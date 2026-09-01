@@ -1,0 +1,756 @@
+'use client';
+
+import { useState, useEffect } from 'react';
+import { useRouter } from 'next/navigation';
+import { getFormation, canFillSlot, Formation } from '@/lib/formations';
+import {
+  SquadPick, SimulationResult, TeamStanding, LeagueEntry,
+  computeOverall, preSeasonOdds,
+} from '@/lib/simulation';
+import PitchView from '@/components/PitchView';
+import PositionBadge from '@/components/PositionBadge';
+import LineRatings from '@/components/LineRatings';
+
+// ── What Could Have Been ─────────────────────────────────────────────────────
+
+interface SeenPlayer {
+  player_id: number; player_name: string; nationality: string | null;
+  rating: number; positions: string; clubName: string; seasonLabel: string;
+}
+
+function computeBestXI(
+  formation: Formation,
+  seenSquads: { clubName: string; seasonLabel: string; players: SeenPlayer[] }[],
+): SquadPick[] {
+  const byId = new Map<number, SeenPlayer & { clubName: string; seasonLabel: string }>();
+  for (const squad of seenSquads) {
+    for (const p of squad.players) {
+      const ex = byId.get(p.player_id);
+      if (!ex || p.rating > ex.rating) byId.set(p.player_id, { ...p, clubName: squad.clubName, seasonLabel: squad.seasonLabel });
+    }
+  }
+  const pool = [...byId.values()];
+  const result: SquadPick[] = [];
+  const usedIds = new Set<number>();
+  const slotOrder = formation.slots
+    .map((s, i) => ({ slot: s, index: i }))
+    .sort((a, b) => {
+      const ca = pool.filter(p => canFillSlot(JSON.parse(p.positions), a.slot.position)).length;
+      const cb = pool.filter(p => canFillSlot(JSON.parse(p.positions), b.slot.position)).length;
+      return ca - cb;
+    });
+  for (const { slot, index } of slotOrder) {
+    const cands = pool.filter(p => !usedIds.has(p.player_id) && canFillSlot(JSON.parse(p.positions), slot.position));
+    if (!cands.length) continue;
+    cands.sort((a, b) => b.rating - a.rating);
+    const best = cands[0];
+    usedIds.add(best.player_id);
+    result.push({ slotIndex: index, position: slot.position, playerId: best.player_id, playerName: best.player_name, nationality: best.nationality, rating: best.rating, clubName: best.clubName, seasonLabel: best.seasonLabel, positions: JSON.parse(best.positions) });
+  }
+  return result;
+}
+
+function WhatCouldHaveBeen({ formation, actualPicks }: { formation: Formation; actualPicks: SquadPick[] }) {
+  const [bestXI, setBestXI] = useState<SquadPick[]>([]);
+  const [show, setShow] = useState(false);
+  useEffect(() => {
+    const raw = localStorage.getItem('38-0-seen-squads');
+    if (!raw) return;
+    const squads = JSON.parse(raw);
+    if (!squads.length) return;
+    setBestXI(computeBestXI(formation, squads));
+  }, [formation]);
+  if (!bestXI.length) return null;
+  const bestOverall = computeOverall(bestXI);
+  const actualOverall = computeOverall(actualPicks);
+  const diff = bestOverall - actualOverall;
+  const sortedBest = [...bestXI].sort((a, b) => b.slotIndex - a.slotIndex);
+  const actualMap = new Map(actualPicks.map(p => [p.slotIndex, p]));
+  return (
+    <div className="bg-[#111] rounded-2xl p-6">
+      <button onClick={() => setShow(s => !s)} className="w-full flex items-center justify-between">
+        <div className="text-left">
+          <div className="text-xs text-[#555] uppercase tracking-widest font-bold mb-1">What Could Have Been</div>
+          <div className="text-sm text-[#888]">
+            Best possible XI from your spins —{' '}
+            <span className={diff > 0 ? 'text-amber-400' : 'text-[#00c896]'}>Overall {bestOverall}</span>
+            {diff > 0 && <span className="text-amber-400 ml-1">(+{diff} vs yours)</span>}
+            {diff === 0 && <span className="text-[#00c896] ml-1">(you nailed it)</span>}
+          </div>
+        </div>
+        <span className="text-[#444] ml-4">{show ? '▲' : '▼'}</span>
+      </button>
+      {show && (
+        <div className="mt-4 space-y-1.5">
+          {sortedBest.map((p, i) => {
+            const actual = actualMap.get(p.slotIndex);
+            const isPicked = actual?.playerId === p.playerId;
+            const rDiff = actual ? p.rating - actual.rating : 0;
+            return (
+              <div key={i} className={`flex items-center gap-3 py-1 rounded-lg px-2 ${isPicked ? 'bg-[#00c89611]' : ''}`}>
+                <PositionBadge pos={p.position} size="xs" />
+                <span className={`font-bold text-sm flex-1 ${isPicked ? 'text-[#00c896]' : ''}`}>{p.playerName}</span>
+                <span className="text-[#444] text-xs">{p.clubName.slice(0, 3).toUpperCase()} {p.seasonLabel}</span>
+                <span className="text-[#00c896] font-black text-sm w-6 text-right">{p.rating}</span>
+                {!isPicked && rDiff > 0 && <span className="text-amber-400 text-[10px] w-8 text-right">+{rDiff}</span>}
+                {isPicked && <span className="text-[#00c896] text-[10px] w-8 text-right">✓</span>}
+              </div>
+            );
+          })}
+          <p className="text-[#333] text-[10px] mt-3 text-center">✓ = player you actually picked · numbers show rating advantage missed</p>
+        </div>
+      )}
+    </div>
+  );
+}
+
+// ── Main Page ────────────────────────────────────────────────────────────────
+
+export default function ResultsPage() {
+  const router = useRouter();
+  const [picks, setPicks]           = useState<SquadPick[]>([]);
+  const [formation, setFormation]   = useState<ReturnType<typeof getFormation> | null>(null);
+  const [simResult, setSimResult]   = useState<SimulationResult | null>(null);
+  const [simulating, setSimulating] = useState(false);
+  const [showFinal, setShowFinal]   = useState(false);
+  const [teamRatings, setTeamRatings] = useState<{ clubName: string; overall: number }[]>([]);
+
+  useEffect(() => {
+    const squad = localStorage.getItem('38-0-squad');
+    const setup = localStorage.getItem('38-0-setup');
+    if (!squad) { router.push('/'); return; }
+    const p: SquadPick[] = JSON.parse(squad);
+    const s = setup ? JSON.parse(setup) : { formation: '4-4-2' };
+    setPicks(p);
+    setFormation(getFormation(s.formation));
+    fetch('/api/strengths').then(r => r.json()).then(setTeamRatings);
+  }, [router]);
+
+  async function simulate() {
+    setSimulating(true);
+    try {
+      const res = await fetch('/api/simulate', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ picks }),
+      });
+      const data: SimulationResult = await res.json();
+      setSimResult(data);
+    } finally {
+      setSimulating(false);
+    }
+  }
+
+  function handleResim() {
+    setShowFinal(false);
+    setSimResult(null);
+    simulate();
+  }
+
+  if (!picks.length || !formation) {
+    return <div className="min-h-screen bg-[#0a0a0a] flex items-center justify-center text-white">Loading…</div>;
+  }
+
+  const overall = computeOverall(picks);
+  const odds    = preSeasonOdds(overall);
+  // Count how many of the 19 opponents have a higher best-XI OVR than the user
+  const projectedPosition = teamRatings.length > 0
+    ? teamRatings.filter(t => t.overall > overall).length + 1
+    : odds.projectedPosition;
+
+  return (
+    <main className="min-h-screen bg-[#0a0a0a] text-white">
+      <div className="max-w-5xl mx-auto py-10 px-4 space-y-6">
+
+        {/* Squad header */}
+        <div className="flex flex-col lg:flex-row gap-6">
+          <div className="flex-shrink-0 flex justify-center">
+            <PitchView formation={formation} picks={picks} compact />
+          </div>
+          <div className="flex-1 space-y-4">
+            <div className="flex items-end gap-4">
+              <div>
+                <div className="text-xs text-[#555] uppercase tracking-widest font-bold mb-1">Your XI</div>
+                <div className="text-sm text-[#555]">{formation.name}</div>
+              </div>
+              <div className="ml-auto text-right">
+                <div className="text-xs text-[#555] uppercase tracking-widest font-bold mb-1">Overall</div>
+                <div className="text-5xl font-black leading-none" style={{ color: overall >= 90 ? '#00c896' : overall >= 85 ? '#3b82f6' : overall >= 80 ? '#f59e0b' : '#ef4444' }}>
+                  {overall}
+                </div>
+              </div>
+            </div>
+            <div className="space-y-1.5">
+              {[...picks].sort((a, b) => b.slotIndex - a.slotIndex).map((p, i) => (
+                <div key={i} className="flex items-center gap-3 py-1.5">
+                  <PositionBadge pos={p.position} size="xs" />
+                  <span className="font-bold text-sm flex-1">{p.playerName}</span>
+                  <span className="text-[#555] text-xs">{p.clubName.slice(0, 3).toUpperCase()} {p.seasonLabel}</span>
+                  <span className="text-[#00c896] font-black text-sm w-6 text-right">{p.rating}</span>
+                </div>
+              ))}
+            </div>
+            <LineRatings formation={formation} picks={picks} />
+          </div>
+        </div>
+
+        {/* Pre-season odds */}
+        {!simResult && (
+          <div className="bg-[#111] rounded-2xl p-6 space-y-4">
+            <div className="text-xs text-[#555] uppercase tracking-widest font-bold">Pre-Season Odds</div>
+            <div className="text-xs text-[#444]">Based on your squad&apos;s overall rating</div>
+            <div className="grid grid-cols-2 gap-4">
+              <div>
+                <div className="text-xs text-[#555]">Projected Finish</div>
+                <div className="text-3xl font-black">{ordinal(projectedPosition)}</div>
+              </div>
+              <div>
+                <div className="text-xs text-[#555]">Expected Points</div>
+                <div className="text-3xl font-black text-[#00c896]">{odds.expectedPoints}</div>
+              </div>
+            </div>
+            <div className="space-y-2">
+              <OddsBar label="Win the league" pct={odds.winLeague}   color="#00c896" />
+              <OddsBar label="Top 4"           pct={odds.top4}       color="#3b82f6" />
+              <OddsBar label="Top 6"           pct={odds.top6}       color="#8b5cf6" />
+              <OddsBar label="Top 10"          pct={odds.top10}      color="#f59e0b" />
+              <OddsBar label="Relegation"      pct={odds.relegation} color="#ef4444" />
+            </div>
+            <button
+              onClick={simulate}
+              disabled={simulating}
+              className="w-full py-4 rounded-xl font-black text-lg bg-[#00c896] text-black hover:bg-[#00b385] transition-colors disabled:opacity-50"
+            >
+              {simulating ? 'Simulating season…' : 'Simulate Season →'}
+            </button>
+          </div>
+        )}
+
+        {/* Live GW simulation */}
+        {simResult && !showFinal && (
+          <LiveSimulation
+            simResult={simResult}
+            odds={odds}
+            onDone={() => setShowFinal(true)}
+          />
+        )}
+
+        {/* Final season report */}
+        {simResult && showFinal && (
+          <FinalSummary result={simResult} picks={picks} odds={odds} onResim={handleResim} />
+        )}
+
+        {/* What Could Have Been */}
+        {formation && <WhatCouldHaveBeen formation={formation} actualPicks={picks} />}
+
+        <div className="text-center pb-8">
+          <button
+            onClick={() => {
+              localStorage.removeItem('38-0-draft');
+              localStorage.removeItem('38-0-squad');
+              localStorage.removeItem('38-0-seen-squads');
+              router.push('/');
+            }}
+            className="text-[#444] text-xs hover:text-white transition-colors"
+          >
+            ↩ Start a new run
+          </button>
+        </div>
+      </div>
+    </main>
+  );
+}
+
+// ── Live GW Animation ────────────────────────────────────────────────────────
+
+function LiveSimulation({
+  simResult, odds, onDone,
+}: {
+  simResult: SimulationResult;
+  odds: ReturnType<typeof preSeasonOdds>;
+  onDone: () => void;
+}) {
+  const [gw, setGw]           = useState(1);
+  const [playing, setPlaying] = useState(true);
+  const [speed, setSpeed]     = useState<'normal' | 'fast'>('normal');
+
+  // Stop auto-play at GW 38
+  useEffect(() => {
+    if (gw >= 38) setPlaying(false);
+  }, [gw]);
+
+  // Auto-advance
+  useEffect(() => {
+    if (!playing || gw >= 38) return;
+    const delay = speed === 'fast' ? 300 : 1100;
+    const t = setTimeout(() => setGw(g => g + 1), delay);
+    return () => clearTimeout(t);
+  }, [playing, gw, speed]);
+
+  const gwData        = simResult.gameweeks[gw - 1];
+  const table         = gwData?.tableSnapshot ?? [];
+  const userFixture   = gwData?.fixtures.find(f => f.userInvolved);
+  const otherFixtures = (gwData?.fixtures ?? []).filter(f => !f.userInvolved);
+  const isHome        = userFixture?.home === 'Your XI';
+  const userGoals     = userFixture ? (isHome ? userFixture.homeGoals : userFixture.awayGoals) : 0;
+  const oppGoals      = userFixture ? (isHome ? userFixture.awayGoals : userFixture.homeGoals) : 0;
+  const opponent      = userFixture ? (isHome ? userFixture.away : userFixture.home) : '';
+  const result        = userGoals > oppGoals ? 'W' : userGoals === oppGoals ? 'D' : 'L';
+  const rCol          = result === 'W' ? '#00c896' : result === 'D' ? '#f59e0b' : '#ef4444';
+  const seasonDone    = gw >= 38;
+
+  return (
+    <div className="space-y-4">
+      {/* GW header bar */}
+      <div className="bg-[#111] rounded-2xl p-4">
+        <div className="flex items-center justify-between mb-3">
+          <div className="flex items-center gap-3">
+            <span className="text-[#555] text-[10px] uppercase tracking-widest font-bold">Gameweek</span>
+            <span className="text-3xl font-black leading-none">{gw}</span>
+            <span className="text-[#444] text-sm">/ 38</span>
+          </div>
+          <div className="flex items-center gap-2">
+            {!seasonDone ? (
+              <>
+                <button
+                  onClick={() => setPlaying(p => !p)}
+                  className="px-3 py-1.5 rounded-lg text-xs font-bold bg-[#1a1a1a] text-[#888] hover:text-white transition-colors"
+                >
+                  {playing ? '⏸ Pause' : '▶ Play'}
+                </button>
+                <button
+                  onClick={() => setSpeed(s => s === 'normal' ? 'fast' : 'normal')}
+                  className={`px-2.5 py-1.5 rounded-lg text-xs font-bold transition-colors ${speed === 'fast' ? 'bg-[#00c896] text-black' : 'bg-[#1a1a1a] text-[#888] hover:text-white'}`}
+                >
+                  {speed === 'fast' ? '3×' : '1×'}
+                </button>
+                <button
+                  onClick={() => { setGw(38); setPlaying(false); }}
+                  className="px-3 py-1.5 rounded-lg text-xs font-bold bg-[#1a1a1a] text-[#888] hover:text-white transition-colors"
+                >
+                  Skip ⏭
+                </button>
+              </>
+            ) : (
+              <button
+                onClick={onDone}
+                className="px-4 py-2 rounded-xl text-sm font-black bg-[#00c896] text-black hover:bg-[#00b385] transition-colors"
+              >
+                Full Season Report →
+              </button>
+            )}
+          </div>
+        </div>
+        <div className="w-full bg-[#1a1a1a] rounded-full h-1.5">
+          <div className="h-1.5 rounded-full transition-all duration-500" style={{ width: `${(gw / 38) * 100}%`, background: '#00c896' }} />
+        </div>
+      </div>
+
+      {/* Body: fixtures + table */}
+      <div className="grid gap-4 lg:grid-cols-[1fr_268px]">
+
+        {/* Left: user fixture + other results */}
+        <div className="space-y-3">
+
+          {/* User's match – re-mounts each GW for the snap-in feel */}
+          {userFixture && (
+            <div key={gw} className="bg-[#111] rounded-2xl p-5 border" style={{ borderColor: `${rCol}50` }}>
+              <div className="flex items-center gap-3 mb-3">
+                <span className="text-xs font-black px-2 py-0.5 rounded" style={{ background: rCol, color: result === 'L' ? 'white' : 'black' }}>
+                  {result}
+                </span>
+                <span className="text-sm text-[#777]">{isHome ? 'Home' : 'Away'} · {opponent}</span>
+              </div>
+              <div className="flex items-center justify-center gap-4 py-2">
+                <span className="text-5xl font-black" style={{ color: rCol }}>{userGoals}</span>
+                <span className="text-2xl text-[#333] font-black">–</span>
+                <span className={`text-5xl font-black ${result === 'L' ? 'text-white' : 'text-[#555]'}`}>{oppGoals}</span>
+              </div>
+              {userFixture.scorers.length > 0 && (
+                <div className="text-[11px] text-[#555] text-center mt-1">
+                  {userFixture.scorers.map(s => `${s.name} ${s.minute}′`).join(' · ')}
+                </div>
+              )}
+            </div>
+          )}
+
+          {/* Other fixtures */}
+          <div className="bg-[#111] rounded-2xl p-4">
+            <div className="text-[9px] text-[#444] uppercase tracking-widest font-bold mb-3">Other Results</div>
+            <div className="space-y-1.5">
+              {otherFixtures.map((f, i) => (
+                <div key={i} className="flex items-center gap-2 text-[11px]">
+                  <span className="flex-1 text-right text-[#777] truncate">{f.home}</span>
+                  <span className="font-black text-white w-10 text-center shrink-0">{f.homeGoals}–{f.awayGoals}</span>
+                  <span className="flex-1 text-[#777] truncate">{f.away}</span>
+                </div>
+              ))}
+            </div>
+          </div>
+
+          {/* Season complete: outcome banner (mobile / if no right panel) */}
+          {seasonDone && (
+            <div className="bg-[#111] rounded-2xl p-5 text-center lg:hidden">
+              <div className="text-3xl mb-2">{simResult.finalPosition === 1 ? '🏆' : simResult.finalPosition <= 4 ? '🔵' : simResult.finalPosition >= 18 ? '🔴' : '📊'}</div>
+              <div className="font-black text-lg mb-1">
+                {simResult.finalPosition === 1 ? 'CHAMPIONS!' : `${ordinal(simResult.finalPosition)} Place`}
+              </div>
+              <div className="text-[#555] text-xs mb-4">{simResult.narrative}</div>
+              <button onClick={onDone} className="w-full py-3 rounded-xl font-black bg-[#00c896] text-black hover:bg-[#00b385] transition-colors">
+                Full Season Report →
+              </button>
+            </div>
+          )}
+        </div>
+
+        {/* Right: live table */}
+        <div className="bg-[#111] rounded-2xl p-4 flex flex-col">
+          <div className="flex items-center justify-between mb-3">
+            <div className="text-[9px] text-[#444] uppercase tracking-widest font-bold">Table</div>
+            <div className="text-[9px] text-[#333] uppercase tracking-widest">Pts</div>
+          </div>
+          <div className="flex-1 space-y-0.5">
+            {table.map(row => {
+              const dotCol = row.position === 1 ? '#fbbf24' : row.position <= 4 ? '#3b82f6' : row.position <= 6 ? '#8b5cf6' : row.position >= 18 ? '#ef4444' : '#2a2a2a';
+              return (
+                <div key={row.name} className={`flex items-center gap-1.5 px-1 py-1 rounded text-[11px] ${row.isUser ? 'bg-[#00c896]/10' : ''}`}>
+                  <div className="w-1.5 h-1.5 rounded-full shrink-0" style={{ background: dotCol }} />
+                  <span className="text-[#444] w-4 text-right shrink-0 font-bold">{row.position}</span>
+                  <span className={`flex-1 truncate ${row.isUser ? 'text-[#00c896] font-black' : 'text-[#888]'}`}>{row.name}</span>
+                  <span className="text-[#555] w-4 text-center shrink-0">{row.played}</span>
+                  <span className={`font-black w-6 text-right shrink-0 ${row.isUser ? 'text-[#00c896]' : 'text-white'}`}>{row.points}</span>
+                </div>
+              );
+            })}
+          </div>
+          <div className="flex gap-3 mt-3 flex-wrap border-t border-[#1a1a1a] pt-2">
+            {[['#fbbf24','1st'],['#3b82f6','UCL'],['#8b5cf6','UEL'],['#ef4444','REL']].map(([c,l]) => (
+              <div key={l} className="flex items-center gap-1">
+                <div className="w-1.5 h-1.5 rounded-full" style={{ background: c }} />
+                <span className="text-[8px] text-[#444]">{l}</span>
+              </div>
+            ))}
+          </div>
+
+          {/* Season done — desktop outcome card inline */}
+          {seasonDone && (
+            <div className="hidden lg:block mt-4 pt-4 border-t border-[#1a1a1a] text-center">
+              <div className="font-black text-base mb-1" style={{ color: simResult.finalPosition === 1 ? '#00c896' : simResult.finalPosition <= 4 ? '#3b82f6' : simResult.finalPosition >= 18 ? '#ef4444' : '#ccc' }}>
+                {simResult.finalPosition === 1 ? '🏆 CHAMPIONS!' : `${ordinal(simResult.finalPosition)} Place`}
+              </div>
+              <div className="text-[10px] text-[#555] mb-3">{simResult.points} pts · {simResult.wins}W {simResult.draws}D {simResult.losses}L</div>
+              <button onClick={onDone} className="w-full py-2.5 rounded-xl text-sm font-black bg-[#00c896] text-black hover:bg-[#00b385] transition-colors">
+                Full Report →
+              </button>
+            </div>
+          )}
+        </div>
+      </div>
+    </div>
+  );
+}
+
+// ── Final Summary ─────────────────────────────────────────────────────────────
+
+function FinalSummary({ result, picks, odds, onResim }: {
+  result: SimulationResult;
+  picks: SquadPick[];
+  odds: ReturnType<typeof preSeasonOdds>;
+  onResim: () => void;
+}) {
+  const perf =
+    result.finalPosition < odds.projectedPosition ? 'OVERPERFORMED' :
+    result.finalPosition > odds.projectedPosition ? 'UNDERPERFORMED' : 'AS EXPECTED';
+  const perfColor = perf === 'OVERPERFORMED' ? 'text-[#00c896] border-[#00c896]' : perf === 'UNDERPERFORMED' ? 'text-red-400 border-red-400' : 'text-amber-400 border-amber-400';
+  const resultBg =
+    result.finalPosition === 1 ? 'from-[#00c896]/20 to-transparent' :
+    result.finalPosition <= 4  ? 'from-blue-900/20 to-transparent' :
+    result.finalPosition >= 18 ? 'from-red-900/20 to-transparent' :
+    'from-[#1a1a1a] to-transparent';
+  const outcomeLabel =
+    result.finalPosition === 1 ? '🏆 CHAMPIONS' :
+    result.finalPosition <= 4  ? '✅ CHAMPIONS LEAGUE' :
+    result.finalPosition <= 6  ? '🟢 EUROPA LEAGUE' :
+    result.finalPosition >= 18 ? '🔴 RELEGATED' : `${ordinal(result.finalPosition)} PLACE`;
+
+  return (
+    <div className="space-y-6">
+
+      {/* Outcome banner */}
+      <div className={`bg-gradient-to-b ${resultBg} bg-[#111] rounded-2xl p-6 text-center`}>
+        <div className="text-xs text-[#555] uppercase tracking-widest mb-4 font-bold">Season Result</div>
+        <div className="text-5xl mb-2">{result.finalPosition === 1 ? '🏆' : '📋'}</div>
+        <div className="font-black text-2xl mb-1">{outcomeLabel}</div>
+        <div className="text-[#555] text-sm mb-4">{result.narrative}</div>
+        <div className="grid grid-cols-3 gap-3 max-w-sm mx-auto">
+          {[
+            ['Finished', ordinal(result.finalPosition)],
+            ['Projected', ordinal(odds.projectedPosition)],
+          ].map(([label, value]) => (
+            <div key={label} className="bg-[#1a1a1a] rounded-xl p-3 text-center">
+              <div className="text-xl font-black">{value}</div>
+              <div className="text-[10px] text-[#555] uppercase tracking-widest">{label}</div>
+            </div>
+          ))}
+          <div className="bg-[#1a1a1a] rounded-xl p-3 flex items-center justify-center">
+            <div className={`text-[10px] font-black border rounded px-2 py-1 ${perfColor}`}>{perf}</div>
+          </div>
+        </div>
+      </div>
+
+      {/* Resim */}
+      <button
+        onClick={onResim}
+        className="w-full py-3 rounded-xl font-black text-sm bg-[#1a1a1a] text-[#888] hover:bg-[#222] hover:text-white transition-colors border border-[#2a2a2a]"
+      >
+        ↺ Resim Season
+      </button>
+
+      {/* Season stats */}
+      <div className="grid grid-cols-3 gap-3">
+        {([
+          [result.wins,   'Wins'],
+          [result.draws,  'Draws'],
+          [result.losses, 'Losses'],
+          [result.points, 'Points'],
+          [result.goalsFor, 'Goals For'],
+          [result.goalsAgainst, 'Against'],
+        ] as [number, string][]).map(([v, l]) => (
+          <div key={l} className="bg-[#111] rounded-xl p-4 text-center">
+            <div className="text-2xl font-black">{v}</div>
+            <div className="text-[10px] text-[#555] uppercase tracking-widest">{l}</div>
+          </div>
+        ))}
+      </div>
+
+      {/* Your XI stats */}
+      <div className="bg-[#111] rounded-2xl p-6">
+        <div className="flex items-center gap-3 mb-3">
+          <div className="text-xs text-[#555] uppercase tracking-widest font-bold flex-1">Your XI</div>
+          <span className="text-[10px] text-[#444] w-4 text-center">G</span>
+          <span className="text-[10px] text-[#444] w-4 text-center">A</span>
+          <span className="text-[10px] text-[#444] w-4 text-center">CS</span>
+          <span className="text-[10px] text-[#444] w-6 text-right">OVR</span>
+          <span className="text-[10px] text-[#444] w-7 text-right">RTG</span>
+        </div>
+        <div className="space-y-2">
+          {[...picks].sort((a, b) => b.slotIndex - a.slotIndex).map((p, i) => {
+            const stat = result.playerStats.find(s => s.playerId === p.playerId);
+            const rtg  = stat?.avgMatchRating ?? 0;
+            const rtgColor = rtg >= 8.0 ? 'text-amber-400' : rtg >= 7.0 ? 'text-[#00c896]' : rtg >= 6.5 ? 'text-white' : 'text-[#555]';
+            return (
+              <div key={i} className="flex items-center gap-3">
+                <PositionBadge pos={p.position} size="xs" />
+                <span className="font-bold text-sm flex-1">{p.playerName}</span>
+                <span className="text-[#444] text-xs">{p.clubName.slice(0, 3).toUpperCase()} {p.seasonLabel.slice(2, 4)}/{p.seasonLabel.slice(-2)}</span>
+                <span className="text-[#888] text-xs font-bold w-4 text-center">{stat?.goals ?? 0}</span>
+                <span className="text-[#888] text-xs font-bold w-4 text-center">{stat?.assists ?? 0}</span>
+                <span className="text-[#888] text-xs font-bold w-4 text-center">{p.position === 'GK' || ['CB','LB','RB','LWB','RWB'].includes(p.position) ? (stat?.cleanSheets ?? 0) : '-'}</span>
+                <span className="text-[#00c896] font-black text-sm w-6 text-right">{p.rating}</span>
+                <span className={`font-black text-xs w-7 text-right ${rtgColor}`}>{rtg > 0 ? rtg.toFixed(1) : '-'}</span>
+              </div>
+            );
+          })}
+        </div>
+      </div>
+
+      {/* League Awards */}
+      <div className="bg-[#111] rounded-2xl p-6">
+        <div className="text-xs text-[#555] uppercase tracking-widest mb-4 font-bold">League Awards</div>
+        <div className="grid grid-cols-2 gap-3">
+          <Award icon="🏅" title="Player of the Season"
+            name={result.awards.leaguePlayerOfSeason.name}
+            stat={`${result.awards.leaguePlayerOfSeason.goals}G · ${result.awards.leaguePlayerOfSeason.assists}A · ${result.awards.leaguePlayerOfSeason.isUser ? 'Your XI ★' : result.awards.leaguePlayerOfSeason.club}`}
+          />
+          {result.topScorers?.[0] && (
+            <Award icon="⚽" title="Golden Boot"
+              name={result.topScorers[0].playerName}
+              stat={`${result.topScorers[0].value} goals · ${result.topScorers[0].clubName}`}
+            />
+          )}
+          {result.topAssisters?.[0] && (
+            <Award icon="🎯" title="Top Assister"
+              name={result.topAssisters[0].playerName}
+              stat={`${result.topAssisters[0].value} assists · ${result.topAssisters[0].clubName}`}
+            />
+          )}
+          {result.topKeepers?.[0] && (
+            <Award icon="🧤" title="Golden Glove"
+              name={result.topKeepers[0].playerName}
+              stat={`${result.topKeepers[0].value} clean sheets · ${result.topKeepers[0].clubName}`}
+            />
+          )}
+        </div>
+      </div>
+
+      {/* Your XI Awards */}
+      <div className="bg-[#111] rounded-2xl p-6">
+        <div className="text-xs text-[#555] uppercase tracking-widest mb-4 font-bold">Your XI Awards</div>
+        <div className="grid grid-cols-2 gap-3">
+          <Award icon="⭐" title="Player of Season"  name={result.awards.playerOfSeason.name}  stat={`${result.awards.playerOfSeason.goals}G · ${result.awards.playerOfSeason.assists}A`} />
+          <Award icon="⚽" title="Top Scorer"         name={result.awards.goldenBoot.name}       stat={`${result.awards.goldenBoot.goals} goals`} />
+          <Award icon="🎯" title="Top Assister"        name={result.awards.playmaker.name}         stat={`${result.awards.playmaker.assists} assists`} />
+          <Award icon="🧤" title="Top Keeper"          name={result.awards.goldenGlove.name}      stat={`${result.awards.goldenGlove.cleanSheets} clean sheets`} />
+        </div>
+      </div>
+
+      {/* Extra records */}
+      <div className="grid grid-cols-2 gap-3">
+        <div className="bg-[#111] rounded-xl p-4">
+          <div className="text-xs text-[#555] mb-1">Longest Win Streak</div>
+          <div className="text-2xl font-black">{result.longestWinStreak}</div>
+        </div>
+        <div className="bg-[#111] rounded-xl p-4">
+          <div className="text-xs text-[#555] mb-1">Biggest Win</div>
+          <div className="text-sm font-black text-[#00c896]">{result.biggestWin}</div>
+        </div>
+      </div>
+
+      {/* Full league table */}
+      {result.finalTable?.length > 0 && (
+        <LeagueTable table={result.finalTable} />
+      )}
+
+      {/* League leaderboards */}
+      {(result.topScorers?.length > 0 || result.topAssisters?.length > 0 || result.topKeepers?.length > 0) && (
+        <LeagueLeaderboards
+          scorers={result.topScorers ?? []}
+          assisters={result.topAssisters ?? []}
+          keepers={result.topKeepers ?? []}
+        />
+      )}
+    </div>
+  );
+}
+
+// ── League Table ──────────────────────────────────────────────────────────────
+
+function LeagueTable({ table }: { table: TeamStanding[] }) {
+  const [show, setShow] = useState(true); // open by default in final summary
+  const posColor = (pos: number) =>
+    pos === 1 ? '#fbbf24' : pos <= 4 ? '#3b82f6' : pos <= 6 ? '#8b5cf6' : pos >= 18 ? '#ef4444' : undefined;
+
+  return (
+    <div className="bg-[#111] rounded-2xl overflow-hidden">
+      <button onClick={() => setShow(s => !s)} className="w-full flex items-center justify-between px-6 py-4 hover:bg-[#151515] transition-colors">
+        <div className="text-xs text-[#555] uppercase tracking-widest font-bold">Final League Table</div>
+        <span className="text-[#444] text-xs">{show ? '▲' : '▼'}</span>
+      </button>
+      {show && (
+        <div className="px-4 pb-4">
+          <div className="flex items-center gap-2 px-2 pb-1 text-[9px] text-[#444] uppercase tracking-widest border-b border-[#1a1a1a]">
+            <span className="w-5 text-center">#</span>
+            <span className="flex-1">Club</span>
+            <span className="w-5 text-center">P</span>
+            <span className="w-5 text-center">W</span>
+            <span className="w-5 text-center">D</span>
+            <span className="w-5 text-center">L</span>
+            <span className="w-7 text-center">GF</span>
+            <span className="w-7 text-center">GA</span>
+            <span className="w-7 text-center">GD</span>
+            <span className="w-7 text-right">Pts</span>
+            <span className="w-8 text-center text-[#00c896]/70">OVR</span>
+            <span className="w-8 text-center text-orange-400/70">ATT</span>
+            <span className="w-8 text-center text-purple-400/70">MID</span>
+            <span className="w-8 text-center text-blue-400/70">DEF</span>
+          </div>
+          {table.map(row => (
+            <div key={row.name} className={`flex items-center gap-2 px-2 py-1.5 text-xs rounded ${row.isUser ? 'bg-[#00c896]/10' : ''}`}>
+              <span className="w-5 text-center font-black" style={{ color: posColor(row.position) ?? '#555' }}>{row.position}</span>
+              <span className={`flex-1 font-bold truncate ${row.isUser ? 'text-[#00c896]' : 'text-[#ccc]'}`}>{row.name}</span>
+              <span className="w-5 text-center text-[#666]">{row.played}</span>
+              <span className="w-5 text-center text-[#888]">{row.won}</span>
+              <span className="w-5 text-center text-[#666]">{row.drawn}</span>
+              <span className="w-5 text-center text-[#666]">{row.lost}</span>
+              <span className="w-7 text-center text-[#888]">{row.goalsFor}</span>
+              <span className="w-7 text-center text-[#666]">{row.goalsAgainst}</span>
+              <span className={`w-7 text-center ${row.gd > 0 ? 'text-[#00c896]' : row.gd < 0 ? 'text-red-400' : 'text-[#888]'}`}>
+                {row.gd > 0 ? '+' : ''}{row.gd}
+              </span>
+              <span className="w-7 text-right font-black text-white">{row.points}</span>
+              <span className="w-8 text-center font-bold text-[#00c896]">{row.ovr}</span>
+              <span className="w-8 text-center text-orange-400">{row.att}</span>
+              <span className="w-8 text-center text-purple-400">{row.mid}</span>
+              <span className="w-8 text-center text-blue-400">{row.def}</span>
+            </div>
+          ))}
+          <div className="flex gap-3 mt-3 flex-wrap">
+            {[['#fbbf24','Champions'],['#3b82f6','Top 4 (UCL)'],['#8b5cf6','6th (UEL)'],['#ef4444','Relegation']].map(([c,l]) => (
+              <div key={l} className="flex items-center gap-1.5">
+                <div className="w-2 h-2 rounded-full" style={{ background: c }} />
+                <span className="text-[9px] text-[#444]">{l}</span>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
+    </div>
+  );
+}
+
+// ── League Leaderboards ───────────────────────────────────────────────────────
+
+function LeagueLeaderboards({ scorers, assisters, keepers }: { scorers: LeagueEntry[]; assisters: LeagueEntry[]; keepers: LeagueEntry[] }) {
+  const [tab, setTab] = useState<'scorers' | 'assisters' | 'keepers'>('scorers');
+  const data  = tab === 'scorers' ? scorers : tab === 'assisters' ? assisters : keepers;
+  const label = tab === 'scorers' ? 'Goals' : tab === 'assisters' ? 'Assists' : 'CS';
+
+  return (
+    <div className="bg-[#111] rounded-2xl p-6">
+      <div className="text-xs text-[#555] uppercase tracking-widest font-bold mb-4">League Leaderboards</div>
+      <div className="flex gap-2 mb-4 flex-wrap">
+        {(['scorers','assisters','keepers'] as const).map(t => (
+          <button key={t} onClick={() => setTab(t)} className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-colors ${tab === t ? 'bg-[#00c896] text-black' : 'bg-[#1a1a1a] text-[#555] hover:text-white'}`}>
+            {t === 'scorers' ? '⚽ Top Scorers' : t === 'assisters' ? '🎯 Top Assisters' : '🧤 Golden Glove'}
+          </button>
+        ))}
+      </div>
+      <div className="flex items-center gap-3 px-2 pb-1.5 text-[9px] text-[#444] uppercase tracking-widest border-b border-[#1a1a1a]">
+        <span className="w-5 text-center">#</span>
+        <span className="flex-1">Player</span>
+        <span className="w-24 text-right text-[10px]">Club</span>
+        <span className="w-8 text-right">{label}</span>
+      </div>
+      <div className="space-y-0.5 mt-1">
+        {data.slice(0, 20).map((e, i) => (
+          <div key={i} className={`flex items-center gap-3 px-2 py-1.5 rounded text-xs ${e.isUser ? 'bg-[#00c896]/10' : ''}`}>
+            <span className="w-5 text-center text-[#555] font-bold">{i + 1}</span>
+            <span className={`flex-1 font-bold ${e.isUser ? 'text-[#00c896]' : 'text-[#ccc]'}`}>{e.playerName}</span>
+            <span className={`w-24 text-right text-[10px] truncate ${e.isUser ? 'text-[#00c896]/60' : 'text-[#444]'}`}>{e.clubName}</span>
+            <span className={`w-8 text-right font-black ${e.isUser ? 'text-[#00c896]' : 'text-white'}`}>{e.value}</span>
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+}
+
+// ── Helper components ─────────────────────────────────────────────────────────
+
+function OddsBar({ label, pct, color }: { label: string; pct: number; color: string }) {
+  return (
+    <div className="flex items-center gap-3">
+      <div className="text-xs text-[#666] w-28 flex-shrink-0">{label}</div>
+      <div className="flex-1 bg-[#1a1a1a] rounded-full h-1.5">
+        <div className="h-1.5 rounded-full" style={{ width: `${Math.min(100, pct)}%`, background: color }} />
+      </div>
+      <div className="text-xs text-[#888] w-10 text-right">{pct.toFixed(1)}%</div>
+    </div>
+  );
+}
+
+function Award({ icon, title, name, stat }: { icon: string; title: string; name: string; stat: string }) {
+  return (
+    <div className="bg-[#1a1a1a] rounded-xl p-3">
+      <div className="text-xs text-[#555] mb-1">{icon} {title}</div>
+      <div className="font-black text-sm">{name}</div>
+      <div className="text-[#00c896] text-xs">{stat}</div>
+    </div>
+  );
+}
+
+function ordinal(n: number): string {
+  const s = ['th','st','nd','rd'];
+  const v = n % 100;
+  return n + (s[(v - 20) % 10] || s[v] || s[0]);
+}
