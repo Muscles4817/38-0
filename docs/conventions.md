@@ -1,0 +1,148 @@
+# Conventions
+
+Match the surrounding code. Where this document and the code disagree, the code
+is probably right and this document needs fixing.
+
+## TypeScript
+
+- `strict` is on. Do not add `any`; if a type is genuinely unknown, use
+  `unknown` and narrow it.
+- Prefer `type`/`interface` definitions near the top of the file that uses them.
+  Types shared across modules live with the module that owns the concept —
+  `Position` in `formations.ts`, `SquadPick` in `simulation.ts`, the `Data*`
+  types in `gameData.ts`.
+- Import types with `import type` or an inline `type` specifier when the import
+  is types-only. `src/lib/formations.ts` must stay importable from a runtime
+  that has no bundler.
+
+## React
+
+Next 16 ships the React Compiler lint rules and they are treated as errors.
+Three patterns come up constantly:
+
+### Do not call `setState` synchronously inside an effect
+
+```ts
+// no — flagged, and makes the store and component state two sources of truth
+useEffect(() => { setThing(compute()); }, [dep]);
+
+// yes — derive it
+const thing = useMemo(() => compute(), [dep]);
+```
+
+`setState` inside a `.then()` callback is fine. Calling an `async` function from
+an effect body is **not** — the rule cannot see past it. Write the fetch as a
+promise chain:
+
+```ts
+// no
+useEffect(() => { loadClubs(); }, []);
+
+// yes
+useEffect(() => { fetch('/api/clubs').then(r => r.json()).then(setClubs); }, []);
+```
+
+### Derive dependent data; do not clear it in an effect
+
+When a selection changes and dependent data must go away, store the fetched
+value **with the selection it belongs to** and derive the visible value:
+
+```ts
+const [loaded, setLoaded] = useState<{ clubId: number; players: Player[] } | null>(null);
+
+useEffect(() => {
+  if (!clubId) return;                       // no setState here
+  const id = clubId;
+  fetch(`/api/squads?clubId=${id}`).then(r => r.json())
+    .then(players => setLoaded({ clubId: id, players }));
+}, [clubId]);
+
+const players = useMemo(
+  () => (loaded?.clubId === clubId ? loaded.players : NO_PLAYERS),
+  [loaded, clubId],
+);
+```
+
+This also stops a previous selection's data showing while a new request is in
+flight. Resetting a *choice* that a selection invalidates belongs in the change
+handler, not an effect — see `changeClub` in `src/app/editor/squads/page.dev.tsx`.
+
+Derived empty values use a module-level constant (`const NO_PLAYERS: Player[] = []`)
+so they do not hand out a fresh reference every render.
+
+### Read `localStorage` through `clientStorage`
+
+Never call `localStorage` directly in a component. `src/lib/clientStorage.ts`
+exposes it through `useSyncExternalStore`:
+
+```ts
+const picks = useStoredJson<SquadPick[]>('38-0-draft') ?? NO_PICKS;
+writeStored('38-0-draft', next);   // re-renders every reader
+clearStored('38-0-draft', '38-0-squad');
+```
+
+Server rendering gets `null`, so there is no hydration mismatch, and a write
+from anywhere updates every component reading that key. A direct
+`localStorage.getItem` in an effect is acceptable only for a one-shot check with
+no `setState`, such as redirecting when a run has not been started.
+
+### Refs
+
+Do not read `ref.current` during render — it is a lint error. If a value needs
+to appear in the output, it is state.
+
+## Files and naming
+
+- `page.tsx` / `route.ts` for the deployed game; **`page.dev.tsx` /
+  `route.dev.ts` for anything that must not ship** (see
+  [architecture.md](architecture.md)).
+- Tests sit next to what they test: `src/lib/simulation.ts` →
+  `src/lib/simulation.test.ts`.
+- Scripts in `scripts/`, plain `.mjs`, run with `node`.
+
+## Style
+
+The existing code has habits worth keeping:
+
+- Section headers in longer files:
+  `// ── Standings helpers ─────────────────────────────────`
+- Aligned assignments in blocks of related declarations.
+- Comments explain **why**, not what. `simulation.ts` is the model to follow:
+  every magic number has a sentence saying what it represents.
+- 2-space indent, single quotes, semicolons, trailing commas in multi-line
+  literals.
+
+## Tests
+
+`vitest`, `environment: 'node'`, files matched by `src/**/*.test.ts`.
+
+- Test behaviour, not implementation. The simulation tests assert invariants
+  (points equal `3W + D`, the schedule is a true double round robin) rather than
+  specific scorelines, so tuning does not break them.
+- Name tests as sentences about behaviour: `it('never has a team face itself')`.
+- Anything random takes an explicit seed or an injected source of randomness.
+  `pickRandomSquad` accepts a `random` parameter for exactly this reason.
+- Where a value is known to be wrong but is not being fixed in this change, test
+  the shape and record the problem in [known-issues.md](known-issues.md). Do not
+  encode a bug as expected behaviour.
+- The snapshot integrity tests in `gameData.test.ts` guard committed data. If
+  one fails after `npm run export:data`, fix the database.
+
+## Commits
+
+Conventional-commit prefixes, already used throughout the history:
+`feat`, `fix`, `refactor`, `test`, `docs`, `chore`, `build`, `ci`, `style`, with
+an optional scope (`feat(sim):`, `refactor(editor):`).
+
+Subject in the imperative, under ~72 characters. Body explains why, and states
+anything a reader would otherwise have to reverse-engineer. Group related
+changes into one commit; do not mix a refactor with a behaviour change.
+
+## Before opening a pull request
+
+```bash
+npm run lint && npm run typecheck && npm test && npm run build
+```
+
+That is exactly what CI runs, and the `Verify` job must pass before a PR can
+merge. See [ci-and-deployment.md](ci-and-deployment.md).
