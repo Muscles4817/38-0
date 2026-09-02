@@ -181,7 +181,10 @@ export default function DraftPage() {
 
   function selectPlayer(player: DataPlayer) {
     if (!spinResult) return;
-    setSelectedPlayer(prev => prev?.playerId === player.playerId ? null : player);
+    // Selecting is not a toggle. Tapping an already-selected row used to clear
+    // the selection and close the placement panel, which looked like the tap
+    // had been ignored; Cancel in the panel is the way to back out.
+    setSelectedPlayer(player);
   }
 
   function placePlayer(slotIndex: number) {
@@ -224,6 +227,17 @@ export default function DraftPage() {
     }
   }
 
+  // The slots the selected player could fill, so the pitch shows the targets
+  // rather than leaving the position buttons as the only discoverable route.
+  const eligibleSlots = useMemo(() => {
+    if (!selectedPlayer || !formation) return undefined;
+    const filled = new Set(picks.map(p => p.slotIndex));
+    return formation.slots
+      .map((slot, i) => ({ slot, i }))
+      .filter(({ slot, i }) => !filled.has(i) && canFillSlot(selectedPlayer.positions, slot.position))
+      .map(({ i }) => i);
+  }, [selectedPlayer, formation, picks]);
+
   function handleSlotClick(slotIndex: number) {
     const filledSlots = new Set(picks.map(p => p.slotIndex));
     if (filledSlots.has(slotIndex)) return;
@@ -261,7 +275,13 @@ export default function DraftPage() {
           <span className="ml-1">{picks.length}/11</span>
         </div>
 
-        <PitchView formation={formation} picks={picks} onSlotClick={handleSlotClick} highlightSlot={highlightSlot} />
+        <PitchView
+          formation={formation}
+          picks={picks}
+          onSlotClick={handleSlotClick}
+          highlightSlot={highlightSlot}
+          eligibleSlots={eligibleSlots}
+        />
 
         {/* Rating reveal toast */}
         <div className={`w-full mt-3 px-3 py-2 rounded-xl transition-all duration-300 overflow-hidden
@@ -361,6 +381,7 @@ export default function DraftPage() {
             picks={picks}
             selectedPlayer={selectedPlayer}
             onSelectPlayer={selectPlayer}
+            onCancelSelection={() => setSelectedPlayer(null)}
             onPlacePlayer={placePlayer}
             onReroll={rerollsLeft > 0 ? () => spin(true) : undefined}
             rerollsLeft={rerollsLeft}
@@ -377,13 +398,14 @@ export default function DraftPage() {
 
 function SpinPanel({
   result, formation, picks, selectedPlayer,
-  onSelectPlayer, onPlacePlayer, onReroll, rerollsLeft, showRatings, positionFilter,
+  onSelectPlayer, onCancelSelection, onPlacePlayer, onReroll, rerollsLeft, showRatings, positionFilter,
 }: {
   result: SpunSquad;
   formation: Formation;
   picks: SquadPick[];
   selectedPlayer: DataPlayer | null;
   onSelectPlayer: (p: DataPlayer) => void;
+  onCancelSelection: () => void;
   onPlacePlayer: (slotIdx: number) => void;
   onReroll?: () => void;
   rerollsLeft: number;
@@ -432,13 +454,15 @@ function SpinPanel({
             <div className="font-bold text-[#00c896] truncate">Place {selectedPlayer.name.split(' ').pop()}</div>
             <button
               type="button"
-              onClick={() => onSelectPlayer(selectedPlayer)}
+              onClick={onCancelSelection}
               className="shrink-0 text-[#555] text-xs hover:text-white px-3 py-2 -mr-2 touch-manipulation"
             >
               Cancel
             </button>
           </div>
-          <div className="text-[10px] text-[#555] uppercase tracking-widest mb-2">Available</div>
+          <div className="text-[10px] text-[#555] uppercase tracking-widest mb-2">
+            Where they can play
+          </div>
           <div className="flex flex-wrap gap-2">
             {formation.slots.map((slot, i) => slotStatus(i, slot) === 'available' ? (
               <button key={i} type="button" onClick={() => onPlacePlayer(i)}
@@ -447,18 +471,8 @@ function SpinPanel({
               </button>
             ) : null)}
           </div>
-          {/* The unavailable slots are reference detail, not something to act
-              on, so they are dropped on small screens to keep the sticky panel
-              from swallowing the list. */}
-          <div className="hidden sm:block">
-            <div className="text-[10px] text-[#555] uppercase tracking-widest mt-3 mb-2">Unavailable</div>
-            <div className="flex flex-wrap gap-1.5">
-              {formation.slots.map((slot, i) => slotStatus(i, slot) === 'unavailable' ? (
-                <span key={i} className="px-2 py-1 rounded bg-[#1a1a1a] text-[#444] text-[10px]">
-                  {slot.position} · N/A
-                </span>
-              ) : null)}
-            </div>
+          <div className="text-[11px] text-[#555] mt-3">
+            Tap a position above, or one of the highlighted spots on the pitch.
           </div>
         </div>
       )}

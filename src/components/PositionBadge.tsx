@@ -18,10 +18,16 @@ const COLOR: Partial<Record<Position, string>> = {
   CF:  'bg-red-500 text-white',
 };
 
+/**
+ * A label, never a control. It is `pointer-events-none` because these sit
+ * inside clickable player rows and look enough like buttons that people try to
+ * pick a position with them — swallowing the tap made the row toggle off
+ * instead, which read as the app ignoring the click.
+ */
 export default function PositionBadge({ pos, size = 'sm' }: { pos: Position; size?: 'xs' | 'sm' }) {
   const cls = COLOR[pos] ?? 'bg-gray-600 text-white';
   const sz = size === 'xs' ? 'text-[9px] px-1 py-0' : 'text-[10px] px-1.5 py-0.5';
   return (
-    <span className={`rounded font-bold uppercase ${cls} ${sz}`}>{pos}</span>
+    <span className={`rounded font-bold uppercase pointer-events-none ${cls} ${sz}`}>{pos}</span>
   );
 }

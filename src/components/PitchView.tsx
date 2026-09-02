@@ -8,6 +8,8 @@ interface PitchViewProps {
   picks: SquadPick[];
   onSlotClick?: (slotIndex: number) => void;
   highlightSlot?: number;
+  /** Slots the currently selected player could fill, drawn as tappable targets. */
+  eligibleSlots?: number[];
   compact?: boolean;
 }
 
@@ -23,9 +25,10 @@ function hashColor(name: string): string {
 }
 
 export default function PitchView({
-  formation, picks, onSlotClick, highlightSlot, compact = false,
+  formation, picks, onSlotClick, highlightSlot, eligibleSlots, compact = false,
 }: PitchViewProps) {
   const picksMap = new Map(picks.map(p => [p.slotIndex, p]));
+  const eligible = new Set(eligibleSlots ?? []);
 
   // The pitch shrinks to fit a narrow screen rather than forcing the page to
   // scroll sideways: slots are positioned as percentages and the container
@@ -72,6 +75,7 @@ export default function PitchView({
       {formation.slots.map((slot, i) => {
         const pick = picksMap.get(i);
         const isHighlight = highlightSlot === i;
+        const isEligible = eligible.has(i);
         const color = pick ? hashColor(pick.playerName) : undefined;
         const initials = pick ? playerInitials(pick.playerName) : slot.position;
 
@@ -89,18 +93,22 @@ export default function PitchView({
               width: r * 2,
               height: r * 2,
               borderRadius: '50%',
-              border: `2px solid ${pick ? color : isHighlight ? '#fff' : '#00c896'}`,
-              background: pick ? `${color}22` : 'rgba(0,0,0,0.35)',
+              border: `2px solid ${pick ? color : isHighlight || isEligible ? '#fff' : '#00c896'}`,
+              background: pick ? `${color}22` : isEligible ? 'rgba(0,200,150,0.45)' : 'rgba(0,0,0,0.35)',
               display: 'flex',
               flexDirection: 'column',
               alignItems: 'center',
               justifyContent: 'center',
               cursor: onSlotClick ? 'pointer' : 'default',
               transition: 'all 0.2s',
-              boxShadow: isHighlight ? '0 0 0 3px rgba(255,255,255,0.4)' : undefined,
+              boxShadow: isHighlight
+                ? '0 0 0 3px rgba(255,255,255,0.4)'
+                : isEligible ? '0 0 0 3px rgba(255,255,255,0.55)' : undefined,
+              // An eligible slot is the drop target, so lift it above its neighbours.
+              zIndex: isEligible ? 2 : undefined,
             }}
           >
-            <span style={{ fontSize, fontWeight: 700, color: pick ? color : '#00c896', lineHeight: 1 }}>
+            <span style={{ fontSize, fontWeight: 700, color: pick ? color : isEligible ? '#fff' : '#00c896', lineHeight: 1 }}>
               {initials}
             </span>
           </button>
