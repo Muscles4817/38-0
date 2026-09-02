@@ -1,8 +1,9 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import { useRouter } from 'next/navigation';
 import { getFormation, canFillSlot, Formation } from '@/lib/formations';
+import { useStoredJson, clearStored } from '@/lib/clientStorage';
 import {
   SquadPick, SimulationResult, TeamStanding, LeagueEntry,
   computeOverall, preSeasonOdds,
@@ -17,6 +18,10 @@ interface SeenPlayer {
   player_id: number; player_name: string; nationality: string | null;
   rating: number; positions: string; clubName: string; seasonLabel: string;
 }
+
+// Stable empty array so a missing squad does not hand out a new reference
+// on every render.
+const NO_PICKS: SquadPick[] = [];
 
 function computeBestXI(
   formation: Formation,
@@ -51,15 +56,12 @@ function computeBestXI(
 }
 
 function WhatCouldHaveBeen({ formation, actualPicks }: { formation: Formation; actualPicks: SquadPick[] }) {
-  const [bestXI, setBestXI] = useState<SquadPick[]>([]);
   const [show, setShow] = useState(false);
-  useEffect(() => {
-    const raw = localStorage.getItem('38-0-seen-squads');
-    if (!raw) return;
-    const squads = JSON.parse(raw);
-    if (!squads.length) return;
-    setBestXI(computeBestXI(formation, squads));
-  }, [formation]);
+  const seenSquads = useStoredJson<{ clubName: string; seasonLabel: string; players: SeenPlayer[] }[]>('38-0-seen-squads');
+  const bestXI = useMemo(
+    () => (seenSquads?.length ? computeBestXI(formation, seenSquads) : []),
+    [formation, seenSquads],
+  );
   if (!bestXI.length) return null;
   const bestOverall = computeOverall(bestXI);
   const actualOverall = computeOverall(actualPicks);
@@ -108,23 +110,26 @@ function WhatCouldHaveBeen({ formation, actualPicks }: { formation: Formation; a
 
 export default function ResultsPage() {
   const router = useRouter();
-  const [picks, setPicks]           = useState<SquadPick[]>([]);
-  const [formation, setFormation]   = useState<ReturnType<typeof getFormation> | null>(null);
+
+  // The drafted XI and the setup that produced it are handed over in
+  // localStorage by the draft and classic pages.
+  const picks     = useStoredJson<SquadPick[]>('38-0-squad') ?? NO_PICKS;
+  const setup     = useStoredJson<{ formation: string }>('38-0-setup');
+  const formation = useMemo(() => getFormation(setup?.formation ?? '4-4-2'), [setup]);
+
   const [simResult, setSimResult]   = useState<SimulationResult | null>(null);
   const [simulating, setSimulating] = useState(false);
   const [showFinal, setShowFinal]   = useState(false);
   const [teamRatings, setTeamRatings] = useState<{ clubName: string; overall: number }[]>([]);
 
+  // Nothing to report on without a squad.
   useEffect(() => {
-    const squad = localStorage.getItem('38-0-squad');
-    const setup = localStorage.getItem('38-0-setup');
-    if (!squad) { router.push('/'); return; }
-    const p: SquadPick[] = JSON.parse(squad);
-    const s = setup ? JSON.parse(setup) : { formation: '4-4-2' };
-    setPicks(p);
-    setFormation(getFormation(s.formation));
-    fetch('/api/strengths').then(r => r.json()).then(setTeamRatings);
+    if (localStorage.getItem('38-0-squad') === null) router.push('/');
   }, [router]);
+
+  useEffect(() => {
+    fetch('/api/strengths').then(r => r.json()).then(setTeamRatings);
+  }, []);
 
   async function simulate() {
     setSimulating(true);
@@ -147,7 +152,7 @@ export default function ResultsPage() {
     simulate();
   }
 
-  if (!picks.length || !formation) {
+  if (!picks.length) {
     return <div className="min-h-screen bg-[#0a0a0a] flex items-center justify-center text-white">Loading…</div>;
   }
 
@@ -230,7 +235,6 @@ export default function ResultsPage() {
         {simResult && !showFinal && (
           <LiveSimulation
             simResult={simResult}
-            odds={odds}
             onDone={() => setShowFinal(true)}
           />
         )}
@@ -241,14 +245,12 @@ export default function ResultsPage() {
         )}
 
         {/* What Could Have Been */}
-        {formation && <WhatCouldHaveBeen formation={formation} actualPicks={picks} />}
+        <WhatCouldHaveBeen formation={formation} actualPicks={picks} />
 
         <div className="text-center pb-8">
           <button
             onClick={() => {
-              localStorage.removeItem('38-0-draft');
-              localStorage.removeItem('38-0-squad');
-              localStorage.removeItem('38-0-seen-squads');
+              clearStored('38-0-draft', '38-0-squad', '38-0-seen-squads');
               router.push('/');
             }}
             className="text-[#444] text-xs hover:text-white transition-colors"
@@ -264,22 +266,17 @@ export default function ResultsPage() {
 // ── Live GW Animation ────────────────────────────────────────────────────────
 
 function LiveSimulation({
-  simResult, odds, onDone,
+  simResult, onDone,
 }: {
   simResult: SimulationResult;
-  odds: ReturnType<typeof preSeasonOdds>;
   onDone: () => void;
 }) {
   const [gw, setGw]           = useState(1);
   const [playing, setPlaying] = useState(true);
   const [speed, setSpeed]     = useState<'normal' | 'fast'>('normal');
 
-  // Stop auto-play at GW 38
-  useEffect(() => {
-    if (gw >= 38) setPlaying(false);
-  }, [gw]);
-
-  // Auto-advance
+  // Auto-advance. Stops at GW 38, at which point the play/pause control is
+  // replaced by the season report button.
   useEffect(() => {
     if (!playing || gw >= 38) return;
     const delay = speed === 'fast' ? 300 : 1100;

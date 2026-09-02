@@ -1,9 +1,10 @@
 'use client';
 
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect, useMemo, useRef } from 'react';
 import { useRouter } from 'next/navigation';
 import { getFormation, canFillSlot, Formation, Position } from '@/lib/formations';
 import { SquadPick, computeOverall } from '@/lib/simulation';
+import { useStoredJson, readStored, writeStored } from '@/lib/clientStorage';
 import PitchView from '@/components/PitchView';
 import PositionBadge from '@/components/PositionBadge';
 import LineRatings from '@/components/LineRatings';
@@ -47,6 +48,9 @@ interface StoredSquad {
 type SpinPhase = 'idle' | 'fast' | 'slowing' | 'reveal';
 
 const REROLLS_BY_DIFFICULTY = { easy: 3, normal: 1, hard: 0 };
+// Stable empty array so an unstarted draft does not hand out a new reference
+// on every render.
+const NO_PICKS: SquadPick[] = [];
 const SPIN_CLUBS = [
   'Arsenal','Chelsea','Liverpool','Man City','Man Utd','Tottenham',
   'Leicester','Newcastle','Blackburn','Aston Villa','Everton','Leeds',
@@ -54,14 +58,22 @@ const SPIN_CLUBS = [
 
 export default function DraftPage() {
   const router = useRouter();
-  const [setup, setSetup]             = useState<Setup | null>(null);
-  const [formation, setFormation]     = useState<Formation | null>(null);
-  const [picks, setPicks]             = useState<SquadPick[]>([]);
-  const [rerollsLeft, setRerollsLeft] = useState(1);
+
+  // The run in progress lives in localStorage so a refresh resumes it.
+  const setup     = useStoredJson<Setup>('38-0-setup');
+  const picks     = useStoredJson<SquadPick[]>('38-0-draft') ?? NO_PICKS;
+  const formation = useMemo(() => (setup ? getFormation(setup.formation) : null), [setup]);
+
+  // Counting rerolls used rather than remaining keeps this independent of when
+  // setup finishes loading.
+  const [rerollsUsed, setRerollsUsed] = useState(0);
+  const rerollsTotal = setup ? REROLLS_BY_DIFFICULTY[setup.difficulty] ?? 1 : 0;
+  const rerollsLeft  = Math.max(0, rerollsTotal - rerollsUsed);
 
   // Spin animation state
   const [spinPhase, setSpinPhase]     = useState<SpinPhase>('idle');
   const [spinDisplay, setSpinDisplay] = useState('');
+  const [spinSeason, setSpinSeason]   = useState('');
   const [spinFlash, setSpinFlash]     = useState(false);
   const pendingResult                 = useRef<SpinResult | null>(null);
   const spinTimer                     = useRef<ReturnType<typeof setTimeout> | null>(null);
@@ -76,15 +88,9 @@ export default function DraftPage() {
   const [reveal, setReveal]           = useState<{ name: string; rating: number } | null>(null);
   const revealTimer                   = useRef<ReturnType<typeof setTimeout> | null>(null);
 
+  // Setup is written by the home page; without it there is nothing to draft.
   useEffect(() => {
-    const raw = localStorage.getItem('38-0-setup');
-    if (!raw) { router.push('/'); return; }
-    const s: Setup = JSON.parse(raw);
-    setSetup(s);
-    setFormation(getFormation(s.formation));
-    setRerollsLeft(REROLLS_BY_DIFFICULTY[s.difficulty] ?? 1);
-    const draft = localStorage.getItem('38-0-draft');
-    if (draft) setPicks(JSON.parse(draft));
+    if (localStorage.getItem('38-0-setup') === null) router.push('/');
   }, [router]);
 
   // Clean up timers on unmount
@@ -94,14 +100,12 @@ export default function DraftPage() {
   }, []);
 
   function saveDraft(next: SquadPick[]) {
-    setPicks(next);
-    localStorage.setItem('38-0-draft', JSON.stringify(next));
+    writeStored('38-0-draft', next);
   }
 
   // ── Spin animation ─────────────────────────────────────────────────────────
 
   function runSpinAnimation(result: SpinResult) {
-    let frame = 0;
     pendingResult.current = result;
 
     // Phase 1: fast cycling (already running from fetchSpin)
@@ -117,6 +121,7 @@ export default function DraftPage() {
         // Land on the actual result
         setSpinPhase('reveal');
         setSpinDisplay(result.clubName);
+        setSpinSeason(result.seasonLabel);
         setSpinFlash(true);
         spinTimer.current = setTimeout(() => {
           setSpinFlash(false);
@@ -132,7 +137,7 @@ export default function DraftPage() {
     if (!setup || !formation) return;
     if (reroll) {
       if (rerollsLeft <= 0) return;
-      setRerollsLeft(r => r - 1);
+      setRerollsUsed(n => n + 1);
     }
 
     setSpinResult(null);
@@ -192,9 +197,9 @@ export default function DraftPage() {
       }
 
       // Store this squad for "what could have been"
-      const stored: StoredSquad[] = JSON.parse(localStorage.getItem('38-0-seen-squads') ?? '[]');
+      const stored = readStored<StoredSquad[]>('38-0-seen-squads') ?? [];
       stored.push({ clubName: found.clubName, seasonLabel: found.seasonLabel, players: found.players });
-      localStorage.setItem('38-0-seen-squads', JSON.stringify(stored));
+      writeStored('38-0-seen-squads', stored);
 
       runSpinAnimation(found);
     } catch {
@@ -246,7 +251,7 @@ export default function DraftPage() {
     pendingResult.current = null;
 
     if (next.length === 11) {
-      localStorage.setItem('38-0-squad', JSON.stringify(next));
+      writeStored('38-0-squad', next);
       router.push('/results');
     }
   }
@@ -271,7 +276,6 @@ export default function DraftPage() {
   const openSlots = formation.slots.filter((_, i) => !filledSlots.has(i));
   const positionFirstSlot = positionFirst !== null ? formation.slots[positionFirst] : null;
   const overall = computeOverall(picks);
-  const rerollsTotal = REROLLS_BY_DIFFICULTY[setup.difficulty] ?? 1;
   const showRatings = setup.showRatings && setup.difficulty !== 'hard';
   const isSpinning = spinPhase !== 'idle';
 
@@ -362,9 +366,9 @@ export default function DraftPage() {
                 >
                   {spinDisplay}
                 </div>
-                {spinPhase === 'reveal' && pendingResult.current && (
+                {spinPhase === 'reveal' && spinSeason && (
                   <div className="text-sm font-bold text-[#00c896]/70 mt-0.5">
-                    {pendingResult.current.seasonLabel}
+                    {spinSeason}
                   </div>
                 )}
               </div>
