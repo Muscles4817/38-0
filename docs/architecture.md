@@ -125,6 +125,7 @@ Nothing below needs the architecture to change:
 - **React Native / Expo** — `src/lib/` ports as-is; the UI layer is rewritten,
   since Tailwind classes and `<div>` do not exist there.
 
-The UI is currently desktop-first and merely stacks on narrow screens
-(`flex-col lg:flex-row`). A real touch and layout pass is outstanding work
-whichever route is taken.
+The UI has had a phone layout pass and is verified at 360px, 390px and 768px:
+no horizontal scrolling, no control under 32px tall, and the thing a player is
+acting on stays on screen. See [conventions.md](conventions.md#mobile) for the
+rules that keep it that way.

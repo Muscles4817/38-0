@@ -8,6 +8,8 @@ interface PitchViewProps {
   picks: SquadPick[];
   onSlotClick?: (slotIndex: number) => void;
   highlightSlot?: number;
+  /** Slots the currently selected player could fill, drawn as tappable targets. */
+  eligibleSlots?: number[];
   compact?: boolean;
 }
 
@@ -23,65 +25,90 @@ function hashColor(name: string): string {
 }
 
 export default function PitchView({
-  formation, picks, onSlotClick, highlightSlot, compact = false,
+  formation, picks, onSlotClick, highlightSlot, eligibleSlots, compact = false,
 }: PitchViewProps) {
   const picksMap = new Map(picks.map(p => [p.slotIndex, p]));
-  const h = compact ? 280 : 420;
-  const w = compact ? 210 : 300;
+  const eligible = new Set(eligibleSlots ?? []);
+
+  // The pitch shrinks to fit a narrow screen rather than forcing the page to
+  // scroll sideways: slots are positioned as percentages and the container
+  // holds its shape with aspect-ratio. Badges keep a fixed pixel size so the
+  // text inside them stays legible.
+  const maxWidth = compact ? 210 : 300;
+  const aspectRatio = compact ? '210 / 280' : '300 / 420';
   const r = compact ? 18 : 24;
   const fontSize = compact ? 8 : 10;
 
   return (
     <div
       className="relative rounded-xl overflow-hidden"
-      style={{ width: w, height: h, background: 'linear-gradient(180deg, #1a5c2e 0%, #1e6e35 50%, #1a5c2e 100%)' }}
+      style={{
+        // A preferred pixel width that is allowed to shrink. Using w-full here
+        // instead would collapse to nothing inside the shrink-to-fit flex
+        // parents this sits in (items-center / items-start).
+        width: maxWidth,
+        maxWidth: '100%',
+        aspectRatio,
+        background: 'linear-gradient(180deg, #1a5c2e 0%, #1e6e35 50%, #1a5c2e 100%)',
+      }}
     >
-      {/* Pitch markings */}
-      <svg width={w} height={h} className="absolute inset-0 opacity-30" style={{ pointerEvents: 'none' }}>
-        {/* Centre circle */}
-        <ellipse cx={w / 2} cy={h * 0.5} rx={w * 0.22} ry={h * 0.1} fill="none" stroke="white" strokeWidth={1} />
-        {/* Centre line */}
-        <line x1={0} y1={h * 0.5} x2={w} y2={h * 0.5} stroke="white" strokeWidth={1} />
-        {/* Top goal area */}
-        <rect x={w * 0.28} y={0} width={w * 0.44} height={h * 0.12} fill="none" stroke="white" strokeWidth={1} />
-        <rect x={w * 0.36} y={0} width={w * 0.28} height={h * 0.06} fill="none" stroke="white" strokeWidth={1} />
-        {/* Bottom goal area */}
-        <rect x={w * 0.28} y={h * 0.88} width={w * 0.44} height={h * 0.12} fill="none" stroke="white" strokeWidth={1} />
-        <rect x={w * 0.36} y={h * 0.94} width={w * 0.28} height={h * 0.06} fill="none" stroke="white" strokeWidth={1} />
+      {/* Pitch markings, drawn in percentage units and stretched to fit. */}
+      <svg
+        viewBox="0 0 100 100"
+        preserveAspectRatio="none"
+        className="absolute inset-0 h-full w-full opacity-30"
+        style={{ pointerEvents: 'none' }}
+      >
+        <g fill="none" stroke="white" strokeWidth={1} vectorEffect="non-scaling-stroke">
+          {/* Centre circle and halfway line */}
+          <ellipse cx={50} cy={50} rx={22} ry={10} />
+          <line x1={0} y1={50} x2={100} y2={50} />
+          {/* Goal areas, top and bottom */}
+          <rect x={28} y={0} width={44} height={12} />
+          <rect x={36} y={0} width={28} height={6} />
+          <rect x={28} y={88} width={44} height={12} />
+          <rect x={36} y={94} width={28} height={6} />
+        </g>
       </svg>
 
       {/* Slots */}
       {formation.slots.map((slot, i) => {
         const pick = picksMap.get(i);
-        const cx = (slot.x / 100) * w;
-        const cy = (slot.y / 100) * h;
         const isHighlight = highlightSlot === i;
+        const isEligible = eligible.has(i);
         const color = pick ? hashColor(pick.playerName) : undefined;
         const initials = pick ? playerInitials(pick.playerName) : slot.position;
 
         return (
           <button
             key={i}
+            type="button"
             onClick={() => onSlotClick?.(i)}
+            className="touch-manipulation"
             style={{
               position: 'absolute',
-              left: cx - r,
-              top: cy - r,
+              left: `${slot.x}%`,
+              top: `${slot.y}%`,
+              transform: 'translate(-50%, -50%)',
               width: r * 2,
               height: r * 2,
               borderRadius: '50%',
-              border: `2px solid ${pick ? color : isHighlight ? '#fff' : '#00c896'}`,
-              background: pick ? `${color}22` : 'rgba(0,0,0,0.35)',
+              border: `2px solid ${pick ? color : isHighlight || isEligible ? '#fff' : '#00c896'}`,
+              background: pick ? `${color}22` : isEligible ? 'rgba(0,200,150,0.45)' : 'rgba(0,0,0,0.35)',
               display: 'flex',
               flexDirection: 'column',
               alignItems: 'center',
               justifyContent: 'center',
               cursor: onSlotClick ? 'pointer' : 'default',
               transition: 'all 0.2s',
-              boxShadow: isHighlight ? '0 0 0 3px rgba(255,255,255,0.4)' : undefined,
+              boxShadow: isHighlight
+                ? '0 0 0 3px rgba(255,255,255,0.4)'
+                : isEligible ? '0 0 0 3px rgba(255,255,255,0.55)' : undefined,
+              // An eligible slot is the drop target, so lift it above its neighbours.
+              zIndex: isEligible ? 2 : undefined,
             }}
           >
-            <span style={{ fontSize, fontWeight: 700, color: pick ? color : '#00c896', lineHeight: 1 }}>
+            <span style={{ fontSize, fontWeight: 700, color: pick ? color : isEligible ? '#fff' : '#00c896', lineHeight: 1 }}>
               {initials}
             </span>
           </button>
@@ -91,15 +118,13 @@ export default function PitchView({
       {/* Labels below slots */}
       {!compact && formation.slots.map((slot, i) => {
         const pick = picksMap.get(i);
-        const cx = (slot.x / 100) * w;
-        const cy = (slot.y / 100) * h;
         return (
           <div
             key={`lbl-${i}`}
             style={{
               position: 'absolute',
-              left: cx,
-              top: cy + r + 3,
+              left: `${slot.x}%`,
+              top: `calc(${slot.y}% + ${r + 3}px)`,
               transform: 'translateX(-50%)',
               fontSize: 9,
               color: 'rgba(255,255,255,0.7)',

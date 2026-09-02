@@ -12,6 +12,7 @@ import {
 import PitchView from '@/components/PitchView';
 import PositionBadge from '@/components/PositionBadge';
 import LineRatings from '@/components/LineRatings';
+import BackLink from '@/components/BackLink';
 
 // ── What Could Have Been ─────────────────────────────────────────────────────
 
@@ -134,7 +135,9 @@ export default function ResultsPage() {
   // The drafted XI and the setup that produced it are handed over in
   // localStorage by the draft and classic pages.
   const picks     = useStoredJson<SquadPick[]>('38-0-squad') ?? NO_PICKS;
-  const setup     = useStoredJson<{ formation: string }>('38-0-setup');
+  const setup     = useStoredJson<{ formation: string; draftMode?: string }>('38-0-setup');
+  // Classic mode writes draftMode 'classic', so back goes where the XI came from.
+  const cameFromClassic = setup?.draftMode === 'classic';
   const formation = useMemo(() => getFormation(setup?.formation ?? '4-4-2'), [setup]);
 
   const [simResult, setSimResult]   = useState<SimulationResult | null>(null);
@@ -177,12 +180,22 @@ export default function ResultsPage() {
     ? teamRatings.filter(t => t.overall > overall).length + 1
     : odds.projectedPosition;
 
+  // While the season is playing out, the live panel is the only thing changing.
+  // On a phone the squad list above it is several screens tall, so the match
+  // would animate off-screen; promote it to the top until the report is shown.
+  const liveSim = simResult !== null && !showFinal;
+
   return (
     <main className="min-h-screen bg-[#0a0a0a] text-white">
-      <div className="max-w-5xl mx-auto py-10 px-4 space-y-6">
+      <div className="max-w-5xl mx-auto py-6 px-4 flex flex-col gap-6">
+
+        {/* Back to wherever this XI came from. */}
+        <div className="order-none">
+          <BackLink href={cameFromClassic ? '/classic' : '/draft'} label={cameFromClassic ? 'Classic' : 'Draft'} />
+        </div>
 
         {/* Squad header */}
-        <div className="flex flex-col lg:flex-row gap-6">
+        <div className={`flex flex-col lg:flex-row gap-6 ${liveSim ? 'order-2 lg:order-1' : 'order-1'}`}>
           <div className="flex-shrink-0 flex justify-center">
             <PitchView formation={formation} picks={picks} compact />
           </div>
@@ -215,7 +228,7 @@ export default function ResultsPage() {
 
         {/* Pre-season odds */}
         {!simResult && (
-          <div className="bg-[#111] rounded-2xl p-6 space-y-4">
+          <div className="order-2 bg-[#111] rounded-2xl p-6 space-y-4">
             <div className="text-xs text-[#555] uppercase tracking-widest font-bold">Pre-Season Odds</div>
             <div className="text-xs text-[#444]">Based on your squad&apos;s overall rating</div>
             <div className="grid grid-cols-2 gap-4">
@@ -246,28 +259,35 @@ export default function ResultsPage() {
         )}
 
         {/* Live GW simulation */}
-        {simResult && !showFinal && (
-          <LiveSimulation
-            simResult={simResult}
-            onDone={() => setShowFinal(true)}
-          />
+        {liveSim && (
+          <div className="order-1 lg:order-2">
+            <LiveSimulation
+              simResult={simResult}
+              onDone={() => setShowFinal(true)}
+            />
+          </div>
         )}
 
         {/* Final season report */}
         {simResult && showFinal && (
-          <FinalSummary result={simResult} picks={picks} odds={odds} onResim={handleResim} />
+          <div className="order-3">
+            <FinalSummary result={simResult} picks={picks} odds={odds} onResim={handleResim} />
+          </div>
         )}
 
         {/* What Could Have Been */}
-        <WhatCouldHaveBeen formation={formation} actualPicks={picks} />
+        <div className="order-4">
+          <WhatCouldHaveBeen formation={formation} actualPicks={picks} />
+        </div>
 
-        <div className="text-center pb-8">
+        <div className="order-5 text-center pb-8">
           <button
+            type="button"
             onClick={() => {
               clearStored('38-0-draft', '38-0-squad', '38-0-seen-squads');
               router.push('/');
             }}
-            className="text-[#444] text-xs hover:text-white transition-colors"
+            className="text-[#444] text-xs hover:text-white transition-colors px-4 py-3 touch-manipulation"
           >
             ↩ Start a new run
           </button>
@@ -325,19 +345,19 @@ function LiveSimulation({
               <>
                 <button
                   onClick={() => setPlaying(p => !p)}
-                  className="px-3 py-1.5 rounded-lg text-xs font-bold bg-[#1a1a1a] text-[#888] hover:text-white transition-colors"
+                  className="px-3 py-2.5 rounded-lg text-xs font-bold bg-[#1a1a1a] text-[#888] hover:text-white transition-colors touch-manipulation"
                 >
                   {playing ? '⏸ Pause' : '▶ Play'}
                 </button>
                 <button
                   onClick={() => setSpeed(s => s === 'normal' ? 'fast' : 'normal')}
-                  className={`px-2.5 py-1.5 rounded-lg text-xs font-bold transition-colors ${speed === 'fast' ? 'bg-[#00c896] text-black' : 'bg-[#1a1a1a] text-[#888] hover:text-white'}`}
+                  className={`px-3 py-2.5 rounded-lg text-xs font-bold transition-colors touch-manipulation ${speed === 'fast' ? 'bg-[#00c896] text-black' : 'bg-[#1a1a1a] text-[#888] hover:text-white'}`}
                 >
                   {speed === 'fast' ? '3×' : '1×'}
                 </button>
                 <button
                   onClick={() => { setGw(38); setPlaying(false); }}
-                  className="px-3 py-1.5 rounded-lg text-xs font-bold bg-[#1a1a1a] text-[#888] hover:text-white transition-colors"
+                  className="px-3 py-2.5 rounded-lg text-xs font-bold bg-[#1a1a1a] text-[#888] hover:text-white transition-colors touch-manipulation"
                 >
                   Skip ⏭
                 </button>
@@ -711,7 +731,7 @@ function LeagueLeaderboards({ scorers, assisters, keepers }: { scorers: LeagueEn
       <div className="text-xs text-[#555] uppercase tracking-widest font-bold mb-4">League Leaderboards</div>
       <div className="flex gap-2 mb-4 flex-wrap">
         {(['scorers','assisters','keepers'] as const).map(t => (
-          <button key={t} onClick={() => setTab(t)} className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-colors ${tab === t ? 'bg-[#00c896] text-black' : 'bg-[#1a1a1a] text-[#555] hover:text-white'}`}>
+          <button key={t} type="button" onClick={() => setTab(t)} className={`px-3 py-2.5 rounded-lg text-xs font-bold transition-colors touch-manipulation ${tab === t ? 'bg-[#00c896] text-black' : 'bg-[#1a1a1a] text-[#555] hover:text-white'}`}>
             {t === 'scorers' ? '⚽ Top Scorers' : t === 'assisters' ? '🎯 Top Assisters' : '🧤 Golden Glove'}
           </button>
         ))}

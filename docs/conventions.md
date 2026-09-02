@@ -91,6 +91,62 @@ no `setState`, such as redirecting when a run has not been started.
 Do not read `ref.current` during render — it is a lint error. If a value needs
 to appear in the output, it is state.
 
+## Mobile
+
+This is headed for a phone, so a layout that only works on a desktop is a bug,
+not a later refinement. Design for 360px first and add breakpoints upward
+(`sm:` is 640px, `lg:` is 1024px).
+
+Rules that the current layouts hold to:
+
+- **Nothing scrolls sideways.** `document.scrollWidth` must equal
+  `window.innerWidth` at 360px. No fixed pixel widths that exceed a phone; use
+  a preferred width with `maxWidth: '100%'` rather than `w-full`, which
+  collapses to zero inside a shrink-to-fit flex parent (`items-center`,
+  `items-start`) — `PitchView` is the worked example.
+- **Every control is at least 32px tall**, ideally 44px. `py-2.5` on a
+  `text-xs` button gets there; `py-1.5` does not. Add `touch-manipulation` to
+  remove the 300ms tap delay.
+- **Keep what the player is acting on in view.** A long list plus a control
+  panel above it means the panel is off-screen exactly when it is needed; the
+  draft's placement panel is `sticky top-2` for that reason. Where a page has a
+  primary action, it sticks to the bottom on small screens (setup's "Start
+  Draft").
+- **Order content by what is changing.** During the live simulation the results
+  page promotes the match panel above the squad with `order-1 lg:order-2`, so
+  the animation is not two screens down. Use `flex flex-col gap-*` rather than
+  `space-y-*` when ordering, since `space-y` follows DOM order.
+- **Fold away what is not actionable.** Disabled "coming soon" tiles and a
+  thirty-card selection list belong behind a summary once they are not the
+  current task.
+- Grids: `grid-cols-2 sm:grid-cols-3 lg:grid-cols-4` rather than a fixed
+  `grid-cols-4`, which turns long labels like "4-3-3 (CDM-CAM)" into three
+  wrapped lines at 360px.
+- **Nothing inert may look interactive.** A disabled-looking chip next to a real
+  button gets clicked, and a click that does nothing reads as a broken app. If
+  something is a label, make it plainly a label and `pointer-events-none` when
+  it sits inside a clickable row. If an option is unavailable, prefer leaving it
+  out over rendering it greyed next to the real ones.
+- **Every page below the top level has a back control.** `BackLink` at the top
+  left; the footer nav is a site map, not a way out of where you are.
+
+### Verifying
+
+There is no automated visual check in CI, and screenshots are not worth a
+dependency in `package.json`. Install Playwright outside the repo when you need
+to look:
+
+```bash
+cd "$(mktemp -d)" && npm init -y && npm i playwright && npx playwright install chromium
+```
+
+Then drive `npm run dev` (or a static server over `./out`) at 360×740 and
+390×844, seeding `localStorage` with `38-0-setup` and `38-0-squad` to reach the
+draft and results pages. Assert `scrollWidth - innerWidth === 0` and collect any
+control under 32px tall; those two measurements catch most regressions without
+having to eyeball anything. Check the real static build too, not just the dev
+server — the dev overlay badge is not present in production.
+
 ## Files and naming
 
 - `page.tsx` / `route.ts` for the deployed game; **`page.dev.tsx` /

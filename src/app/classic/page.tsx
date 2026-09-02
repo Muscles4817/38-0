@@ -9,6 +9,7 @@ import OptionCard from '@/components/OptionCard';
 import type { SquadPick } from '@/lib/simulation';
 import { getClassicTeams, getSquad, getLineup, type ClassicTeam, type DataPlayer } from '@/lib/gameData';
 import SiteNav from '@/components/SiteNav';
+import BackLink from '@/components/BackLink';
 import { writeStored, clearStored } from '@/lib/clientStorage';
 
 // Stable empty array so an unselected team does not hand out a new reference.
@@ -83,6 +84,8 @@ export default function ClassicPage() {
   const [formation, setFormation] = useState('4-4-2');
   const [picks,     setPicks]     = useState<SquadPick[]>([]);
   const [editSlot,  setEditSlot]  = useState<number | null>(null);
+  // True while the side list is open. Starts open, since nothing is chosen yet.
+  const [browsing,  setBrowsing]  = useState(true);
 
   // Every player available to the selected team.
   const entries = useMemo(
@@ -92,6 +95,7 @@ export default function ClassicPage() {
 
   function selectTeam(team: ClassicTeam) {
     setSelected(team);
+    setBrowsing(false);
     setEditSlot(null);
 
     const players = getSquad(team.clubId, team.seasonId)?.players ?? NO_PLAYERS;
@@ -193,8 +197,11 @@ export default function ClassicPage() {
   const currentInSlot = editSlot != null ? picks.find(p => p.slotIndex === editSlot) : null;
 
   return (
-    <main className="min-h-screen bg-[#0a0a0a] text-white flex flex-col items-center py-12 px-4">
-      <h1 className="text-6xl font-black mb-2 tracking-tight">
+    <main className="min-h-screen bg-[#0a0a0a] text-white flex flex-col items-center py-6 px-4">
+      <div className="w-full max-w-2xl">
+        <BackLink href="/" label="Setup" />
+      </div>
+      <h1 className="text-6xl font-black mb-2 mt-4 tracking-tight">
         <span className="text-white">38</span>
         <span className="text-[#00c896]">-0</span>
       </h1>
@@ -207,14 +214,42 @@ export default function ClassicPage() {
 
         {/* Team selection */}
         <section>
-          <div className="flex items-center justify-between mb-2">
+          {/*
+            Once a side is chosen the list folds away. It is nearly thirty
+            cards, and on a phone leaving it expanded pushed the XI you just
+            picked several screens down, so nothing appeared to happen.
+          */}
+          {selected && !browsing ? (
+            <button
+              type="button"
+              onClick={() => setBrowsing(true)}
+              className="w-full rounded-xl border px-4 py-3 flex items-center gap-3 text-left transition-colors touch-manipulation"
+              style={{ borderColor: `${selected.color}66`, background: `${selected.color}14` }}
+            >
+              <span className="w-2.5 h-2.5 rounded-full shrink-0" style={{ background: selected.color }} />
+              <span className="flex-1 min-w-0">
+                <span className="block font-bold text-sm text-white truncate">
+                  {selected.clubName} <span className="text-[#888] font-normal">{selected.seasonLabel}</span>
+                </span>
+                <span className="block text-xs font-bold" style={{ color: ratingColor(selected.overallRating) }}>
+                  OVR {selected.overallRating}
+                </span>
+              </span>
+              <span className="text-[10px] font-bold uppercase tracking-widest text-[#00c896] shrink-0">
+                Change
+              </span>
+            </button>
+          ) : (
+          <>
+          <div className="flex items-center justify-between mb-2 gap-2">
             <span className="text-[10px] font-bold tracking-widest text-[#555] uppercase">Choose a Classic Side</span>
             <div className="flex gap-1">
               {(['ovr', 'year', 'name'] as const).map(opt => (
                 <button
                   key={opt}
+                  type="button"
                   onClick={() => setSortBy(opt)}
-                  className={`px-2.5 py-1 rounded text-[10px] font-bold uppercase tracking-widest transition-colors ${
+                  className={`px-3 py-2.5 rounded text-[10px] font-bold uppercase tracking-widest transition-colors touch-manipulation ${
                     sortBy === opt ? 'bg-[#00c896] text-black' : 'text-[#444] hover:text-white'
                   }`}
                 >
@@ -229,6 +264,7 @@ export default function ClassicPage() {
               return (
                 <button
                   key={`${team.clubId}-${team.seasonId}`}
+                  type="button"
                   onClick={() => selectTeam(team)}
                   className="relative rounded-xl border text-left px-4 py-3 transition-all"
                   style={{
@@ -247,6 +283,8 @@ export default function ClassicPage() {
               );
             })}
           </div>
+          </>
+          )}
         </section>
 
         {/* Configuration — visible once a team is selected */}
@@ -255,7 +293,7 @@ export default function ClassicPage() {
             {/* Formation */}
             <section>
               <Label>Formation</Label>
-              <div className="grid grid-cols-4 gap-2 mb-1">
+              <div className="grid grid-cols-2 gap-2 mb-1 sm:grid-cols-3 lg:grid-cols-4">
                 {Object.keys(FORMATIONS).map(f => (
                   <OptionCard key={f} label={f} selected={formation === f} onClick={() => changeFormation(f)} />
                 ))}
