@@ -122,6 +122,13 @@ Rules that the current layouts hold to:
 - Grids: `grid-cols-2 sm:grid-cols-3 lg:grid-cols-4` rather than a fixed
   `grid-cols-4`, which turns long labels like "4-3-3 (CDM-CAM)" into three
   wrapped lines at 360px.
+- **Nothing inert may look interactive.** A disabled-looking chip next to a real
+  button gets clicked, and a click that does nothing reads as a broken app. If
+  something is a label, make it plainly a label and `pointer-events-none` when
+  it sits inside a clickable row. If an option is unavailable, prefer leaving it
+  out over rendering it greyed next to the real ones.
+- **Every page below the top level has a back control.** `BackLink` at the top
+  left; the footer nav is a site map, not a way out of where you are.
 
 ### Verifying
 

@@ -92,6 +92,16 @@ opponent best-XI fallback.
 
 Do not re-report these:
 
+- The draft's placement panel listed one or two green "Available" buttons above
+  ten grey `ST · N/A` chips that looked identical but were inert `<span>`s.
+  Clicking one did nothing at all, which read as the game ignoring the click.
+  The chips are gone and the eligible slots are highlighted on the pitch.
+- Position badges on a player row swallowed taps. They look like where you pick
+  a position, but they sat inside the row button, so tapping one toggled the
+  row off and closed the panel. They are `pointer-events-none`, and selecting a
+  player is no longer a toggle — Cancel is the way to back out.
+- There was no way back from the draft, results or classic pages except the
+  footer site map. All three have a back control now.
 - A failed reroll used to consume a reroll and fail silently. The candidate is
   now resolved before the reroll is spent, and an empty era is reported.
 - Spinning sampled 50 random club-seasons and filtered afterwards, so exclusions
