@@ -16,7 +16,7 @@ export default function ClubsEditor() {
     const r = await fetch('/api/clubs');
     setClubs(await r.json());
   }
-  useEffect(() => { load(); }, []);
+  useEffect(() => { fetch('/api/clubs').then(r => r.json()).then(setClubs); }, []);
 
   function startEdit(c: Club) {
     setEditing(c);

@@ -57,7 +57,7 @@ export default function PlayersEditor() {
   const [roleOptions, setRoleOptions] = useState<{ name: string; label: string }[]>([]);
 
   useEffect(() => {
-    loadPlayers();
+    fetch('/api/players').then(r => r.json()).then(setPlayers);
     fetch('/api/clubs').then(r => r.json()).then(setClubs);
     fetch('/api/seasons').then(r => r.json()).then(setSeasons);
     fetch('/api/roles').then(r => r.json()).then((rows: { name: string; label: string }[]) => setRoleOptions(rows));

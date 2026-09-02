@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect, useMemo, useRef } from 'react';
 import PositionBadge from '@/components/PositionBadge';
 import { Position, FORMATIONS, getFormation } from '@/lib/formations';
 import { PlayerRole } from '@/lib/simulation';
@@ -15,6 +15,13 @@ const POSITION_ORDER: Record<string, number> = {
 };
 
 type SortKey = 'position' | 'overall' | 'name' | 'nationality';
+
+// Stable empties, so deriving "nothing selected" does not produce a new
+// reference on every render.
+const NO_ENTRIES: EntryFull[] = [];
+const NO_SEASON_IDS: ReadonlySet<number> = new Set<number>();
+
+const emptySlots = (): (number | null)[] => Array(11).fill(null);
 
 
 interface Club   { id: number; name: string; color: string; }
@@ -34,11 +41,15 @@ interface EntryFull {
 export default function SquadsEditor() {
   const [clubs,   setClubs]   = useState<Club[]>([]);
   const [seasons, setSeasons] = useState<Season[]>([]);
-  const [entries, setEntries] = useState<EntryFull[]>([]);
 
   const [selClub,        setSelClub]        = useState('');
   const [selSeason,      setSelSeason]      = useState('');
-  const [validSeasonIds, setValidSeasonIds] = useState<Set<number>>(new Set());
+
+  // Fetched data is stored with the selection it belongs to, so the derived
+  // values below fall back to empty rather than showing a previous club's
+  // squad while a new request is in flight.
+  const [loadedEntries,  setLoadedEntries]  = useState<{ club: string; season: string; rows: EntryFull[] } | null>(null);
+  const [clubSeasonIds,  setClubSeasonIds]  = useState<{ club: string; ids: Set<number> } | null>(null);
 
   // add-player form
   const [playerQuery,   setPlayerQuery]   = useState('');
@@ -68,7 +79,7 @@ export default function SquadsEditor() {
 
   // lineup
   const [formation,       setFormation]       = useState('4-3-3');
-  const [lineupSlots,     setLineupSlots]     = useState<(number | null)[]>(Array(11).fill(null));
+  const [lineupSlots,     setLineupSlots]     = useState<(number | null)[]>(emptySlots);
   const [lineupSaving,    setLineupSaving]    = useState(false);
   const [lineupStatus,    setLineupStatus]    = useState<'idle' | 'saved' | 'error'>('idle');
 
@@ -76,8 +87,33 @@ export default function SquadsEditor() {
 
   async function loadEntries() {
     if (!selClub || !selSeason) return;
-    const r = await fetch(`/api/squads?clubId=${selClub}&seasonId=${selSeason}`);
-    setEntries(await r.json());
+    const club = selClub, season = selSeason;
+    const r = await fetch(`/api/squads?clubId=${club}&seasonId=${season}`);
+    setLoadedEntries({ club, season, rows: await r.json() });
+  }
+
+  const entries = useMemo(
+    () => (loadedEntries?.club === selClub && loadedEntries?.season === selSeason
+      ? loadedEntries.rows
+      : NO_ENTRIES),
+    [loadedEntries, selClub, selSeason],
+  );
+
+  const validSeasonIds = useMemo(
+    () => (clubSeasonIds?.club === selClub ? clubSeasonIds.ids : NO_SEASON_IDS),
+    [clubSeasonIds, selClub],
+  );
+
+  // Changing club invalidates the season choice and everything built from it.
+  function changeClub(club: string) {
+    setSelClub(club);
+    setSelSeason('');
+    setLineupSlots(emptySlots());
+  }
+
+  function changeSeason(season: string) {
+    setSelSeason(season);
+    setLineupSlots(emptySlots());
   }
 
   const [roleOptions, setRoleOptions] = useState<{ name: string; label: string }[]>([]);
@@ -87,14 +123,21 @@ export default function SquadsEditor() {
     fetch('/api/seasons').then(r => r.json()).then(setSeasons);
     fetch('/api/roles').then(r => r.json()).then((rows: { name: string; label: string }[]) => setRoleOptions(rows));
   }, []);
-  useEffect(() => { loadEntries(); }, [selClub, selSeason]); // eslint-disable-line
+  useEffect(() => {
+    if (!selClub || !selSeason) return;
+    const club = selClub, season = selSeason;
+    fetch(`/api/squads?clubId=${club}&seasonId=${season}`)
+      .then(r => r.json())
+      .then((rows: EntryFull[]) => setLoadedEntries({ club, season, rows }));
+  }, [selClub, selSeason]);
 
   useEffect(() => {
-    if (!selClub) { setValidSeasonIds(new Set()); setSelSeason(''); return; }
-    fetch(`/api/squads?clubId=${selClub}&distinct=seasons`)
+    if (!selClub) return;
+    const club = selClub;
+    fetch(`/api/squads?clubId=${club}&distinct=seasons`)
       .then(r => r.json())
-      .then((ids: number[]) => setValidSeasonIds(new Set(ids)));
-  }, [selClub]); // eslint-disable-line
+      .then((ids: number[]) => setClubSeasonIds({ club, ids: new Set(ids) }));
+  }, [selClub]);
 
   // Close dropdown on outside click
   useEffect(() => {
@@ -107,24 +150,25 @@ export default function SquadsEditor() {
     return () => document.removeEventListener('mousedown', handler);
   }, []);
 
-  // Load saved lineup whenever club+season changes
+  // Load saved lineup whenever club+season changes. Clearing on deselection is
+  // handled by changeClub/changeSeason.
   useEffect(() => {
-    if (!selClub || !selSeason) { setLineupSlots(Array(11).fill(null)); return; }
+    if (!selClub || !selSeason) return;
     fetch(`/api/lineups?clubId=${selClub}&seasonId=${selSeason}`)
       .then(r => r.json())
       .then((data: { formation: string; slots: { slot_index: number; player_id: number }[] } | null) => {
         if (data?.formation) {
           setFormation(data.formation);
-          const s: (number | null)[] = Array(11).fill(null);
+          const s = emptySlots();
           for (const sl of data.slots) s[sl.slot_index] = sl.player_id;
           setLineupSlots(s);
         } else {
-          setLineupSlots(Array(11).fill(null));
+          setLineupSlots(emptySlots());
         }
       });
-  }, [selClub, selSeason]); // eslint-disable-line
+  }, [selClub, selSeason]);
 
-  function changeFormation(f: string) { setFormation(f); setLineupSlots(Array(11).fill(null)); }
+  function changeFormation(f: string) { setFormation(f); setLineupSlots(emptySlots()); }
 
   function setLineupSlot(i: number, playerId: number | null) {
     setLineupSlots(prev => {
@@ -310,14 +354,14 @@ export default function SquadsEditor() {
         <div className="grid grid-cols-2 gap-3">
           <select
             className="bg-[#1a1a1a] rounded-lg px-3 py-2 text-sm border border-[#2a2a2a] focus:border-[#00c896] outline-none"
-            value={selClub} onChange={e => setSelClub(e.target.value)}
+            value={selClub} onChange={e => changeClub(e.target.value)}
           >
             <option value="">— Select club —</option>
             {clubs.map(c => <option key={c.id} value={c.id}>{c.name}</option>)}
           </select>
           <select
             className="bg-[#1a1a1a] rounded-lg px-3 py-2 text-sm border border-[#2a2a2a] focus:border-[#00c896] outline-none"
-            value={selSeason} onChange={e => setSelSeason(e.target.value)}
+            value={selSeason} onChange={e => changeSeason(e.target.value)}
           >
             <option value="">— Select season —</option>
             {[...seasons].reverse()
