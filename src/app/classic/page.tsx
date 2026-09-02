@@ -17,17 +17,24 @@ const NO_PLAYERS: DataPlayer[] = [];
 /**
  * Best legal XI for a formation, filling the scarcest slots first so a rare
  * position is not left empty by a greedy earlier pick.
+ *
+ * `existing` slots are kept as they are and only the gaps are filled, which is
+ * how a stored lineup missing a player or two is topped up.
  */
-function autoPickXI(players: DataPlayer[], formation: Formation, team: ClassicTeam): SquadPick[] {
+function autoPickXI(
+  players: DataPlayer[], formation: Formation, team: ClassicTeam, existing: SquadPick[] = [],
+): SquadPick[] {
   const slots = formation.slots;
-  const used = new Set<number>();
-  const picks: SquadPick[] = [];
+  const picks = [...existing];
+  const used = new Set(existing.map(p => p.playerId));
+  const filled = new Set(existing.map(p => p.slotIndex));
 
   const slotOrder = slots
     .map((slot, i) => ({
       i,
       eligible: players.filter(p => canFillSlot(p.positions, slot.position)).length,
     }))
+    .filter(x => !filled.has(x.i))
     .sort((a, b) => a.eligible - b.eligible)
     .map(x => x.i);
 
@@ -91,15 +98,17 @@ export default function ClassicPage() {
     const lineup = getLineup(team.clubId, team.seasonId);
 
     if (lineup && lineup.slots.length > 0) {
-      // Use the lineup stored in the editor.
+      // Use the lineup stored in the editor, topping up any slot it leaves
+      // empty so the pitch is always a full XI.
       setFormation(lineup.formation);
       const fmt = getFormation(lineup.formation);
       const byId = new Map(players.map(p => [p.playerId, p]));
-      setPicks(lineup.slots.flatMap(slot => {
+      const fromLineup = lineup.slots.flatMap(slot => {
         const player = byId.get(slot.playerId);
         const slotPos = fmt.slots[slot.slotIndex]?.position ?? 'CM';
         return player ? [playerToPick(player, slot.slotIndex, slotPos, team)] : [];
-      }));
+      });
+      setPicks(autoPickXI(players, fmt, team, fromLineup));
     } else {
       setPicks(autoPickXI(players, getFormation(formation), team));
     }

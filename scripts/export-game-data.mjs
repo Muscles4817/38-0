@@ -78,18 +78,38 @@ for (const row of entryRows) {
 const squads = [...squadsByKey.values()];
 
 // Stored starting XIs. Slots are sparse: a lineup may have fewer than 11 filled.
+//
+// lineup_slots.player_id references players(id) rather than squad membership,
+// so dropping a player from a squad leaves the slot behind pointing at someone
+// who is no longer in that club-season. Those slots are dropped here (and
+// reported) to keep the snapshot internally consistent.
 const lineupRows = db.prepare(`
   SELECT tl.id, tl.club_id, tl.season_id, tl.formation FROM team_lineups tl
 `).all();
 const slotStmt = db.prepare(`
   SELECT slot_index, player_id FROM lineup_slots WHERE lineup_id = ? ORDER BY slot_index
 `);
-const lineups = lineupRows.map(l => ({
-  clubId: l.club_id,
-  seasonId: l.season_id,
-  formation: l.formation,
-  slots: slotStmt.all(l.id).map(s => ({ slotIndex: s.slot_index, playerId: s.player_id })),
-}));
+
+const orphaned = [];
+const lineups = lineupRows.map(l => {
+  const squad = squadsByKey.get(`${l.club_id}-${l.season_id}`);
+  const squadIds = new Set(squad ? squad.players.map(p => p.playerId) : []);
+  const slots = [];
+  for (const s of slotStmt.all(l.id)) {
+    if (squadIds.has(s.player_id)) {
+      slots.push({ slotIndex: s.slot_index, playerId: s.player_id });
+    } else {
+      const club = clubs.find(c => c.id === l.club_id);
+      const season = seasons.find(x => x.id === l.season_id);
+      const player = db.prepare('SELECT name FROM players WHERE id = ?').get(s.player_id);
+      orphaned.push(
+        `${club?.name ?? l.club_id} ${season?.label ?? l.season_id} ` +
+        `slot ${s.slot_index}: ${player?.name ?? `player ${s.player_id}`}`
+      );
+    }
+  }
+  return { clubId: l.club_id, seasonId: l.season_id, formation: l.formation, slots };
+});
 
 const roles = db.prepare(`
   SELECT name, label, goal_mult, assist_mult, valid_positions, description,
@@ -119,3 +139,16 @@ console.log(
   `${clubs.length} clubs, ${seasons.length} seasons, ${squads.length} club-seasons, ` +
   `${playerCount} squad entries, ${lineups.length} lineups, ${roles.length} roles (${sizeKb} KB)`
 );
+
+if (orphaned.length > 0) {
+  console.warn(
+    `\nDropped ${orphaned.length} lineup slot(s) naming a player who is no longer ` +
+    `in that squad:\n  ${orphaned.join('\n  ')}\n` +
+    `Those XIs are now short. Fix them in the lineup editor and export again.`
+  );
+}
+
+const short = lineups.filter(l => l.slots.length > 0 && l.slots.length < 11);
+if (short.length > 0) {
+  console.warn(`${short.length} lineup(s) have fewer than 11 players set.`);
+}
