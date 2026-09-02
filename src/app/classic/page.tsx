@@ -8,6 +8,7 @@ import PitchView from '@/components/PitchView';
 import OptionCard from '@/components/OptionCard';
 import type { SquadPick } from '@/lib/simulation';
 import type { ClassicTeam } from '@/app/api/classic-teams/route';
+import SiteNav from '@/components/SiteNav';
 
 type RawEntry = {
   player_id: number;
@@ -464,12 +465,7 @@ export default function ClassicPage() {
           </>
         )}
 
-        <div className="flex justify-center gap-6 text-xs text-[#444] pt-2 pb-8">
-          <a href="/" className="hover:text-white transition-colors">Setup</a>
-          <a href="/draft" className="hover:text-white transition-colors">Draft</a>
-          <a href="/classic" className="hover:text-white transition-colors">Classic</a>
-          <a href="/editor" className="hover:text-white transition-colors">Editor</a>
-        </div>
+        <SiteNav />
       </div>
     </main>
   );

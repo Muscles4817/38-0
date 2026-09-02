@@ -2,9 +2,11 @@
 
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
+import Link from 'next/link';
 import { FORMATIONS, getFormation } from '@/lib/formations';
 import PitchView from '@/components/PitchView';
 import OptionCard from '@/components/OptionCard';
+import SiteNav from '@/components/SiteNav';
 
 const ERA_PRESETS = [
   { label: 'All-time',       start: 1992, end: 2026 },
@@ -227,19 +229,14 @@ export default function SetupPage() {
           Start Draft →
         </button>
 
-        <a
+        <Link
           href="/classic"
           className="block w-full py-3 rounded-xl font-bold text-base border border-[#1a1a1a] text-[#888] hover:border-[#333] hover:text-white transition-colors text-center"
         >
           Classic Mode — pick a legendary side
-        </a>
+        </Link>
 
-        <div className="flex justify-center gap-6 text-xs text-[#444] pt-2 pb-8">
-          <a href="/" className="hover:text-white transition-colors">Home</a>
-          <a href="/draft" className="hover:text-white transition-colors">Play</a>
-          <a href="/classic" className="hover:text-white transition-colors">Classic</a>
-          <a href="/editor" className="hover:text-white transition-colors">Editor</a>
-        </div>
+        <SiteNav />
       </div>
     </main>
   );
