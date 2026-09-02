@@ -12,6 +12,7 @@ import {
 import PitchView from '@/components/PitchView';
 import PositionBadge from '@/components/PositionBadge';
 import LineRatings from '@/components/LineRatings';
+import BackLink from '@/components/BackLink';
 
 // ── What Could Have Been ─────────────────────────────────────────────────────
 
@@ -134,7 +135,9 @@ export default function ResultsPage() {
   // The drafted XI and the setup that produced it are handed over in
   // localStorage by the draft and classic pages.
   const picks     = useStoredJson<SquadPick[]>('38-0-squad') ?? NO_PICKS;
-  const setup     = useStoredJson<{ formation: string }>('38-0-setup');
+  const setup     = useStoredJson<{ formation: string; draftMode?: string }>('38-0-setup');
+  // Classic mode writes draftMode 'classic', so back goes where the XI came from.
+  const cameFromClassic = setup?.draftMode === 'classic';
   const formation = useMemo(() => getFormation(setup?.formation ?? '4-4-2'), [setup]);
 
   const [simResult, setSimResult]   = useState<SimulationResult | null>(null);
@@ -184,7 +187,12 @@ export default function ResultsPage() {
 
   return (
     <main className="min-h-screen bg-[#0a0a0a] text-white">
-      <div className="max-w-5xl mx-auto py-10 px-4 flex flex-col gap-6">
+      <div className="max-w-5xl mx-auto py-6 px-4 flex flex-col gap-6">
+
+        {/* Back to wherever this XI came from. */}
+        <div className="order-none">
+          <BackLink href={cameFromClassic ? '/classic' : '/draft'} label={cameFromClassic ? 'Classic' : 'Draft'} />
+        </div>
 
         {/* Squad header */}
         <div className={`flex flex-col lg:flex-row gap-6 ${liveSim ? 'order-2 lg:order-1' : 'order-1'}`}>

@@ -9,6 +9,7 @@ import OptionCard from '@/components/OptionCard';
 import type { SquadPick } from '@/lib/simulation';
 import { getClassicTeams, getSquad, getLineup, type ClassicTeam, type DataPlayer } from '@/lib/gameData';
 import SiteNav from '@/components/SiteNav';
+import BackLink from '@/components/BackLink';
 import { writeStored, clearStored } from '@/lib/clientStorage';
 
 // Stable empty array so an unselected team does not hand out a new reference.
@@ -196,8 +197,11 @@ export default function ClassicPage() {
   const currentInSlot = editSlot != null ? picks.find(p => p.slotIndex === editSlot) : null;
 
   return (
-    <main className="min-h-screen bg-[#0a0a0a] text-white flex flex-col items-center py-12 px-4">
-      <h1 className="text-6xl font-black mb-2 tracking-tight">
+    <main className="min-h-screen bg-[#0a0a0a] text-white flex flex-col items-center py-6 px-4">
+      <div className="w-full max-w-2xl">
+        <BackLink href="/" label="Setup" />
+      </div>
+      <h1 className="text-6xl font-black mb-2 mt-4 tracking-tight">
         <span className="text-white">38</span>
         <span className="text-[#00c896]">-0</span>
       </h1>

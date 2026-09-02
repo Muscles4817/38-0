@@ -10,6 +10,7 @@ import PitchView from '@/components/PitchView';
 import PositionBadge from '@/components/PositionBadge';
 import LineRatings from '@/components/LineRatings';
 import DraftRecap from '@/components/DraftRecap';
+import BackLink from '@/components/BackLink';
 
 interface Setup {
   formation: string;
@@ -264,7 +265,10 @@ export default function DraftPage() {
   return (
     <main className="min-h-screen bg-[#0a0a0a] text-white flex flex-col lg:flex-row">
       {/* Left — pitch + recap */}
-      <aside className="lg:w-[320px] flex-shrink-0 flex flex-col items-center py-8 px-4 border-b lg:border-b-0 lg:border-r border-[#1a1a1a] lg:overflow-y-auto">
+      <aside className="lg:w-[320px] flex-shrink-0 flex flex-col items-center py-6 px-4 border-b lg:border-b-0 lg:border-r border-[#1a1a1a] lg:overflow-y-auto">
+        <div className="w-full mb-2">
+          <BackLink href="/" label="Setup" />
+        </div>
         <div className="text-xs font-bold tracking-widest text-[#555] uppercase mb-1">Formation</div>
         <div className="text-xl font-black mb-3">{setup.formation}</div>
         <div className="text-xs text-[#555] mb-3 flex items-center gap-2">
