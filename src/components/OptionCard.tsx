@@ -25,10 +25,11 @@ export default function OptionCard({
 
   return (
     <button
+      type="button"
       onClick={onClick}
       className={`
-        rounded-lg border-2 px-4 py-3 text-left transition-colors
-        bg-[#111] cursor-pointer
+        rounded-lg border-2 px-3 py-3 text-left transition-colors
+        bg-[#111] cursor-pointer touch-manipulation
         ${borderStyle} ${className}
       `}
     >

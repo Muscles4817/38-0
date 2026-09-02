@@ -14,12 +14,17 @@ export default function SiteNav() {
   const links = process.env.NODE_ENV === 'development' ? [...LINKS, EDITOR_LINK] : LINKS;
 
   return (
-    <div className="flex justify-center gap-6 text-xs text-[#444] pt-2 pb-8">
+    <nav className="flex justify-center gap-2 text-xs text-[#444] pt-2 pb-8">
       {links.map(link => (
-        <Link key={link.href} href={link.href} className="hover:text-white transition-colors">
+        <Link
+          key={link.href}
+          href={link.href}
+          // px/py give a finger-sized target around the small label.
+          className="px-4 py-3 rounded-lg hover:text-white transition-colors touch-manipulation"
+        >
           {link.label}
         </Link>
       ))}
-    </div>
+    </nav>
   );
 }
