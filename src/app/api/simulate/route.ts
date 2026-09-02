@@ -51,7 +51,7 @@ export async function POST(req: Request) {
     .prepare('SELECT id FROM seasons WHERE year_start = 2025')
     .get() as { id: number } | undefined;
 
-  let opponentSquads: OpponentSquad[] = [];
+  const opponentSquads: OpponentSquad[] = [];
 
   if (season) {
     type Row = { club_id: number; club_name: string; player_name: string; rating: number; positions: string; roles: string };

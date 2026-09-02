@@ -1,6 +1,6 @@
 'use client';
 
-import { Formation, FormationSlot, playerInitials } from '@/lib/formations';
+import { Formation, playerInitials } from '@/lib/formations';
 import { SquadPick } from '@/lib/simulation';
 
 interface PitchViewProps {

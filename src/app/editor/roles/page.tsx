@@ -56,7 +56,7 @@ export default function RolesPage() {
 
   useEffect(() => {
     fetch('/api/roles').then(r => r.json()).then((rows: RoleRow[]) => setRoles(sortRoles(rows)));
-  }, []); // eslint-disable-line
+  }, []);
 
   function selectRole(name: string) {
     const role = roles.find(r => r.name === name);
@@ -171,7 +171,7 @@ export default function RolesPage() {
         </div>
         <p className="text-sm text-[#666]">
           Roles shape how goals and assists are attributed during simulation.
-          Multipliers stack with the "suppressors multiply, highest booster wins" rule.
+          Multipliers stack with the &quot;suppressors multiply, highest booster wins&quot; rule.
         </p>
 
         {creating && (

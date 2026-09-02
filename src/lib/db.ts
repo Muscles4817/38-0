@@ -383,7 +383,7 @@ function seedData(db: Database.Database): void {
   ];
   const cheId = (db.prepare('SELECT id FROM clubs WHERE name = ?').get('Chelsea') as { id: number }).id;
   for (const [name, nat, rating, pos] of che1314Players) {
-    let pidRow = db.prepare('SELECT id FROM players WHERE name = ?').get(name) as { id: number } | undefined;
+    const pidRow = db.prepare('SELECT id FROM players WHERE name = ?').get(name) as { id: number } | undefined;
     const pid = pidRow ? pidRow.id : (ip.run(name, nat).lastInsertRowid as number);
     ise.run(cheId, che1314, ipv.run(pid, '2013/14', rating, pos, '[]').lastInsertRowid as number);
   }
