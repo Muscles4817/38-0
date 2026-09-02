@@ -250,7 +250,7 @@ export default function DraftPage() {
   return (
     <main className="min-h-screen bg-[#0a0a0a] text-white flex flex-col lg:flex-row">
       {/* Left — pitch + recap */}
-      <aside className="lg:w-[320px] flex-shrink-0 flex flex-col items-center py-8 px-4 border-r border-[#1a1a1a] overflow-y-auto">
+      <aside className="lg:w-[320px] flex-shrink-0 flex flex-col items-center py-8 px-4 border-b lg:border-b-0 lg:border-r border-[#1a1a1a] lg:overflow-y-auto">
         <div className="text-xs font-bold tracking-widest text-[#555] uppercase mb-1">Formation</div>
         <div className="text-xl font-black mb-3">{setup.formation}</div>
         <div className="text-xs text-[#555] mb-3 flex items-center gap-2">
@@ -403,47 +403,62 @@ function SpinPanel({
   return (
     <div className="w-full max-w-xl">
       {/* Header */}
-      <div className="flex items-center justify-between mb-4">
-        <div>
+      <div className="flex items-start justify-between gap-3 mb-4">
+        <div className="min-w-0">
           <div className="text-xs text-[#555] uppercase tracking-widest mb-1">Squad Spun</div>
-          <div className="flex items-center gap-2">
-            <span className="inline-block w-3 h-3 rounded-full" style={{ background: result.color }} />
+          <div className="flex items-center gap-2 flex-wrap">
+            <span className="inline-block w-3 h-3 rounded-full shrink-0" style={{ background: result.color }} />
             <span className="font-black text-lg">{result.clubName}</span>
             <span className="text-[#00c896] font-bold">{result.seasonLabel}</span>
           </div>
           <div className="text-xs text-[#555] mt-1">Pick any player, then choose which open position to slot them into.</div>
         </div>
         {onReroll && (
-          <button onClick={onReroll}
-            className="flex items-center gap-1 px-3 py-1.5 rounded-lg border border-[#00c896] text-[#00c896] text-xs font-bold hover:bg-[#00c89622] transition-colors">
+          <button type="button" onClick={onReroll}
+            className="shrink-0 whitespace-nowrap flex items-center gap-1 px-3 py-2.5 rounded-lg border border-[#00c896] text-[#00c896] text-xs font-bold hover:bg-[#00c89622] transition-colors touch-manipulation">
             🔄 Reroll ({rerollsLeft})
           </button>
         )}
       </div>
 
-      {/* Position assignment panel */}
+      {/*
+        Placement panel. It sticks to the top of the viewport because the squad
+        list below runs to twenty-odd rows: choose someone near the bottom on a
+        phone and the destination buttons would otherwise be off-screen above.
+      */}
       {selectedPlayer && (
-        <div className="bg-[#111] border border-[#00c896] rounded-xl p-4 mb-4">
-          <div className="flex items-center justify-between mb-3">
-            <div className="font-bold text-[#00c896]">Place {selectedPlayer.name.split(' ').pop()}</div>
-            <button onClick={() => onSelectPlayer(selectedPlayer)} className="text-[#555] text-xs hover:text-white">Cancel</button>
+        <div className="sticky top-2 z-20 bg-[#111] border border-[#00c896] rounded-xl p-4 mb-4 shadow-lg shadow-black/60">
+          <div className="flex items-center justify-between gap-2 mb-3">
+            <div className="font-bold text-[#00c896] truncate">Place {selectedPlayer.name.split(' ').pop()}</div>
+            <button
+              type="button"
+              onClick={() => onSelectPlayer(selectedPlayer)}
+              className="shrink-0 text-[#555] text-xs hover:text-white px-3 py-2 -mr-2 touch-manipulation"
+            >
+              Cancel
+            </button>
           </div>
           <div className="text-[10px] text-[#555] uppercase tracking-widest mb-2">Available</div>
-          <div className="flex flex-wrap gap-2 mb-3">
+          <div className="flex flex-wrap gap-2">
             {formation.slots.map((slot, i) => slotStatus(i, slot) === 'available' ? (
-              <button key={i} onClick={() => onPlacePlayer(i)}
-                className="px-3 py-1.5 rounded-lg bg-[#00c896] text-black text-xs font-bold hover:bg-[#00b385] transition-colors">
+              <button key={i} type="button" onClick={() => onPlacePlayer(i)}
+                className="px-3 py-2.5 rounded-lg bg-[#00c896] text-black text-xs font-bold hover:bg-[#00b385] transition-colors touch-manipulation">
                 {slot.label} ({slot.position})
               </button>
             ) : null)}
           </div>
-          <div className="text-[10px] text-[#555] uppercase tracking-widest mb-2">Unavailable</div>
-          <div className="flex flex-wrap gap-1.5">
-            {formation.slots.map((slot, i) => slotStatus(i, slot) === 'unavailable' ? (
-              <span key={i} className="px-2 py-1 rounded bg-[#1a1a1a] text-[#444] text-[10px]">
-                {slot.position} · N/A
-              </span>
-            ) : null)}
+          {/* The unavailable slots are reference detail, not something to act
+              on, so they are dropped on small screens to keep the sticky panel
+              from swallowing the list. */}
+          <div className="hidden sm:block">
+            <div className="text-[10px] text-[#555] uppercase tracking-widest mt-3 mb-2">Unavailable</div>
+            <div className="flex flex-wrap gap-1.5">
+              {formation.slots.map((slot, i) => slotStatus(i, slot) === 'unavailable' ? (
+                <span key={i} className="px-2 py-1 rounded bg-[#1a1a1a] text-[#444] text-[10px]">
+                  {slot.position} · N/A
+                </span>
+              ) : null)}
+            </div>
           </div>
         </div>
       )}
