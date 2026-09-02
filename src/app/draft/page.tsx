@@ -4,6 +4,7 @@ import { useState, useEffect, useMemo, useRef } from 'react';
 import { useRouter } from 'next/navigation';
 import { getFormation, canFillSlot, Formation, Position } from '@/lib/formations';
 import { SquadPick, computeOverall } from '@/lib/simulation';
+import { listDraftableSquads, type DataPlayer, type SpunSquad } from '@/lib/gameData';
 import { useStoredJson, readStored, writeStored } from '@/lib/clientStorage';
 import PitchView from '@/components/PitchView';
 import PositionBadge from '@/components/PositionBadge';
@@ -20,41 +21,30 @@ interface Setup {
   yearEnd: number;
 }
 
-interface SpunPlayer {
-  entry_id: number;
-  player_id: number;
-  player_name: string;
-  nationality: string | null;
-  rating: number;
-  positions: string;
-}
-
-interface SpinResult {
-  clubId: number;
-  clubName: string;
-  color: string;
-  seasonId: number;
-  seasonLabel: string;
-  players: SpunPlayer[];
-}
-
-// Stored so "what could have been" can read all seen players
+// Stored so "what could have been" on the results page can read every player
+// the draft offered, not just the ones taken.
 interface StoredSquad {
   clubName: string;
   seasonLabel: string;
-  players: SpunPlayer[];
+  players: DataPlayer[];
 }
 
-type SpinPhase = 'idle' | 'fast' | 'slowing' | 'reveal';
+type SpinPhase = 'idle' | 'spinning' | 'reveal';
 
 const REROLLS_BY_DIFFICULTY = { easy: 3, normal: 1, hard: 0 };
 // Stable empty array so an unstarted draft does not hand out a new reference
 // on every render.
 const NO_PICKS: SquadPick[] = [];
+// Names flashed up by the wheel while it spins — flavour only, unrelated to
+// the squad that is actually landed on.
 const SPIN_CLUBS = [
   'Arsenal','Chelsea','Liverpool','Man City','Man Utd','Tottenham',
   'Leicester','Newcastle','Blackburn','Aston Villa','Everton','Leeds',
 ];
+const FAST_FRAMES = 8;
+const FAST_INTERVAL = 65;
+const SLOW_INTERVALS = [120, 180, 260, 360, 480];
+const REVEAL_HOLD = 700;
 
 export default function DraftPage() {
   const router = useRouter();
@@ -75,12 +65,11 @@ export default function DraftPage() {
   const [spinDisplay, setSpinDisplay] = useState('');
   const [spinSeason, setSpinSeason]   = useState('');
   const [spinFlash, setSpinFlash]     = useState(false);
-  const pendingResult                 = useRef<SpinResult | null>(null);
   const spinTimer                     = useRef<ReturnType<typeof setTimeout> | null>(null);
-  const skippedIds                    = useRef<string[]>([]);
 
-  const [spinResult, setSpinResult]   = useState<SpinResult | null>(null);
-  const [selectedPlayer, setSelectedPlayer] = useState<SpunPlayer | null>(null);
+  const [spinResult, setSpinResult]   = useState<SpunSquad | null>(null);
+  const [spinNotice, setSpinNotice]   = useState<string | null>(null);
+  const [selectedPlayer, setSelectedPlayer] = useState<DataPlayer | null>(null);
   const [highlightSlot, setHighlightSlot]   = useState<number | undefined>();
   const [positionFirst, setPositionFirst]   = useState<number | null>(null);
 
@@ -103,152 +92,131 @@ export default function DraftPage() {
     writeStored('38-0-draft', next);
   }
 
-  // ── Spin animation ─────────────────────────────────────────────────────────
+  // ── Spinning ───────────────────────────────────────────────────────────────
 
-  function runSpinAnimation(result: SpinResult) {
-    pendingResult.current = result;
+  /**
+   * Picks a squad at random from the era that still has a player the current
+   * formation can use. Returns null when the era has nothing left to offer,
+   * which lets the caller report it without burning a reroll.
+   */
+  function findSquad(excludeDrafted: boolean): SpunSquad | null {
+    if (!setup || !formation) return null;
+    const takenPlayers = new Set(picks.map(p => p.playerId));
+    const filledSlots  = new Set(picks.map(p => p.slotIndex));
+    const openSlots    = formation.slots.filter((_, i) => !filledSlots.has(i));
+    const draftedFrom  = new Set(
+      picks.filter(p => p.clubId != null && p.seasonId != null)
+        .map(p => `${p.clubId}-${p.seasonId}`),
+    );
 
-    // Phase 1: fast cycling (already running from fetchSpin)
-    // Phase 2: slowing — show a few more random clubs at increasing intervals
-    const slowFrames = [120, 180, 260, 360, 480];
-    setSpinPhase('slowing');
+    const candidates = listDraftableSquads(setup.yearStart, setup.yearEnd).filter(squad => {
+      if (excludeDrafted && draftedFrom.has(`${squad.clubId}-${squad.seasonId}`)) return false;
+      return squad.players.some(p =>
+        !takenPlayers.has(p.playerId) &&
+        openSlots.some(slot => canFillSlot(p.positions, slot.position)));
+    });
 
-    function showSlowFrame(idx: number) {
-      if (idx < slowFrames.length) {
-        setSpinDisplay(SPIN_CLUBS[Math.floor(Math.random() * SPIN_CLUBS.length)]);
-        spinTimer.current = setTimeout(() => showSlowFrame(idx + 1), slowFrames[idx]);
-      } else {
-        // Land on the actual result
-        setSpinPhase('reveal');
-        setSpinDisplay(result.clubName);
-        setSpinSeason(result.seasonLabel);
-        setSpinFlash(true);
-        spinTimer.current = setTimeout(() => {
-          setSpinFlash(false);
-          setSpinResult(result);
-          setSpinPhase('idle');
-        }, 700);
-      }
-    }
-    showSlowFrame(0);
+    if (candidates.length === 0) return null;
+    return candidates[Math.floor(Math.random() * candidates.length)];
   }
 
-  async function spin(reroll = false) {
-    if (!setup || !formation) return;
-    if (reroll) {
-      if (rerollsLeft <= 0) return;
-      setRerollsUsed(n => n + 1);
-    }
+  function runSpinAnimation(result: SpunSquad) {
+    let frame = 0;
+    setSpinPhase('spinning');
 
-    setSpinResult(null);
-    setSelectedPlayer(null);
-    setSpinPhase('fast');
-
-    // Fast cycling while waiting for API
-    let fastIdx = 0;
-    function fastTick() {
-      if (pendingResult.current) return;
-      setSpinDisplay(SPIN_CLUBS[fastIdx % SPIN_CLUBS.length]);
-      fastIdx++;
-      spinTimer.current = setTimeout(fastTick, 65);
-    }
-    fastTick();
-
-    const pickedPlayerIds = new Set(picks.map(p => p.playerId));
-    const filledSlotSet   = new Set(picks.map(p => p.slotIndex));
-    const pickedSquadIds  = picks
-      .filter(p => p.clubId && p.seasonId)
-      .map(p => `${p.clubId}-${p.seasonId}`)
-      .filter((v, i, a) => a.indexOf(v) === i);
-
-    try {
-      let found: SpinResult | null = null;
-      for (let attempt = 0; attempt < 20; attempt++) {
-        const excludeIds = [
-          ...(reroll ? pickedSquadIds : []),
-          ...skippedIds.current,
-        ];
-        const res = await fetch('/api/spin', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-            yearStart: setup.yearStart,
-            yearEnd: setup.yearEnd,
-            excludeIds,
-          }),
-        });
-        if (!res.ok) break;
-        const candidate: SpinResult = await res.json();
-
-        const hasValid = candidate.players.some(p => {
-          if (pickedPlayerIds.has(p.player_id)) return false;
-          const pp: Position[] = JSON.parse(p.positions);
-          return formation.slots.some((slot, i) => !filledSlotSet.has(i) && canFillSlot(pp, slot.position));
-        });
-
-        if (hasValid) { found = candidate; break; }
-        skippedIds.current.push(`${candidate.clubId}-${candidate.seasonId}`);
-      }
-
-      if (!found) {
-        pendingResult.current = { clubId: 0, clubName: '—', color: '#fff', seasonId: 0, seasonLabel: '—', players: [] };
-        setSpinPhase('idle');
+    function tick() {
+      if (frame < FAST_FRAMES) {
+        setSpinDisplay(SPIN_CLUBS[frame % SPIN_CLUBS.length]);
+        spinTimer.current = setTimeout(tick, FAST_INTERVAL);
+        frame++;
         return;
       }
-
-      // Store this squad for "what could have been"
-      const stored = readStored<StoredSquad[]>('38-0-seen-squads') ?? [];
-      stored.push({ clubName: found.clubName, seasonLabel: found.seasonLabel, players: found.players });
-      writeStored('38-0-seen-squads', stored);
-
-      runSpinAnimation(found);
-    } catch {
-      pendingResult.current = { clubId: 0, clubName: '—', color: '#fff', seasonId: 0, seasonLabel: '—', players: [] };
-      setSpinPhase('idle');
+      const slowIndex = frame - FAST_FRAMES;
+      if (slowIndex < SLOW_INTERVALS.length) {
+        setSpinDisplay(SPIN_CLUBS[Math.floor(Math.random() * SPIN_CLUBS.length)]);
+        spinTimer.current = setTimeout(tick, SLOW_INTERVALS[slowIndex]);
+        frame++;
+        return;
+      }
+      // Land on the squad that was chosen before the animation started.
+      setSpinPhase('reveal');
+      setSpinDisplay(result.clubName);
+      setSpinSeason(result.seasonLabel);
+      setSpinFlash(true);
+      spinTimer.current = setTimeout(() => {
+        setSpinFlash(false);
+        setSpinResult(result);
+        setSpinPhase('idle');
+      }, REVEAL_HOLD);
     }
+
+    tick();
   }
 
-  function selectPlayer(player: SpunPlayer) {
+  function spin(reroll = false) {
+    if (!setup || !formation) return;
+    if (reroll && rerollsLeft <= 0) return;
+
+    // Resolve the squad first, so a reroll is only spent when it buys something.
+    const found = findSquad(reroll);
+    if (!found) {
+      setSpinNotice(reroll
+        ? 'No other club-season in this era can fill an open position.'
+        : 'No club-season in this era can fill an open position. Widen the era and start again.');
+      return;
+    }
+    if (reroll) setRerollsUsed(n => n + 1);
+
+    setSpinNotice(null);
+    setSpinResult(null);
+    setSelectedPlayer(null);
+
+    // Record the squad for "what could have been", whether or not it is used.
+    const stored = readStored<StoredSquad[]>('38-0-seen-squads') ?? [];
+    stored.push({ clubName: found.clubName, seasonLabel: found.seasonLabel, players: found.players });
+    writeStored('38-0-seen-squads', stored);
+
+    runSpinAnimation(found);
+  }
+
+  function selectPlayer(player: DataPlayer) {
     if (!spinResult) return;
-    setSelectedPlayer(prev => prev?.player_id === player.player_id ? null : player);
+    setSelectedPlayer(prev => prev?.playerId === player.playerId ? null : player);
   }
 
   function placePlayer(slotIndex: number) {
     if (!selectedPlayer || !spinResult || !formation) return;
     const slot = formation.slots[slotIndex];
-    const playerPositions: Position[] = JSON.parse(selectedPlayer.positions);
-    if (!canFillSlot(playerPositions, slot.position)) return;
+    if (!canFillSlot(selectedPlayer.positions, slot.position)) return;
 
     const pick: SquadPick = {
       slotIndex,
       position: slot.position,
-      playerId: selectedPlayer.player_id,
-      playerName: selectedPlayer.player_name,
+      playerId: selectedPlayer.playerId,
+      playerName: selectedPlayer.name,
       nationality: selectedPlayer.nationality,
       rating: selectedPlayer.rating,
       clubName: spinResult.clubName,
       seasonLabel: spinResult.seasonLabel,
       clubId: spinResult.clubId,
       seasonId: spinResult.seasonId,
-      positions: playerPositions,
+      positions: selectedPlayer.positions,
     };
 
     // Rating reveal toast (only when ratings are hidden)
     const showRatings = (setup?.showRatings ?? false) && setup?.difficulty !== 'hard';
     if (!showRatings) {
       if (revealTimer.current) clearTimeout(revealTimer.current);
-      setReveal({ name: selectedPlayer.player_name, rating: selectedPlayer.rating });
+      setReveal({ name: selectedPlayer.name, rating: selectedPlayer.rating });
       revealTimer.current = setTimeout(() => setReveal(null), 2500);
     }
 
     const next = [...picks, pick];
-    skippedIds.current = [];
     saveDraft(next);
     setSelectedPlayer(null);
     setSpinResult(null);
     setHighlightSlot(undefined);
     setPositionFirst(null);
-    pendingResult.current = null;
 
     if (next.length === 11) {
       writeStored('38-0-squad', next);
@@ -339,6 +307,11 @@ export default function DraftPage() {
               </button>
             )}
             <div className="text-[#333] text-xs">or tap anywhere to spin</div>
+            {spinNotice && (
+              <div className="max-w-sm text-center rounded-xl border border-amber-500/40 bg-amber-500/10 px-4 py-3 text-amber-300 text-sm">
+                {spinNotice}
+              </div>
+            )}
           </div>
         )}
 
@@ -375,7 +348,7 @@ export default function DraftPage() {
             </div>
 
             {spinPhase === 'reveal' && (
-              <div className="text-[#00c896] text-sm font-bold animate-pulse">Loading squad…</div>
+              <div className="text-[#00c896] text-sm font-bold animate-pulse">Opening the squad…</div>
             )}
           </div>
         )}
@@ -406,11 +379,11 @@ function SpinPanel({
   result, formation, picks, selectedPlayer,
   onSelectPlayer, onPlacePlayer, onReroll, rerollsLeft, showRatings, positionFilter,
 }: {
-  result: SpinResult;
+  result: SpunSquad;
   formation: Formation;
   picks: SquadPick[];
-  selectedPlayer: SpunPlayer | null;
-  onSelectPlayer: (p: SpunPlayer) => void;
+  selectedPlayer: DataPlayer | null;
+  onSelectPlayer: (p: DataPlayer) => void;
   onPlacePlayer: (slotIdx: number) => void;
   onReroll?: () => void;
   rerollsLeft: number;
@@ -419,12 +392,12 @@ function SpinPanel({
 }) {
   const filledSlots = new Set(picks.map(p => p.slotIndex));
   const pickedPlayerIds = new Set(picks.map(p => p.playerId));
-  const players = result.players.filter(p => !pickedPlayerIds.has(p.player_id));
+  const players = result.players.filter(p => !pickedPlayerIds.has(p.playerId));
 
   function slotStatus(i: number, slot: { position: Position }): 'available' | 'filled' | 'unavailable' {
     if (filledSlots.has(i)) return 'filled';
     if (!selectedPlayer) return 'unavailable';
-    return canFillSlot(JSON.parse(selectedPlayer.positions), slot.position) ? 'available' : 'unavailable';
+    return canFillSlot(selectedPlayer.positions, slot.position) ? 'available' : 'unavailable';
   }
 
   return (
@@ -452,7 +425,7 @@ function SpinPanel({
       {selectedPlayer && (
         <div className="bg-[#111] border border-[#00c896] rounded-xl p-4 mb-4">
           <div className="flex items-center justify-between mb-3">
-            <div className="font-bold text-[#00c896]">Place {selectedPlayer.player_name.split(' ').pop()}</div>
+            <div className="font-bold text-[#00c896]">Place {selectedPlayer.name.split(' ').pop()}</div>
             <button onClick={() => onSelectPlayer(selectedPlayer)} className="text-[#555] text-xs hover:text-white">Cancel</button>
           </div>
           <div className="text-[10px] text-[#555] uppercase tracking-widest mb-2">Available</div>
@@ -478,14 +451,14 @@ function SpinPanel({
       {/* Player list */}
       <div className="space-y-1.5">
         {players.map(player => {
-          const pp: Position[] = JSON.parse(player.positions);
-          const isSelected = selectedPlayer?.player_id === player.player_id;
+          const pp: Position[] = player.positions;
+          const isSelected = selectedPlayer?.playerId === player.playerId;
           const canFillAny = formation.slots.some((slot, i) => !filledSlots.has(i) && canFillSlot(pp, slot.position));
           const matchesFilter = !positionFilter || canFillSlot(pp, positionFilter);
 
           return (
             <button
-              key={player.player_id}
+              key={player.playerId}
               onClick={() => canFillAny && onSelectPlayer(player)}
               disabled={!canFillAny}
               className={`
@@ -504,7 +477,7 @@ function SpinPanel({
                 ?
               </div>
               <div className="flex-1 min-w-0">
-                <div className="font-bold text-sm truncate">{player.player_name}</div>
+                <div className="font-bold text-sm truncate">{player.name}</div>
                 <div className="text-[#555] text-xs">{player.nationality}</div>
               </div>
               <div className="flex gap-1 flex-wrap justify-end">

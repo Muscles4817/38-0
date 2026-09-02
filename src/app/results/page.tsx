@@ -3,6 +3,7 @@
 import { useState, useEffect, useMemo } from 'react';
 import { useRouter } from 'next/navigation';
 import { getFormation, canFillSlot, Formation } from '@/lib/formations';
+import { getTeamStrengths, runSeasonSimulation, type DataPlayer } from '@/lib/gameData';
 import { useStoredJson, clearStored } from '@/lib/clientStorage';
 import {
   SquadPick, SimulationResult, TeamStanding, LeagueEntry,
@@ -14,50 +15,69 @@ import LineRatings from '@/components/LineRatings';
 
 // ── What Could Have Been ─────────────────────────────────────────────────────
 
-interface SeenPlayer {
-  player_id: number; player_name: string; nationality: string | null;
-  rating: number; positions: string; clubName: string; seasonLabel: string;
+/** A squad the draft offered, as recorded by the draft page. */
+interface SeenSquad {
+  clubName: string;
+  seasonLabel: string;
+  players: DataPlayer[];
 }
+
+type SeenPlayer = DataPlayer & { clubName: string; seasonLabel: string };
 
 // Stable empty array so a missing squad does not hand out a new reference
 // on every render.
 const NO_PICKS: SquadPick[] = [];
 
-function computeBestXI(
-  formation: Formation,
-  seenSquads: { clubName: string; seasonLabel: string; players: SeenPlayer[] }[],
-): SquadPick[] {
-  const byId = new Map<number, SeenPlayer & { clubName: string; seasonLabel: string }>();
+/**
+ * The strongest legal XI that could have been assembled from every player the
+ * draft ever showed. Slots with the fewest eligible players are filled first,
+ * so a scarce position is not left empty by a greedy earlier pick.
+ */
+function computeBestXI(formation: Formation, seenSquads: SeenSquad[]): SquadPick[] {
+  const byId = new Map<number, SeenPlayer>();
   for (const squad of seenSquads) {
     for (const p of squad.players) {
-      const ex = byId.get(p.player_id);
-      if (!ex || p.rating > ex.rating) byId.set(p.player_id, { ...p, clubName: squad.clubName, seasonLabel: squad.seasonLabel });
+      const existing = byId.get(p.playerId);
+      if (!existing || p.rating > existing.rating) {
+        byId.set(p.playerId, { ...p, clubName: squad.clubName, seasonLabel: squad.seasonLabel });
+      }
     }
   }
   const pool = [...byId.values()];
   const result: SquadPick[] = [];
   const usedIds = new Set<number>();
+
   const slotOrder = formation.slots
-    .map((s, i) => ({ slot: s, index: i }))
-    .sort((a, b) => {
-      const ca = pool.filter(p => canFillSlot(JSON.parse(p.positions), a.slot.position)).length;
-      const cb = pool.filter(p => canFillSlot(JSON.parse(p.positions), b.slot.position)).length;
-      return ca - cb;
-    });
+    .map((slot, index) => ({ slot, index }))
+    .sort((a, b) =>
+      pool.filter(p => canFillSlot(p.positions, a.slot.position)).length -
+      pool.filter(p => canFillSlot(p.positions, b.slot.position)).length);
+
   for (const { slot, index } of slotOrder) {
-    const cands = pool.filter(p => !usedIds.has(p.player_id) && canFillSlot(JSON.parse(p.positions), slot.position));
-    if (!cands.length) continue;
-    cands.sort((a, b) => b.rating - a.rating);
-    const best = cands[0];
-    usedIds.add(best.player_id);
-    result.push({ slotIndex: index, position: slot.position, playerId: best.player_id, playerName: best.player_name, nationality: best.nationality, rating: best.rating, clubName: best.clubName, seasonLabel: best.seasonLabel, positions: JSON.parse(best.positions) });
+    const candidates = pool
+      .filter(p => !usedIds.has(p.playerId) && canFillSlot(p.positions, slot.position))
+      .sort((a, b) => b.rating - a.rating);
+    const best = candidates[0];
+    if (!best) continue;
+    usedIds.add(best.playerId);
+    result.push({
+      slotIndex: index,
+      position: slot.position,
+      playerId: best.playerId,
+      playerName: best.name,
+      nationality: best.nationality,
+      rating: best.rating,
+      clubName: best.clubName,
+      seasonLabel: best.seasonLabel,
+      positions: best.positions,
+    });
   }
   return result;
 }
 
 function WhatCouldHaveBeen({ formation, actualPicks }: { formation: Formation; actualPicks: SquadPick[] }) {
   const [show, setShow] = useState(false);
-  const seenSquads = useStoredJson<{ clubName: string; seasonLabel: string; players: SeenPlayer[] }[]>('38-0-seen-squads');
+  const seenSquads = useStoredJson<SeenSquad[]>('38-0-seen-squads');
   const bestXI = useMemo(
     () => (seenSquads?.length ? computeBestXI(formation, seenSquads) : []),
     [formation, seenSquads],
@@ -120,30 +140,24 @@ export default function ResultsPage() {
   const [simResult, setSimResult]   = useState<SimulationResult | null>(null);
   const [simulating, setSimulating] = useState(false);
   const [showFinal, setShowFinal]   = useState(false);
-  const [teamRatings, setTeamRatings] = useState<{ clubName: string; overall: number }[]>([]);
+  const teamRatings = useMemo(() => getTeamStrengths(), []);
 
   // Nothing to report on without a squad.
   useEffect(() => {
     if (localStorage.getItem('38-0-squad') === null) router.push('/');
   }, [router]);
 
-  useEffect(() => {
-    fetch('/api/strengths').then(r => r.json()).then(setTeamRatings);
-  }, []);
-
-  async function simulate() {
+  function simulate() {
     setSimulating(true);
-    try {
-      const res = await fetch('/api/simulate', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ picks }),
-      });
-      const data: SimulationResult = await res.json();
-      setSimResult(data);
-    } finally {
-      setSimulating(false);
-    }
+    // The simulation runs on this thread; yield first so the button can repaint
+    // into its pending state before it blocks.
+    setTimeout(() => {
+      try {
+        setSimResult(runSeasonSimulation(picks));
+      } finally {
+        setSimulating(false);
+      }
+    }, 0);
   }
 
   function handleResim() {
