@@ -1,0 +1,51 @@
+name: CI
+
+# Every pull request, and every push to main, must pass these gates. Branch
+# protection makes the "Verify" job below a required check, so a PR cannot be
+# merged until it is green — which is what keeps main deployable.
+#
+# The deploy workflow repeats these same gates before publishing. If you change
+# the steps here, change them there too.
+
+on:
+  pull_request:
+  push:
+    branches: [main]
+
+# A newer commit on the same ref supersedes an in-flight run.
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+
+jobs:
+  verify:
+    name: Verify
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out
+        uses: actions/checkout@v4
+
+      - name: Set up Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+
+      - name: Install
+        run: npm ci
+
+      - name: Lint
+        run: npm run lint
+
+      - name: Typecheck
+        run: npm run typecheck
+
+      - name: Test
+        run: npm test
+
+      # Proves the static export still succeeds, so main is always deployable.
+      - name: Build
+        run: npm run build

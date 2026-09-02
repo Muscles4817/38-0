@@ -1,0 +1,89 @@
+name: Deploy to GitHub Pages
+
+# Publishes the static export of the game. The editor and the /api routes are
+# not part of that build; see next.config.ts.
+#
+# Requires Pages to be enabled for the repository with "Source: GitHub Actions"
+# (Settings -> Pages). Until that is done, configure-pages below fails.
+#
+# The lint/typecheck/test gates are repeated from ci.yml on purpose: this
+# workflow is the last thing to run before the site changes, so it re-checks
+# rather than trusting that CI ran on the merged result.
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+# Only one deploy at a time. Queued runs wait rather than cancelling, so a
+# deploy is never abandoned half-published.
+concurrency:
+  group: pages
+  cancel-in-progress: false
+
+jobs:
+  build:
+    name: Build
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out
+        uses: actions/checkout@v4
+
+      - name: Set up Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+
+      - name: Configure Pages
+        id: pages
+        uses: actions/configure-pages@v5
+
+      - name: Install
+        run: npm ci
+
+      - name: Lint
+        run: npm run lint
+
+      - name: Typecheck
+        run: npm run typecheck
+
+      - name: Test
+        run: npm test
+
+      - name: Resolve base path
+        id: basepath
+        run: |
+          BASE='${{ steps.pages.outputs.base_path }}'
+          # A project site is served from /<repo>; a user or organisation site
+          # is served from the domain root, where Next wants an empty basePath.
+          if [ "$BASE" = "/" ]; then BASE=''; fi
+          echo "Using basePath '$BASE'"
+          echo "value=$BASE" >> "$GITHUB_OUTPUT"
+
+      - name: Build
+        run: npm run build
+        env:
+          NEXT_PUBLIC_BASE_PATH: ${{ steps.basepath.outputs.value }}
+
+      - name: Upload artifact
+        uses: actions/upload-pages-artifact@v3
+        with:
+          path: ./out
+
+  deploy:
+    name: Deploy
+    needs: build
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - name: Deploy to GitHub Pages
+        id: deployment
+        uses: actions/deploy-pages@v4
