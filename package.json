@@ -4,12 +4,13 @@
   "private": true,
   "scripts": {
     "dev": "next dev",
-    "build": "BUILD_TARGET=static next build",
+    "build": "next build",
     "start": "next start",
     "lint": "eslint",
     "typecheck": "tsc --noEmit",
-    "export:data": "node scripts/export-game-data.mjs",
-    "build:server": "next build"
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "export:data": "node scripts/export-game-data.mjs"
   },
   "dependencies": {
     "better-sqlite3": "^12.10.0",
@@ -26,6 +27,7 @@
     "eslint": "^9",
     "eslint-config-next": "16.2.9",
     "tailwindcss": "^4",
-    "typescript": "^5"
+    "typescript": "^5",
+    "vitest": "^4.1.11"
   }
 }
