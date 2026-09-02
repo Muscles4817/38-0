@@ -56,7 +56,7 @@ export default function SetupPage() {
         {/* Formation */}
         <section>
           <Label>Formation</Label>
-          <div className="grid grid-cols-4 gap-2 mb-2">
+          <div className="grid grid-cols-2 gap-2 mb-2 sm:grid-cols-3 lg:grid-cols-4">
             {Object.keys(FORMATIONS).map(f => (
               <OptionCard key={f} label={f} selected={formation === f} onClick={() => setFormation(f)} />
             ))}
@@ -72,7 +72,7 @@ export default function SetupPage() {
         {/* Difficulty */}
         <section>
           <Label>Difficulty</Label>
-          <div className="grid grid-cols-3 gap-3">
+          <div className="grid grid-cols-1 gap-3 sm:grid-cols-3">
             <OptionCard label="Easy"   description="3 rerolls available"          selected={difficulty === 'easy'}   onClick={() => setDifficulty('easy')} />
             <OptionCard label="Normal" description="1 reroll available"            selected={difficulty === 'normal'} onClick={() => setDifficulty('normal')} accent="amber" />
             <OptionCard label="Hard"   description="No rerolls · ratings hidden"   selected={difficulty === 'hard'}   onClick={() => setDifficulty('hard')} />
@@ -130,7 +130,7 @@ export default function SetupPage() {
         {/* Era */}
         <section>
           <Label>Era</Label>
-          <div className="grid grid-cols-4 gap-2 mb-4">
+          <div className="grid grid-cols-2 gap-2 mb-4 sm:grid-cols-4">
             {ERA_PRESETS.map(e => (
               <OptionCard key={e.label} label={e.label} selected={eraPreset === e.label} onClick={() => handleEraPreset(e.label)} />
             ))}
@@ -141,13 +141,13 @@ export default function SetupPage() {
                 <div className="text-[10px] text-[#555] mb-1">From</div>
                 <input type="range" min={1992} max={2025} value={yearStart}
                   onChange={e => { setYearStart(+e.target.value); setEraPreset(''); }}
-                  className="w-full accent-[#00c896]" />
+                  className="w-full h-8 accent-[#00c896] touch-manipulation" />
               </div>
               <div className="flex-1">
                 <div className="text-[10px] text-[#555] mb-1">To</div>
                 <input type="range" min={1993} max={2026} value={yearEnd}
                   onChange={e => { setYearEnd(+e.target.value); setEraPreset(''); }}
-                  className="w-full accent-[#00c896]" />
+                  className="w-full h-8 accent-[#00c896] touch-manipulation" />
               </div>
             </div>
             <div className="flex justify-between text-xs text-[#888]">
@@ -164,18 +164,17 @@ export default function SetupPage() {
         {/* Draft Pool */}
         <section>
           <Label>Draft Pool</Label>
-          <p className="text-[#444] text-xs mb-3">More leagues coming soon — draft from Serie A, La Liga, Bundesliga, or mix them all.</p>
-          <div className="grid grid-cols-3 gap-2">
-            {/* Premier League — active (current) */}
-            <div className="relative rounded-lg border border-[#00c896]/30 bg-[#0d0d0d] px-3 py-3 select-none">
-              <div className="absolute top-2 right-2 text-[9px] text-[#00c896] font-bold uppercase tracking-widest bg-[#00c896]/10 px-1.5 py-0.5 rounded">
-                Active
-              </div>
-              <div className="text-lg mb-1">🏴󠁧󠁢󠁥󠁮󠁧󠁿</div>
+          <div className="rounded-lg border border-[#00c896]/30 bg-[#0d0d0d] px-4 py-3 flex items-center gap-3 select-none">
+            <span className="text-lg">🏴󠁧󠁢󠁥󠁮󠁧󠁿</span>
+            <div className="flex-1 min-w-0">
               <div className="font-bold text-sm text-white">Premier League</div>
-              <div className="text-[#555] text-[11px] mt-0.5">English top flight</div>
+              <div className="text-[#555] text-[11px]">English top flight</div>
             </div>
-            {/* Coming soon */}
+            <span className="text-[9px] text-[#00c896] font-bold uppercase tracking-widest bg-[#00c896]/10 px-1.5 py-0.5 rounded shrink-0">
+              Active
+            </span>
+          </div>
+          <ComingSoon summary="More leagues coming soon">
             {[
               { flag: '🇮🇹', name: 'Serie A',    desc: 'Italian top flight' },
               { flag: '🇪🇸', name: 'La Liga',    desc: 'Spanish top flight' },
@@ -193,14 +192,13 @@ export default function SetupPage() {
                 <div className="text-[#444] text-[11px] mt-0.5">{l.desc}</div>
               </div>
             ))}
-          </div>
+          </ComingSoon>
         </section>
 
         {/* Challenge Modes */}
         <section>
           <Label>Challenge Modes</Label>
-          <p className="text-[#444] text-xs mb-3">Coming soon — extra constraints for a harder draft.</p>
-          <div className="grid grid-cols-2 gap-2">
+          <ComingSoon summary="Extra constraints for a harder draft">
             {[
               { label: '🏟️ One Club',        desc: 'All 11 players from the same club-season' },
               { label: '🌍 One Nation',       desc: 'Full XI from a single nationality' },
@@ -218,16 +216,23 @@ export default function SetupPage() {
                 <div className="text-[#444] text-xs mt-0.5">{c.desc}</div>
               </div>
             ))}
-          </div>
+          </ComingSoon>
         </section>
 
-        {/* Start */}
-        <button
-          onClick={startDraft}
-          className="w-full py-4 rounded-xl font-black text-lg bg-[#00c896] text-black hover:bg-[#00b385] transition-colors"
-        >
-          Start Draft →
-        </button>
+        {/*
+          Start sticks to the bottom of the phone viewport. Every setting here
+          has a sensible default, so the primary action should not be several
+          screens of scrolling away.
+        */}
+        <div className="sticky bottom-0 z-30 py-3 bg-[#0a0a0a]/95 backdrop-blur-sm sm:static sm:py-0 sm:bg-transparent sm:backdrop-blur-none">
+          <button
+            type="button"
+            onClick={startDraft}
+            className="w-full py-4 rounded-xl font-black text-lg bg-[#00c896] text-black hover:bg-[#00b385] transition-colors touch-manipulation"
+          >
+            Start Draft →
+          </button>
+        </div>
 
         <Link
           href="/classic"
@@ -244,4 +249,24 @@ export default function SetupPage() {
 
 function Label({ children }: { children: React.ReactNode }) {
   return <div className="text-[10px] font-bold tracking-widest text-[#555] uppercase mb-2">{children}</div>;
+}
+
+/**
+ * Folds away a grid of not-yet-available options. Twelve disabled tiles were
+ * roughly a third of the page on a phone, pushing "Start Draft" far out of
+ * reach; collapsed by default they stay discoverable without the scroll.
+ */
+function ComingSoon({ summary, children }: { summary: string; children: React.ReactNode }) {
+  return (
+    <details className="group rounded-lg border border-[#1a1a1a] bg-[#0d0d0d]/50 mt-2">
+      <summary className="cursor-pointer list-none px-4 py-3 flex items-center gap-2 text-xs text-[#555] hover:text-[#888] transition-colors touch-manipulation">
+        <span className="text-[#444] transition-transform group-open:rotate-90">▶</span>
+        <span className="flex-1">{summary}</span>
+        <span className="text-[9px] font-bold uppercase tracking-widest text-[#444] bg-[#1a1a1a] px-1.5 py-0.5 rounded">Soon</span>
+      </summary>
+      <div className="grid grid-cols-1 gap-2 px-3 pb-3 sm:grid-cols-2">
+        {children}
+      </div>
+    </details>
+  );
 }
