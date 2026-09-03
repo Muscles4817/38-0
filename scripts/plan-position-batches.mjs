@@ -31,6 +31,9 @@ const value = name => {
 };
 const BATCH_SIZE = Number(value('size') ?? 25);
 const MIN_MINUTES = Number(value('min-minutes') ?? 0);
+// Restrict to players who appeared in one season, so a season can be completed
+// and costed on its own rather than the whole database at once.
+const ONLY_SEASON = value('season');
 const statusOnly = args.includes('--status');
 
 if (!fs.existsSync(PLAYERS)) {
@@ -82,7 +85,9 @@ for (const f of batchFiles()) {
   }
 }
 
-const wanted = players.filter(p => p.totalMinutes >= MIN_MINUTES);
+const wanted = players.filter(p =>
+  p.totalMinutes >= MIN_MINUTES &&
+  (!ONLY_SEASON || p.seasons.some(x => x.season === ONLY_SEASON)));
 const batches = [];
 for (let i = 0; i < wanted.length; i += BATCH_SIZE) {
   batches.push(wanted.slice(i, i + BATCH_SIZE));

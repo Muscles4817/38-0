@@ -106,3 +106,33 @@ describe('checkAssignment', () => {
       .toMatch(/not understood/);
   });
 });
+
+describe('disputing a wrong label', () => {
+  // FBref's labels are sometimes wrong or stale — John Barnes is recorded
+  // DFFW, which permits no forward or midfield primary at all. Without a way
+  // out, the constraint that prevents invention starts enforcing errors.
+  // The escape hatch is narrow on purpose: going outside the label requires
+  // saying so and giving a reason.
+  const barnes = {
+    name: 'John Barnes', fbrefPosition: 'DFFW', positions: ['LW', 'CM'],
+  };
+
+  it('refuses to go outside the label by default', () => {
+    expect(checkAssignment(barnes).join(' ')).toMatch(/does not match FBref/);
+  });
+
+  it('allows it when the label is disputed with a reason', () => {
+    expect(checkAssignment({
+      ...barnes,
+      labelDisputed: true,
+      note: 'DFFW is wrong: a left winger moving into central midfield, never a defender.',
+    })).toEqual([]);
+  });
+
+  it('requires an actual reason, not just the flag', () => {
+    expect(checkAssignment({ ...barnes, labelDisputed: true }).join(' '))
+      .toMatch(/must explain why/);
+    expect(checkAssignment({ ...barnes, labelDisputed: true, note: 'wrong' }).join(' '))
+      .toMatch(/must explain why/);
+  });
+});

@@ -57,7 +57,9 @@ export function primaryPositions(label) {
  * Returns a list of problems; empty means the assignment is consistent with
  * what the source actually recorded.
  */
-export function checkAssignment({ name, fbrefPosition, positions }) {
+export function checkAssignment({
+  name, fbrefPosition, positions, labelDisputed = false, note = '',
+}) {
   const problems = [];
   const who = name ?? 'player';
 
@@ -80,23 +82,43 @@ export function checkAssignment({ name, fbrefPosition, positions }) {
     return problems;
   }
 
+  // The source is occasionally wrong. Steve McMahon is recorded DFFW, which
+  // permits no midfield position at all, and he was a central midfielder — so
+  // the constraint would force a false answer with no way out.
+  //
+  // The escape hatch is deliberately narrow: going outside the label requires
+  // saying so explicitly and giving a reason. That keeps the property worth
+  // having — nobody drifts outside the source by accident — while allowing a
+  // genuine correction to be made and reviewed.
+  if (labelDisputed) {
+    if (!note || String(note).trim().length < 10) {
+      problems.push(
+        `${who}: labelDisputed is set, so "note" must explain why FBref's ` +
+        `"${fbrefPosition}" is wrong`
+      );
+    }
+    return problems;
+  }
+
   const allowed = allowedPositions(fbrefPosition);
   for (const p of positions) {
     if (GAME_POSITIONS.includes(p) && !allowed.includes(p)) {
       problems.push(
         `${who}: assigned ${p} but FBref recorded them as ${fbrefPosition}, ` +
-        `which allows only ${allowed.join(' ')}`
+        `which allows only ${allowed.join(' ')}. If the label is wrong, set ` +
+        `labelDisputed with a note saying why.`
       );
     }
   }
 
-  // The first position listed is the player's main one, and must match the
+  // The first position listed is the player's main one, and should match the
   // bucket FBref put first.
   const primary = primaryPositions(fbrefPosition);
   if (positions.length && !primary.includes(positions[0])) {
     problems.push(
       `${who}: primary position ${positions[0]} does not match FBref's primary ` +
-      `bucket ${buckets[0]} (expected one of ${primary.join(' ')})`
+      `bucket ${buckets[0]} (expected one of ${primary.join(' ')}). If the ` +
+      `label is wrong, set labelDisputed with a note saying why.`
     );
   }
 
