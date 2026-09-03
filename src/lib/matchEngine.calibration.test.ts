@@ -14,6 +14,7 @@
 //   goals 1.40   shots 13.0   on target 4.4   conversion 10.8%
 //   fouls 10.4   yellows 1.9  reds 0.05       assisted goals 74%
 //   home 1.55 / away 1.25     clean sheets ~26%
+//   goals from a dead ball ~25%
 
 import { describe, it, expect } from 'vitest';
 import { gameData } from './gameData';
@@ -75,6 +76,7 @@ const rand = rng(20260903);
 const t = {
   n: 0, matches: 0, goals: 0, shots: 0, onTarget: 0, fouls: 0, yellows: 0, reds: 0,
   homeGoals: 0, awayGoals: 0, cleanSheets: 0, assistedGoals: 0, allGoals: 0,
+  setPieceGoals: 0,
 };
 const scorelines = new Map<string, number>();
 for (let repeat = 0; repeat < 3; repeat++) {
@@ -96,6 +98,7 @@ for (let repeat = 0; repeat < 3; repeat++) {
         if (e.type !== 'goal') continue;
         t.allGoals++;
         if (e.assistId !== undefined) t.assistedGoals++;
+        if (e.chanceType === 'setPiece') t.setPieceGoals++;
       }
       scorelines.set(`${m.home.goals}-${m.away.goals}`,
         (scorelines.get(`${m.home.goals}-${m.away.goals}`) ?? 0) + 1);
@@ -149,6 +152,16 @@ describe('and football-shaped matches', () => {
     const rate = t.cleanSheets / t.n;
     expect(rate).toBeGreaterThan(0.21);
     expect(rate).toBeLessThan(0.33);
+  });
+
+  it('takes about a quarter of its goals from a dead ball', () => {
+    // Set pieces are not decoration. They are the one route to a goal that does
+    // not scale with the quality gap — a poor side with a big centre-half
+    // scores from a corner against anyone — and without them a strong squad
+    // beats a weak league by more than any real team has managed.
+    const share = t.setPieceGoals / t.allGoals;
+    expect(share).toBeGreaterThan(0.19);
+    expect(share).toBeLessThan(0.33);
   });
 
   it('sets up about three quarters of its goals', () => {

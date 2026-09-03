@@ -40,7 +40,7 @@ export type PlayerRole = string;
 const POSSESSIONS = 200;
 
 /** Chance that a possession produces a shot, for evenly matched sides. */
-const BASE_SHOT_RATE = 0.132;
+const BASE_SHOT_RATE = 0.136;
 
 /** Chance that a possession concedes a foul. */
 const BASE_FOUL_RATE = 0.099;
@@ -69,6 +69,42 @@ const KEEPING_EXPONENT = 0.32;
 const ROLE_SELECTION_POWER = 0.5;
 const RATING_SELECTION_POWER = 0.6;
 
+// ── Set pieces ───────────────────────────────────────────────────────────────
+//
+// About 30% of shots and a quarter of goals in real football come from a dead
+// ball, and they behave differently from open play. Winning a corner does not
+// need you to play through a side — a deep defence wins them from clearances
+// and counters — and converting one is a contest of height and delivery rather
+// than of general quality.
+//
+// That matters more than it sounds. Without them, the only route to a goal is
+// the one that scales hardest with squad quality, so a strong side dominates a
+// weak league by more than any real team ever has.
+
+/** Share of a side's shots that come from a dead ball. */
+const SET_PIECE_SHARE = 0.3;
+
+/** How much territorial superiority earns extra set pieces. Deliberately far
+ *  below EDGE_TO_CHANCES: a side pinned back still wins corners. */
+const SET_PIECE_EDGE = 0.06;
+
+/** Base quality of a shot from a dead ball. Lower than a through ball. */
+const SET_PIECE_QUALITY = 0.092;
+
+/** How far an aerial mismatch carries on a set piece. */
+const AERIAL_EXPONENT = 0.5;
+
+/** Who wins a header in the box. */
+const AERIAL_WEIGHT: Record<Position, number> = {
+  CB: 1.0, ST: 0.9, CF: 0.7, CDM: 0.6, GK: 0.35,
+  LB: 0.4, RB: 0.4, LWB: 0.35, RWB: 0.35, CM: 0.45, CAM: 0.3,
+  LM: 0.3, RM: 0.3, LW: 0.2, RW: 0.2,
+};
+
+const ROLE_AERIAL: Partial<Record<PlayerRole, number>> = {
+  AerialThreat: 2.4, TargetMan: 1.8, NoNonsenseDefender: 1.5, SetPieceDeliverer: 1.2,
+};
+
 /** A foul that is booked, and a foul that is a straight red. */
 const FOUL_TO_YELLOW = 0.2;
 const FOUL_TO_RED = 0.0012;
@@ -92,7 +128,8 @@ const ratingScale = (rating: number) => Math.exp(RATING_CURVE * (rating - 80));
 // a header from a cross is a worse chance than a through ball.
 
 export type ChanceType =
-  | 'throughBall' | 'cross' | 'aerial' | 'longShot' | 'individual' | 'penalty';
+  | 'throughBall' | 'cross' | 'aerial' | 'longShot' | 'individual'
+  | 'setPiece' | 'penalty';
 
 const CHANCE_QUALITY: Record<ChanceType, number> = {
   throughBall: 0.16,
@@ -100,6 +137,7 @@ const CHANCE_QUALITY: Record<ChanceType, number> = {
   aerial: 0.095,
   cross: 0.08,
   longShot: 0.032,
+  setPiece: SET_PIECE_QUALITY,
   penalty: 0.78,
 };
 
@@ -110,6 +148,7 @@ const ROLE_CHANCE_AFFINITY: Record<ChanceType, Partial<Record<PlayerRole, number
   throughBall: { Poacher: 1.8, LateRunner: 1.6, InsideForward: 1.4, DeepLyingForward: 1.3 },
   individual: { InsideForward: 1.7, Trequartista: 1.5, Winger: 1.3 },
   longShot: { Mezzala: 1.5, Trequartista: 1.4, Regista: 1.2 },
+  setPiece: { AerialThreat: 2.8, TargetMan: 2.0, NoNonsenseDefender: 1.9, BallPlayingDefender: 1.4 },
   penalty: {},
 };
 
@@ -293,6 +332,7 @@ interface TeamModel {
   attackZone: Record<Zone, number>;
   defendZone: Record<Zone, number>;
   midfield: number;
+  aerial: number;
   focus: Record<Zone, number>;
 }
 
@@ -324,6 +364,19 @@ function weightedQuality(
   return mass === 0 ? ratingScale(70) : total / mass;
 }
 
+/** A side's presence in both boxes at a dead ball. */
+function aerialQuality(players: MatchPlayer[]): number {
+  let total = 0;
+  let mass = 0;
+  for (const p of players) {
+    let w = AERIAL_WEIGHT[p.position] ?? 0.4;
+    for (const r of p.roles ?? []) w *= ROLE_AERIAL[r] ?? 1;
+    total += w * ratingScale(p.rating);
+    mass += w;
+  }
+  return mass === 0 ? ratingScale(70) : total / mass;
+}
+
 function buildTeam(setup: TeamSetup): TeamModel {
   const style = PLAYSTYLES[setup.style] ?? PLAYSTYLES.balanced;
   const players = setup.players;
@@ -344,6 +397,7 @@ function buildTeam(setup: TeamSetup): TeamModel {
       R: weightedQuality(players, DEFEND_WEIGHT, 'R'),
     },
     midfield: weightedQuality(players, MIDFIELD_WEIGHT, null),
+    aerial: aerialQuality(players),
     focus: {
       L: Math.max(0, setup.focus.L ?? 0) / focusTotal,
       C: Math.max(0, setup.focus.C ?? 0) / focusTotal,
@@ -388,10 +442,15 @@ function pickShooter(
 ): MatchPlayer | null {
   const affinity = ROLE_CHANCE_AFFINITY[type];
   const candidates = team.players.filter(p => p.position !== 'GK');
+  // At a corner the whole side is in the box, and it is usually a centre-half
+  // who gets on the end of it. Open-play weighting would all but exclude them.
+  const setPiece = type === 'setPiece';
   const weights = candidates.map(p => {
-    let w = (ATTACK_WEIGHT[p.position] ?? 0.2) + 0.05;
+    let w = setPiece
+      ? (AERIAL_WEIGHT[p.position] ?? 0.4) + 0.05
+      : (ATTACK_WEIGHT[p.position] ?? 0.2) + 0.05;
     const pz = positionZone(p.position);
-    w *= pz === zone ? 1.35 : pz === 'C' || zone === 'C' ? 1 : 0.55;
+    if (!setPiece) w *= pz === zone ? 1.35 : pz === 'C' || zone === 'C' ? 1 : 0.55;
     let best = 1;
     for (const r of p.roles ?? []) {
       w *= Math.pow(roles.goalMult[r] ?? 1, ROLE_SELECTION_POWER);
@@ -509,8 +568,20 @@ export function simulateMatch(
       Math.exp(EDGE_TO_CHANCES * edge) *
       (isHome ? HOME_SHOT_RATE : 1);
 
-    if (rand() < shotRate) {
-      const type = rand() < 0.011 ? 'penalty' : pickChanceType(rand, att, zone);
+    // Two independent routes to a shot. The second barely cares who is on top.
+    // BASE_SHOT_RATE is the whole shot count, so the two routes split it rather
+    // than stacking: adding dead balls on top put every side on 18 shots.
+    const setPieceRate = BASE_SHOT_RATE * SET_PIECE_SHARE
+      * att.style.shotRate * Math.exp(SET_PIECE_EDGE * edge) * (isHome ? HOME_SHOT_RATE : 1);
+    const openPlay = rand() < shotRate * (1 - SET_PIECE_SHARE);
+    const deadBall = !openPlay && rand() < setPieceRate;
+
+    if (openPlay || deadBall) {
+      const type: ChanceType = deadBall
+        ? 'setPiece'
+        : rand() < 0.011
+          ? 'penalty'
+          : pickChanceType(rand, att, zone);
       const shooter = pickShooter(rand, att, zone, type, roles);
       if (shooter) {
         const shooterStats = stats.get(shooter.playerId)!;
@@ -524,10 +595,15 @@ export function simulateMatch(
         const keeper = def.keeper;
         const keeping = keeper ? ratingScale(keeper.rating) : 1;
 
-        let xg = CHANCE_QUALITY[type] * att.style.chanceQuality
-          * (isHome ? HOME_CHANCE_QUALITY : 1);
-        if (type !== 'penalty') {
-          xg *= Math.pow(finishing, FINISHING_EXPONENT)
+        let xg = CHANCE_QUALITY[type] * (isHome ? HOME_CHANCE_QUALITY : 1);
+        if (type === 'setPiece') {
+          // A contest of height and delivery. A poor side with a big defender
+          // scores from a corner against anyone, which is exactly why this
+          // route does not scale with the open-play gap.
+          xg *= Math.pow(att.aerial / def.aerial, AERIAL_EXPONENT) / defPenalty;
+        } else if (type !== 'penalty') {
+          xg *= att.style.chanceQuality
+            * Math.pow(finishing, FINISHING_EXPONENT)
             * Math.pow(keeping, -KEEPING_EXPONENT) / defPenalty;
         }
         xg = Math.min(0.95, xg);
@@ -547,7 +623,7 @@ export function simulateMatch(
           side.goals++;
           // Most goals are assisted; a solo effort or a penalty is not.
           const creator =
-            type === 'penalty' || rand() > OPEN_PLAY_ASSIST_RATE
+            type === 'penalty' || rand() > (type === 'setPiece' ? 0.93 : OPEN_PLAY_ASSIST_RATE)
               ? null
               : pickCreator(rand, att, zone, shooter.playerId, roles);
           if (creator) {
