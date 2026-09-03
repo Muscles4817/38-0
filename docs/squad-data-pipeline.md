@@ -72,32 +72,63 @@ call in the sample.
 
 ## Phase 2 — positions and formations
 
-Phase 1 cannot supply these. Position labels are too coarse, and formation is
-not in an appearance table at all.
+The game matches positions literally: an `LB` cannot fill an `LWB` slot. FBref
+gives `DF`. Closing that gap is the only judgement in the factual half of the
+pipeline, and judgement is where invented data comes from — so it is fenced in
+two ways.
 
-This phase takes the phase 1 roster as given — it does **not** re-derive who was
-in the squad — and resolves, per club-season:
+### The label is a constraint, not a hint
 
-- the formation the side actually used, and any second shape they switched to
-- each player's specific positions that season, from the fifteen the game knows
+Whoever assigns positions never decides *whether* someone is a defender, only
+*which kind*. `scripts/lib/positions.mjs` maps each FBref bucket to the
+positions it permits, and `checkAssignment` rejects anything outside it. A
+centre-back can no longer be recorded as a winger, structurally.
 
-```jsonc
-{
-  "club": "Manchester United",
-  "season": "1993/94",
-  "formation": "4-4-2",
-  "alternativeFormations": ["4-3-2-1"],
-  "formationNote": "Ferguson's standard shape; Cantona often withdrawn behind Hughes",
-  "source": "https://...",
-  "players": [
-    { "name": "Denis Irwin", "positions": ["LB", "RB"], "note": "played both flanks" }
-  ]
-}
-```
+| FBref label | Share of players | Allowed |
+| --- | --- | --- |
+| `GK` | 8% | `GK` — nothing to decide |
+| `FW` | 15% | `LW RW ST CF` |
+| `DF` | 30% | `LB CB RB LWB RWB` |
+| `MF` | 29% | `CDM CM CAM LM RM` |
+| combined | 16% | both buckets, 9–10 options |
 
-Splitting this from ratings matters: positions are checkable facts, ratings are
-not, and mixing them means a rating dispute forces you to re-litigate positions
-too.
+FBref orders a combined label by primacy — `DFMF` is a defender who also played
+midfield, `MFDF` the reverse — so the **first** position assigned must come from
+the **first** bucket. That is enforced too.
+
+Three quarters of players are therefore a choice between four or five
+candidates, and 8% need no choice at all.
+
+### Positions are assigned per player, not per club-season
+
+The same reasoning as ratings: one agent takes a player and assigns positions
+across their whole career in a single pass. In the data so far, **no player's
+FBref bucket changed between seasons**, so position is largely a property of the
+player rather than the player-season — which makes the per-player pass both
+cheaper and more consistent than 686 club-season passes.
+
+### Formation is derived, not researched
+
+Once players have positions, the shape falls out of who played. `lineupFit.ts`
+takes the squad, finds the maximum matching between players and each formation's
+eleven slots, and ranks formations by slots filled, then by the minutes of the
+players filling them. A side with one keeper, four defenders, four midfielders
+and two forwards is a 4-4-2 whether or not anyone wrote that down.
+
+This matters beyond tidiness: a derived formation is reproducible and auditable,
+while one recalled by an agent is neither. It also means phase 6 is mostly this
+same computation — most-used XI from minutes, shape from the matching — rather
+than another research pass.
+
+`equallyGoodFormations` reports ties, so a genuine ambiguity between, say,
+4-4-2 and 4-4-1-1 is visible rather than silently resolved.
+
+### What still needs a person or an agent
+
+- The specific position within the allowed set, for the 92% who are not
+  goalkeepers.
+- Confirming a derived formation where the fit is poor or tied, which is a much
+  smaller list than 686.
 
 ## Phase 3 — the canonical player list
 
