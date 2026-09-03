@@ -10,7 +10,8 @@
     "typecheck": "tsc --noEmit",
     "test": "vitest run",
     "test:watch": "vitest",
-    "export:data": "node scripts/export-game-data.mjs"
+    "export:data": "node scripts/export-game-data.mjs",
+    "import:squads": "node scripts/import-squads.mjs"
   },
   "dependencies": {
     "next": "16.2.9",
