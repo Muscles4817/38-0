@@ -3,19 +3,20 @@
 Recorded so they are not rediscovered. Ordered by value, highest first. Numbers
 here were measured; the method is in [simulation.md](simulation.md).
 
-## 1. The league is flatter than it should be
+## 1. The scoring coefficients are too gentle
 
-`scaledAvgRating` in `src/lib/simulation.ts` inverts an exponential with the
-wrong constant (`0.055` where `ratingScale` uses `0.032`), compressing every
-rating difference to 58% of its size. The result is a league where an 88-rated
-side finishes sixth and eight different clubs win the title in twenty seasons.
+`simulateScore` in `src/lib/simulation.ts` converts a 10-point strength edge
+into only +0.38 expected goals, so the table is still flatter than a real
+league: champions average 75.6 points against a real ~88, and the bottom club
+29.0 against a real ~22.
 
-Changing the constant moves the champion's average from 72 to 77 points and
-concentrates titles among four clubs. Full measurements in
-[simulation.md](simulation.md#1-scaledavgrating-inverts-with-the-wrong-constant).
+Raising `0.38 → 0.62` and `0.30 → 0.52` gives a 81.5-point champion and four
+distinct title winners across 30 seasons. That is tuning, not a defect, and
+wants measuring against the resulting tables rather than applying blind.
 
-Real Premier League champions average about 88 points, so the coefficients in
-`simulateScore` want widening afterwards. Do that as a second, measured step.
+Do not chase the last few points by inflating goal difference: real leagues are
+spread partly by injuries, form and mid-season upheaval that this model does not
+represent at all.
 
 ## 2. Pre-season odds promise more than the simulation delivers
 
@@ -111,6 +112,12 @@ rows, and only the id could tell them apart.
 ## Fixed, for reference
 
 Do not re-report these:
+
+- `scaledAvgRating` inverted `ratingScale` with the wrong constant — 0.032
+  forward, 0.055 back — dragging every squad 58% of the way toward 80 and making
+  the league close to a coin toss. Both now share one `RATING_CURVE` constant
+  with a round-trip test guarding it. The champion's average went from 71.1 to
+  75.6 points and an 88-rated XI from 4.9th to 2.6th.
 
 - `canFillSlot` required an exact string match, so a left-back could not cover
   left wing-back and a central midfielder could not fill a holding role. Seven

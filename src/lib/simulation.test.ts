@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import type { Position } from './formations';
 import {
+  __ratingCurve,
   computeOverall,
   preSeasonOdds,
   simulateSeason,
@@ -320,5 +321,58 @@ describe('preSeasonOdds', () => {
       expect(better.winLeague).toBeGreaterThanOrEqual(worse.winLeague);
       expect(better.relegation).toBeLessThanOrEqual(worse.relegation);
     }
+  });
+});
+
+describe('the rating curve', () => {
+  const { RATING_CURVE, ratingScale, scaledAvgRating } = __ratingCurve;
+
+  // ratingScale and scaledAvgRating are inverses. They once used different
+  // constants — 0.032 forward, 0.055 back — which silently pulled every squad
+  // 58% of the way toward 80: a squad of 90s was simulated as 85.8, and the
+  // league became far more random than the ratings said it should be. These
+  // tests exist so that can never happen again unnoticed.
+
+  it('returns a uniform squad at exactly its own rating', () => {
+    for (const rating of [60, 70, 75, 80, 85, 90, 95, 99]) {
+      const squad = Array.from({ length: 11 }, () => ({ rating }));
+      expect(scaledAvgRating(squad)).toBeCloseTo(rating, 6);
+    }
+  });
+
+  it('round-trips a single player', () => {
+    for (const rating of [64, 78, 91]) {
+      expect(scaledAvgRating([{ rating }])).toBeCloseTo(rating, 6);
+    }
+  });
+
+  it('is the true inverse of ratingScale', () => {
+    for (const rating of [55, 72, 88, 97]) {
+      expect(Math.log(ratingScale(rating)) / RATING_CURVE + 80).toBeCloseTo(rating, 6);
+    }
+  });
+
+  it('lets the best players carry the side, so it sits above the plain mean', () => {
+    // One outstanding player among ordinary ones.
+    const squad = [{ rating: 95 }, ...Array.from({ length: 10 }, () => ({ rating: 75 }))];
+    const plainMean = squad.reduce((n, p) => n + p.rating, 0) / squad.length;
+    expect(scaledAvgRating(squad)).toBeGreaterThan(plainMean);
+  });
+
+  it('preserves the gap between two squads rather than compressing it', () => {
+    const of = (rating: number) => Array.from({ length: 11 }, () => ({ rating }));
+    // A 6-point difference in the data must arrive as a 6-point difference.
+    expect(scaledAvgRating(of(77)) - scaledAvgRating(of(71))).toBeCloseTo(6, 6);
+  });
+
+  it('is monotonic', () => {
+    const of = (rating: number) => Array.from({ length: 11 }, () => ({ rating }));
+    for (let r = 50; r < 99; r++) {
+      expect(scaledAvgRating(of(r + 1))).toBeGreaterThan(scaledAvgRating(of(r)));
+    }
+  });
+
+  it('falls back to 70 for an empty squad', () => {
+    expect(scaledAvgRating([])).toBe(70);
   });
 });
