@@ -104,6 +104,9 @@ export function validateSquadFile(file, { label = 'squad' } = {}) {
     }
 
     if (p.roles !== undefined && !Array.isArray(p.roles)) bad('"roles" must be an array');
+    if (p.fbrefId !== undefined && (typeof p.fbrefId !== 'string' || !p.fbrefId.trim())) {
+      bad('"fbrefId" must be a non-empty string when present');
+    }
   });
 
   if (keepers === 0) fail('no goalkeeper');
@@ -151,9 +154,15 @@ export function validateAcrossFiles(files) {
       const norm = playerKey(p.name);
       if (!spellings.has(norm)) spellings.set(norm, new Set());
       spellings.get(norm).add(p.name.trim());
-      const key = `${data.season}::${norm}`;
+      // Two men can share a name. 1992/93 had a David Smith at Coventry and a
+      // different David Smith at Norwich, and keying on the name alone reads
+      // that as one player who cannot be in two squads. Where the file carries
+      // an FBref id, that is the identity; the name is only a fallback for the
+      // hand-written files that predate it.
+      const identity = typeof p.fbrefId === 'string' && p.fbrefId ? p.fbrefId : norm;
+      const key = `${data.season}::${identity}`;
       if (!bySeason.has(key)) bySeason.set(key, []);
-      bySeason.get(key).push({ path, club: data.club });
+      bySeason.get(key).push({ path, club: data.club, name: p.name.trim() });
     }
   }
 
@@ -168,7 +177,8 @@ export function validateAcrossFiles(files) {
 
   for (const [key, entries] of bySeason) {
     if (entries.length > 1) {
-      const [season, name] = key.split('::');
+      const [season] = key.split('::');
+      const name = entries[0].name;
       errors.push(
         `${name} appears in ${entries.length} squads for ${season} ` +
         `(${entries.map(e => e.club).join(', ')}). ` +

@@ -67,6 +67,34 @@ squads often.
 This is the real ceiling on replay value. Every other improvement is bounded by
 it.
 
+## 7. Twelve players exist as two rows each
+
+Found while importing 1992/93. In the seed data that predates the FBref
+pipeline, twelve people each have two `players` rows:
+
+    Kieran Trippier   120 (2018/19, 2025/26)  and 134 (2022/23)
+    Vladimir Smicer   604 (2004/05)           and 686 (2000/01, "Vladimír Šmicer")
+    Ilkay Gundogan    447 (no squad entry)    and 521 (2017/18)
+    Davinson Sanchez, Fabian Schar, Bruno Guimaraes, Miguel Almiron,
+    Emiliano Martinez, Jhon Duran, Jeremy Doku, Caoimhin Kelleher, Igor Biscan
+
+`playerKey` strips accents precisely so `Šmicer` and `Smicer` are one person,
+and it does. The rows survive anyway because `import-squads.mjs` builds its
+lookup map once and keeps only the **first** row per key, so a duplicate already
+in the database is never seen. The import cannot create these — it just cannot
+heal them either.
+
+It matters because the draft pool is built from players, so a duplicated person
+can be drafted twice, as two footballers.
+
+Not fixed yet because it is a merge rather than a delete: the versions have to
+be reparented, and 11 `lineup_slots` rows point at versions belonging to a
+player row that would go away. Done carelessly it breaks the classic lineups.
+
+Going forward `fbref_id` prevents the opposite error too. 1992/93 had a David
+Smith at Coventry and a different David Smith at Norwich; they correctly got two
+rows, and only the id could tell them apart.
+
 ## 8. Smaller things
 
 - **Line ratings disagree with the simulation.** `LineRatings.tsx` counts LW/RW

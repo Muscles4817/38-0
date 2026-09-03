@@ -90,6 +90,19 @@ if (!fs.existsSync(DB_PATH)) {
 const db = new Database(DB_PATH);
 db.pragma('foreign_keys = ON');
 
+// A players row is one human. Matching them by name was always a compromise:
+// it merges two different David Smiths into one person, and the three-level
+// model then hangs both men's versions off a single player. The FBref id is
+// the real identity where a file carries one, so store it.
+const hasFbrefId = db.prepare('PRAGMA table_info(players)').all()
+  .some(c => c.name === 'fbref_id');
+if (!hasFbrefId) {
+  db.exec('ALTER TABLE players ADD COLUMN fbref_id TEXT');
+  db.exec('CREATE UNIQUE INDEX IF NOT EXISTS players_fbref_id ON players(fbref_id) ' +
+    'WHERE fbref_id IS NOT NULL');
+  console.log('  + players.fbref_id');
+}
+
 const clubMeta = fs.existsSync(CLUBS_PATH)
   ? JSON.parse(fs.readFileSync(CLUBS_PATH, 'utf8'))
   : {};
@@ -98,8 +111,12 @@ const findClub = db.prepare('SELECT id FROM clubs WHERE name = ?');
 const insertClub = db.prepare('INSERT INTO clubs (name, short_name, color, league) VALUES (?, ?, ?, ?)');
 const findSeason = db.prepare('SELECT id FROM seasons WHERE label = ?');
 const insertSeason = db.prepare('INSERT INTO seasons (label, year_start) VALUES (?, ?)');
-const allPlayers = db.prepare('SELECT id, name, nationality FROM players');
-const insertPlayer = db.prepare('INSERT INTO players (name, nationality) VALUES (?, ?)');
+const allPlayers = db.prepare('SELECT id, name, nationality, fbref_id FROM players');
+const insertPlayer = db.prepare(
+  'INSERT INTO players (name, nationality, fbref_id) VALUES (?, ?, ?)'
+);
+const setFbrefId = db.prepare('UPDATE players SET fbref_id = ? WHERE id = ?');
+const setNationality = db.prepare('UPDATE players SET nationality = ? WHERE id = ?');
 const insertVersion = db.prepare(
   'INSERT INTO player_versions (player_id, label, rating, positions, roles) VALUES (?, ?, ?, ?, ?)'
 );
@@ -132,15 +149,52 @@ function seasonId(label) {
 // One players row per human, across every season and club. Lookup is by
 // accent-insensitive key so "Srnicek" and "Srnicek" do not become two people.
 const playersByKey = new Map();
+const playersById = new Map();
 for (const row of allPlayers.all()) {
   const key = playerKey(row.name);
   if (!playersByKey.has(key)) playersByKey.set(key, row);
+  if (row.fbref_id) playersById.set(row.fbref_id, row);
 }
 
-function playerId(name, nationality) {
+// The seed rows predate the pipeline and many carry no nationality at all. A
+// file that knows one fills the gap. A file that disagrees with a value already
+// there does not overwrite it — that is a conflict, and it warns instead.
+function fillNationality(row, nationality) {
+  if (row.nationality || !nationality) return;
+  setNationality.run(nationality, row.id);
+  row.nationality = nationality;
+}
+
+function playerId(name, nationality, fbrefId) {
+  // The id wins outright when we have it.
+  if (fbrefId && playersById.has(fbrefId)) {
+    const hit = playersById.get(fbrefId);
+    fillNationality(hit, nationality);
+    return hit.id;
+  }
+
   const key = playerKey(name);
   const row = playersByKey.get(key);
+
+  // A name match against a row that already holds a *different* id is two
+  // people with the same name, not one person. Make a new row.
+  if (row && fbrefId && row.fbref_id && row.fbref_id !== fbrefId) {
+    const id = Number(insertPlayer.run(name, nationality, fbrefId).lastInsertRowid);
+    console.log(`  + "${name}" is a second player of that name (${fbrefId})`);
+    playersById.set(fbrefId, { id, name, nationality, fbref_id: fbrefId });
+    return id;
+  }
+
+  // A name match against a row with no id yet is the hand-written seasons
+  // meeting the pipeline for the first time. Same person; record the id.
+  if (row && fbrefId && !row.fbref_id) {
+    setFbrefId.run(fbrefId, row.id);
+    row.fbref_id = fbrefId;
+    playersById.set(fbrefId, row);
+  }
+
   if (row) {
+    fillNationality(row, nationality);
     if (row.name !== name) {
       console.warn(`warning  "${name}" matched existing player "${row.name}"`);
     }
@@ -152,8 +206,10 @@ function playerId(name, nationality) {
     }
     return row.id;
   }
-  const id = Number(insertPlayer.run(name, nationality).lastInsertRowid);
-  playersByKey.set(key, { id, name, nationality });
+  const id = Number(insertPlayer.run(name, nationality, fbrefId ?? null).lastInsertRowid);
+  const made = { id, name, nationality, fbref_id: fbrefId ?? null };
+  playersByKey.set(key, made);
+  if (fbrefId) playersById.set(fbrefId, made);
   return id;
 }
 
@@ -172,7 +228,7 @@ const run = db.transaction(() => {
     }
 
     for (const p of data.players) {
-      const pid = playerId(p.name.trim(), p.nationality.trim());
+      const pid = playerId(p.name.trim(), p.nationality.trim(), p.fbrefId ?? null);
       const vid = insertVersion.run(
         pid,
         data.season,
