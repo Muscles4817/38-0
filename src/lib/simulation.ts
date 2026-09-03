@@ -372,22 +372,36 @@ export function zoneWeight(pos: Position): { att: number; def: number } {
   return w[pos] ?? { att: 0.50, def: 0.50 };
 }
 
-// Averages ratings in exponential space then inverts back to rating units.
-// A 90-rated player raises the effective mean more than a 70-rated one lowers it,
-// so elite players carry a team beyond what a raw average would suggest.
+// How sharply a rating compounds into effectiveness. Each 5-point band is worth
+// about 17% more than the one below, so 85→90 matters more than 75→80. This
+// stops a mediocre striker matching an elite one just by holding a
+// high-multiplier role such as Poacher.
+//
+// ratingScale and scaledAvgRating are inverses and MUST share this constant.
+// They previously did not — 0.032 out, 0.055 back — which silently dragged
+// every squad 58% of the way toward 80 and left the league closer to a coin
+// toss than to a table. See simulation.test.ts for the round trip that now
+// guards it.
+const RATING_CURVE = 0.032;
+
+// Maps a rating onto the curve.
+function ratingScale(rating: number): number {
+  return Math.exp(RATING_CURVE * (rating - 80));
+}
+
+// Averages ratings in curve space, then maps back to rating units.
+//
+// Not a plain mean: a 90-rated player raises the effective average more than a
+// 70-rated one lowers it, so a side is carried by its best players rather than
+// dragged to the middle by its worst.
 function scaledAvgRating(players: { rating: number }[]): number {
   if (players.length === 0) return 70;
   const avgScale = players.reduce((s, p) => s + ratingScale(p.rating), 0) / players.length;
-  return Math.log(avgScale) / 0.055 + 80;
+  return Math.log(avgScale) / RATING_CURVE + 80;
 }
 
-// Rating scales contribution to goals/assists with an exponential curve.
-// Each 5-point band adds ~28% more than the previous band, so 85→90 is a much bigger
-// jump than 75→80. This prevents a mediocre striker from matching elite players just by
-// holding a high-multiplier role (e.g. Poacher).
-function ratingScale(rating: number): number {
-  return Math.exp(0.032 * (rating - 80));
-}
+// Exported for the round-trip test; not part of the simulation's public API.
+export const __ratingCurve = { RATING_CURVE, ratingScale, scaledAvgRating };
 
 function posGoalWeight(pos: Position): number {
   const w: Partial<Record<Position, number>> = {
