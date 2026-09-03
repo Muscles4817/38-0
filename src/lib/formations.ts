@@ -417,6 +417,18 @@ const LANE_ORDER: Lane[] = ['L', 'C', 'R'];
 const laneGap = (a: Lane, b: Lane) =>
   Math.abs(LANE_ORDER.indexOf(a) - LANE_ORDER.indexOf(b));
 
+/**
+ * Which side of the pitch a position occupies.
+ *
+ * The match engine attacks through a zone and defends it with whoever is
+ * stationed there, so a side with a weak right-back concedes down that flank.
+ * It shares LANE with positionFit deliberately: one definition of where a
+ * player stands, used by both drafting and simulation.
+ */
+export function positionZone(position: Position): 'L' | 'C' | 'R' {
+  return LANE[position];
+}
+
 export type SlotFit = 'exact' | 'adjacent' | 'none';
 
 /**
