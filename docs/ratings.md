@@ -40,9 +40,23 @@ the draft a real risk/reward decision rather than a wasted spin.
 
 Below 60 should be rare enough to need a reason.
 
-## Expected shape of a squad
+## Never rate a player relative to their teammates
 
-Use these as a sanity check after rating a squad. They are guides, not quotas.
+A player's rating depends on the player, not the company they keep. If a squad
+contains seven players who were genuinely world class, it gets seven ratings in
+the 90s. Peak Manchester City fielded Aguero, De Bruyne, David Silva, Kompany,
+Fernandinho, Bernardo Silva and Walker at the same time; the 2003/04 Arsenal
+side was similarly stacked. Both are correct as they stand.
+
+There is no quota, no cap, and no expected average. Nothing in the validation
+enforces a distribution, and nothing should.
+
+The table below is **descriptive** — what squads of a given calibre have
+typically looked like — and is there to help you notice that you have drifted
+off the absolute scale. It is not a target to hit, and a squad that departs
+from it because the players really were that good is right, not wrong.
+
+## What squads have typically looked like
 
 | Squad | Typical range | Best player |
 | --- | --- | --- |
@@ -55,8 +69,11 @@ Use these as a sanity check after rating a squad. They are guides, not quotas.
 | 1995 mid-table | 68–78 | 80–84 |
 | 1995 relegation | 64–74 | 76–79 |
 
-If a 1996 relegation side comes out with five players in the 80s, it is wrong.
-If a 2025 mid-table side has half its XI in the 60s, it is also wrong.
+Use these to catch drift, not to force a shape. If a 1996 relegation side comes
+out with five players in the 80s, that is worth re-checking against the anchors
+— but if the players really were that good, leave them there. If a 2025
+mid-table side has half its XI in the 60s, you have almost certainly slipped
+into rating them against their own era instead of the absolute scale.
 
 ## How to decide a number
 

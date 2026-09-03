@@ -108,19 +108,24 @@ export function validateSquadFile(file, { label = 'squad' } = {}) {
   if (keepers === 0) fail('no goalkeeper');
   if (keepers > 3) warn(`${keepers} goalkeepers`);
 
-  // Distribution sanity — see docs/ratings.md. Warnings only: a genuinely great
-  // side should trip the high one.
+  // Deliberately NOT a distribution check.
+  //
+  // An earlier version warned when a squad held more than four players at 90+.
+  // That is wrong: peak Manchester City really did field Aguero, De Bruyne,
+  // Silva, Kompany, Fernandinho, Bernardo and Walker at once, and the 2003/04
+  // Arsenal side was similarly stacked. Players are as good as they are, and a
+  // rule about squad averages would only push correct ratings down.
+  //
+  // What is left catches a broken file, not an unusual squad.
   const ratings = file.players
     .map(p => p && p.rating)
     .filter(r => typeof r === 'number');
-  if (ratings.length) {
-    const elite = ratings.filter(r => r >= 90).length;
-    if (elite > 4) warn(`${elite} players rated 90+; world class should be rare`);
-    if (ratings.filter(r => r >= 95).length > 2) {
-      warn('more than two all-time-great ratings in one squad');
+  if (ratings.length > 1) {
+    if (new Set(ratings).size === 1) {
+      warn(`every player is rated ${ratings[0]}; this looks unrated rather than flat`);
     }
     const top = Math.max(...ratings);
-    if (top < 70) warn(`best player is only ${top}; check the whole squad`);
+    if (top < 65) warn(`best player is only ${top}; check the whole squad`);
   }
 
   return { errors, warnings };

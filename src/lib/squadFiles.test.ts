@@ -100,12 +100,21 @@ describe('squad validation rules', () => {
     expect(validateSquadFile(bad).errors.join(' ')).toMatch(/must be a URL/);
   });
 
-  it('warns when a squad is stacked with world-class players', () => {
+  it('accepts a squad stacked with world-class players', () => {
+    // Peak Manchester City and the 2003/04 Arsenal side genuinely were. A
+    // squad is never wrong just because several of its players were excellent.
     const stacked = {
       ...ok,
-      players: ok.players.map((p, i) => (i < 6 ? { ...p, rating: 92 } : p)),
+      players: ok.players.map((p, i) => (i < 7 ? { ...p, rating: 93 } : p)),
     };
-    expect(validateSquadFile(stacked).warnings.join(' ')).toMatch(/90\+/);
+    const { errors, warnings } = validateSquadFile(stacked);
+    expect(errors).toEqual([]);
+    expect(warnings).toEqual([]);
+  });
+
+  it('warns when every player has the same rating', () => {
+    const flat = { ...ok, players: ok.players.map(p => ({ ...p, rating: 75 })) };
+    expect(validateSquadFile(flat).warnings.join(' ')).toMatch(/looks unrated/);
   });
 
   it('catches a player in two clubs in one season', () => {
