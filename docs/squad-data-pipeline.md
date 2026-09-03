@@ -154,6 +154,36 @@ The rules are in [ratings.md](ratings.md). The one that governs everything:
 distribution. If a side genuinely had seven world-class players, it gets seven
 ratings in the 90s.
 
+### Running batches in parallel
+
+Ten rating agents run at once comfortably. One rule, learned the hard way: give
+each agent a **unique filename** for any script it writes to the scratchpad.
+
+The scratchpad is shared, not per-agent. On the 1992/93 run two agents both
+wrote `apply.mjs`, and one executed the other's script — it happened to write a
+valid batch, so nothing was corrupted and the checker stayed green, but that was
+luck. A clobbered write here is silent: the file it produces is well-formed, and
+no check can tell it apart from the batch that should have been there.
+
+Tell each agent to name its script after its own batch.
+
+### Watching for drift
+
+The per-batch mean falling as the batch number rises is expected, not a warning:
+`players.json` is ordered by minutes played, so batch 1 holds the stars and the
+last batch the fringe. On 1992/93 the means ran 76.5 down to 66.1, correlating
+0.98 with median minutes.
+
+That gradient does **not** show the ratings are sound. It is equally what you
+would see if the agents had rated playing time instead of ability, which the
+spec forbids. The test that separates the two is the correlation of rating with
+minutes *within* one batch, where the ordering is gone — it came out between
+-0.03 and 0.17 across the ten, so they were reading ability. Two spot checks
+that say the same thing more directly: Grobbelaar 77 on 396 minutes, against
+Mick Stockwell 67 on 3780.
+
+Check the within-batch figure when a season finishes, not the gradient.
+
 ## Phase 5 — verification
 
 A second agent checks ratings and positions independently, with the phase 1

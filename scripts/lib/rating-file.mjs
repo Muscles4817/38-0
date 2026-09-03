@@ -56,12 +56,18 @@ export function checkRatingEntry(player, { validRoles = null } = {}) {
     const prev = rated[i - 1];
     const curr = rated[i];
     const swing = Math.abs(curr.rating - prev.rating);
-    if (swing > MAX_UNEXPLAINED_SWING && !String(curr.note ?? '').trim()) {
+    // Seasons are not always consecutive: a player can appear in 1992/93 and
+    // then not again until 2003/04, and ten points over ten years is a career
+    // rather than a contradiction. Allow the budget to grow with the gap.
+    const gap = Math.max(1, Number(String(curr.season).slice(0, 4)) -
+                            Number(String(prev.season).slice(0, 4)));
+    const budget = MAX_UNEXPLAINED_SWING * gap;
+    if (swing > budget && !String(curr.note ?? '').trim()) {
       problems.push(
         `${who}: ${prev.season} ${prev.rating} to ${curr.season} ${curr.rating} ` +
-        `is a ${swing}-point swing with no note explaining it`
+        `is a ${swing}-point swing over ${gap} season(s) with no note explaining it`
       );
-    } else if (swing > MAX_UNEXPLAINED_SWING) {
+    } else if (swing > budget) {
       warnings.push(`${who}: ${swing}-point swing ${prev.season} to ${curr.season} — ${curr.note}`);
     }
   }
