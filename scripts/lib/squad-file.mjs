@@ -4,6 +4,24 @@
 // it, so a file that fails here never reaches the database and never lands on
 // main.
 
+/**
+ * Key used to decide whether two spellings are the same person.
+ *
+ * Squad files are written by many hands across 30+ seasons, so the same player
+ * arrives as "Pavel Srnicek" and "Pavel Srnicek" with diacritics. Matching on
+ * the raw string would give them two rows in `players` and break the whole
+ * point of the three-level model, where one human has many versions.
+ */
+export function playerKey(name) {
+  return String(name)
+    .normalize('NFD')
+    .replace(/[̀-ͯ]/g, '')   // strip accents
+    .replace(/[.'’]/g, '')          // O'Neill / O'Neill / Jr.
+    .replace(/\s+/g, ' ')
+    .trim()
+    .toLowerCase();
+}
+
 export const VALID_POSITIONS = [
   'GK', 'LB', 'CB', 'RB', 'LWB', 'RWB',
   'CDM', 'CM', 'CAM', 'LM', 'RM', 'LW', 'RW', 'ST', 'CF',
@@ -58,7 +76,7 @@ export function validateSquadFile(file, { label = 'squad' } = {}) {
     if (typeof p.name !== 'string' || !p.name.trim()) bad('missing name');
     if (typeof p.nationality !== 'string' || !p.nationality.trim()) bad('missing nationality');
 
-    const key = String(p.name).trim().toLowerCase();
+    const key = playerKey(p.name);
     if (seenNames.has(key)) bad('listed twice in this squad');
     seenNames.add(key);
 
@@ -116,13 +134,29 @@ export function validateAcrossFiles(files) {
   const errors = [];
   const bySeason = new Map();
 
+  // Spellings that differ only by accent are the same person, so normalise
+  // before comparing — otherwise a transfer slips through as two players.
+  const spellings = new Map();
+
   for (const { path, data } of files) {
     if (!data || !Array.isArray(data.players)) continue;
     for (const p of data.players) {
       if (!p || typeof p.name !== 'string') continue;
-      const key = `${data.season}::${p.name.trim().toLowerCase()}`;
+      const norm = playerKey(p.name);
+      if (!spellings.has(norm)) spellings.set(norm, new Set());
+      spellings.get(norm).add(p.name.trim());
+      const key = `${data.season}::${norm}`;
       if (!bySeason.has(key)) bySeason.set(key, []);
       bySeason.get(key).push({ path, club: data.club });
+    }
+  }
+
+  for (const [, variants] of spellings) {
+    if (variants.size > 1) {
+      errors.push(
+        `the same player is spelled ${[...variants].map(v => `"${v}"`).join(' and ')}. ` +
+        `Pick one spelling; they would otherwise become separate players.`
+      );
     }
   }
 

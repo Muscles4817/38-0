@@ -2,7 +2,7 @@ import fs from 'node:fs';
 import path from 'node:path';
 import { describe, expect, it } from 'vitest';
 // @ts-expect-error — plain JS helper shared with scripts/import-squads.mjs
-import { validateSquadFile, validateAcrossFiles } from '../../scripts/lib/squad-file.mjs';
+import { validateSquadFile, validateAcrossFiles, playerKey } from '../../scripts/lib/squad-file.mjs';
 
 // Guards the committed squad staging files. CI runs this, so a squad that
 // breaks the rules in docs/ratings.md cannot reach main.
@@ -113,5 +113,35 @@ describe('squad validation rules', () => {
     const b = { ...ok, club: 'Club B' };
     const errors = validateAcrossFiles([{ path: 'a.json', data: a }, { path: 'b.json', data: b }]);
     expect(errors.join(' ')).toMatch(/appears in 2 squads/);
+  });
+});
+
+describe('player identity', () => {
+  it('treats accented and unaccented spellings as the same person', () => {
+    expect(playerKey('Pavel Srníček')).toBe(playerKey('Pavel Srnicek'));
+    expect(playerKey("Shay O'Neill")).toBe(playerKey('Shay ONeill'));
+    expect(playerKey('  Jan  Mucha ')).toBe(playerKey('Ján Mucha'));
+  });
+
+  it('keeps genuinely different players apart', () => {
+    expect(playerKey('Gary Neville')).not.toBe(playerKey('Phil Neville'));
+  });
+
+  it('rejects two spellings of one player across files', () => {
+    const base = {
+      season: '1996/97', source: 'https://example.com',
+      players: [
+        { name: 'A Keeper', nationality: 'England', positions: ['GK'], rating: 80, appearances: 38 },
+        ...Array.from({ length: 10 }, (_, i) => ({
+          name: `Player ${i}`, nationality: 'England', positions: ['CM'], rating: 74, appearances: 20,
+        })),
+      ],
+    };
+    const a = { ...base, club: 'Club A', players: [...base.players,
+      { name: 'Pavel Srníček', nationality: 'Czech Republic', positions: ['GK'], rating: 74, appearances: 20 }] };
+    const b = { ...base, club: 'Club B', season: '1997/98', players: [...base.players,
+      { name: 'Pavel Srnicek', nationality: 'Czech Republic', positions: ['GK'], rating: 74, appearances: 20 }] };
+    const errors = validateAcrossFiles([{ path: 'a.json', data: a }, { path: 'b.json', data: b }]);
+    expect(errors.join(' ')).toMatch(/same player is spelled/);
   });
 });

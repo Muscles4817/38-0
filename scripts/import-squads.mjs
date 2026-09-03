@@ -13,7 +13,7 @@ import Database from 'better-sqlite3';
 import fs from 'node:fs';
 import path from 'node:path';
 import process from 'node:process';
-import { validateSquadFile, validateAcrossFiles } from './lib/squad-file.mjs';
+import { validateSquadFile, validateAcrossFiles, playerKey } from './lib/squad-file.mjs';
 
 const ROOT = process.cwd();
 const DB_PATH = path.join(ROOT, 'data', '38-0.db');
@@ -98,7 +98,7 @@ const findClub = db.prepare('SELECT id FROM clubs WHERE name = ?');
 const insertClub = db.prepare('INSERT INTO clubs (name, short_name, color, league) VALUES (?, ?, ?, ?)');
 const findSeason = db.prepare('SELECT id FROM seasons WHERE label = ?');
 const insertSeason = db.prepare('INSERT INTO seasons (label, year_start) VALUES (?, ?)');
-const findPlayer = db.prepare('SELECT id, nationality FROM players WHERE name = ?');
+const allPlayers = db.prepare('SELECT id, name, nationality FROM players');
 const insertPlayer = db.prepare('INSERT INTO players (name, nationality) VALUES (?, ?)');
 const insertVersion = db.prepare(
   'INSERT INTO player_versions (player_id, label, rating, positions, roles) VALUES (?, ?, ?, ?, ?)'
@@ -129,10 +129,21 @@ function seasonId(label) {
   return Number(info.lastInsertRowid);
 }
 
-/** One players row per human. Name is the key; nationality guards against clashes. */
+// One players row per human, across every season and club. Lookup is by
+// accent-insensitive key so "Srnicek" and "Srnicek" do not become two people.
+const playersByKey = new Map();
+for (const row of allPlayers.all()) {
+  const key = playerKey(row.name);
+  if (!playersByKey.has(key)) playersByKey.set(key, row);
+}
+
 function playerId(name, nationality) {
-  const row = findPlayer.get(name);
+  const key = playerKey(name);
+  const row = playersByKey.get(key);
   if (row) {
+    if (row.name !== name) {
+      console.warn(`warning  "${name}" matched existing player "${row.name}"`);
+    }
     if (row.nationality && nationality && row.nationality !== nationality) {
       console.warn(
         `warning  "${name}" is recorded as ${row.nationality} but this file says ` +
@@ -141,7 +152,9 @@ function playerId(name, nationality) {
     }
     return row.id;
   }
-  return Number(insertPlayer.run(name, nationality).lastInsertRowid);
+  const id = Number(insertPlayer.run(name, nationality).lastInsertRowid);
+  playersByKey.set(key, { id, name, nationality });
+  return id;
 }
 
 let clubSeasons = 0, playerSeasons = 0, newPlayers = 0;
