@@ -18,6 +18,34 @@ Do not chase the last few points by inflating goal difference: real leagues are
 spread partly by injuries, form and mid-season upheaval that this model does not
 represent at all.
 
+### The scoring rate is a separate knob, and it is the base constants
+
+Measured over 40 seeded seasons with a drafted 1992/93 XI in the league, before
+and after the rating curve fix:
+
+|                      | before | after | real PL |
+| -------------------- | -----: | ----: | ------: |
+| champion's points    |   79.8 |  82.8 |     ~88 |
+| bottom club's points |   38.6 |  32.4 |     ~22 |
+| spread               |   41.2 |  50.4 |     ~66 |
+| goals per game       |   2.48 |  2.51 |    ~2.80 |
+
+The curve fix opened the table by nine points and left the scoring rate where it
+was. That is not a shortcoming of the fix — the two are controlled by different
+terms, and it is worth being explicit about which:
+
+    homeLambda = (1.3 + (homeAtt + 3 - awayDef)/10 * 0.38) * midfieldMultiplier
+    awayLambda = (1.0 + (awayAtt - homeDef)/10      * 0.30) * midfieldMultiplier
+
+Set both sides equal and the formula still yields 1.41 + 1.00 = **2.41 goals**.
+So the constants `1.3` and `1.0` supply almost the whole scoring rate, and every
+rating in the database only redistributes what is left. `0.38`/`0.30` control
+the *spread*; `1.3`/`1.0` control the *mean*.
+
+Raising the coefficients alone therefore widens the table without moving 2.51
+toward 2.80 — it would make good teams beat bad ones by more while the league
+still scores too little. Both wants changing, and measuring together.
+
 ## 2. Pre-season odds promise more than the simulation delivers
 
 An 88-rated XI is told it will finish 1st on 83 points with a 60% title chance.
@@ -68,13 +96,33 @@ squads often.
 This is the real ceiling on replay value. Every other improvement is bounded by
 it.
 
-## 7. Position matching is exact
+## 7. Twelve players exist as two rows each
 
-`canFillSlot` requires the player to list the slot's position literally. An LB
-cannot cover LWB, a CM cannot cover CDM, a ST cannot cover CF. Combined with a
-small pool this makes the draft brittle. A compatibility map (LB↔LWB, CM↔CDM,
-ST↔CF, LM↔LW) with a small rating penalty would help both drafting and the
-opponent best-XI fallback.
+Found while importing 1992/93. In the seed data that predates the FBref
+pipeline, twelve people each have two `players` rows:
+
+    Kieran Trippier   120 (2018/19, 2025/26)  and 134 (2022/23)
+    Vladimir Smicer   604 (2004/05)           and 686 (2000/01, "Vladimír Šmicer")
+    Ilkay Gundogan    447 (no squad entry)    and 521 (2017/18)
+    Davinson Sanchez, Fabian Schar, Bruno Guimaraes, Miguel Almiron,
+    Emiliano Martinez, Jhon Duran, Jeremy Doku, Caoimhin Kelleher, Igor Biscan
+
+`playerKey` strips accents precisely so `Šmicer` and `Smicer` are one person,
+and it does. The rows survive anyway because `import-squads.mjs` builds its
+lookup map once and keeps only the **first** row per key, so a duplicate already
+in the database is never seen. The import cannot create these — it just cannot
+heal them either.
+
+It matters because the draft pool is built from players, so a duplicated person
+can be drafted twice, as two footballers.
+
+Not fixed yet because it is a merge rather than a delete: the versions have to
+be reparented, and 11 `lineup_slots` rows point at versions belonging to a
+player row that would go away. Done carelessly it breaks the classic lineups.
+
+Going forward `fbref_id` prevents the opposite error too. 1992/93 had a David
+Smith at Coventry and a different David Smith at Norwich; they correctly got two
+rows, and only the id could tell them apart.
 
 ## 8. Smaller things
 
@@ -98,6 +146,13 @@ Do not re-report these:
   the league close to a coin toss. Both now share one `RATING_CURVE` constant
   with a round-trip test guarding it. The champion's average went from 71.1 to
   75.6 points and an 88-rated XI from 4.9th to 2.6th.
+
+- `canFillSlot` required an exact string match, so a left-back could not cover
+  left wing-back and a central midfielder could not fill a holding role. Seven
+  of the formations were unfillable in practice, and it forced position data to
+  be more precise than football is. Positions now carry a lane and a depth, and
+  cover an adjacent slot at a four-point rating penalty. The formation list grew
+  from 15 to 21 at the same time.
 
 - The draft's placement panel listed one or two green "Available" buttons above
   ten grey `ST · N/A` chips that looked identical but were inert `<span>`s.
