@@ -94,6 +94,48 @@ const SET_PIECE_QUALITY = 0.092;
 /** How far an aerial mismatch carries on a set piece. */
 const AERIAL_EXPONENT = 0.5;
 
+// ── Cohesion ─────────────────────────────────────────────────────────────────
+//
+// How well drilled a side is: how reliably its talent turns into results.
+//
+// This is not a bonus and it is not a rating. A well-drilled side performs
+// close to its level every week. A poorly drilled one is the same players
+// having a different afternoon — brilliant one week, disjointed the next.
+//
+// It matters because everything else in this engine changes how much talent is
+// worth on average, which moves every side together and leaves the table the
+// same shape. Cohesion changes the RELIABILITY of talent, and unreliability is
+// what closes a table up: upsets take points off the sides that should not be
+// dropping them.
+//
+// It is also the honest way to say something true about football history. The
+// modern game is coached far harder than the 1992/93 game was, which is why a
+// talent gap converted into a points gap less dependably then.
+//
+// A caution for whoever sets these values: cohesion must be judged from what is
+// known about a side — Wimbledon were drilled and limited, some talented sides
+// were shambolic — and never fitted to make a historical table come out right.
+// Doing that would be exactly the outcome-fitting this engine exists to avoid.
+
+/** Cohesion of a side with nothing recorded. */
+export const DEFAULT_COHESION = 72;
+
+/** Swing, in rating points, of a wholly undrilled side's weekly performance. */
+const COHESION_SWING = 9;
+
+// Cohesion has a second, larger effect than that swing, and it is the one that
+// matters. Talent is only expressed through organisation: eleven good players
+// who have not been drilled do not play like eleven good players. So how far a
+// quality advantage carries is itself scaled by how well drilled the sides are.
+//
+// A symmetric weekly swing turns out to do very little to a season — noise
+// averages out over 42 games. This does not average out, because it changes how
+// much being better is worth in the first place.
+const EXPRESSION_FLOOR = 0.34;
+
+/** A side at this cohesion performs at its level almost every week. */
+const COHESION_CEILING = 100;
+
 /** Who wins a header in the box. */
 const AERIAL_WEIGHT: Record<Position, number> = {
   CB: 1.0, ST: 0.9, CF: 0.7, CDM: 0.6, GK: 0.35,
@@ -247,6 +289,12 @@ export interface TeamSetup {
   style: PlaystyleName;
   /** Relative weight of attacks down each side. Normalised internally. */
   focus: Record<Zone, number>;
+  /**
+   * How well drilled this side is, 0-100. Defaults to DEFAULT_COHESION.
+   * Low cohesion does not make a side worse on average — it makes it less
+   * reliable, which over a season costs points it should have taken.
+   */
+  cohesion?: number;
 }
 
 export interface RoleMultipliers {
@@ -323,6 +371,18 @@ const MIDFIELD_WEIGHT: Record<Position, number> = {
   CM: 1.0, CDM: 0.9, CAM: 0.8, LM: 0.65, RM: 0.65, LWB: 0.35, RWB: 0.35,
   CF: 0.25, LW: 0.25, RW: 0.25, CB: 0.2, LB: 0.2, RB: 0.2, ST: 0.05, GK: 0.05,
 };
+
+/**
+ * How much of a quality advantage a side can actually put on the pitch.
+ *
+ * 1.0 for a perfectly drilled side, falling to EXPRESSION_FLOOR for one with no
+ * organisation at all — where a match is far closer to a lottery regardless of
+ * who is playing.
+ */
+function expression(cohesion: number): number {
+  const drilled = Math.max(0, Math.min(COHESION_CEILING, cohesion)) / COHESION_CEILING;
+  return EXPRESSION_FLOOR + (1 - EXPRESSION_FLOOR) * drilled;
+}
 
 interface TeamModel {
   setup: TeamSetup;
@@ -407,6 +467,38 @@ function buildTeam(setup: TeamSetup): TeamModel {
 }
 
 // ── Selection ────────────────────────────────────────────────────────────────
+
+/** Box-Muller. A performance swing is symmetric around a side's own level. */
+function gaussian(rand: () => number): number {
+  let u = 0;
+  let v = 0;
+  while (u === 0) u = rand();
+  while (v === 0) v = rand();
+  return Math.sqrt(-2 * Math.log(u)) * Math.cos(2 * Math.PI * v);
+}
+
+/**
+ * How far off its own level a side plays today, in rating points.
+ *
+ * Mean zero: cohesion does not make a side better or worse on average, only
+ * more or less dependable. A fully drilled side barely deviates; an undrilled
+ * one is a different team week to week.
+ */
+function formShift(rand: () => number, cohesion: number): number {
+  const drilled = Math.max(0, Math.min(COHESION_CEILING, cohesion)) / COHESION_CEILING;
+  return gaussian(rand) * COHESION_SWING * (1 - drilled);
+}
+
+/** Applies a day's form to everything a side does. */
+function applyForm(team: TeamModel, shift: number): void {
+  const factor = Math.exp(RATING_CURVE * shift);
+  for (const z of ZONES) {
+    team.attackZone[z] *= factor;
+    team.defendZone[z] *= factor;
+  }
+  team.aerial *= factor;
+  team.midfield *= factor;
+}
 
 function pickWeighted<T>(rand: () => number, items: T[], weights: number[]): T | null {
   let total = 0;
@@ -525,6 +617,12 @@ export function simulateMatch(
   const home = buildTeam(homeSetup);
   const away = buildTeam(awaySetup);
 
+  // What each side turns up as today. Drawn before anything else happens, so
+  // the whole match is played by the team that showed up rather than the team
+  // on paper.
+  applyForm(home, formShift(rand, homeSetup.cohesion ?? DEFAULT_COHESION));
+  applyForm(away, formShift(rand, awaySetup.cohesion ?? DEFAULT_COHESION));
+
   const stats = new Map<number, MatchPlayerStats>();
   for (const p of [...home.players, ...away.players]) stats.set(p.playerId, blankStats(p));
   const sent = new Set<number>();
@@ -561,11 +659,15 @@ export function simulateMatch(
     // against defensive quality in the zone it arrives at.
     const edge =
       Math.log(att.attackZone[zone] / (def.defendZone[defZone] * defPenalty)) / RATING_CURVE / 10;
+    // Both sides' organisation decides how far the gap between them tells: a
+    // drilled side exploits its superiority, and a drilled one resists it.
+    const carry = (expression(att.setup.cohesion ?? DEFAULT_COHESION)
+      + expression(def.setup.cohesion ?? DEFAULT_COHESION)) / 2;
     const shotRate =
       BASE_SHOT_RATE *
       att.style.shotRate *
       def.style.vulnerability *
-      Math.exp(EDGE_TO_CHANCES * edge) *
+      Math.exp(EDGE_TO_CHANCES * carry * edge) *
       (isHome ? HOME_SHOT_RATE : 1);
 
     // Two independent routes to a shot. The second barely cares who is on top.
@@ -603,8 +705,8 @@ export function simulateMatch(
           xg *= Math.pow(att.aerial / def.aerial, AERIAL_EXPONENT) / defPenalty;
         } else if (type !== 'penalty') {
           xg *= att.style.chanceQuality
-            * Math.pow(finishing, FINISHING_EXPONENT)
-            * Math.pow(keeping, -KEEPING_EXPONENT) / defPenalty;
+            * Math.pow(finishing, FINISHING_EXPONENT * carry)
+            * Math.pow(keeping, -KEEPING_EXPONENT * carry) / defPenalty;
         }
         xg = Math.min(0.95, xg);
         side.xg += xg;

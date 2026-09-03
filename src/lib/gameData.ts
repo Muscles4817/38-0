@@ -10,6 +10,7 @@
 
 import rawData from '@/data/game-data.json';
 import { Position } from './formations';
+import { bestFormation } from './lineupFit';
 import {
   simulateSeason,
   type PlayerRole,
@@ -121,8 +122,26 @@ export function getLineup(clubId: number, seasonId: number): DataLineup | null {
  * a stored lineup use that instead; see getOpponentSquads.
  */
 export function bestXI(players: DataPlayer[]): DataPlayer[] {
+  // Sorting by rating and taking ten does not field a football team. For
+  // 1992/93, where no club has a stored lineup, it put Manchester United out
+  // with five forwards and one central midfielder, which flattered them in
+  // every simulated match. Fit the best shape the squad can actually fill.
+  const fit = bestFormation(players.map(p => ({
+    name: p.name,
+    positions: p.positions as Position[],
+    // No minutes here, so rating stands in: it is what a picker would choose on.
+    minutes: p.rating,
+  })));
+
+  const byName = new Map(players.map(p => [p.name, p]));
+  const eleven = fit.slots
+    .map(slot => byName.get(slot.player.name))
+    .filter((p): p is DataPlayer => p != null);
+  if (eleven.length === 11) return eleven;
+
+  // A squad too lopsided to fill any shape still has to field someone.
   const isGk = (p: DataPlayer) => p.positions[0] === 'GK';
-  const keepers  = players.filter(isGk).sort((a, b) => b.rating - a.rating);
+  const keepers = players.filter(isGk).sort((a, b) => b.rating - a.rating);
   const outfield = players.filter(p => !isGk(p)).sort((a, b) => b.rating - a.rating);
   return [...keepers.slice(0, 1), ...outfield.slice(0, 10)];
 }
