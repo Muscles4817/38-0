@@ -32,9 +32,11 @@ Each team gets three numbers — attack, midfield, defence — from the players
 whose positions fall in that zone (`isAttPosition`, `isMidPosition`,
 `isDefPosition`; `CM` counts as both attack and defence).
 
-Ratings are averaged in exponential space by `scaledAvgRating`, so one elite
-player lifts a side more than one poor player drags it down. Roles then add a
-flat contribution on top via `roleStrBonus`.
+Ratings are averaged in curve space by `scaledAvgRating`, so one elite player
+lifts a side more than one poor player drags it down. It and `ratingScale` are
+inverses sharing one `RATING_CURVE` constant — they must, or squads get pulled
+toward 80 and the league loses its shape. Roles then add a flat contribution on
+top via `roleStrBonus`.
 
 ## Match result
 
@@ -84,46 +86,56 @@ When no seed is passed, `Date.now() % 999983` is used.
 | What | Where |
 | --- | --- |
 | Goal / assist weight by position | `posGoalWeight`, `posAssistWeight` |
-| How much rating matters | `ratingScale` (0.032 per point) |
+| How much rating matters | `RATING_CURVE` — shared by `ratingScale` and `scaledAvgRating`, which are inverses |
 | Attack/defence split by position | `zoneWeight` |
 | Home advantage, score spread | `simulateScore` |
 | Role multipliers | **the database** (`role_config`), not the defaults in code |
 | Pre-season projection | `preSeasonOdds` |
 
-## Known calibration problems
+## Calibration
 
-These are real, measured, and not yet fixed. They are the highest-value work in
-the codebase.
+### Fixed: `scaledAvgRating` inverted with the wrong constant
 
-### 1. `scaledAvgRating` inverts with the wrong constant
+`ratingScale` and `scaledAvgRating` are inverses, but used different constants:
+`0.032` forward and `0.055` back. A round trip through `exp(k·x)` and `log(y)/k`
+only returns `x` when k is the same both ways, so every squad was dragged 58% of
+the way toward 80 — a side of 90s was simulated as 85.8 — and Poisson noise
+outweighed squad quality.
 
-```ts
-function ratingScale(rating)  { return Math.exp(0.032 * (rating - 80)); }
-function scaledAvgRating(ps)  { return Math.log(avgScale) / 0.055 + 80; }  // 0.055 ≠ 0.032
-```
+Both now share one `RATING_CURVE` constant, and `simulation.test.ts` asserts the
+round trip, so the two can no longer drift apart unnoticed.
 
-The two are meant to be a round trip. A squad of all-85s should score 85; it
-scores 82.9. Every rating difference is compressed to **58%** of its true size,
-and since all three strength numbers pass through it, the league collapses into
-a narrow band where Poisson noise outweighs squad quality.
+Measured over 30 seeded seasons against the real 2025/26 squads:
 
-Measured over 20 seasons, an 82-rated XI against the real 2025/26 squads:
-
-| | as shipped | with `0.032` |
+| | before | after |
 | --- | --- | --- |
-| Champion's points | 72.2 | 77.0 |
-| Bottom club's points | 34.2 | 29.4 |
-| Distinct title winners in 20 runs | 8, including Wolves twice | 4 |
-| Liverpool (88 OVR), sample season | 6th, 56 pts | 2nd, 74 pts |
+| Champion's points | 71.1 | 75.6 |
+| Bottom club's points | 34.2 | 29.0 |
+| Distinct title winners in 30 seasons | 9 | 7 |
+| Where an 88-rated XI finishes | 4.9th | 2.6th |
 
-Real Premier League champions average about 88 points and the bottom club about
-22, so even the corrected figure is compressed. The `0.38` and `0.30`
-coefficients in `simulateScore` are the next thing to widen.
+Still flatter than the real thing, where champions average about 88 points and
+the bottom club about 22. That remaining gap is the scoring coefficients, not
+the curve — see below.
 
-### 2. `preSeasonOdds` does not match the simulator
+### 1. The scoring coefficients are too gentle (open)
+
+`simulateScore` turns a 10-point strength advantage into only +0.38 expected
+goals. Raising `0.38 → 0.62` and `0.30 → 0.52` moves the champion to 81.5 points
+and concentrates titles among four clubs across 30 seasons.
+
+That is tuning rather than a bug, so it wants its own change and its own look at
+the resulting tables. Be wary of chasing the last few points: real leagues are
+spread partly by things this model does not have at all — injuries, form,
+fixture congestion, a manager sacked in November — and forcing the table to look
+right by inflating goal difference buys a realistic league with unrealistic
+scorelines.
+
+### 2. `preSeasonOdds` does not match the simulator (open)
 
 It is a hand-written linear formula that was never checked against the thing it
-predicts. Measured over 30 seasons per rating:
+predicts. Measured over 30 seasons per rating, **before the curve fix** — the
+gap narrows with it but does not close:
 
 | XI OVR | Odds promise | Actually happens |
 | --- | --- | --- |
@@ -133,14 +145,14 @@ predicts. Measured over 30 seasons per rating:
 | 90 | 1st, 91 pts, 70% title | 3.3rd, 66.1 pts, 33% |
 
 The player is told they will win the league, finishes fifth, and is labelled
-UNDERPERFORMED. Some of this closes once (1) is fixed; the rest needs refitting
-against measured output.
+UNDERPERFORMED. The curve fix moves an 88-rated XI from 4.9th to 2.6th, so some
+of this is already recovered; the rest needs refitting against measured output.
 
 `src/lib/simulation.test.ts` deliberately tests only the *shape* of
 `preSeasonOdds` — bounded probabilities, monotonic in rating — so that fixing
 the calibration does not require rewriting the tests.
 
-### 3. Two different projections are shown
+### 3. Two different projections are shown (open)
 
 The pre-season card ranks the user's OVR against the real opponents; the final
 banner and the OVERPERFORMED/UNDERPERFORMED verdict use `odds.projectedPosition`
