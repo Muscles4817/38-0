@@ -1,5 +1,4 @@
 import { describe, expect, it } from 'vitest';
-// @ts-expect-error — plain JS helper shared with scripts/build-player-list.mjs
 import { buildPlayerList, identityKey, nameKey } from '../../scripts/lib/player-list.mjs';
 
 // The point of the canonical player list is that one human is one entry across

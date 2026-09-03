@@ -1,5 +1,4 @@
 import { describe, expect, it } from 'vitest';
-// @ts-expect-error — plain JS helper shared with the data scripts
 import {
   BUCKET_POSITIONS, GAME_POSITIONS, allowedPositions, ambiguity,
   bucketsOf, checkAssignment, primaryPositions,

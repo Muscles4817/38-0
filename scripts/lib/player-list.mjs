@@ -22,8 +22,11 @@ export function identityKey(player) {
 }
 
 /**
- * @param rosters [{ season, club, competition, squad: [...] }]
- * @returns { players, playerSeasons, idless }
+ * Groups roster files into one entry per player.
+ *
+ * Takes an array of `{ season, club, competition, squad }` and returns
+ * `{ players, playerSeasons, idless }` — the aggregated players, how many
+ * player-seasons went in, and any rows that had no FBref id to match on.
  */
 export function buildPlayerList(rosters) {
   const byKey = new Map();

@@ -34,7 +34,8 @@ const SEASON_RE = /^(19|20)\d{2}\/\d{2}$/;
 
 /**
  * Checks one parsed squad file.
- * Returns { errors: string[], warnings: string[] } — errors block the import,
+ *
+ * Returns an object with `errors` and `warnings`: errors block the import,
  * warnings are reported and allowed through.
  */
 export function validateSquadFile(file, { label = 'squad' } = {}) {

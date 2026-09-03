@@ -11,7 +11,8 @@
     "test": "vitest run",
     "test:watch": "vitest",
     "export:data": "node scripts/export-game-data.mjs",
-    "import:squads": "node scripts/import-squads.mjs"
+    "import:squads": "node scripts/import-squads.mjs",
+    "check": "npm run lint && npm run typecheck && npm test && npm run build"
   },
   "dependencies": {
     "next": "16.2.9",

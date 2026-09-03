@@ -1,7 +1,6 @@
 import fs from 'node:fs';
 import path from 'node:path';
 import { describe, expect, it } from 'vitest';
-// @ts-expect-error — plain JS helper shared with scripts/import-squads.mjs
 import { validateSquadFile, validateAcrossFiles, playerKey } from '../../scripts/lib/squad-file.mjs';
 
 // Guards the committed squad staging files. CI runs this, so a squad that
