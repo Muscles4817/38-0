@@ -8,7 +8,8 @@ The pipeline exists to separate **fact** from **judgement**, and to make sure
 the facts are collected once.
 
 ```
-  1. appearances   script   -> data/raw/appearances/<season>/<club>.json
+  1. appearances   manual   -> data/raw/fbref/<comp>/<season>/<club>.csv
+                   script   -> data/raw/rosters/<season>/<club>.json
   2. positions     agents   -> data/raw/positions/<season>/<club>.json
   3. canonical     script   -> data/raw/players.json
   4. ratings       agents   -> data/squads/<season>/<club>.json
@@ -24,57 +25,50 @@ the rating scale changes.
 
 ## Phase 1 — appearances
 
+The source is **FBref standard-stats exports, supplied by hand**. fbref.com sits
+behind a Cloudflare challenge that refuses automated requests, including for
+`robots.txt`; that is a deliberate access control and not something to work
+around.
+
+It is also the best data available. Compared with what can be scraped, it gives
+league-only appearances rather than all-competitions, minutes played, starts
+separated from substitute outings, age, nationality — and a stable per-player
+FBref id, which makes player identity exact across thirty years instead of a
+name-matching guess.
+
 ```bash
-node scripts/scrape-appearances.mjs                 # all seasons, resumable
-node scripts/scrape-appearances.mjs --season 1994   # just 1993/94
-node scripts/scrape-appearances.mjs --from 2000 --to 2010
-node scripts/scrape-appearances.mjs --delay 3000    # be gentler
+node scripts/scaffold-fbref-files.mjs            # create the empty files
+node scripts/scaffold-fbref-files.mjs --status   # how much is pasted in
+node scripts/ingest-fbref.mjs                    # exports -> roster files
 ```
 
-Source is [11v11](https://www.11v11.com). It is the only source checked that
-carries per-player appearances for **every** season back to 1992/93. Wikipedia
-has them only for recent seasons — the 1993/94 club pages are bare squad lists
-with `pos=DF` and no numbers at all, so an agent told to "use Wikipedia" for the
-1990s would have had to invent them. FBref blocks automated requests.
+686 empty CSVs sit under `data/raw/fbref/premier-league/<season>/<club>.csv`,
+one per club-season from 1992/93 to 2025/26. The club list for each season comes
+from that season's real league table, so the 22-club seasons up to 1994/95 and
+every promotion are correct. An empty file means "not collected yet", which is
+what `--status` reports on.
 
-Each club-season lands as:
+`ingest-fbref.mjs` parses those into `data/raw/rosters/<season>/<club>.json`,
+keeping both the squad and everyone excluded, with the reason.
 
-```jsonc
-{
-  "club": "Manchester United",
-  "clubSlug": "manchester-united",
-  "season": "1993/94",
-  "source": "https://www.11v11.com/teams/manchester-united/tab/players/season/1994/",
-  "fetchedAt": "...",
-  "players": [
-    {
-      "name": "Eric Cantona",
-      "squadNumber": "7",
-      "nationality": "",
-      "appearances": 49,
-      "substitute": 0,
-      "goals": 25,
-      "positionLabel": "Forward",
-      "raw": ["7", "", "Eric Cantona", "49", "0", "25", "", "", "", "Forward"]
-    }
-  ]
-}
-```
+### Squad inclusion is by minutes
 
-`raw` is the source row verbatim, so a later verification pass can check a claim
-against what the source actually said without re-fetching.
+**270 minutes — three full matches.** Not an appearance count: three substitute
+cameos of four minutes each is not a squad member, whereas a rotation player who
+started six games is.
 
-Two things to know:
+Checked against real squads:
 
-- **Appearances are across all competitions, not league only.** A 1990s club
-  shows more than 42. Read it as "how much football did this player actually
-  play for this club", which is what squad inclusion wants anyway.
-- **Position labels are coarse**: `Goalkeeper`, `Defender`, `Midfielder`,
-  `Forward`, sometimes `Defender/Left back` or `Winger`. Not enough for the
-  fifteen positions the game matches literally. That is what phase 2 is for.
+- Manchester United 1993/94 keeps all fourteen of the double-winning side and
+  drops Gary Neville (90 minutes, his debut season) and Nicky Butt (11).
+- Arsenal 2003/04 keeps nineteen, including Clichy and Reyes, dropping only
+  Bentley and Hoyte.
+- Liverpool 2025/26 drops nine academy players on zero minutes.
 
-The script is resumable: existing files are skipped, so a run interrupted by
-rate limiting can simply be restarted. `--force` refetches.
+Fourteen for United is correct rather than thin — squads were small and Ferguson
+rarely rotated. Adjust with `--min-minutes` if a case appears where it is wrong;
+Jérémie Aliadière at 260 minutes for the 2003/04 Arsenal side is the closest
+call in the sample.
 
 ## Phase 2 — positions and formations
 
