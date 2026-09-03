@@ -38,7 +38,9 @@ the draft a real risk/reward decision rather than a wasted spin.
 | **65–69** | Well below modern standard. A common starter in the 1990s lower half; would not play today. |
 | **60–64** | Fringe or lower-division quality. Use sparingly. |
 
-Below 60 should be rare enough to need a reason.
+Below 60 is effectively unused. The scale allows down to 40 so that nothing has
+to be clamped, but a top-flight player who genuinely belongs there is rare
+enough that a rating under 60 should carry a note.
 
 ## Never rate a player relative to their teammates
 
@@ -106,6 +108,30 @@ all-round profile is not that of a modern complete forward.
 
 That reasoning pattern is what to apply everywhere.
 
+### The bottom of the scale, worked
+
+Most ratings live between 66 and 78, so that is where drift does the most
+damage — and where "he was a decent player" is least useful as a guide. What
+separates a 68 from a 74?
+
+**68 — David Linighan, Ipswich, 1993/94.** An honest centre-half, an
+ever-present for a struggling side, competent in the air and organised. Nothing
+about his game is above the standard of the division's lower half. Put him in a
+2025 squad and he is not in the eighteen.
+
+**74 — Kevin Davies, Bolton, 2009/10.** Also a lower-half regular, also nobody's
+idea of elite. But there is a genuine top-flight skill there — the physical hold
+and aerial dominance that got him an England cap. He would be a squad player in
+a modern side rather than absent from it.
+
+The line is roughly: **could this player be in a modern Premier League squad at
+all?** A 74 could, as a rotation option. A 68 could not; he was a starter only
+because the 1990s floor was lower. A 71 is the honest middle — a solid starter
+for a mid-table side of his era with one usable top-flight attribute.
+
+Do not let "he played 38 games" push someone up. Being an ever-present for a bad
+side is evidence about the side, not the player.
+
 ## Anchors
 
 Calibrate against these. If your number for a comparable player is far from the
@@ -135,28 +161,57 @@ nearest anchor, re-check it.
 | Virgil van Dijk, 2018/19 | 96 | All-time great centre-back season |
 | Rio Ferdinand, 2007/08 | 91 | World class |
 | Tony Adams, 1997/98 | 88 | Elite leader and defender, era-appropriate |
-| Peter Schmeichel, 1995/96 | 93 | World class goalkeeper |
+| Peter Schmeichel, 1995/96 | 93 | World class goalkeeper, at his peak |
+| David Seaman, 1993/94 | 86 | Elite, England's first choice, a rung below the very best |
+| Tim Flowers, 1994/95 | 81 | Good; a title-winning keeper who was not himself elite |
+| Bryan Gunn, 1993/94 | 76 | A dependable ever-present for a mid-table side |
+| Steve Ogrizovic, 1993/94 | 72 | Long-serving lower-half keeper; below modern standard |
 | Gary Pallister, 1993/94 | 84 | Good, occasionally elite |
 | Colin Hendry, 1994/95 | 79 | Solid title-winning starter, absolutely ordinary |
 
-## Positions
+## Positions are already decided
 
-Positions are matched **literally** by `canFillSlot` — an `LB` cannot fill an
-`LWB` slot. Sloppy positions silently break drafting.
+Positions are assigned in a separate, earlier pass — see
+[positions-lookup.md](positions-lookup.md). They arrive pre-filled in the
+rating files and are **not** for the rating pass to change.
 
-- Use only: `GK LB CB RB LWB RWB CDM CM CAM LM RM LW RW ST CF`.
-- List the positions the player **actually played that season**, most natural
-  first. Two or three is normal; more than four means you are guessing.
-- A player who filled in once at right-back is not an `RB`.
+They are there as context: a rating is easier to judge when you can see whether
+the player was a holding midfielder or a number ten. Use them, do not edit them.
 
-## One club per season
+For reference, the fifteen the game knows are
+`GK LB CB RB LWB RWB CDM CM CAM LM RM LW RW ST CF`, and a player may cover an
+adjacent one at a small penalty.
 
-A player belongs to exactly **one** club-season: the club they made the most
-league appearances for that season. A January transfer goes to whichever side
-they played more for, with the other noted in `note`.
+## A player who moved mid-season
 
-This keeps the simulation honest — a player appearing in two clubs' XIs would
-be scoring against himself and appearing twice on the same leaderboard.
+A rating is a property of the **player in that season**, not of the club. Eric
+Cantona was the same footballer in November at Leeds and in December at
+Manchester United. So when a player has two club rows for one season, **give
+both rows the same rating**, unless something genuinely changed — an injury, a
+sudden loss of form — in which case say so in `note`.
+
+The rating files carry both rows because the appearance data does. Which club
+the player ends up attached to in the game is decided at import: the one he
+played more for. That is a separate concern and not something to resolve by
+rating him differently at each.
+
+This matters for the simulation, where a player appearing in two clubs' XIs
+would be scoring against himself and appearing twice on the same leaderboard.
+
+## Roles
+
+A role is a claim about **how** a player played, not a bonus to hand out. They
+carry real weight — the multipliers reach 2.2x for goals and higher for aerial
+threat — so they change who scores in a simulated season.
+
+- Set one only where the fit is obvious. A player who straddles two roles gets
+  neither; omitting is always safe.
+- Keep a player's role consistent across their seasons unless their game
+  genuinely changed.
+- Valid names live in the database, exposed in `src/data/game-data.json` under
+  `roles`. Do not invent one.
+
+Roughly half of players having no role at all is a healthy outcome, not a gap.
 
 ## Who to include
 
