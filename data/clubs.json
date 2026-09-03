@@ -1,33 +1,198 @@
 {
   "_comment": "Metadata for clubs created by scripts/import-squads.mjs. A club named in a squad file but missing here is created with a grey placeholder colour, so add it before importing. Colour is the club's primary shirt colour, used on the draft wheel and team cards.",
-
-  "Newcastle United": { "shortName": "NEW", "color": "#241f20", "league": "PL" },
-  "Wigan Athletic":   { "shortName": "WIG", "color": "#1d59af", "league": "PL" },
-  "Everton":          { "shortName": "EVE", "color": "#003399", "league": "PL" },
-  "Luton Town":       { "shortName": "LUT", "color": "#f78f1e", "league": "PL" },
-
-  "Leeds United":     { "shortName": "LEE", "color": "#ffffff", "league": "PL" },
-  "Burnley":          { "shortName": "BUR", "color": "#6c1d45", "league": "PL" },
-  "Sunderland":       { "shortName": "SUN", "color": "#eb172b", "league": "PL" },
-  "Sheffield United": { "shortName": "SHU", "color": "#ee2737", "league": "PL" },
-  "Sheffield Wednesday": { "shortName": "SHW", "color": "#0066b3", "league": "PL" },
-  "Middlesbrough":    { "shortName": "MID", "color": "#e21c38", "league": "PL" },
-  "Bolton Wanderers": { "shortName": "BOL", "color": "#263c7e", "league": "PL" },
-  "Charlton Athletic": { "shortName": "CHA", "color": "#d4021d", "league": "PL" },
-  "Coventry City":    { "shortName": "COV", "color": "#78d0f3", "league": "PL" },
-  "Derby County":     { "shortName": "DER", "color": "#ffffff", "league": "PL" },
-  "Norwich City":     { "shortName": "NOR", "color": "#00a650", "league": "PL" },
-  "Queens Park Rangers": { "shortName": "QPR", "color": "#1d5ba4", "league": "PL" },
-  "Stoke City":       { "shortName": "STK", "color": "#e03a3e", "league": "PL" },
-  "Swansea City":     { "shortName": "SWA", "color": "#ffffff", "league": "PL" },
-  "Watford":          { "shortName": "WAT", "color": "#fbee23", "league": "PL" },
-  "West Bromwich Albion": { "shortName": "WBA", "color": "#122f67", "league": "PL" },
-  "Wimbledon":        { "shortName": "WIM", "color": "#1b1f6b", "league": "PL" },
-  "Portsmouth":       { "shortName": "POR", "color": "#001489", "league": "PL" },
-  "Reading":          { "shortName": "RDG", "color": "#004494", "league": "PL" },
-  "Hull City":        { "shortName": "HUL", "color": "#f5971d", "league": "PL" },
-  "Blackpool":        { "shortName": "BLA", "color": "#f68712", "league": "PL" },
-  "Cardiff City":     { "shortName": "CAR", "color": "#0070b5", "league": "PL" },
-  "Huddersfield Town": { "shortName": "HUD", "color": "#0e63ad", "league": "PL" },
-  "Brentford":        { "shortName": "BRE", "color": "#e30613", "league": "PL" }
+  "Newcastle United": {
+    "shortName": "NEW",
+    "color": "#241f20",
+    "league": "PL"
+  },
+  "Wigan Athletic": {
+    "shortName": "WIG",
+    "color": "#1d59af",
+    "league": "PL"
+  },
+  "Everton": {
+    "shortName": "EVE",
+    "color": "#003399",
+    "league": "PL"
+  },
+  "Luton Town": {
+    "shortName": "LUT",
+    "color": "#f78f1e",
+    "league": "PL"
+  },
+  "Leeds United": {
+    "shortName": "LEE",
+    "color": "#ffffff",
+    "league": "PL"
+  },
+  "Burnley": {
+    "shortName": "BUR",
+    "color": "#6c1d45",
+    "league": "PL"
+  },
+  "Sunderland": {
+    "shortName": "SUN",
+    "color": "#eb172b",
+    "league": "PL"
+  },
+  "Sheffield United": {
+    "shortName": "SHU",
+    "color": "#ee2737",
+    "league": "PL"
+  },
+  "Sheffield Wednesday": {
+    "shortName": "SHW",
+    "color": "#0066b3",
+    "league": "PL"
+  },
+  "Middlesbrough": {
+    "shortName": "MID",
+    "color": "#e21c38",
+    "league": "PL"
+  },
+  "Bolton Wanderers": {
+    "shortName": "BOL",
+    "color": "#263c7e",
+    "league": "PL"
+  },
+  "Charlton Athletic": {
+    "shortName": "CHA",
+    "color": "#d4021d",
+    "league": "PL"
+  },
+  "Coventry City": {
+    "shortName": "COV",
+    "color": "#78d0f3",
+    "league": "PL"
+  },
+  "Derby County": {
+    "shortName": "DER",
+    "color": "#ffffff",
+    "league": "PL"
+  },
+  "Norwich City": {
+    "shortName": "NOR",
+    "color": "#00a650",
+    "league": "PL"
+  },
+  "Queens Park Rangers": {
+    "shortName": "QPR",
+    "color": "#1d5ba4",
+    "league": "PL"
+  },
+  "Stoke City": {
+    "shortName": "STK",
+    "color": "#e03a3e",
+    "league": "PL"
+  },
+  "Swansea City": {
+    "shortName": "SWA",
+    "color": "#ffffff",
+    "league": "PL"
+  },
+  "Watford": {
+    "shortName": "WAT",
+    "color": "#fbee23",
+    "league": "PL"
+  },
+  "West Bromwich Albion": {
+    "shortName": "WBA",
+    "color": "#122f67",
+    "league": "PL"
+  },
+  "Wimbledon": {
+    "shortName": "WIM",
+    "color": "#1b1f6b",
+    "league": "PL"
+  },
+  "Portsmouth": {
+    "shortName": "POR",
+    "color": "#001489",
+    "league": "PL"
+  },
+  "Reading": {
+    "shortName": "RDG",
+    "color": "#004494",
+    "league": "PL"
+  },
+  "Hull City": {
+    "shortName": "HUL",
+    "color": "#f5971d",
+    "league": "PL"
+  },
+  "Blackpool": {
+    "shortName": "BLA",
+    "color": "#f68712",
+    "league": "PL"
+  },
+  "Cardiff City": {
+    "shortName": "CAR",
+    "color": "#0070b5",
+    "league": "PL"
+  },
+  "Huddersfield Town": {
+    "shortName": "HUD",
+    "color": "#0e63ad",
+    "league": "PL"
+  },
+  "Brentford": {
+    "shortName": "BRE",
+    "color": "#e30613",
+    "league": "PL"
+  },
+  "_aliases": {
+    "__comment": "Source spellings mapped to the club name used in the database. Keeps one club row per club.",
+    "AFC Bournemouth": "Bournemouth",
+    "Brighton and Hove Albion": "Brighton",
+    "Brighton & Hove Albion": "Brighton",
+    "Wolves": "Wolverhampton Wanderers",
+    "Spurs": "Tottenham Hotspur",
+    "Newcastle Utd": "Newcastle United",
+    "Manchester Utd": "Manchester United",
+    "Nott'ham Forest": "Nottingham Forest",
+    "Sheffield Weds": "Sheffield Wednesday",
+    "West Brom": "West Bromwich Albion",
+    "Leeds Utd": "Leeds United",
+    "QPR": "Queens Park Rangers"
+  },
+  "Barnsley": {
+    "shortName": "BAR",
+    "color": "#e4022d",
+    "league": "PL"
+  },
+  "Birmingham City": {
+    "shortName": "BIR",
+    "color": "#0000ff",
+    "league": "PL"
+  },
+  "Bradford City": {
+    "shortName": "BRA",
+    "color": "#8a2432",
+    "league": "PL"
+  },
+  "Oldham Athletic": {
+    "shortName": "OLD",
+    "color": "#4a90d9",
+    "league": "PL"
+  },
+  "Swindon Town": {
+    "shortName": "SWI",
+    "color": "#d80000",
+    "league": "PL"
+  },
+  "Bournemouth": {
+    "shortName": "BOU",
+    "color": "#da291c",
+    "league": "PL"
+  },
+  "Brighton": {
+    "shortName": "BHA",
+    "color": "#0057b8",
+    "league": "PL"
+  },
+  "Blackburn Rovers": {
+    "shortName": "BLB",
+    "color": "#009ee0",
+    "league": "PL"
+  }
 }
