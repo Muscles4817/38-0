@@ -1,7 +1,7 @@
 # Looking up positions
 
 FBref records a player as `DF`. The game needs `LB`, `CB`, `RB`, `LWB` or
-`RWB`, matched literally. Closing that gap is lookup work — there is no
+`RWB`. Closing that gap is lookup work — there is no
 programmatic shortcut, and the data has been checked for one.
 
 ## Why there is no shortcut
@@ -62,10 +62,13 @@ Fill in `positions`, `confidence` and, if useful, `note`. Change nothing else.
 2. **The first position must come from `primaryMustBeOneOf`.** FBref orders a
    combined label by primacy: `DFMF` is a defender who also played midfield,
    `MFDF` the reverse.
-3. **Be specific enough to fill a formation.** Seven of the fifteen formations
-   need a `CDM` slot. If every central midfielder is recorded as `CM`, those
-   seven become unfillable and the coherence check will fail. Distinguish the
-   holding midfielder from the box-to-box one from the number ten.
+3. **Be as specific as the evidence supports, and no more.** A player who
+   covers an adjacent position is handled automatically — a `CM` can fill a
+   `CDM` or `CAM` slot, an `LB` can fill `LWB` — at a small rating penalty. So
+   there is no need to force a precise call you are not confident in. Do
+   distinguish a genuine holding midfielder from a genuine number ten, because
+   the simulation weights them very differently, but `CM` is a perfectly good
+   answer for a player who was simply a central midfielder.
 4. **List both flanks when a player genuinely played both**, as `["LB", "RB"]`.
    That is honest, and the simulation treats left and right identically, so it
    costs nothing. Never invent a side to look precise.

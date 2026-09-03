@@ -1,4 +1,4 @@
-import { Position } from './formations';
+import { Position, effectiveRating } from './formations';
 
 // ── Player roles (weight modifiers) ──────────────────────────────────────────
 // Roles tweak per-player goal/assist probability during attribution.
@@ -441,9 +441,20 @@ function roleStrBonus(
 
 // ── Main export ───────────────────────────────────────────────────────────────
 
+/**
+ * A pick's rating in the slot it is actually filling.
+ *
+ * Players may cover an adjacent position, but not for free: a left-back at
+ * left wing-back is worse than a left wing-back. Without this, drafting would
+ * be a game of finding the most flexible players rather than the best ones.
+ */
+export function ratingInSlot(pick: SquadPick): number {
+  return effectiveRating(pick.rating, pick.positions ?? [pick.position], pick.position);
+}
+
 export function computeOverall(picks: SquadPick[]): number {
   if (picks.length === 0) return 0;
-  return Math.round(picks.reduce((s, p) => s + p.rating, 0) / picks.length);
+  return Math.round(picks.reduce((s, p) => s + ratingInSlot(p), 0) / picks.length);
 }
 
 export function preSeasonOdds(overall: number) {
@@ -500,9 +511,11 @@ export function simulateSeason(
   const midStr = new Map<string, number>();
 
   const userBonus = roleStrBonus(picks, effectiveTeamContrib, effectiveValidPos);
-  attStr.set(USER, scaledAvgRating(picks.filter(p => isAttPosition(p.position))) + userBonus.att);
-  defStr.set(USER, scaledAvgRating(picks.filter(p => isDefPosition(p.position))) + userBonus.def);
-  midStr.set(USER, scaledAvgRating(picks.filter(p => isMidPosition(p.position))) + userBonus.mid);
+  // Out-of-position players contribute at their reduced rating.
+  const inSlot = picks.map(p => ({ ...p, rating: ratingInSlot(p) }));
+  attStr.set(USER, scaledAvgRating(inSlot.filter(p => isAttPosition(p.position))) + userBonus.att);
+  defStr.set(USER, scaledAvgRating(inSlot.filter(p => isDefPosition(p.position))) + userBonus.def);
+  midStr.set(USER, scaledAvgRating(inSlot.filter(p => isMidPosition(p.position))) + userBonus.mid);
 
   // ── Squad representation for player attribution ─────────────────────────────
   interface FPLayer { id: string; name: string; team: string; role: string; position: Position; roles: PlayerRole[]; rating: number }

@@ -67,9 +67,15 @@ describe('canFillSlot', () => {
     expect(canFillSlot(['CM', 'CDM'], 'CDM')).toBe(true);
   });
 
-  it('rejects a player who does not, even for a near-identical role', () => {
-    // Position matching is exact: an LB cannot cover LWB.
-    expect(canFillSlot(['LB'], 'LWB')).toBe(false);
+  it('lets a player cover an adjacent role', () => {
+    // A left-back covers left wing-back. Requiring an exact match here made
+    // several formations unfillable; see positionFit.test.ts for the model.
+    expect(canFillSlot(['LB'], 'LWB')).toBe(true);
+  });
+
+  it('still refuses a position that is nowhere near', () => {
+    expect(canFillSlot(['LB'], 'ST')).toBe(false);
+    expect(canFillSlot(['LB'], 'RB')).toBe(false);
   });
 
   it('rejects a player with no positions', () => {

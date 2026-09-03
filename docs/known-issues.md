@@ -67,14 +67,6 @@ squads often.
 This is the real ceiling on replay value. Every other improvement is bounded by
 it.
 
-## 7. Position matching is exact
-
-`canFillSlot` requires the player to list the slot's position literally. An LB
-cannot cover LWB, a CM cannot cover CDM, a ST cannot cover CF. Combined with a
-small pool this makes the draft brittle. A compatibility map (LB↔LWB, CM↔CDM,
-ST↔CF, LM↔LW) with a small rating penalty would help both drafting and the
-opponent best-XI fallback.
-
 ## 8. Smaller things
 
 - **Line ratings disagree with the simulation.** `LineRatings.tsx` counts LW/RW
@@ -91,6 +83,13 @@ opponent best-XI fallback.
 ## Fixed, for reference
 
 Do not re-report these:
+
+- `canFillSlot` required an exact string match, so a left-back could not cover
+  left wing-back and a central midfielder could not fill a holding role. Seven
+  of the formations were unfillable in practice, and it forced position data to
+  be more precise than football is. Positions now carry a lane and a depth, and
+  cover an adjacent slot at a four-point rating penalty. The formation list grew
+  from 15 to 21 at the same time.
 
 - The draft's placement panel listed one or two green "Available" buttons above
   ten grey `ST · N/A` chips that looked identical but were inert `<span>`s.

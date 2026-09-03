@@ -1,4 +1,6 @@
-import { FORMATIONS, Formation, Position, canFillSlot } from './formations';
+import {
+  FORMATIONS, Formation, Position, canFillSlot, fillsSlotNaturally, slotFit,
+} from './formations';
 
 /**
  * Working out which formation a side actually played, from who played and where.
@@ -11,6 +13,11 @@ import { FORMATIONS, Formation, Position, canFillSlot } from './formations';
  *
  * This is deliberately deterministic. A formation derived from minutes played
  * is reproducible and auditable; one recalled by an agent is neither.
+ *
+ * Players may cover an adjacent position - a left-back at left wing-back, a
+ * central midfielder as a holder - so a shape is not ruled out just because
+ * nobody's listed position matches a slot exactly. Natural fits are preferred:
+ * a formation nobody has to be shoehorned into beats one that needs it.
  */
 
 export interface FittablePlayer {
@@ -27,28 +34,41 @@ export interface LineupFit {
   filled: number;
   /** Minutes played by the matched XI — how well the shape matches who played. */
   minutes: number;
+  /** How many of the eleven are in a position they actually play. */
+  natural: number;
 }
 
 /**
- * Maximum bipartite matching between players and formation slots.
+ * Matches players to formation slots.
  *
- * Players are considered in minutes order, and the augmenting-path search keeps
- * every player it has already placed, so a fully-filled XI favours the players
- * who actually played. Slots are exact-match: `canFillSlot` is literal.
+ * Two passes, and the order matters. The first uses only natural fits, so
+ * everyone who has a slot they actually play gets it. The second fills what is
+ * left by asking players to cover an adjacent position.
+ *
+ * Doing it in one pass over the combined graph would fill the same number of
+ * slots but could put a player in a slot he merely covers while his natural one
+ * went to someone else — a right-back at right wing-back with the wing-back at
+ * right-back. Maximum cardinality is not the same as a sensible team.
  */
 function matchSlots(players: FittablePlayer[], formation: Formation): (number | null)[] {
   const slotCount = formation.slots.length;
-  // slotForPlayer[i] = slot index taken by player i, or null.
   const slotTakenBy: (number | null)[] = Array(slotCount).fill(null);
+  const placed = new Set<number>();
 
-  const tryAssign = (playerIndex: number, seen: boolean[]): boolean => {
+  // Most minutes first, so a fully-filled XI favours the players who played.
+  const ordered = players
+    .map((p, i) => ({ p, i }))
+    .sort((a, b) => b.p.minutes - a.p.minutes)
+    .map(({ i }) => i);
+
+  // ── Pass 1: natural fits only, with augmenting so nobody blocks anyone ──
+  const tryNatural = (playerIndex: number, seen: boolean[]): boolean => {
     for (let s = 0; s < slotCount; s++) {
       if (seen[s]) continue;
-      if (!canFillSlot(players[playerIndex].positions, formation.slots[s].position)) continue;
+      if (!fillsSlotNaturally(players[playerIndex].positions, formation.slots[s].position)) continue;
       seen[s] = true;
       const current = slotTakenBy[s];
-      // Take the slot, or bump whoever has it if they can go elsewhere.
-      if (current === null || tryAssign(current, seen)) {
+      if (current === null || tryNatural(current, seen)) {
         slotTakenBy[s] = playerIndex;
         return true;
       }
@@ -56,13 +76,29 @@ function matchSlots(players: FittablePlayer[], formation: Formation): (number | 
     return false;
   };
 
-  const ordered = players
-    .map((p, i) => ({ p, i }))
-    .sort((a, b) => b.p.minutes - a.p.minutes);
-
-  for (const { i } of ordered) {
-    tryAssign(i, Array(slotCount).fill(false));
+  for (const i of ordered) {
+    if (tryNatural(i, Array(slotCount).fill(false))) placed.add(i);
   }
+  // Anyone displaced during augmenting is still matched somewhere.
+  placed.clear();
+  for (const taken of slotTakenBy) if (taken !== null) placed.add(taken);
+
+  // ── Pass 2: cover the rest, without disturbing the natural placements ──
+  const emptySlots = slotTakenBy
+    .map((taken, slotIndex) => ({ taken, slotIndex }))
+    .filter(x => x.taken === null)
+    .map(x => x.slotIndex);
+
+  for (const slotIndex of emptySlots) {
+    const slot = formation.slots[slotIndex].position;
+    const candidate = ordered.find(i =>
+      !placed.has(i) && canFillSlot(players[i].positions, slot));
+    if (candidate !== undefined) {
+      slotTakenBy[slotIndex] = candidate;
+      placed.add(candidate);
+    }
+  }
+
   return slotTakenBy;
 }
 
@@ -85,6 +121,7 @@ export function fitFormation(players: FittablePlayer[], formationName: string): 
     slots,
     filled: slots.length,
     minutes: slots.reduce((n, s) => n + s.player.minutes, 0),
+    natural: slots.filter(s => slotFit(s.player.positions, s.position) === 'exact').length,
   };
 }
 
@@ -102,6 +139,7 @@ export function bestFormation(
   const fits = formationNames.map(name => fitFormation(players, name));
   fits.sort((a, b) =>
     b.filled - a.filled ||
+    b.natural - a.natural ||        // prefer a shape nobody is shoehorned into
     b.minutes - a.minutes ||
     a.formation.localeCompare(b.formation));   // stable when genuinely tied
   return fits[0];
@@ -118,6 +156,7 @@ export function equallyGoodFormations(
   const best = bestFormation(players, formationNames);
   return formationNames
     .map(name => fitFormation(players, name))
-    .filter(f => f.filled === best.filled && f.minutes === best.minutes)
+    .filter(f => f.filled === best.filled && f.natural === best.natural &&
+                 f.minutes === best.minutes)
     .map(f => f.formation);
 }
