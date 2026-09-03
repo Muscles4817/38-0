@@ -18,6 +18,34 @@ Do not chase the last few points by inflating goal difference: real leagues are
 spread partly by injuries, form and mid-season upheaval that this model does not
 represent at all.
 
+### The scoring rate is a separate knob, and it is the base constants
+
+Measured over 40 seeded seasons with a drafted 1992/93 XI in the league, before
+and after the rating curve fix:
+
+|                      | before | after | real PL |
+| -------------------- | -----: | ----: | ------: |
+| champion's points    |   79.8 |  82.8 |     ~88 |
+| bottom club's points |   38.6 |  32.4 |     ~22 |
+| spread               |   41.2 |  50.4 |     ~66 |
+| goals per game       |   2.48 |  2.51 |    ~2.80 |
+
+The curve fix opened the table by nine points and left the scoring rate where it
+was. That is not a shortcoming of the fix — the two are controlled by different
+terms, and it is worth being explicit about which:
+
+    homeLambda = (1.3 + (homeAtt + 3 - awayDef)/10 * 0.38) * midfieldMultiplier
+    awayLambda = (1.0 + (awayAtt - homeDef)/10      * 0.30) * midfieldMultiplier
+
+Set both sides equal and the formula still yields 1.41 + 1.00 = **2.41 goals**.
+So the constants `1.3` and `1.0` supply almost the whole scoring rate, and every
+rating in the database only redistributes what is left. `0.38`/`0.30` control
+the *spread*; `1.3`/`1.0` control the *mean*.
+
+Raising the coefficients alone therefore widens the table without moving 2.51
+toward 2.80 — it would make good teams beat bad ones by more while the league
+still scores too little. Both wants changing, and measuring together.
+
 ## 2. Pre-season odds promise more than the simulation delivers
 
 An 88-rated XI is told it will finish 1st on 83 points with a 60% title chance.
