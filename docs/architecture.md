@@ -100,6 +100,20 @@ To add a new editor page or API route, name it `page.dev.tsx` /
 `route.dev.ts`. To confirm something is excluded, `npm run build` and check that
 it is not in the route list or in `./out`.
 
+### Running dev then building fails, and the error does not say why
+
+`next dev` writes route types under `.next/dev/types` that include `/editor`
+and `/api`, because under dev those routes exist. The production build then
+type-checks against a route set that excludes them, and stops with
+
+    Type 'Route' does not satisfy the constraint '"/"'.
+    Type '"/editor"' is not assignable to type '"/"'.
+
+which points at a generated file and says nothing about the cause. A `prebuild`
+script deletes that directory, so `npm run build` and `npm run check` work
+whether or not the dev server has been running. If you ever see that error,
+something has bypassed `prebuild`; remove `.next` and try again.
+
 ## State and navigation
 
 A run in progress lives in `localStorage`, not in a server session:

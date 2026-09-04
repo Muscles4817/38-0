@@ -4,12 +4,17 @@
   "private": true,
   "scripts": {
     "dev": "next dev",
+    "prebuild": "node -e \"require('fs').rmSync('.next/dev/types',{recursive:true,force:true})\"",
     "build": "next build",
     "start": "next start",
     "lint": "eslint",
     "typecheck": "tsc --noEmit",
     "test": "vitest run",
     "test:watch": "vitest",
+    "hindcast": "vitest run src/lib/hindcast.test.ts",
+    "calibrate": "vitest run src/lib/matchEngine.calibration.test.ts",
+    "data:status": "node scripts/scaffold-fbref-files.mjs --status",
+    "data:ingest": "node scripts/ingest-fbref.mjs",
     "export:data": "node scripts/export-game-data.mjs",
     "import:squads": "node scripts/import-squads.mjs",
     "check": "npm run lint && npm run typecheck && npm test && npm run build"
