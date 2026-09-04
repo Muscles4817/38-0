@@ -12,14 +12,27 @@
  * the raw string would give them two rows in `players` and break the whole
  * point of the three-level model, where one human has many versions.
  */
+/**
+ * Letters NFD does not decompose, because they are distinct letters rather than
+ * a base plus a combining accent. Stripping accents alone left "Jorgen" and
+ * "Jørgen" Strand Larsen as two different people, which let the same man sit in
+ * both Wolves' and Crystal Palace's 2025/26 squads without this file's
+ * cross-squad check noticing.
+ */
+const FOLD = {
+  ø: 'o', đ: 'd', ł: 'l', ß: 'ss', æ: 'ae', œ: 'oe',
+  ð: 'd', þ: 'th', ı: 'i', ħ: 'h', ŧ: 't',
+};
+
 export function playerKey(name) {
   return String(name)
     .normalize('NFD')
     .replace(/[̀-ͯ]/g, '')   // strip accents
     .replace(/[.'’]/g, '')          // O'Neill / O'Neill / Jr.
+    .toLowerCase()
+    .replace(/[^\x00-\x7f]/g, c => FOLD[c] ?? c)
     .replace(/\s+/g, ' ')
-    .trim()
-    .toLowerCase();
+    .trim();
 }
 
 export const VALID_POSITIONS = [
