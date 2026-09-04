@@ -134,6 +134,14 @@ side is evidence about the side, not the player.
 
 ## Anchors
 
+Every anchor below names a real player-season that is **already rated in
+`data/raw/ratings/`**, and quotes the number actually recorded there. That is
+not decoration. An anchor that disagrees with the data is worse than no anchor
+at all, because every agent calibrates to it: two of these were wrong for a
+while — Gunn quoted at 76 against a recorded 73, and Flowers attributed to a
+season that had never been rated — and mid-tier goalkeepers were being pulled
+up three points by it. `ratingsAnchors.test.ts` now checks them.
+
 Calibrate against these. If your number for a comparable player is far from the
 nearest anchor, re-check it.
 
@@ -163,8 +171,8 @@ nearest anchor, re-check it.
 | Tony Adams, 1997/98 | 88 | Elite leader and defender, era-appropriate |
 | Peter Schmeichel, 1995/96 | 93 | World class goalkeeper, at his peak |
 | David Seaman, 1993/94 | 86 | Elite, England's first choice, a rung below the very best |
-| Tim Flowers, 1994/95 | 81 | Good; a title-winning keeper who was not himself elite |
-| Bryan Gunn, 1993/94 | 76 | A dependable ever-present for a mid-table side |
+| Tim Flowers, 1993/94 | 81 | Good; the keeper Blackburn bought to win a title, not himself elite |
+| Bryan Gunn, 1993/94 | 73 | A dependable ever-present for a mid-table side |
 | Steve Ogrizovic, 1993/94 | 72 | Long-serving lower-half keeper; below modern standard |
 | Gary Pallister, 1993/94 | 84 | Good, occasionally elite |
 | Colin Hendry, 1994/95 | 79 | Solid title-winning starter, absolutely ordinary |

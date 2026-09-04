@@ -19,6 +19,7 @@
 import fs from 'node:fs';
 import path from 'node:path';
 import process from 'node:process';
+import { checkAssignment } from './lib/positions.mjs';
 
 const DIR = path.join(process.cwd(), 'data', 'raw', 'positions');
 const asJson = process.argv.includes('--json');
@@ -47,11 +48,17 @@ for (const file of files) {
     const note = String(p.note ?? '').toLowerCase();
     const hinted = DISPUTE_HINTS.some(h => note.includes(h));
 
-    if (p.labelDisputed || hinted) {
+    // A note that mentions the label is not itself a problem: most notes
+    // explaining a compromise say so. What matters is whether the assignment
+    // actually contradicts the label. If checkAssignment passes, the value is
+    // legal and the assigner never had to write something they believed false.
+    const contradicts = checkAssignment(p).length > 0;
+
+    if (p.labelDisputed || (hinted && contradicts)) {
       disputes.push({
         file, name: p.name, fbrefPosition: p.fbrefPosition,
         positions: p.positions, confidence: p.confidence,
-        note: p.note, alreadyDisputed: Boolean(p.labelDisputed),
+        note: p.note, alreadyDisputed: Boolean(p.labelDisputed), contradicts,
       });
     } else if (p.confidence === 'low') {
       lowConfidence.push({
@@ -81,11 +88,17 @@ for (const l of lowConfidence) {
   console.log(`  ${l.name.padEnd(24)} ${String(l.fbrefPosition).padEnd(6)} -> ${l.positions.join('/')}`);
 }
 
-const undisputed = disputes.filter(d => !d.alreadyDisputed).length;
-if (undisputed > 0) {
+const stuck = disputes.filter(d => !d.alreadyDisputed && d.contradicts).length;
+if (stuck > 0) {
   console.log(
-    `\n${undisputed} of these were assigned before the labelDisputed escape ` +
-    `hatch existed, so they hold a value the assigner believed to be wrong. ` +
-    `They need re-doing.`
+    `\n${stuck} contradict their label with no flag set. Either the position is ` +
+    `wrong and needs re-doing, or the label is wrong and labelDisputed ` +
+    `belongs on it.`
+  );
+} else {
+  console.log(
+    `
+None of these contradict their label. A note that mentions the label ` +
+    `is normal: it is how a compromise inside the label gets explained.`
   );
 }
