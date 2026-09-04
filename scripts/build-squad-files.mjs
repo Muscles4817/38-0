@@ -39,6 +39,18 @@ const NATIONS = {
   RUS: 'Russia', SCO: 'Scotland', SKN: 'Saint Kitts and Nevis', SWE: 'Sweden',
   TRI: 'Trinidad and Tobago', USA: 'United States', WAL: 'Wales',
   ZIM: 'Zimbabwe', BRA: 'Brazil', ITA: 'Italy', POR: 'Portugal',
+  ALG: 'Algeria', ARG: 'Argentina', AUT: 'Austria', BFA: 'Burkina Faso',
+  BIH: 'Bosnia and Herzegovina', CHI: 'Chile', CIV: 'Ivory Coast',
+  CMR: 'Cameroon', COD: 'DR Congo', COL: 'Colombia', CRC: 'Costa Rica',
+  CRO: 'Croatia', CUW: 'Curacao', EGY: 'Egypt', EST: 'Estonia',
+  GEO: 'Georgia', GUI: 'Guinea', GUY: 'Guyana', HUN: 'Hungary',
+  JPN: 'Japan', LBR: 'Liberia', LVA: 'Latvia', MAR: 'Morocco',
+  MKD: 'North Macedonia', MLI: 'Mali', PER: 'Peru', SRB: 'Serbia',
+  SVK: 'Slovakia', SVN: 'Slovenia', TUR: 'Turkey', UKR: 'Ukraine',
+  URU: 'Uruguay',
+  // FBref still records the Serbia and Montenegro union that existed
+  // 1992-2006 under its own code; players so labelled played under that flag.
+  SCG: 'Serbia and Montenegro',
   BEL: 'Belgium', SUI: 'Switzerland', GHA: 'Ghana', RSA: 'South Africa',
   NZL: 'New Zealand', FIN: 'Finland', GRE: 'Greece', ROU: 'Romania',
 };

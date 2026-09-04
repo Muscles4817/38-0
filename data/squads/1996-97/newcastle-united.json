@@ -1,25 +1,231 @@
 {
   "club": "Newcastle United",
   "season": "1996/97",
-  "source": "https://en.wikipedia.org/wiki/1996%E2%80%9397_Newcastle_United_F.C._season",
+  "source": "https://fbref.com/en/comps/9/1996-1997/1996-1997-Premier-League-Stats",
   "players": [
-    { "name": "Pavel Srnicek", "nationality": "Czech Republic", "positions": ["GK"], "rating": 74, "appearances": 22 },
-    { "name": "Shaka Hislop", "nationality": "Trinidad and Tobago", "positions": ["GK"], "rating": 73, "appearances": 16 },
-    { "name": "Warren Barton", "nationality": "England", "positions": ["RB", "CB"], "rating": 73, "appearances": 17 },
-    { "name": "John Beresford", "nationality": "England", "positions": ["LB"], "rating": 73, "appearances": 19, "roles": ["AttackingFullback"] },
-    { "name": "Robbie Elliott", "nationality": "England", "positions": ["LB", "LM"], "rating": 73, "appearances": 29, "roles": ["AttackingFullback"], "note": "Seven league goals from left-back/left-midfield, his best Newcastle season" },
-    { "name": "Darren Peacock", "nationality": "England", "positions": ["CB"], "rating": 74, "appearances": 35 },
-    { "name": "Steve Howey", "nationality": "England", "positions": ["CB"], "rating": 76, "appearances": 8, "note": "England centre-back; injury restricted him to eight league games" },
-    { "name": "Philippe Albert", "nationality": "Belgium", "positions": ["CB"], "rating": 80, "appearances": 27, "roles": ["BallPlayingDefender"] },
-    { "name": "Steve Watson", "nationality": "England", "positions": ["RB", "RM"], "rating": 72, "appearances": 36 },
-    { "name": "David Batty", "nationality": "England", "positions": ["CDM", "CM"], "rating": 80, "appearances": 32, "roles": ["Enforcer"] },
-    { "name": "Rob Lee", "nationality": "England", "positions": ["CM"], "rating": 79, "appearances": 33, "roles": ["BoxToBox"] },
-    { "name": "Lee Clark", "nationality": "England", "positions": ["CM", "CAM"], "rating": 71, "appearances": 10 },
-    { "name": "Peter Beardsley", "nationality": "England", "positions": ["CAM", "CF"], "rating": 80, "appearances": 25, "roles": ["ChanceCreator"], "note": "Aged 35-36; still the side's chief creator but past his peak" },
-    { "name": "David Ginola", "nationality": "France", "positions": ["LM", "LW"], "rating": 82, "appearances": 24, "roles": ["Winger"] },
-    { "name": "Keith Gillespie", "nationality": "Northern Ireland", "positions": ["RM", "RW"], "rating": 74, "appearances": 32, "roles": ["Winger"] },
-    { "name": "Faustino Asprilla", "nationality": "Colombia", "positions": ["CF", "ST", "RW"], "rating": 82, "appearances": 24, "roles": ["Trequartista"] },
-    { "name": "Alan Shearer", "nationality": "England", "positions": ["ST"], "rating": 91, "appearances": 31, "roles": ["CompleteForward"] },
-    { "name": "Les Ferdinand", "nationality": "England", "positions": ["ST"], "rating": 85, "appearances": 31, "roles": ["TargetMan", "AerialThreat"] }
+    {
+      "name": "Darren Peacock",
+      "fbrefId": "957c8f17",
+      "nationality": "England",
+      "positions": [
+        "CB"
+      ],
+      "rating": 75,
+      "appearances": 35
+    },
+    {
+      "name": "Steve Watson",
+      "fbrefId": "302d8e76",
+      "nationality": "England",
+      "positions": [
+        "RB",
+        "RM"
+      ],
+      "rating": 75,
+      "appearances": 36
+    },
+    {
+      "name": "David Batty",
+      "fbrefId": "21b2e37b",
+      "nationality": "England",
+      "positions": [
+        "CDM",
+        "CM"
+      ],
+      "rating": 80,
+      "appearances": 32,
+      "roles": [
+        "Enforcer"
+      ]
+    },
+    {
+      "name": "Rob Lee",
+      "fbrefId": "291b2178",
+      "nationality": "England",
+      "positions": [
+        "CM",
+        "RM"
+      ],
+      "rating": 81,
+      "appearances": 33,
+      "roles": [
+        "BoxToBox"
+      ]
+    },
+    {
+      "name": "Alan Shearer",
+      "fbrefId": "438b3a51",
+      "nationality": "England",
+      "positions": [
+        "ST",
+        "CF"
+      ],
+      "rating": 89,
+      "appearances": 31,
+      "roles": [
+        "CompleteForward"
+      ]
+    },
+    {
+      "name": "Les Ferdinand",
+      "fbrefId": "aad47f5a",
+      "nationality": "England",
+      "positions": [
+        "ST",
+        "CF"
+      ],
+      "rating": 85,
+      "appearances": 31,
+      "roles": [
+        "TargetMan"
+      ]
+    },
+    {
+      "name": "Robbie Elliott",
+      "fbrefId": "9ade4dc1",
+      "nationality": "England",
+      "positions": [
+        "LB",
+        "LWB"
+      ],
+      "rating": 72,
+      "appearances": 29
+    },
+    {
+      "name": "Philippe Albert",
+      "fbrefId": "749d95dc",
+      "nationality": "Belgium",
+      "positions": [
+        "CB"
+      ],
+      "rating": 80,
+      "appearances": 27,
+      "roles": [
+        "BallPlayingDefender"
+      ]
+    },
+    {
+      "name": "Keith Gillespie",
+      "fbrefId": "012f440e",
+      "nationality": "Northern Ireland",
+      "positions": [
+        "RW",
+        "RM"
+      ],
+      "rating": 75,
+      "appearances": 32,
+      "roles": [
+        "Winger"
+      ]
+    },
+    {
+      "name": "Pavel Srníček",
+      "fbrefId": "db13a630",
+      "nationality": "Czech Republic",
+      "positions": [
+        "GK"
+      ],
+      "rating": 75,
+      "appearances": 22
+    },
+    {
+      "name": "Peter Beardsley",
+      "fbrefId": "4d9a93aa",
+      "nationality": "England",
+      "positions": [
+        "CF",
+        "CAM"
+      ],
+      "rating": 80,
+      "appearances": 25,
+      "roles": [
+        "DeepLyingForward"
+      ],
+      "note": "Thirty-five, and Shearer's arrival plus a fading engine reduced him to a rotation option."
+    },
+    {
+      "name": "David Ginola",
+      "fbrefId": "189225b3",
+      "nationality": "France",
+      "positions": [
+        "LW",
+        "LM"
+      ],
+      "rating": 81,
+      "appearances": 24,
+      "roles": [
+        "Winger"
+      ],
+      "note": "Marginalised under Kenny Dalglish and reduced to 20 starts."
+    },
+    {
+      "name": "John Beresford",
+      "fbrefId": "50d79fe2",
+      "nationality": "England",
+      "positions": [
+        "LB"
+      ],
+      "rating": 75,
+      "appearances": 19,
+      "roles": [
+        "AttackingFullback"
+      ]
+    },
+    {
+      "name": "Faustino Asprilla",
+      "fbrefId": "ec043e74",
+      "nationality": "Colombia",
+      "positions": [
+        "CF",
+        "ST",
+        "RW"
+      ],
+      "rating": 81,
+      "appearances": 24
+    },
+    {
+      "name": "Shaka Hislop",
+      "fbrefId": "7f44f7dd",
+      "nationality": "Trinidad and Tobago",
+      "positions": [
+        "GK"
+      ],
+      "rating": 75,
+      "appearances": 16
+    },
+    {
+      "name": "Warren Barton",
+      "fbrefId": "7e732709",
+      "nationality": "England",
+      "positions": [
+        "RB"
+      ],
+      "rating": 75,
+      "appearances": 18,
+      "roles": [
+        "AttackingFullback"
+      ]
+    },
+    {
+      "name": "Lee Clark",
+      "fbrefId": "8bd64c51",
+      "nationality": "England",
+      "positions": [
+        "CM",
+        "CAM"
+      ],
+      "rating": 74,
+      "appearances": 25
+    },
+    {
+      "name": "Steve Howey",
+      "fbrefId": "c1dd78cb",
+      "nationality": "England",
+      "positions": [
+        "CB"
+      ],
+      "rating": 76,
+      "appearances": 8
+    }
   ]
 }
