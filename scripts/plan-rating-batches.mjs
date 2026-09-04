@@ -95,10 +95,19 @@ if (fs.existsSync(POSITIONS)) {
   }
 }
 
+// Carry forward every rating that exists, not only those of players who are
+// finished.
+//
+// This once required a player to be COMPLETELY rated before his numbers were
+// kept. That is fine the first time and destroys work the second: adding a new
+// season gives everybody an unrated row, so nobody qualifies, and the next
+// re-plan silently discards the lot. It cost 1,574 hand-made ratings, which
+// were only noticed because the preserved count was compared with the previous
+// run's. A rating is finished work whether or not the player is.
 const existing = new Map();
 for (const f of batchFiles()) {
   for (const p of JSON.parse(fs.readFileSync(path.join(OUT_DIR, f), 'utf8')).players) {
-    if ((p.seasons ?? []).every(s => typeof s.rating === 'number')) {
+    if ((p.seasons ?? []).some(s => typeof s.rating === 'number')) {
       existing.set(p.fbrefId ?? p.name, p);
     }
   }
