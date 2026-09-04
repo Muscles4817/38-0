@@ -6,12 +6,13 @@ export default function EditorHome() {
       <h1 className="text-2xl font-black">Data Editor</h1>
       <p className="text-[#555] text-sm">Manage clubs, players, and squad entries for the draft pool.</p>
 
-      <div className="grid grid-cols-4 gap-4">
+      <div className="grid grid-cols-3 gap-4">
         {[
           { href: '/editor/clubs',   icon: '🏟️', title: 'Clubs',   desc: 'Add and edit clubs' },
           { href: '/editor/players', icon: '👤', title: 'Players', desc: 'Manage the player database' },
           { href: '/editor/squads',  icon: '📋', title: 'Squads',  desc: 'Assign players to club-seasons' },
           { href: '/editor/lineups', icon: '📐', title: 'Lineups', desc: 'Set formation & starting XI per club' },
+          { href: '/editor/traits',  icon: '🧪', title: 'Chemistry', desc: 'How drilled each side is, and how it plays' },
         ].map(item => (
           <Link
             key={item.href}

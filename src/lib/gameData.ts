@@ -53,6 +53,21 @@ export interface DataSquad {
   players: DataPlayer[];
 }
 
+/**
+ * How a club-season plays: how well drilled it is, and its shape of attack.
+ *
+ * Absent means nothing has been recorded, not that the side is average — the
+ * default lives in matchEngine.ts so there is one place it is decided.
+ */
+export interface DataTraits {
+  clubId: number;
+  seasonId: number;
+  cohesion: number;
+  playstyle: string;
+  focus: { L: number; C: number; R: number };
+  note?: string;
+}
+
 export interface DataLineup {
   clubId: number;
   seasonId: number;
@@ -78,9 +93,12 @@ export interface GameData {
   squads: DataSquad[];
   lineups: DataLineup[];
   roles: DataRole[];
+  /** Optional: older snapshots predate it. */
+  traits?: DataTraits[];
 }
 
 export const gameData = rawData as GameData;
+
 
 // ── Indexes ──────────────────────────────────────────────────────────────────
 
@@ -90,6 +108,10 @@ const clubById   = new Map(gameData.clubs.map(c => [c.id, c]));
 const seasonById = new Map(gameData.seasons.map(s => [s.id, s]));
 const squadByKey = new Map(gameData.squads.map(s => [key(s.clubId, s.seasonId), s]));
 const lineupByKey = new Map(gameData.lineups.map(l => [key(l.clubId, l.seasonId), l]));
+
+const traitsByKey = new Map<string, DataTraits>(
+  (gameData.traits ?? []).map(t => [key(t.clubId, t.seasonId), t]),
+);
 
 /** The season the user's XI is dropped into and plays against. */
 export const SIMULATED_SEASON_START = 2025;
@@ -111,6 +133,16 @@ export function getSquad(clubId: number, seasonId: number): DataSquad | null {
 
 export function getLineup(clubId: number, seasonId: number): DataLineup | null {
   return lineupByKey.get(key(clubId, seasonId)) ?? null;
+}
+
+/**
+ * Recorded tactics for a club-season, or null when nobody has set any.
+ *
+ * Null means unrecorded, not average: the default lives in matchEngine.ts so
+ * there is one place that decision is made.
+ */
+export function getTraits(clubId: number, seasonId: number): DataTraits | null {
+  return traitsByKey.get(key(clubId, seasonId)) ?? null;
 }
 
 // ── Best XI ──────────────────────────────────────────────────────────────────

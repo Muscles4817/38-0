@@ -63,6 +63,26 @@ function initSchema(db: Database.Database): void {
       UNIQUE(club_id, season_id)
     );
 
+    -- How a side plays, as opposed to who is in it.
+    --
+    -- Separate from team_lineups on purpose: a club-season can have tactics
+    -- recorded without anyone having picked its XI, and most historical ones
+    -- do. Cohesion is how well drilled the side is — not a rating and not a
+    -- bonus, but how reliably its talent turns into results. See the comment
+    -- above DEFAULT_COHESION in matchEngine.ts.
+    CREATE TABLE IF NOT EXISTS club_season_traits (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      club_id INTEGER NOT NULL REFERENCES clubs(id) ON DELETE CASCADE,
+      season_id INTEGER NOT NULL REFERENCES seasons(id) ON DELETE CASCADE,
+      cohesion INTEGER NOT NULL DEFAULT 72,
+      playstyle TEXT NOT NULL DEFAULT 'balanced',
+      focus_left REAL NOT NULL DEFAULT 1,
+      focus_centre REAL NOT NULL DEFAULT 1,
+      focus_right REAL NOT NULL DEFAULT 1,
+      note TEXT NOT NULL DEFAULT '',
+      UNIQUE(club_id, season_id)
+    );
+
     CREATE TABLE IF NOT EXISTS lineup_slots (
       id INTEGER PRIMARY KEY AUTOINCREMENT,
       lineup_id INTEGER NOT NULL REFERENCES team_lineups(id) ON DELETE CASCADE,

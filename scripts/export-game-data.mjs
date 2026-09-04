@@ -127,7 +127,28 @@ const roles = db.prepare(`
   defContrib: r.def_contrib,
 }));
 
-const snapshot = { clubs, seasons, squads, lineups, roles };
+// How each side plays. Absent rows are not defaulted here: the engine's own
+// DEFAULT_COHESION is the single place that decision lives, so a club with
+// nothing recorded simply does not appear.
+const hasTraits = db.prepare(
+  "SELECT 1 FROM sqlite_master WHERE type='table' AND name='club_season_traits'"
+).get();
+const traits = hasTraits
+  ? db.prepare(`
+      SELECT club_id, season_id, cohesion, playstyle,
+             focus_left, focus_centre, focus_right, note
+      FROM club_season_traits ORDER BY season_id, club_id
+    `).all().map(t => ({
+      clubId: t.club_id,
+      seasonId: t.season_id,
+      cohesion: t.cohesion,
+      playstyle: t.playstyle,
+      focus: { L: t.focus_left, C: t.focus_centre, R: t.focus_right },
+      ...(t.note ? { note: t.note } : {}),
+    }))
+  : [];
+
+const snapshot = { clubs, seasons, squads, lineups, roles, traits };
 
 fs.mkdirSync(path.dirname(OUT_PATH), { recursive: true });
 fs.writeFileSync(OUT_PATH, JSON.stringify(snapshot, null, 2) + '\n', 'utf8');
@@ -137,7 +158,8 @@ const sizeKb = (fs.statSync(OUT_PATH).size / 1024).toFixed(0);
 console.log(
   `Wrote ${path.relative(ROOT, OUT_PATH)} — ` +
   `${clubs.length} clubs, ${seasons.length} seasons, ${squads.length} club-seasons, ` +
-  `${playerCount} squad entries, ${lineups.length} lineups, ${roles.length} roles (${sizeKb} KB)`
+  `${playerCount} squad entries, ${lineups.length} lineups, ${traits.length} tactics, ` +
+  `${roles.length} roles (${sizeKb} KB)`
 );
 
 if (orphaned.length > 0) {

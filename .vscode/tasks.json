@@ -1,0 +1,136 @@
+{
+  // Everything this project does from the terminal, as a task.
+  //
+  //   Ctrl+Shift+B          runs Check (the same four gates CI runs)
+  //   Ctrl+Shift+P -> Tasks: Run Task    picks any of the others
+  //
+  // The data tasks run in the order the pipeline expects: paste CSVs, ingest,
+  // build staging files, import, export. See docs/squad-data-pipeline.md.
+  "version": "2.0.0",
+  "tasks": [
+    {
+      "label": "Dev server",
+      "detail": "next dev — the game AND the editor. The editor only exists here.",
+      "type": "npm",
+      "script": "dev",
+      "isBackground": true,
+      "problemMatcher": {
+        "owner": "next",
+        "pattern": [{ "regexp": "^\\s*(.*)$", "message": 1 }],
+        "background": {
+          "activeOnStart": true,
+          "beginsPattern": ".*(Starting|Compiling).*",
+          "endsPattern": ".*(Ready|Compiled|started server).*"
+        }
+      },
+      "presentation": { "reveal": "always", "panel": "dedicated" }
+    },
+    {
+      "label": "Check",
+      "detail": "lint + typecheck + test + build. Exactly what CI runs. Run before pushing.",
+      "type": "npm",
+      "script": "check",
+      "group": { "kind": "build", "isDefault": true },
+      "problemMatcher": ["$tsc", "$eslint-stylish"],
+      "presentation": { "reveal": "always", "panel": "dedicated" }
+    },
+    {
+      "label": "Test",
+      "type": "npm",
+      "script": "test",
+      "group": { "kind": "test", "isDefault": true },
+      "problemMatcher": []
+    },
+    {
+      "label": "Test (watch)",
+      "type": "npm",
+      "script": "test:watch",
+      "isBackground": true,
+      "problemMatcher": []
+    },
+    {
+      "label": "Typecheck",
+      "type": "npm",
+      "script": "typecheck",
+      "problemMatcher": ["$tsc"]
+    },
+    {
+      "label": "Lint",
+      "type": "npm",
+      "script": "lint",
+      "problemMatcher": ["$eslint-stylish"]
+    },
+
+    {
+      "label": "Sim: hindcast the 1990s",
+      "detail": "Replays all eight real seasons and compares with what happened.",
+      "type": "npm",
+      "script": "hindcast",
+      "problemMatcher": [],
+      "presentation": { "reveal": "always", "panel": "dedicated" }
+    },
+    {
+      "label": "Sim: calibration rates",
+      "detail": "Shots, conversion, cards and scorelines against real football.",
+      "type": "npm",
+      "script": "calibrate",
+      "problemMatcher": [],
+      "presentation": { "reveal": "always", "panel": "dedicated" }
+    },
+
+    {
+      "label": "Data: collection status",
+      "detail": "How many club-seasons of FBref exports are filled in.",
+      "type": "npm",
+      "script": "data:status",
+      "problemMatcher": [],
+      "presentation": { "reveal": "always", "panel": "dedicated" }
+    },
+    {
+      "label": "Data: ingest FBref exports",
+      "detail": "Parses every pasted CSV into rosters. Safe to re-run.",
+      "type": "npm",
+      "script": "data:ingest",
+      "problemMatcher": [],
+      "presentation": { "reveal": "always", "panel": "dedicated" }
+    },
+    {
+      "label": "Data: build squad files for a season",
+      "detail": "Joins appearances, positions and ratings into staging files.",
+      "type": "shell",
+      "command": "node scripts/build-squad-files.mjs --season \"${input:season}\"",
+      "problemMatcher": [],
+      "presentation": { "reveal": "always", "panel": "dedicated" }
+    },
+    {
+      "label": "Data: import into the database",
+      "type": "npm",
+      "script": "import:squads",
+      "problemMatcher": [],
+      "presentation": { "reveal": "always", "panel": "dedicated" }
+    },
+    {
+      "label": "Data: export the game snapshot",
+      "detail": "Writes src/data/game-data.json. Nothing else propagates a data change to the game.",
+      "type": "npm",
+      "script": "export:data",
+      "problemMatcher": [],
+      "presentation": { "reveal": "always", "panel": "dedicated" }
+    },
+    {
+      "label": "Data: import then export",
+      "detail": "The two steps that take edited data all the way into the game.",
+      "dependsOrder": "sequence",
+      "dependsOn": ["Data: import into the database", "Data: export the game snapshot"],
+      "problemMatcher": []
+    }
+  ],
+  "inputs": [
+    {
+      "id": "season",
+      "type": "promptString",
+      "description": "Season, in the form 1997/98",
+      "default": "1999/00"
+    }
+  ]
+}

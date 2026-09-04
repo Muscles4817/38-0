@@ -1,7 +1,10 @@
 import { describe, it, expect } from 'vitest';
 import fs from 'node:fs';
-import { gameData } from './gameData';
-import { simulateMatch, inferStyle, type TeamSetup, type MatchPlayer } from './matchEngine';
+import { gameData, getTraits } from './gameData';
+import {
+  simulateMatch, inferStyle, DEFAULT_COHESION,
+  type TeamSetup, type MatchPlayer, type PlaystyleName,
+} from './matchEngine';
 import { bestFormation, type FittablePlayer } from './lineupFit';
 import type { Position } from './formations';
 
@@ -78,8 +81,17 @@ function build(label: string): TeamSetup[] {
       return { playerId: p.playerId, name: p.name, position: slot.position as Position,
         rating: p.rating, roles: p.roles };
     });
-    const { style, focus } = inferStyle(players);
-    out.push({ name: club.name, players, formation: fit.formation, style, focus, cohesion: 62 });
+    // Recorded tactics win; otherwise infer a shape from the squad and use the
+    // default cohesion. That is the same fallback the game will use, so the
+    // hindcast measures what a player would actually get.
+    const inferred = inferStyle(players);
+    const traits = getTraits(sq.clubId, season.id);
+    out.push({
+      name: club.name, players, formation: fit.formation,
+      style: (traits?.playstyle as PlaystyleName) ?? inferred.style,
+      focus: traits?.focus ?? inferred.focus,
+      cohesion: traits?.cohesion ?? DEFAULT_COHESION,
+    });
   }
   return out;
 }
