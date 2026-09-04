@@ -40,7 +40,7 @@ export type PlayerRole = string;
 const POSSESSIONS = 200;
 
 /** Chance that a possession produces a shot, for evenly matched sides. */
-const BASE_SHOT_RATE = 0.136;
+const BASE_SHOT_RATE = 0.122;
 
 /** Chance that a possession concedes a foul. */
 const BASE_FOUL_RATE = 0.099;
@@ -537,6 +537,34 @@ function pickWeighted<T>(rand: () => number, items: T[], weights: number[]): T |
   return items[items.length - 1];
 }
 
+/**
+ * Combines a player's role multipliers.
+ *
+ * Traits do not stack, in either direction. Each one is a statement about the
+ * player measured against an ordinary player, not against his other traits, so
+ * multiplying them together compounds a comparison that was never meant to be
+ * compounded. Saying a man delivers set pieces AND creates chances should not
+ * make him unable to score.
+ *
+ * It bit hard once the traits were assigned properly: Rodri, who scores from
+ * distance, came out at 0.33; Reece James, who scores free kicks, at 0.17; and
+ * Declan Rice at 0.24 from four separate true statements about him.
+ *
+ * The old engine already did half of this — applyRoleMults in simulation.ts
+ * takes the strongest booster rather than their product — but took the product
+ * of the suppressors, which is the same mistake in the other direction.
+ */
+function combineRoleMults(mults: number[], power: number): number {
+  if (mults.length === 0) return 1;
+  let boost = 1;
+  let suppress = 1;
+  for (const m of mults) {
+    if (m > 1) boost = Math.max(boost, m);
+    else if (m < 1) suppress = Math.min(suppress, m);
+  }
+  return Math.pow(boost * suppress, power);
+}
+
 function pickChanceType(rand: () => number, team: TeamModel, zone: Zone): ChanceType {
   const mix = team.style.chanceMix;
   const types: ChanceType[] = ['throughBall', 'cross', 'aerial', 'longShot', 'individual'];
@@ -569,11 +597,13 @@ function pickShooter(
     const pz = positionZone(p.position);
     if (!setPiece) w *= pz === zone ? 1.35 : pz === 'C' || zone === 'C' ? 1 : 0.55;
     let best = 1;
+    const mults: number[] = [];
     for (const r of p.roles ?? []) {
-      w *= Math.pow(roles.goalMult[r] ?? 1, ROLE_SELECTION_POWER);
+      mults.push(roles.goalMult[r] ?? 1);
       best = Math.max(best, affinity[r] ?? 1);
     }
-    return w * Math.pow(best, ROLE_SELECTION_POWER)
+    return w * combineRoleMults(mults, ROLE_SELECTION_POWER)
+      * Math.pow(best, ROLE_SELECTION_POWER)
       * Math.pow(ratingScale(p.rating), RATING_SELECTION_POWER);
   });
   return pickWeighted(rand, candidates, weights);
@@ -591,8 +621,9 @@ function pickCreator(
     let w = (ATTACK_WEIGHT[p.position] ?? 0.2) + 0.12;
     const pz = positionZone(p.position);
     w *= pz === zone ? 1.5 : pz === 'C' || zone === 'C' ? 1 : 0.5;
-    for (const r of p.roles ?? []) w *= Math.pow(roles.assistMult[r] ?? 1, ROLE_SELECTION_POWER);
-    return w * Math.pow(ratingScale(p.rating), RATING_SELECTION_POWER);
+    const mults = (p.roles ?? []).map(r => roles.assistMult[r] ?? 1);
+    return w * combineRoleMults(mults, ROLE_SELECTION_POWER)
+      * Math.pow(ratingScale(p.rating), RATING_SELECTION_POWER);
   });
   return pickWeighted(rand, candidates, weights);
 }

@@ -2000,9 +2000,9 @@ const EXTRA_ROLES: typeof ROLE_DEFAULTS = [
   { name: 'Sweeper', label: 'Sweeper', goal_mult: 0.30, assist_mult: 0.80, valid_positions: ['CB'], description: 'Covers the space behind the line and reads danger early', att_contrib: 0, mid_contrib: 1, def_contrib: 2 },
   { name: 'Stopper', label: 'Stopper', goal_mult: 0.50, assist_mult: 0.30, valid_positions: ['CB'], description: 'Steps out to meet the ball and wins it high up the pitch', att_contrib: 0, mid_contrib: 0, def_contrib: 2.5 },
   { name: 'PressingForward', label: 'Pressing Forward', goal_mult: 1.20, assist_mult: 1.00, valid_positions: ['ST', 'CF', 'LW', 'RW'], description: 'Leads the press from the front and gives defenders no rest', att_contrib: 1, mid_contrib: 1, def_contrib: 0 },
-  { name: 'Workhorse', label: 'Workhorse', goal_mult: 0.80, assist_mult: 0.90, valid_positions: ['CM', 'CDM', 'CAM', 'LM', 'RM'], description: 'Covers ground for ninety minutes', att_contrib: 0, mid_contrib: 1, def_contrib: 1 },
-  { name: 'Carrier', label: 'Ball Carrier', goal_mult: 1.00, assist_mult: 1.40, valid_positions: ['CM', 'CDM', 'CAM', 'LM', 'RM'], description: 'Beats a press by driving through it with the ball', att_contrib: 1, mid_contrib: 2, def_contrib: 0 },
-  { name: 'Dribbler', label: 'Dribbler', goal_mult: 1.30, assist_mult: 1.50, valid_positions: ['LW', 'RW', 'LM', 'RM', 'CAM', 'CF'], description: 'Beats his man one on one', att_contrib: 1, mid_contrib: 0, def_contrib: 0 },
+  { name: 'Workhorse', label: 'Workhorse', goal_mult: 0.80, assist_mult: 0.90, valid_positions: [], description: 'Covers ground for ninety minutes', att_contrib: 0, mid_contrib: 1, def_contrib: 1 },
+  { name: 'Carrier', label: 'Ball Carrier', goal_mult: 1.00, assist_mult: 1.40, valid_positions: [], description: 'Beats a press by driving through it with the ball', att_contrib: 1, mid_contrib: 2, def_contrib: 0 },
+  { name: 'Dribbler', label: 'Dribbler', goal_mult: 1.30, assist_mult: 1.50, valid_positions: [], description: 'Beats his man one on one', att_contrib: 1, mid_contrib: 0, def_contrib: 0 },
   { name: 'ShotStopper', label: 'Shot Stopper', goal_mult: 0.00, assist_mult: 0.20, valid_positions: ['GK'], description: 'Elite reflexes; keeps out what he reaches', att_contrib: 0, mid_contrib: 0, def_contrib: 2 },
   { name: 'CommandingKeeper', label: 'Commanding Keeper', goal_mult: 0.00, assist_mult: 0.30, valid_positions: ['GK'], description: 'Owns his box and claims what comes into it', att_contrib: 0, mid_contrib: 0, def_contrib: 2 },
   { name: 'PenaltyTaker', label: 'Penalty Taker', goal_mult: 1.40, assist_mult: 0.80, valid_positions: [], description: 'The one who takes them, and does not miss often', att_contrib: 0, mid_contrib: 0, def_contrib: 0 },
@@ -2013,7 +2013,7 @@ const EXTRA_ROLES: typeof ROLE_DEFAULTS = [
   { name: 'FlapsAtCrosses', label: 'Flaps at Crosses', goal_mult: 0.00, assist_mult: 0.20, valid_positions: ['GK'], description: 'Does not command his box, and everyone knows it', att_contrib: 0, mid_contrib: 0, def_contrib: -1 },
   { name: 'PoorDistribution', label: 'Poor Distribution', goal_mult: 0.00, assist_mult: 0.10, valid_positions: ['GK'], description: 'Cannot be trusted with the ball at his feet', att_contrib: 0, mid_contrib: -1.5, def_contrib: 0 },
   { name: 'RashInTheTackle', label: 'Rash in the Tackle', goal_mult: 1.00, assist_mult: 1.00, valid_positions: [], description: 'Dives in, and collects what follows', att_contrib: 0, mid_contrib: 0, def_contrib: 0 },
-  { name: 'LongShot', label: 'Long Shot', goal_mult: 1.40, assist_mult: 0.80, valid_positions: ['CM', 'CDM', 'CAM', 'LM', 'RM', 'LW', 'RW', 'CF', 'ST'], description: 'A threat from outside the box', att_contrib: 1, mid_contrib: 0, def_contrib: 0 },
+  { name: 'LongShot', label: 'Long Shot', goal_mult: 1.40, assist_mult: 0.80, valid_positions: [], description: 'A threat from outside the box', att_contrib: 1, mid_contrib: 0, def_contrib: 0 },
 ];
 
 /** Every role the game knows: the original set plus the trait additions. */
