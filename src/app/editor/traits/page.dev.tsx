@@ -12,6 +12,7 @@ interface ClubTraits {
   focus_left: number;
   focus_centre: number;
   focus_right: number;
+  iconic: number;
   note: string;
   saved: number;
 }
@@ -102,6 +103,12 @@ export default function TraitsEditorPage() {
           should not.
         </p>
         <p className="text-[#555] text-sm mt-2">
+          The star marks a side people would name — curation, not quality. Classic mode
+          lists every club-season in the database, so without it the great sides are
+          indistinguishable from the two hundred others. Plenty of ordinary teams are
+          famous, and the overall rating already says how good they were.
+        </p>
+        <p className="text-[#555] text-sm mt-2">
           Judge it from what is known about the side. Wimbledon were drilled and limited;
           plenty of talented sides were shambolic. Do not tune it to make a historical
           table come out right — that is the one use that would make the simulation lie.
@@ -119,6 +126,8 @@ export default function TraitsEditorPage() {
 
         <span className="text-xs text-[#555]">
           {clubs.length} clubs
+          {clubs.filter(c => c.iconic).length > 0 &&
+            <> · <span className="text-[#c9b84e]">{clubs.filter(c => c.iconic).length} icons</span></>}
           {unsaved > 0 && <> · <span className="text-[#c9b84e]">{unsaved} still on defaults</span></>}
         </span>
 
@@ -162,6 +171,23 @@ export default function TraitsEditorPage() {
                     <span className="text-[10px] text-[#555] ml-2">{band.label}</span>
                   </div>
                 </div>
+
+                <button
+                  type="button"
+                  onClick={() => update(c.club_id, { iconic: c.iconic ? 0 : 1 })}
+                  title={c.iconic
+                    ? 'A side people would name. Shows under Icons in classic mode.'
+                    : 'Mark as a side people would name'}
+                  aria-pressed={c.iconic === 1}
+                  aria-label={`${c.club_name} iconic`}
+                  className={`px-2 py-1.5 rounded-lg text-sm leading-none border transition-colors ${
+                    c.iconic
+                      ? 'border-[#c9b84e] text-[#c9b84e] bg-[#c9b84e14]'
+                      : 'border-[#222] text-[#333] hover:text-[#555]'
+                  }`}
+                >
+                  {c.iconic ? '★' : '☆'}
+                </button>
 
                 <select
                   value={c.playstyle}

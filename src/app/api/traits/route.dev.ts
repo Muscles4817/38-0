@@ -12,6 +12,7 @@ interface TraitRow {
   focus_left: number;
   focus_centre: number;
   focus_right: number;
+  iconic: number;
   note: string;
   saved: number;
 }
@@ -36,6 +37,7 @@ export async function GET(req: Request) {
            COALESCE(t.focus_left, 1)      AS focus_left,
            COALESCE(t.focus_centre, 1)    AS focus_centre,
            COALESCE(t.focus_right, 1)     AS focus_right,
+           COALESCE(t.iconic, 0)          AS iconic,
            COALESCE(t.note, '')           AS note,
            CASE WHEN t.id IS NULL THEN 0 ELSE 1 END AS saved
     FROM clubs c
@@ -62,6 +64,7 @@ export async function POST(req: Request) {
       focus_left: number;
       focus_centre: number;
       focus_right: number;
+      iconic?: boolean;
       note?: string;
     }[];
   };
@@ -90,21 +93,23 @@ export async function POST(req: Request) {
 
   const upsert = db.prepare(`
     INSERT INTO club_season_traits
-      (club_id, season_id, cohesion, playstyle, focus_left, focus_centre, focus_right, note)
-    VALUES (?, ?, ?, ?, ?, ?, ?, ?)
+      (club_id, season_id, cohesion, playstyle, focus_left, focus_centre, focus_right, iconic, note)
+    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
     ON CONFLICT(club_id, season_id) DO UPDATE SET
       cohesion = excluded.cohesion,
       playstyle = excluded.playstyle,
       focus_left = excluded.focus_left,
       focus_centre = excluded.focus_centre,
       focus_right = excluded.focus_right,
+      iconic = excluded.iconic,
       note = excluded.note
   `);
 
   db.transaction(() => {
     for (const c of body.clubs) {
       upsert.run(c.club_id, body.season_id, Math.round(c.cohesion), c.playstyle,
-        c.focus_left, c.focus_centre, c.focus_right, (c.note ?? '').trim());
+        c.focus_left, c.focus_centre, c.focus_right,
+        c.iconic ? 1 : 0, (c.note ?? '').trim());
     }
   })();
 

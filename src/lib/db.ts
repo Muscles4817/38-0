@@ -79,6 +79,12 @@ function initSchema(db: Database.Database): void {
       focus_left REAL NOT NULL DEFAULT 1,
       focus_centre REAL NOT NULL DEFAULT 1,
       focus_right REAL NOT NULL DEFAULT 1,
+      -- Whether this side is one people would name. Curation, not quality:
+      -- an overall rating already says how good they were, and plenty of
+      -- ordinary sides are famous. Classic mode lists every club-season in
+      -- the database, so without this the great ones are indistinguishable
+      -- from the two hundred others.
+      iconic INTEGER NOT NULL DEFAULT 0,
       note TEXT NOT NULL DEFAULT '',
       UNIQUE(club_id, season_id)
     );
