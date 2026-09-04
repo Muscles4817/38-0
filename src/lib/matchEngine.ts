@@ -143,9 +143,20 @@ const AERIAL_WEIGHT: Record<Position, number> = {
   LM: 0.3, RM: 0.3, LW: 0.2, RW: 0.2,
 };
 
-const ROLE_AERIAL: Partial<Record<PlayerRole, number>> = {
-  AerialThreat: 2.4, TargetMan: 1.8, NoNonsenseDefender: 1.5, SetPieceDeliverer: 1.2,
-};
+/**
+ * How much the `aerial` quality raises a player's presence in the air.
+ *
+ * This used to be a hardcoded list of role names multiplying a player's WEIGHT
+ * in a mean, which had it backwards: the weight decides how much his rating
+ * counts toward the average, so a below-average aerial specialist dragged his
+ * side's aerial number DOWN. A 79-rated AerialThreat made a team worse in the
+ * air than a plain 79-rated striker — signing a target man was a downgrade.
+ *
+ * The quality now scales his contribution rather than his influence, and it
+ * picks up the negative side for free: Lightweight is aerial -2, and the old
+ * map had no way to say that at all.
+ */
+const AERIAL_FROM_QUALITY = 0.28;
 
 /** A foul that is booked, and a foul that is a straight red. */
 const FOUL_TO_YELLOW = 0.2;
@@ -518,14 +529,20 @@ function weightedQuality(
   return mass === 0 ? ratingScale(70) : total / mass;
 }
 
-/** A side's presence in both boxes at a dead ball. */
-function aerialQuality(players: MatchPlayer[]): number {
+/**
+ * A side's presence in both boxes at a dead ball.
+ *
+ * Position decides how much of the contest a player is part of; the `aerial`
+ * quality decides how well he does in it. Keeping those two separate is the
+ * whole point — see AERIAL_FROM_QUALITY.
+ */
+export function aerialQuality(players: MatchPlayer[], roles: RoleMultipliers): number {
   let total = 0;
   let mass = 0;
   for (const p of players) {
-    let w = AERIAL_WEIGHT[p.position] ?? 0.4;
-    for (const r of p.roles ?? []) w *= ROLE_AERIAL[r] ?? 1;
-    total += w * ratingScale(p.rating);
+    const w = AERIAL_WEIGHT[p.position] ?? 0.4;
+    total += w * ratingScale(p.rating)
+      * Math.exp(AERIAL_FROM_QUALITY * quality(p, 'aerial', roles));
     mass += w;
   }
   return mass === 0 ? ratingScale(70) : total / mass;
@@ -585,7 +602,7 @@ function buildTeam(setup: TeamSetup, roles: RoleMultipliers): TeamModel {
       R: weightedQuality(players, DEFEND_WEIGHT, 'R'),
     },
     midfield: weightedQuality(players, MIDFIELD_WEIGHT, null),
-    aerial: aerialQuality(players),
+    aerial: aerialQuality(players, roles),
     pressResistance: teamQuality(players, 'pressResist', roles),
     pressIntensity: teamQuality(players, 'pressing', roles),
     runningThreat: teamQuality(players, 'pace', roles),

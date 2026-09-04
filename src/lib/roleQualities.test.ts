@@ -8,6 +8,9 @@
 
 import { describe, it, expect } from 'vitest';
 import { gameData } from './gameData';
+import { aerialQuality } from './matchEngine';
+import type { MatchPlayer, RoleMultipliers } from './matchEngine';
+import type { Position } from './formations';
 
 const VOCABULARY = [
   'aerial', 'pace', 'recovery', 'pressing', 'pressResist', 'creation',
@@ -140,5 +143,71 @@ describe('the role set itself', () => {
     const orphaned = [...used].filter(r => !known.has(r));
     expect(orphaned, `roles used by players but not defined: ${orphaned.join(', ')}`)
       .toEqual([]);
+  });
+});
+
+// ── Aerial presence ──────────────────────────────────────────────────────────
+//
+// This is a regression test for a bug that was silently backwards for as long
+// as the aerial number existed. Role names used to multiply a player's WEIGHT
+// in a weighted mean of ratings, but the weight decides how much his rating
+// counts toward the average — so a specialist rated below his team-mates
+// dragged the side's aerial number DOWN. Signing a target man was a downgrade
+// in the air. The `aerial` quality now scales his contribution instead.
+
+describe('aerial presence', () => {
+  const roles: RoleMultipliers = {
+    goalMult: {},
+    assistMult: {},
+    qualities: {
+      AerialThreat: { aerial: 3 },
+      Lightweight: { aerial: -2 },
+    },
+  };
+
+  /** A flat, unremarkable eleven, so the striker's slot is the only variable. */
+  const eleven = (striker: MatchPlayer): MatchPlayer[] => [
+    { playerId: 1, name: 'GK', position: 'GK', rating: 84 },
+    { playerId: 2, name: 'LB', position: 'LB', rating: 82 },
+    { playerId: 3, name: 'CB1', position: 'CB', rating: 84 },
+    { playerId: 4, name: 'CB2', position: 'CB', rating: 83 },
+    { playerId: 5, name: 'RB', position: 'RB', rating: 82 },
+    { playerId: 6, name: 'LM', position: 'LM', rating: 82 },
+    { playerId: 7, name: 'CM1', position: 'CM', rating: 83 },
+    { playerId: 8, name: 'CM2', position: 'CM', rating: 82 },
+    { playerId: 9, name: 'RM', position: 'RM', rating: 82 },
+    { playerId: 10, name: 'ST1', position: 'ST', rating: 84 },
+    striker,
+  ];
+
+  const plain = { playerId: 11, name: 'Plain', position: 'ST' as Position, rating: 79 };
+  const specialist = { ...plain, name: 'Target man', roles: ['AerialThreat'] };
+  const lightweight = { ...plain, name: 'Lightweight', roles: ['Lightweight'] };
+
+  it('is raised by a specialist rated below his team-mates', () => {
+    // The bug: this was the wrong way round, so the more aerial the player, the
+    // worse his side got in the air whenever he was not also the best player.
+    expect(aerialQuality(eleven(specialist), roles))
+      .toBeGreaterThan(aerialQuality(eleven(plain), roles));
+  });
+
+  it('is lowered by a player who loses headers', () => {
+    // Nothing in the old role-name map could say this at all.
+    expect(aerialQuality(eleven(lightweight), roles))
+      .toBeLessThan(aerialQuality(eleven(plain), roles));
+  });
+
+  it('still reads rating, not only traits', () => {
+    const better = { ...plain, playerId: 12, name: 'Better', rating: 86 };
+    expect(aerialQuality(eleven(better), roles))
+      .toBeGreaterThan(aerialQuality(eleven(plain), roles));
+  });
+
+  it('weighs a centre-back more heavily than a winger', () => {
+    // Position decides how much of the contest a player is part of.
+    const asCB = { ...specialist, position: 'CB' as Position };
+    const asWinger = { ...specialist, position: 'LW' as Position };
+    expect(aerialQuality(eleven(asCB), roles))
+      .toBeGreaterThan(aerialQuality(eleven(asWinger), roles));
   });
 });
