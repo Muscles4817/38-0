@@ -74197,6 +74197,10 @@
           "playerId": 40
         },
         {
+          "slotIndex": 5,
+          "playerId": 2223
+        },
+        {
           "slotIndex": 6,
           "playerId": 35
         },
@@ -74242,6 +74246,10 @@
         {
           "slotIndex": 4,
           "playerId": 7
+        },
+        {
+          "slotIndex": 5,
+          "playerId": 668
         },
         {
           "slotIndex": 6,
@@ -74770,6 +74778,108 @@
           "playerId": 674
         }
       ]
+    },
+    {
+      "clubId": 1,
+      "seasonId": 1,
+      "formation": "4-4-2",
+      "slots": [
+        {
+          "slotIndex": 0,
+          "playerId": 695
+        },
+        {
+          "slotIndex": 1,
+          "playerId": 693
+        },
+        {
+          "slotIndex": 2,
+          "playerId": 703
+        },
+        {
+          "slotIndex": 3,
+          "playerId": 696
+        },
+        {
+          "slotIndex": 4,
+          "playerId": 708
+        },
+        {
+          "slotIndex": 5,
+          "playerId": 694
+        },
+        {
+          "slotIndex": 6,
+          "playerId": 697
+        },
+        {
+          "slotIndex": 7,
+          "playerId": 662
+        },
+        {
+          "slotIndex": 8,
+          "playerId": 700
+        },
+        {
+          "slotIndex": 9,
+          "playerId": 661
+        },
+        {
+          "slotIndex": 10,
+          "playerId": 659
+        }
+      ]
+    },
+    {
+      "clubId": 3,
+      "seasonId": 25,
+      "formation": "3-4-3 (WB)",
+      "slots": [
+        {
+          "slotIndex": 0,
+          "playerId": 110
+        },
+        {
+          "slotIndex": 1,
+          "playerId": 572
+        },
+        {
+          "slotIndex": 2,
+          "playerId": 109
+        },
+        {
+          "slotIndex": 3,
+          "playerId": 576
+        },
+        {
+          "slotIndex": 4,
+          "playerId": 108
+        },
+        {
+          "slotIndex": 5,
+          "playerId": 70
+        },
+        {
+          "slotIndex": 6,
+          "playerId": 558
+        },
+        {
+          "slotIndex": 7,
+          "playerId": 105
+        },
+        {
+          "slotIndex": 8,
+          "playerId": 114
+        },
+        {
+          "slotIndex": 9,
+          "playerId": 571
+        },
+        {
+          "slotIndex": 10,
+          "playerId": 570
+        }
+      ]
     }
   ],
   "roles": [
@@ -74782,7 +74892,10 @@
       "description": "Dominant in the air; major threat at set pieces from any position",
       "attContrib": 0,
       "midContrib": 0,
-      "defContrib": 0
+      "defContrib": 0,
+      "qualities": {
+        "aerial": 3
+      }
     },
     {
       "name": "Anchor",
@@ -74793,9 +74906,13 @@
         "CDM"
       ],
       "description": "Pure defensive shield; almost never scores",
-      "attContrib": 0,
+      "attContrib": -1,
       "midContrib": 0,
-      "defContrib": 3
+      "defContrib": 3,
+      "qualities": {
+        "pressing": 1,
+        "pressResist": 1
+      }
     },
     {
       "name": "AttackingFullback",
@@ -74811,7 +74928,10 @@
       "description": "Bombs forward to provide width and crosses",
       "attContrib": 2,
       "midContrib": 0,
-      "defContrib": -2
+      "defContrib": -2,
+      "qualities": {
+        "pace": 1
+      }
     },
     {
       "name": "BallPlayingDefender",
@@ -74824,7 +74944,11 @@
       "description": "Plays out from the back; contributes to build-up play",
       "attContrib": 0,
       "midContrib": 2,
-      "defContrib": 0
+      "defContrib": 0,
+      "qualities": {
+        "pressResist": 3,
+        "creation": 1
+      }
     },
     {
       "name": "BoxToBox",
@@ -74837,8 +74961,33 @@
       ],
       "description": "Balanced midfielder contributing at both ends",
       "attContrib": 1,
-      "midContrib": 0,
-      "defContrib": 1
+      "midContrib": -1,
+      "defContrib": 1,
+      "qualities": {
+        "pressing": 2,
+        "pace": 1
+      }
+    },
+    {
+      "name": "Carrier",
+      "label": "Ball Carrier",
+      "goalMult": 1,
+      "assistMult": 1.4,
+      "validPositions": [
+        "CM",
+        "CDM",
+        "CAM",
+        "LM",
+        "RM"
+      ],
+      "description": "Beats a press by driving through it with the ball",
+      "attContrib": 1,
+      "midContrib": 2,
+      "defContrib": 0,
+      "qualities": {
+        "pressResist": 3,
+        "dribble": 2
+      }
     },
     {
       "name": "ChanceCreator",
@@ -74857,7 +75006,27 @@
       "description": "Natural playmaker who creates chances for others",
       "attContrib": 2,
       "midContrib": 0,
-      "defContrib": 0
+      "defContrib": 0,
+      "qualities": {
+        "creation": 3
+      }
+    },
+    {
+      "name": "CommandingKeeper",
+      "label": "Commanding Keeper",
+      "goalMult": 0,
+      "assistMult": 0.3,
+      "validPositions": [
+        "GK"
+      ],
+      "description": "Owns his box and claims what comes into it",
+      "attContrib": 0,
+      "midContrib": 0,
+      "defContrib": 2,
+      "qualities": {
+        "claiming": 3,
+        "aerial": 1
+      }
     },
     {
       "name": "CompleteForward",
@@ -74871,7 +75040,13 @@
       "description": "All-round striker contributing to goals and assists",
       "attContrib": 0,
       "midContrib": 0,
-      "defContrib": 0
+      "defContrib": 0,
+      "qualities": {
+        "aerial": 1,
+        "pace": 1,
+        "pressing": 1,
+        "dribble": 1
+      }
     },
     {
       "name": "CrossingSpecialist",
@@ -74893,7 +75068,10 @@
       "description": "Elite delivery from wide; rarely attempts shots",
       "attContrib": 0,
       "midContrib": 0,
-      "defContrib": 0
+      "defContrib": 0,
+      "qualities": {
+        "setPiece": 2
+      }
     },
     {
       "name": "DeepLyingForward",
@@ -74907,7 +75085,11 @@
       "description": "Drops deep to link play and create; finishes when presented",
       "attContrib": 0,
       "midContrib": 1,
-      "defContrib": 0
+      "defContrib": 0,
+      "qualities": {
+        "creation": 2,
+        "pressResist": 1
+      }
     },
     {
       "name": "DeepLyingPlaymaker",
@@ -74921,7 +75103,33 @@
       "description": "Dictates tempo from deep; rarely gets forward",
       "attContrib": 0,
       "midContrib": 1,
-      "defContrib": 0
+      "defContrib": 0,
+      "qualities": {
+        "pressResist": 3,
+        "creation": 2
+      }
+    },
+    {
+      "name": "Dribbler",
+      "label": "Dribbler",
+      "goalMult": 1.3,
+      "assistMult": 1.5,
+      "validPositions": [
+        "LW",
+        "RW",
+        "LM",
+        "RM",
+        "CAM",
+        "CF"
+      ],
+      "description": "Beats his man one on one",
+      "attContrib": 1,
+      "midContrib": 0,
+      "defContrib": 0,
+      "qualities": {
+        "dribble": 3,
+        "pace": 1
+      }
     },
     {
       "name": "Enforcer",
@@ -74935,7 +75143,10 @@
       "description": "Win it, keep it simple; physical midfield presence",
       "attContrib": 0,
       "midContrib": 1,
-      "defContrib": 2
+      "defContrib": 2,
+      "qualities": {
+        "pressing": 2
+      }
     },
     {
       "name": "FalseNine",
@@ -74949,7 +75160,11 @@
       "description": "Drops into midfield to link play; still a scoring threat",
       "attContrib": 1,
       "midContrib": 1,
-      "defContrib": 0
+      "defContrib": 0,
+      "qualities": {
+        "creation": 2,
+        "pressResist": 2
+      }
     },
     {
       "name": "InsideForward",
@@ -74965,7 +75180,12 @@
       "description": "Cuts inside from wide to shoot; sacrifices crossing for goals",
       "attContrib": 1,
       "midContrib": 0,
-      "defContrib": 0
+      "defContrib": 0,
+      "qualities": {
+        "pace": 2,
+        "dribble": 2,
+        "longShot": 1
+      }
     },
     {
       "name": "InvertedWingback",
@@ -74981,7 +75201,11 @@
       "description": "Cuts inside into dangerous half-spaces; box threat from fullback",
       "attContrib": 1,
       "midContrib": 1,
-      "defContrib": -1
+      "defContrib": -1,
+      "qualities": {
+        "pressResist": 1,
+        "creation": 1
+      }
     },
     {
       "name": "LateRunner",
@@ -74996,7 +75220,35 @@
       "description": "Times runs into the box perfectly; Lampard/Gerrard archetype",
       "attContrib": 1,
       "midContrib": 0,
-      "defContrib": 0
+      "defContrib": 0,
+      "qualities": {
+        "pace": 1,
+        "longShot": 1
+      }
+    },
+    {
+      "name": "LongShot",
+      "label": "Long Shot",
+      "goalMult": 1.4,
+      "assistMult": 0.8,
+      "validPositions": [
+        "CM",
+        "CDM",
+        "CAM",
+        "LM",
+        "RM",
+        "LW",
+        "RW",
+        "CF",
+        "ST"
+      ],
+      "description": "A threat from outside the box",
+      "attContrib": 1,
+      "midContrib": 0,
+      "defContrib": 0,
+      "qualities": {
+        "longShot": 3
+      }
     },
     {
       "name": "Mezzala",
@@ -75012,7 +75264,12 @@
       "description": "Half-space runner who breaks into the box from midfield",
       "attContrib": 1,
       "midContrib": 1,
-      "defContrib": 0
+      "defContrib": 0,
+      "qualities": {
+        "creation": 1,
+        "pace": 1,
+        "dribble": 1
+      }
     },
     {
       "name": "NoNonsenseDefender",
@@ -75025,7 +75282,39 @@
       "description": "",
       "attContrib": 0,
       "midContrib": -2,
-      "defContrib": 3.5
+      "defContrib": 3.5,
+      "qualities": {
+        "aerial": 2
+      }
+    },
+    {
+      "name": "Pacey",
+      "label": "Pacey",
+      "goalMult": 1.1,
+      "assistMult": 1,
+      "validPositions": [],
+      "description": "Genuine speed; runs in behind and punishes a high line",
+      "attContrib": 0,
+      "midContrib": 0,
+      "defContrib": 0,
+      "qualities": {
+        "pace": 3,
+        "recovery": 1
+      }
+    },
+    {
+      "name": "PenaltyTaker",
+      "label": "Penalty Taker",
+      "goalMult": 1.4,
+      "assistMult": 0.8,
+      "validPositions": [],
+      "description": "The one who takes them, and does not miss often",
+      "attContrib": 0,
+      "midContrib": 0,
+      "defContrib": 0,
+      "qualities": {
+        "penalty": 3
+      }
     },
     {
       "name": "Poacher",
@@ -75041,7 +75330,30 @@
       "description": "Lives in the box for the tap-in; pure goal threat",
       "attContrib": 0,
       "midContrib": 0,
-      "defContrib": 0
+      "defContrib": 0,
+      "qualities": {
+        "pace": 1
+      }
+    },
+    {
+      "name": "PressingForward",
+      "label": "Pressing Forward",
+      "goalMult": 1.2,
+      "assistMult": 1,
+      "validPositions": [
+        "ST",
+        "CF",
+        "LW",
+        "RW"
+      ],
+      "description": "Leads the press from the front and gives defenders no rest",
+      "attContrib": 1,
+      "midContrib": 1,
+      "defContrib": 0,
+      "qualities": {
+        "pressing": 3,
+        "pace": 1
+      }
     },
     {
       "name": "Regista",
@@ -75055,7 +75367,12 @@
       "description": "Orchestrates from deep; elite passer, minimal open-play goal threat",
       "attContrib": 0,
       "midContrib": 3,
-      "defContrib": -2
+      "defContrib": -2,
+      "qualities": {
+        "pressResist": 3,
+        "creation": 3,
+        "setPiece": 1
+      }
     },
     {
       "name": "SetPieceDeliverer",
@@ -75082,7 +75399,61 @@
       "description": "Corner and free kick specialist; rarely scores directly",
       "attContrib": 0,
       "midContrib": 0,
-      "defContrib": 0
+      "defContrib": 0,
+      "qualities": {
+        "setPiece": 3,
+        "penalty": 1
+      }
+    },
+    {
+      "name": "ShotStopper",
+      "label": "Shot Stopper",
+      "goalMult": 0,
+      "assistMult": 0.2,
+      "validPositions": [
+        "GK"
+      ],
+      "description": "Elite reflexes; keeps out what he reaches",
+      "attContrib": 0,
+      "midContrib": 0,
+      "defContrib": 2,
+      "qualities": {
+        "shotStopping": 3
+      }
+    },
+    {
+      "name": "Stopper",
+      "label": "Stopper",
+      "goalMult": 0.5,
+      "assistMult": 0.3,
+      "validPositions": [
+        "CB"
+      ],
+      "description": "Steps out to meet the ball and wins it high up the pitch",
+      "attContrib": 0,
+      "midContrib": 0,
+      "defContrib": 2.5,
+      "qualities": {
+        "aerial": 2,
+        "pressing": 2
+      }
+    },
+    {
+      "name": "Sweeper",
+      "label": "Sweeper",
+      "goalMult": 0.3,
+      "assistMult": 0.8,
+      "validPositions": [
+        "CB"
+      ],
+      "description": "Covers the space behind the line and reads danger early",
+      "attContrib": 0,
+      "midContrib": 1,
+      "defContrib": 2,
+      "qualities": {
+        "recovery": 3,
+        "pressResist": 2
+      }
     },
     {
       "name": "SweeperKeeper",
@@ -75095,7 +75466,11 @@
       "description": "",
       "attContrib": 0,
       "midContrib": 2.5,
-      "defContrib": -1.5
+      "defContrib": -1.5,
+      "qualities": {
+        "pressResist": 2,
+        "claiming": 1
+      }
     },
     {
       "name": "TargetMan",
@@ -75109,7 +75484,10 @@
       "description": "Physical presence up front; wins aerial duels and holds up play",
       "attContrib": 0,
       "midContrib": 0,
-      "defContrib": 0
+      "defContrib": 0,
+      "qualities": {
+        "aerial": 3
+      }
     },
     {
       "name": "Trequartista",
@@ -75125,7 +75503,12 @@
       "description": "Floats between the lines; creative and dangerous in pockets of space",
       "attContrib": 0,
       "midContrib": 0,
-      "defContrib": 0
+      "defContrib": 0,
+      "qualities": {
+        "creation": 3,
+        "dribble": 1,
+        "longShot": 1
+      }
     },
     {
       "name": "Winger",
@@ -75141,7 +75524,33 @@
       "description": "Stays wide to deliver crosses; rarely attempts shots on goal",
       "attContrib": 0,
       "midContrib": 0,
-      "defContrib": 0
+      "defContrib": 0,
+      "qualities": {
+        "setPiece": 1,
+        "dribble": 1,
+        "pace": 1
+      }
+    },
+    {
+      "name": "Workhorse",
+      "label": "Workhorse",
+      "goalMult": 0.8,
+      "assistMult": 0.9,
+      "validPositions": [
+        "CM",
+        "CDM",
+        "CAM",
+        "LM",
+        "RM"
+      ],
+      "description": "Covers ground for ninety minutes",
+      "attContrib": 0,
+      "midContrib": 1,
+      "defContrib": 1,
+      "qualities": {
+        "pressing": 2,
+        "pressResist": 1
+      }
     }
   ],
   "traits": [
@@ -75241,6 +75650,454 @@
         "R": 1
       },
       "iconic": true
+    },
+    {
+      "clubId": 1,
+      "seasonId": 12,
+      "cohesion": 88,
+      "playstyle": "balanced",
+      "focus": {
+        "L": 1,
+        "C": 1,
+        "R": 1
+      }
+    },
+    {
+      "clubId": 2,
+      "seasonId": 12,
+      "cohesion": 72,
+      "playstyle": "balanced",
+      "focus": {
+        "L": 1,
+        "C": 1,
+        "R": 1
+      }
+    },
+    {
+      "clubId": 3,
+      "seasonId": 12,
+      "cohesion": 72,
+      "playstyle": "balanced",
+      "focus": {
+        "L": 1,
+        "C": 1,
+        "R": 1
+      }
+    },
+    {
+      "clubId": 4,
+      "seasonId": 12,
+      "cohesion": 72,
+      "playstyle": "balanced",
+      "focus": {
+        "L": 1,
+        "C": 1,
+        "R": 1
+      }
+    },
+    {
+      "clubId": 5,
+      "seasonId": 12,
+      "cohesion": 72,
+      "playstyle": "balanced",
+      "focus": {
+        "L": 1,
+        "C": 1,
+        "R": 1
+      }
+    },
+    {
+      "clubId": 6,
+      "seasonId": 12,
+      "cohesion": 72,
+      "playstyle": "balanced",
+      "focus": {
+        "L": 1,
+        "C": 1,
+        "R": 1
+      }
+    },
+    {
+      "clubId": 7,
+      "seasonId": 12,
+      "cohesion": 72,
+      "playstyle": "balanced",
+      "focus": {
+        "L": 1,
+        "C": 1,
+        "R": 1
+      }
+    },
+    {
+      "clubId": 8,
+      "seasonId": 12,
+      "cohesion": 72,
+      "playstyle": "balanced",
+      "focus": {
+        "L": 1,
+        "C": 1,
+        "R": 1
+      }
+    },
+    {
+      "clubId": 9,
+      "seasonId": 12,
+      "cohesion": 72,
+      "playstyle": "balanced",
+      "focus": {
+        "L": 1,
+        "C": 1,
+        "R": 1
+      }
+    },
+    {
+      "clubId": 10,
+      "seasonId": 12,
+      "cohesion": 72,
+      "playstyle": "balanced",
+      "focus": {
+        "L": 1,
+        "C": 1,
+        "R": 1
+      }
+    },
+    {
+      "clubId": 18,
+      "seasonId": 12,
+      "cohesion": 72,
+      "playstyle": "balanced",
+      "focus": {
+        "L": 1,
+        "C": 1,
+        "R": 1
+      }
+    },
+    {
+      "clubId": 19,
+      "seasonId": 12,
+      "cohesion": 72,
+      "playstyle": "balanced",
+      "focus": {
+        "L": 1,
+        "C": 1,
+        "R": 1
+      }
+    },
+    {
+      "clubId": 26,
+      "seasonId": 12,
+      "cohesion": 72,
+      "playstyle": "balanced",
+      "focus": {
+        "L": 1,
+        "C": 1,
+        "R": 1
+      }
+    },
+    {
+      "clubId": 29,
+      "seasonId": 12,
+      "cohesion": 72,
+      "playstyle": "balanced",
+      "focus": {
+        "L": 1,
+        "C": 1,
+        "R": 1
+      }
+    },
+    {
+      "clubId": 52,
+      "seasonId": 12,
+      "cohesion": 72,
+      "playstyle": "balanced",
+      "focus": {
+        "L": 1,
+        "C": 1,
+        "R": 1
+      }
+    },
+    {
+      "clubId": 53,
+      "seasonId": 12,
+      "cohesion": 72,
+      "playstyle": "balanced",
+      "focus": {
+        "L": 1,
+        "C": 1,
+        "R": 1
+      }
+    },
+    {
+      "clubId": 63,
+      "seasonId": 12,
+      "cohesion": 72,
+      "playstyle": "balanced",
+      "focus": {
+        "L": 1,
+        "C": 1,
+        "R": 1
+      }
+    },
+    {
+      "clubId": 67,
+      "seasonId": 12,
+      "cohesion": 72,
+      "playstyle": "balanced",
+      "focus": {
+        "L": 1,
+        "C": 1,
+        "R": 1
+      }
+    },
+    {
+      "clubId": 70,
+      "seasonId": 12,
+      "cohesion": 72,
+      "playstyle": "balanced",
+      "focus": {
+        "L": 1,
+        "C": 1,
+        "R": 1
+      }
+    },
+    {
+      "clubId": 72,
+      "seasonId": 12,
+      "cohesion": 72,
+      "playstyle": "balanced",
+      "focus": {
+        "L": 1,
+        "C": 1,
+        "R": 1
+      }
+    },
+    {
+      "clubId": 1,
+      "seasonId": 34,
+      "cohesion": 89,
+      "playstyle": "possession",
+      "focus": {
+        "L": 1.1,
+        "C": 1.3,
+        "R": 1.4
+      },
+      "note": "The most drilled side in the league: rehearsed to the point that set pieces became a defining weapon. Slight right tilt through Saka."
+    },
+    {
+      "clubId": 2,
+      "seasonId": 34,
+      "cohesion": 62,
+      "playstyle": "counter",
+      "focus": {
+        "L": 1.3,
+        "C": 1.1,
+        "R": 1.2
+      },
+      "note": "The clearest example in the league of talent not turning into results — disjointed, poor in possession, better on the break than building."
+    },
+    {
+      "clubId": 3,
+      "seasonId": 34,
+      "cohesion": 71,
+      "playstyle": "possession",
+      "focus": {
+        "L": 1,
+        "C": 1.3,
+        "R": 1.3
+      },
+      "note": "Enormous individual talent and enormous squad turnover; a young side still learning each other. Palmer central-right is the outlet."
+    },
+    {
+      "clubId": 4,
+      "seasonId": 34,
+      "cohesion": 86,
+      "playstyle": "possession",
+      "focus": {
+        "L": 1.1,
+        "C": 1.5,
+        "R": 1.2
+      },
+      "note": "Guardiola sides are coached to the last detail; marked down slightly from their peak for a squad mid-rebuild. Everything funnels centrally to Haaland."
+    },
+    {
+      "clubId": 6,
+      "seasonId": 34,
+      "cohesion": 85,
+      "playstyle": "highPress",
+      "focus": {
+        "L": 1,
+        "C": 1.3,
+        "R": 1.5
+      },
+      "note": "Aggressive, structured pressing with a heavy right side — Salah ahead of Alexander-Arnold is where the play goes."
+    },
+    {
+      "clubId": 8,
+      "seasonId": 34,
+      "cohesion": 70,
+      "playstyle": "highPress",
+      "focus": {
+        "L": 1.4,
+        "C": 1.1,
+        "R": 1.2
+      },
+      "note": "A committed, high-risk system that produced wildly inconsistent weeks. Left-sided through Son."
+    },
+    {
+      "clubId": 9,
+      "seasonId": 34,
+      "cohesion": 81,
+      "playstyle": "highPress",
+      "focus": {
+        "L": 1.2,
+        "C": 1.2,
+        "R": 1.2
+      },
+      "note": "A settled core under a long-serving manager; aggressive rather than intricate, and threat spread evenly."
+    },
+    {
+      "clubId": 10,
+      "seasonId": 34,
+      "cohesion": 84,
+      "playstyle": "counter",
+      "focus": {
+        "L": 1.1,
+        "C": 1.2,
+        "R": 1.3
+      },
+      "note": "Emery is among the best coaches in Europe at organising a mid-block and attacking the space behind it."
+    },
+    {
+      "clubId": 13,
+      "seasonId": 34,
+      "cohesion": 80,
+      "playstyle": "highPress",
+      "focus": {
+        "L": 1.3,
+        "C": 1,
+        "R": 1.3
+      },
+      "note": "Iraola coached one of the most distinctive and demanding pressing systems in the division. Attacks come from wide."
+    },
+    {
+      "clubId": 14,
+      "seasonId": 34,
+      "cohesion": 86,
+      "playstyle": "routeOne",
+      "focus": {
+        "L": 1,
+        "C": 1.2,
+        "R": 1.4
+      },
+      "note": "The clearest case of organisation beating talent: direct, relentless on set pieces, and drilled far beyond what the squad list suggests."
+    },
+    {
+      "clubId": 15,
+      "seasonId": 34,
+      "cohesion": 78,
+      "playstyle": "possession",
+      "focus": {
+        "L": 1.4,
+        "C": 1.2,
+        "R": 1
+      },
+      "note": "A club with a coherent playing identity that survives manager changes, though less settled than at its peak. Heavily left-sided through Mitoma."
+    },
+    {
+      "clubId": 17,
+      "seasonId": 34,
+      "cohesion": 82,
+      "playstyle": "counter",
+      "focus": {
+        "L": 1.3,
+        "C": 1.1,
+        "R": 1.3
+      },
+      "note": "Glasner drilled the wing-back system hard. Width on both flanks is the whole plan."
+    },
+    {
+      "clubId": 18,
+      "seasonId": 34,
+      "cohesion": 78,
+      "playstyle": "lowBlock",
+      "focus": {
+        "L": 1.1,
+        "C": 1.3,
+        "R": 1.1
+      },
+      "note": "Hard to play through, limited going forward, and genuinely dangerous from dead balls. Central and aerial by design."
+    },
+    {
+      "clubId": 19,
+      "seasonId": 34,
+      "cohesion": 78,
+      "playstyle": "balanced",
+      "focus": {
+        "L": 1.2,
+        "C": 1.2,
+        "R": 1.2
+      },
+      "note": "Marco Silva has had time and the shape shows it: organised, mid-block, no strong bias either way."
+    },
+    {
+      "clubId": 20,
+      "seasonId": 34,
+      "cohesion": 77,
+      "playstyle": "highPress",
+      "focus": {
+        "L": 1.2,
+        "C": 1.2,
+        "R": 1.2
+      },
+      "note": "Well coached for a promoted side — McKenna got far more out of the group than its rating suggests. Overmatched, not disorganised."
+    },
+    {
+      "clubId": 25,
+      "seasonId": 34,
+      "cohesion": 80,
+      "playstyle": "counter",
+      "focus": {
+        "L": 1.2,
+        "C": 1.1,
+        "R": 1.3
+      },
+      "note": "An excellent low block that broke at pace. Results ran well ahead of the squad on paper, which is what cohesion is for."
+    },
+    {
+      "clubId": 26,
+      "seasonId": 34,
+      "cohesion": 62,
+      "playstyle": "possession",
+      "focus": {
+        "L": 1.1,
+        "C": 1.3,
+        "R": 1.1
+      },
+      "note": "Committed to playing out from the back while being comprehensively outmatched, which produced the disorganisation rather than excusing it."
+    },
+    {
+      "clubId": 28,
+      "seasonId": 34,
+      "cohesion": 66,
+      "playstyle": "counter",
+      "focus": {
+        "L": 1,
+        "C": 1.1,
+        "R": 1.4
+      },
+      "note": "Unsettled through managerial change, with a squad better than its shape. Bowen and Kudus make it right-heavy."
+    },
+    {
+      "clubId": 29,
+      "seasonId": 34,
+      "cohesion": 66,
+      "playstyle": "counter",
+      "focus": {
+        "L": 1.3,
+        "C": 1,
+        "R": 1.3
+      },
+      "note": "Fast wing-backs and little control in between; the attack lives in the wide areas."
     }
   ]
 }

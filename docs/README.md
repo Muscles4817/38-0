@@ -9,6 +9,9 @@ These documents exist so that anyone — including an AI agent starting a fresh
 session with no memory of previous ones — can make a change that fits the way
 the codebase already works.
 
+- [`roles.md`](roles.md) — what a trait can say about a player
+- [`playstyles.md`](playstyles.md) — how a side plays, and why it is a decision
+
 ## Read these first
 
 | Document | Read it when |
