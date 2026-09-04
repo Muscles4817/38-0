@@ -40,7 +40,7 @@ export type PlayerRole = string;
 const POSSESSIONS = 200;
 
 /** Chance that a possession produces a shot, for evenly matched sides. */
-const BASE_SHOT_RATE = 0.122;
+const BASE_SHOT_RATE = 0.137;
 
 /** Chance that a possession concedes a foul. */
 const BASE_FOUL_RATE = 0.099;
@@ -212,71 +212,136 @@ const DISCIPLINE_TO_FOULS = 1.8;
 // chances but worse ones, and aims them at whoever wins headers.
 
 export type PlaystyleName =
-  | 'balanced' | 'possession' | 'counter' | 'routeOne' | 'highPress' | 'lowBlock';
+  | 'tikiTaka' | 'positionalPlay' | 'totalFootball' | 'possession'
+  | 'gegenpress' | 'highPress' | 'balanced' | 'wingPlay'
+  | 'direct' | 'counter' | 'routeOne' | 'catenaccio'
+  | 'lowBlock' | 'parkTheBus';
 
 export interface Playstyle {
   name: PlaystyleName;
   label: string;
+  /** Long ball at 0, short and patient at 1. */
+  buildUp: number;
+  /** Deep at 0, very high at 1. */
+  line: number;
+  /** Scales the number of chances the match produces. */
+  tempo: number;
   /** Pull on the share of the ball, before the midfield battle. */
   possessionBias: number;
-  /** How often a possession turns into a shot. */
-  shotRate: number;
-  /** How good those shots are. */
-  chanceQuality: number;
-  /** How much the opponent's shot rate rises against this side. */
-  vulnerability: number;
   /** Weighting of the chance types this style manufactures. */
   chanceMix: Partial<Record<ChanceType, number>>;
   /** Fouls conceded. */
   aggression: number;
+  /**
+   * What the eleven needs to execute it, as quality names and weights.
+   *
+   * The cost of a style is always paid; the benefit is collected in
+   * proportion to how well the side can actually play it. Tiki-taka without
+   * technicians buys the low tempo and the high line and none of the control.
+   */
+  needs: Partial<Record<string, number>>;
 }
 
 export const PLAYSTYLES: Record<PlaystyleName, Playstyle> = {
-  balanced: {
-    name: 'balanced', label: 'Balanced',
-    possessionBias: 1.0, shotRate: 1.0, chanceQuality: 1.0, vulnerability: 1.0,
-    chanceMix: { throughBall: 1, cross: 1, aerial: 1, longShot: 1, individual: 1 },
-    aggression: 1.0,
+  tikiTaka: {
+    name: 'tikiTaka', label: 'Tiki-taka',
+    buildUp: 1.0, line: 0.65, tempo: 0.80, possessionBias: 1.60, aggression: 0.80,
+    chanceMix: { throughBall: 1.8, individual: 1.2, longShot: 0.9, cross: 0.5, aerial: 0.3 },
+    needs: { pressResist: 3, creation: 2 },
+  },
+  positionalPlay: {
+    name: 'positionalPlay', label: 'Positional play',
+    buildUp: 0.85, line: 0.75, tempo: 0.95, possessionBias: 1.45, aggression: 0.90,
+    chanceMix: { throughBall: 1.5, individual: 1.2, cross: 1.0, longShot: 1.0, aerial: 0.6 },
+    needs: { pressResist: 2, creation: 2, pressing: 1 },
+  },
+  totalFootball: {
+    name: 'totalFootball', label: 'Total football',
+    buildUp: 0.80, line: 0.80, tempo: 1.05, possessionBias: 1.35, aggression: 0.95,
+    chanceMix: { throughBall: 1.4, individual: 1.3, cross: 1.1, longShot: 1.0, aerial: 0.7 },
+    needs: { pressResist: 1, creation: 1, pressing: 1 },
   },
   possession: {
     name: 'possession', label: 'Possession',
-    // Keeps the ball and works openings, but a packed defence is hard to break
-    // down, so the shots are not especially good ones.
-    possessionBias: 1.45, shotRate: 0.94, chanceQuality: 1.02, vulnerability: 0.88,
-    chanceMix: { throughBall: 1.6, cross: 0.9, aerial: 0.5, longShot: 1.1, individual: 1.2 },
-    aggression: 0.85,
+    buildUp: 0.80, line: 0.55, tempo: 0.90, possessionBias: 1.40, aggression: 0.85,
+    chanceMix: { throughBall: 1.4, cross: 1.0, longShot: 1.1, individual: 1.1, aerial: 0.6 },
+    needs: { pressResist: 2, creation: 2 },
   },
-  counter: {
-    name: 'counter', label: 'Counter-attack',
-    // Gives the ball away deliberately and attacks the space that leaves.
-    // Fewer possessions, markedly better chances from them.
-    possessionBias: 0.62, shotRate: 1.06, chanceQuality: 1.38, vulnerability: 0.94,
-    chanceMix: { throughBall: 2.2, individual: 1.5, cross: 0.7, aerial: 0.5, longShot: 0.7 },
-    aggression: 1.1,
-  },
-  routeOne: {
-    name: 'routeOne', label: 'Route one',
-    // Skips midfield. More attempts, worse ones, and aimed at a head.
-    possessionBias: 0.78, shotRate: 1.12, chanceQuality: 0.82, vulnerability: 1.06,
-    chanceMix: { aerial: 3.2, cross: 1.8, longShot: 1.2, throughBall: 0.4, individual: 0.5 },
-    aggression: 1.15,
+  gegenpress: {
+    name: 'gegenpress', label: 'Gegenpress',
+    buildUp: 0.60, line: 0.90, tempo: 1.25, possessionBias: 1.15, aggression: 1.30,
+    chanceMix: { throughBall: 1.5, individual: 1.4, cross: 1.0, longShot: 1.0, aerial: 0.7 },
+    needs: { pressing: 3, pace: 1 },
   },
   highPress: {
     name: 'highPress', label: 'High press',
-    // Wins the ball high and turns turnovers into chances, at the cost of the
-    // space left behind when it fails.
-    possessionBias: 1.18, shotRate: 1.15, chanceQuality: 1.1, vulnerability: 1.28,
-    chanceMix: { throughBall: 1.5, individual: 1.4, cross: 1.0, aerial: 0.7, longShot: 1.0 },
-    aggression: 1.3,
+    buildUp: 0.55, line: 0.85, tempo: 1.15, possessionBias: 1.10, aggression: 1.20,
+    chanceMix: { throughBall: 1.3, individual: 1.2, cross: 1.0, longShot: 1.0, aerial: 0.8 },
+    needs: { pressing: 2 },
+  },
+  balanced: {
+    name: 'balanced', label: 'Balanced',
+    buildUp: 0.50, line: 0.50, tempo: 1.00, possessionBias: 1.00, aggression: 1.00,
+    chanceMix: { throughBall: 1, cross: 1, aerial: 1, longShot: 1, individual: 1 },
+    needs: {},
+  },
+  wingPlay: {
+    name: 'wingPlay', label: 'Wing play',
+    buildUp: 0.45, line: 0.55, tempo: 1.05, possessionBias: 1.00, aggression: 1.00,
+    chanceMix: { cross: 2.6, aerial: 1.6, individual: 1.1, throughBall: 0.6, longShot: 0.8 },
+    needs: { aerial: 2, dribble: 1, setPiece: 1 },
+  },
+  direct: {
+    name: 'direct', label: 'Direct',
+    buildUp: 0.30, line: 0.55, tempo: 1.05, possessionBias: 0.85, aggression: 1.05,
+    chanceMix: { throughBall: 1.8, individual: 1.2, cross: 1.0, aerial: 0.9, longShot: 0.8 },
+    needs: { pace: 3 },
+  },
+  counter: {
+    name: 'counter', label: 'Counter-attack',
+    buildUp: 0.35, line: 0.30, tempo: 0.90, possessionBias: 0.65, aggression: 1.10,
+    chanceMix: { throughBall: 2.2, individual: 1.5, cross: 0.7, aerial: 0.5, longShot: 0.7 },
+    needs: { pace: 3, recovery: 1 },
+  },
+  routeOne: {
+    name: 'routeOne', label: 'Route one',
+    buildUp: 0.10, line: 0.45, tempo: 1.00, possessionBias: 0.75, aggression: 1.15,
+    chanceMix: { aerial: 3.4, cross: 1.8, longShot: 1.1, throughBall: 0.4, individual: 0.5 },
+    needs: { aerial: 3 },
+  },
+  catenaccio: {
+    name: 'catenaccio', label: 'Catenaccio',
+    buildUp: 0.30, line: 0.20, tempo: 0.80, possessionBias: 0.70, aggression: 1.20,
+    chanceMix: { throughBall: 1.8, individual: 1.2, cross: 0.7, aerial: 0.7, longShot: 0.8 },
+    needs: { recovery: 2, pace: 2 },
   },
   lowBlock: {
     name: 'lowBlock', label: 'Low block',
-    // Concedes the ball and the territory, and is hard to score against.
-    possessionBias: 0.7, shotRate: 0.86, chanceQuality: 1.06, vulnerability: 0.72,
-    chanceMix: { throughBall: 1.2, aerial: 1.3, cross: 0.9, longShot: 1.1, individual: 0.8 },
-    aggression: 1.2,
+    buildUp: 0.40, line: 0.20, tempo: 0.82, possessionBias: 0.70, aggression: 1.20,
+    chanceMix: { throughBall: 1.1, aerial: 1.3, cross: 0.9, longShot: 1.1, individual: 0.8 },
+    needs: { aerial: 1, recovery: 1 },
+  },
+  parkTheBus: {
+    name: 'parkTheBus', label: 'Park the bus',
+    buildUp: 0.25, line: 0.10, tempo: 0.68, possessionBias: 0.55, aggression: 1.30,
+    chanceMix: { aerial: 1.6, longShot: 1.2, cross: 0.8, throughBall: 0.6, individual: 0.5 },
+    needs: { aerial: 1 },
   },
 };
+
+// ── How far a style's demands carry ──────────────────────────────────────────
+
+/** How much a press cuts an exposed side's chances. */
+const PRESS_EFFECT = 2.2;
+
+/** How much a deep block cuts a patient side's chances. */
+const CONGESTION_EFFECT = 0.45;
+
+/** How much space in behind is worth to a direct side against a high line. */
+const SPACE_EFFECT = 1.1;
+
+/** A team quality of this size counts as fully meeting a style's demand. */
+const FIT_REFERENCE = 0.45;
 
 // ── Inputs ───────────────────────────────────────────────────────────────────
 
@@ -286,6 +351,8 @@ export interface MatchPlayer {
   position: Position;
   rating: number;
   roles?: PlayerRole[];
+  /** Every position he genuinely plays. Only total football reads it. */
+  positions?: Position[];
 }
 
 export interface TeamSetup {
@@ -406,6 +473,21 @@ interface TeamModel {
   midfield: number;
   aerial: number;
   focus: Record<Zone, number>;
+  /**
+   * What the eleven can actually do, as opposed to how good they are.
+   *
+   * Each is the sum over the side of a quality, scaled by how good the player
+   * carrying it is and normalised by squad size, so three quick players are
+   * more running threat than one flying winger. These are what the style
+   * interactions read; see docs/playstyles.md.
+   */
+  pressResistance: number;
+  pressIntensity: number;
+  runningThreat: number;
+  creation: number;
+  versatility: number;
+  /** 0-1: how well this eleven can play the style it has been given. */
+  fit: number;
 }
 
 const ZONES: Zone[] = ['L', 'C', 'R'];
@@ -449,11 +531,45 @@ function aerialQuality(players: MatchPlayer[]): number {
   return mass === 0 ? ratingScale(70) : total / mass;
 }
 
-function buildTeam(setup: TeamSetup): TeamModel {
+/**
+ * A team-level quality: everyone's contribution, weighted by how good he is.
+ *
+ * Divided by squad size so the numbers are comparable between sides, and so a
+ * quality nobody has comes out at zero rather than at some baseline.
+ */
+function teamQuality(players: MatchPlayer[], name: string, roles: RoleMultipliers): number {
+  if (players.length === 0) return 0;
+  let total = 0;
+  for (const p of players) total += quality(p, name, roles) * ratingScale(p.rating);
+  return total / players.length;
+}
+
+/**
+ * How well an eleven can execute the style it has been given, 0 to 1.
+ *
+ * A style with no demands fits everybody, which is what makes `balanced` a safe
+ * choice rather than a weak one. The cost of a style is paid regardless; only
+ * the benefit is scaled by this.
+ */
+function styleFit(players: MatchPlayer[], style: Playstyle, roles: RoleMultipliers): number {
+  const demands = Object.entries(style.needs);
+  if (demands.length === 0) return 1;
+  let have = 0;
+  let want = 0;
+  for (const [name, weight] of demands) {
+    const w = weight ?? 0;
+    want += w;
+    have += w * Math.max(0, teamQuality(players, name, roles));
+  }
+  if (want === 0) return 1;
+  return Math.max(0, Math.min(1, have / (want * FIT_REFERENCE)));
+}
+
+function buildTeam(setup: TeamSetup, roles: RoleMultipliers): TeamModel {
   const style = PLAYSTYLES[setup.style] ?? PLAYSTYLES.balanced;
   const players = setup.players;
   const focusTotal = ZONES.reduce((s, z) => s + Math.max(0, setup.focus[z] ?? 0), 0) || 1;
-  return {
+  const model: TeamModel = {
     setup,
     style,
     players,
@@ -470,12 +586,21 @@ function buildTeam(setup: TeamSetup): TeamModel {
     },
     midfield: weightedQuality(players, MIDFIELD_WEIGHT, null),
     aerial: aerialQuality(players),
+    pressResistance: teamQuality(players, 'pressResist', roles),
+    pressIntensity: teamQuality(players, 'pressing', roles),
+    runningThreat: teamQuality(players, 'pace', roles),
+    creation: teamQuality(players, 'creation', roles),
+    versatility: players.filter(p => (p.positions?.length ?? 1) > 1).length
+      / Math.max(1, players.length),
     focus: {
       L: Math.max(0, setup.focus.L ?? 0) / focusTotal,
       C: Math.max(0, setup.focus.C ?? 0) / focusTotal,
       R: Math.max(0, setup.focus.R ?? 0) / focusTotal,
     },
+    fit: 1,
   };
+  model.fit = styleFit(players, style, roles);
+  return model;
 }
 
 // ── Selection ────────────────────────────────────────────────────────────────
@@ -491,6 +616,57 @@ function quality(p: MatchPlayer, name: string, roles: RoleMultipliers): number {
   let total = 0;
   for (const r of p.roles ?? []) total += roles.qualities?.[r]?.[name] ?? 0;
   return total;
+}
+
+// ── The interaction rules, as functions ──────────────────────────────────────
+//
+// Exported so they can be tested for what they claim rather than inferred from
+// shot counts. Every attempt to measure them through a match confounded them
+// with something else: a pressing side and a deep block differ in tempo as well
+// as in pressing, and a squad stripped of traits is weaker everywhere, not only
+// at winning the ball back.
+
+/**
+ * How much a press cuts the chances of a side trying to play through it.
+ *
+ * Going long is the answer to a press, which is why `buildUp` sets the exposure
+ * and why resistance on the ball subtracts from it. A side that hits it long is
+ * not pressed at all, whoever it is playing.
+ */
+export function pressFactor(
+  buildUp: number, pressResistance: number, opponentPress: number,
+): number {
+  const exposed = Math.max(0, buildUp - pressResistance);
+  return 1 / (1 + PRESS_EFFECT * Math.max(0, opponentPress) * exposed);
+}
+
+/**
+ * How much a deep defence cuts the chances of a patient side.
+ *
+ * Creation is what unpicks it; without any, patience against a low block is
+ * just passing in front of them.
+ */
+export function congestionFactor(
+  buildUp: number, creation: number, opponentLine: number,
+): number {
+  const deep = 1 - opponentLine;
+  const congested = deep * buildUp * Math.max(0, 1 - creation * 2);
+  return 1 / (1 + CONGESTION_EFFECT * congested);
+}
+
+/**
+ * How much better a chance is when there is space in behind.
+ *
+ * Directness times the opponent's line height times whoever is running into it,
+ * less whatever recovery pace the defence has to cover the gap.
+ */
+export function spaceFactor(
+  buildUp: number, runningThreat: number, fit: number,
+  opponentLine: number, opponentRecovery: number,
+): number {
+  const directness = 1 - buildUp;
+  const space = directness * opponentLine * Math.max(0, runningThreat - opponentRecovery);
+  return 1 + SPACE_EFFECT * space * fit;
 }
 
 /** Box-Muller. A performance swing is symmetric around a side's own level. */
@@ -673,8 +849,8 @@ export function simulateMatch(
   rand: () => number,
   roles: RoleMultipliers = { goalMult: {}, assistMult: {} },
 ): MatchResult {
-  const home = buildTeam(homeSetup);
-  const away = buildTeam(awaySetup);
+  const home = buildTeam(homeSetup, roles);
+  const away = buildTeam(awaySetup, roles);
 
   // What each side turns up as today. Drawn before anything else happens, so
   // the whole match is played by the team that showed up rather than the team
@@ -722,18 +898,56 @@ export function simulateMatch(
     // drilled side exploits its superiority, and a drilled one resists it.
     const carry = (expression(att.setup.cohesion ?? DEFAULT_COHESION)
       + expression(def.setup.cohesion ?? DEFAULT_COHESION)) / 2;
+    // ── How the styles meet ────────────────────────────────────────────────
+    //
+    // Four rules, from which every matchup follows. Nobody writes down that a
+    // counter-attacking side punishes a possession side; it falls out of these.
+
+    // Tempo is a property of the MATCH, not of one side. Two deep blocks make
+    // a slow game whoever has the ball, which is why a weak side wants one:
+    // fewer chances means quality is expressed less often, and that is
+    // arithmetic rather than a thumb on the scale.
+    const tempo = Math.sqrt(att.style.tempo * def.style.tempo);
+
+    // Having the ball is not itself an advantage, and this is the correction
+    // that makes the styles a set of trade-offs rather than a ladder.
+    //
+    // A side with 62% of the ball was taking 62% of the chances, so possession
+    // bought volume for free and every patient style sat at the top of the
+    // table. Normalising by the share means a possession side gets the same
+    // number of chances from more of the ball — which is what patient build-up
+    // against a set defence actually looks like. Advantage now has to come from
+    // quality, from fit, or from the matchup.
+    const ownShare = isHome ? homeShare : 1 - homeShare;
+    const shareNormalised = 0.5 / Math.max(0.15, ownShare);
+
+    // 1. Press disruption. A side that presses high hurts one trying to play
+    //    out, and is beaten by one that goes long — the reason teams hoof it
+    //    against a press. Resistance on the ball is what survives it.
+    const press = def.pressIntensity * def.style.line * def.fit;
+    const pressed = pressFactor(att.style.buildUp, att.pressResistance, press);
+
+    // 2. Congestion. A deep block leaves a patient side nowhere to play, and
+    //    creation is what unpicks it.
+    const congested = congestionFactor(att.style.buildUp, att.creation, def.style.line);
+
     const shotRate =
       BASE_SHOT_RATE *
-      att.style.shotRate *
-      def.style.vulnerability *
+      tempo *
+      shareNormalised *
+      pressed *
+      congested *
       Math.exp(EDGE_TO_CHANCES * carry * edge) *
       (isHome ? HOME_SHOT_RATE : 1);
 
     // Two independent routes to a shot. The second barely cares who is on top.
     // BASE_SHOT_RATE is the whole shot count, so the two routes split it rather
     // than stacking: adding dead balls on top put every side on 18 shots.
+    // Dead balls are barely affected by any of it: a side pinned in its own
+    // half still wins corners from clearances and counters.
     const setPieceRate = BASE_SHOT_RATE * SET_PIECE_SHARE
-      * att.style.shotRate * Math.exp(SET_PIECE_EDGE * edge) * (isHome ? HOME_SHOT_RATE : 1);
+      * tempo * shareNormalised
+      * Math.exp(SET_PIECE_EDGE * edge) * (isHome ? HOME_SHOT_RATE : 1);
     const openPlay = rand() < shotRate * (1 - SET_PIECE_SHARE);
     const deadBall = !openPlay && rand() < setPieceRate;
 
@@ -756,14 +970,26 @@ export function simulateMatch(
         const keeper = def.keeper;
         const keeping = keeper ? ratingScale(keeper.rating) : 1;
 
+        // A style's demands are a cost paid up front; what it gives back is
+        // collected only in proportion to whether the eleven can play it.
         let xg = CHANCE_QUALITY[type] * (isHome ? HOME_CHANCE_QUALITY : 1);
-        if (type === 'setPiece') {
+        if (type === 'aerial' || type === 'cross') {
+          xg *= Math.pow(att.aerial / def.aerial, AERIAL_EXPONENT * 0.7)
+            * Math.pow(finishing, FINISHING_EXPONENT * carry * 0.5)
+            * Math.pow(keeping, -KEEPING_EXPONENT * carry) / defPenalty;
+        } else if (type === 'setPiece') {
           // A contest of height and delivery. A poor side with a big defender
           // scores from a corner against anyone, which is exactly why this
           // route does not scale with the open-play gap.
           xg *= Math.pow(att.aerial / def.aerial, AERIAL_EXPONENT) / defPenalty;
         } else if (type !== 'penalty') {
-          xg *= att.style.chanceQuality
+          // 3. Space in behind. A direct side with runners punishes a high
+          //    line; a patient one gains nothing from it. Recovery pace in the
+          //    defence is what covers the gap.
+          const inBehind = spaceFactor(att.style.buildUp, att.runningThreat, att.fit,
+            def.style.line, teamQuality(def.players, 'recovery', roles));
+
+          xg *= inBehind
             * Math.pow(finishing, FINISHING_EXPONENT * carry)
             * Math.pow(keeping, -KEEPING_EXPONENT * carry) / defPenalty;
         }

@@ -1,10 +1,8 @@
 # Playstyles
 
-How a side plays, and why choosing it should be a real decision rather than a
-label. This is a plan for work not yet done; the engine today has six styles
-that behave as flat multipliers.
+How a side plays, and why choosing it is a real decision rather than a label.
 
-## What is wrong with the current six
+## What was wrong with the old six
 
 Measured with identical squads, identical ratings and identical cohesion, so
 that style is the only difference between the teams:
@@ -127,6 +125,37 @@ That triangle falls out of rules 2 and 3; nobody writes it down.
   side's chance of a result
 - **the hindcast does not regress**: mean Spearman stays above 0.45 across the
   thirteen seasons
+
+## What it took, beyond the plan
+
+**Possession was a free advantage, and that was the whole ladder.** A side with
+62% of the ball was taking 62% of the chances, so every patient style sat at the
+top of the table. Each side's chance rate is now normalised by its share of the
+ball, which means possession buys patience rather than volume — what patient
+build-up against a set defence actually looks like. That single change took the
+spread from 9.1 points per 10 games to about 2.
+
+**The rules are pure functions, because measuring them through matches did not
+work.** Three attempts confounded them with something else: a pressing side and
+a low block differ in tempo by half again; a squad stripped of its traits is
+weaker everywhere rather than only at pressing; and giving each style the squad
+it wants compares squads, since a route-one eleven is built from roles with 0.1x
+goal multipliers and can barely score whatever it does. Measured through shot
+counts the press came out backwards, showing short build-up *gaining* 24%
+against a press. `pressFactor`, `congestionFactor` and `spaceFactor` are
+exported and unit-tested for what they claim.
+
+**Two of the intended counters were wrong and are not asserted.** "Possession
+beats a low block" and "keeping the ball beats going long" are claims about
+quality, not about tactics. Between equal sides, parking the bus against a
+possession team is a perfectly good plan — which is exactly why teams do it. The
+quality version is tested instead: a better side playing positional play does
+beat a low block.
+
+**Interactions only ever suppress**, so the baseline drifts whenever they are
+tuned and `BASE_SHOT_RATE` has to be re-centred against the calibration test.
+It went 0.136 to 0.122 when the traits landed, then to 0.137 when these rules
+went in.
 
 ## Order of work
 
