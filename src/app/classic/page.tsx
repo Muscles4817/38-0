@@ -80,6 +80,8 @@ export default function ClassicPage() {
   const router = useRouter();
   const teams = useMemo(() => getClassicTeams(), []);
   const [sortBy,    setSortBy]    = useState<'ovr' | 'year' | 'name'>('ovr');
+  const [search,    setSearch]    = useState('');
+  const [iconsOnly, setIconsOnly] = useState(false);
   const [selected,  setSelected]  = useState<ClassicTeam | null>(null);
   const [formation, setFormation] = useState('4-4-2');
   const [picks,     setPicks]     = useState<SquadPick[]>([]);
@@ -176,7 +178,16 @@ export default function ClassicPage() {
     ? Math.round(picks.reduce((s, p) => s + p.rating, 0) / picks.length)
     : 0;
 
-  const sortedTeams = [...teams].sort((a, b) => {
+  // Two hundred club-seasons and climbing, so the list has to be narrowed
+  // before it can be read. Search matches the club or the season, so "1999"
+  // and "forest" both work.
+  const needle = search.trim().toLowerCase();
+  const sortedTeams = teams
+    .filter(t => !iconsOnly || t.iconic)
+    .filter(t => needle === '' ||
+      t.clubName.toLowerCase().includes(needle) ||
+      t.seasonLabel.includes(needle))
+    .sort((a, b) => {
     if (sortBy === 'ovr')  return b.overallRating - a.overallRating;
     if (sortBy === 'year') return b.yearStart - a.yearStart;
     return a.clubName.localeCompare(b.clubName) || b.yearStart - a.yearStart;
@@ -215,9 +226,9 @@ export default function ClassicPage() {
         {/* Team selection */}
         <section>
           {/*
-            Once a side is chosen the list folds away. It is nearly thirty
-            cards, and on a phone leaving it expanded pushed the XI you just
-            picked several screens down, so nothing appeared to happen.
+            Once a side is chosen the list folds away. It is two hundred cards
+            and climbing, and on a phone leaving it expanded pushed the XI you
+            just picked several screens down, so nothing appeared to happen.
           */}
           {selected && !browsing ? (
             <button
@@ -241,8 +252,34 @@ export default function ClassicPage() {
             </button>
           ) : (
           <>
+          <div className="flex items-center gap-2 mb-2">
+            <input
+              type="search"
+              value={search}
+              onChange={e => setSearch(e.target.value)}
+              placeholder="Search club or season"
+              aria-label="Search club or season"
+              className="flex-1 min-w-0 bg-[#0d0d0d] border border-[#1a1a1a] rounded-lg px-3 py-2.5 text-sm
+                         placeholder:text-[#333] focus:border-[#00c896] focus:outline-none"
+            />
+            <button
+              type="button"
+              onClick={() => setIconsOnly(v => !v)}
+              aria-pressed={iconsOnly}
+              className={`px-3 py-2.5 rounded-lg text-[10px] font-bold uppercase tracking-widest shrink-0
+                          transition-colors touch-manipulation border ${
+                iconsOnly
+                  ? 'bg-[#c9b84e] text-black border-[#c9b84e]'
+                  : 'text-[#444] border-[#1a1a1a] hover:text-white'
+              }`}
+            >
+              {'★'} Icons
+            </button>
+          </div>
           <div className="flex items-center justify-between mb-2 gap-2">
-            <span className="text-[10px] font-bold tracking-widest text-[#555] uppercase">Choose a Classic Side</span>
+            <span className="text-[10px] font-bold tracking-widest text-[#555] uppercase">
+              {sortedTeams.length} side{sortedTeams.length === 1 ? '' : 's'}
+            </span>
             <div className="flex gap-1">
               {(['ovr', 'year', 'name'] as const).map(opt => (
                 <button
@@ -273,6 +310,10 @@ export default function ClassicPage() {
                     boxShadow:   isSelected ? `0 0 0 1px ${team.color}44` : undefined,
                   }}
                 >
+                  {team.iconic && (
+                    <span className="absolute top-2 right-2 text-[#c9b84e] text-xs leading-none"
+                          title="Iconic side">{'★'}</span>
+                  )}
                   <div className="w-2 h-2 rounded-full mb-2" style={{ background: team.color }} />
                   <div className="font-bold text-sm text-white leading-tight">{team.clubName}</div>
                   <div className="text-[#888] text-xs mt-0.5">{team.seasonLabel}</div>
@@ -283,6 +324,13 @@ export default function ClassicPage() {
               );
             })}
           </div>
+          {sortedTeams.length === 0 && (
+            <p className="text-[#555] text-sm py-6 text-center">
+              {iconsOnly
+                ? 'No sides are marked as icons yet. Star them in the editor.'
+                : 'Nothing matches that search.'}
+            </p>
+          )}
           </>
           )}
         </section>

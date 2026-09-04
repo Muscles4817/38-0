@@ -136,7 +136,7 @@ const hasTraits = db.prepare(
 const traits = hasTraits
   ? db.prepare(`
       SELECT club_id, season_id, cohesion, playstyle,
-             focus_left, focus_centre, focus_right, note
+             focus_left, focus_centre, focus_right, iconic, note
       FROM club_season_traits ORDER BY season_id, club_id
     `).all().map(t => ({
       clubId: t.club_id,
@@ -144,6 +144,7 @@ const traits = hasTraits
       cohesion: t.cohesion,
       playstyle: t.playstyle,
       focus: { L: t.focus_left, C: t.focus_centre, R: t.focus_right },
+      ...(t.iconic ? { iconic: true } : {}),
       ...(t.note ? { note: t.note } : {}),
     }))
   : [];

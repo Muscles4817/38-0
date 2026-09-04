@@ -1,5 +1,4 @@
 import { describe, it, expect } from 'vitest';
-import fs from 'node:fs';
 import { gameData, getTraits } from './gameData';
 import {
   simulateMatch, inferStyle, DEFAULT_COHESION,

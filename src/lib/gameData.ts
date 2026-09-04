@@ -65,6 +65,8 @@ export interface DataTraits {
   cohesion: number;
   playstyle: string;
   focus: { L: number; C: number; R: number };
+  /** A side people would name. Curation, not quality. */
+  iconic?: boolean;
   note?: string;
 }
 
@@ -251,6 +253,8 @@ export interface ClassicTeam {
   yearStart: number;
   playerCount: number;
   overallRating: number;
+  /** Marked in the editor as a side worth naming. */
+  iconic: boolean;
 }
 
 /**
@@ -280,6 +284,7 @@ export function getClassicTeams(): ClassicTeam[] {
       yearStart: season.yearStart,
       playerCount: rated.length,
       overallRating: averageRating(bestXI(rated)),
+      iconic: getTraits(club.id, season.id)?.iconic === true,
     });
   }
   return teams.sort((a, b) => b.yearStart - a.yearStart || a.clubName.localeCompare(b.clubName));

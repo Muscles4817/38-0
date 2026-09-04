@@ -1,5 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import { FORMATIONS, canFillSlot, type Position } from './formations';
+import { PLAYSTYLES } from './matchEngine';
 import {
   SIMULATED_LEAGUE,
   SIMULATED_SEASON_START,
@@ -10,6 +11,7 @@ import {
   getOpponentSquads,
   getRoleConfig,
   getSquad,
+  getTraits,
   getTeamStrengths,
   listDraftableSquads,
   pickRandomSquad,
@@ -433,5 +435,37 @@ describe('getLineup', () => {
   it('returns the stored lineup when there is one', () => {
     const stored = gameData.lineups[0];
     expect(getLineup(stored.clubId, stored.seasonId)).toEqual(stored);
+  });
+});
+
+describe('club-season traits', () => {
+  it('marks classic teams that have been starred, and only those', () => {
+    const teams = getClassicTeams();
+    const starred = teams.filter(t => t.iconic);
+    // Curation is optional, but if any exist they must correspond to a trait
+    // row — an iconic flag invented anywhere else would be a bug.
+    for (const t of starred) {
+      expect(getTraits(t.clubId, t.seasonId)?.iconic, `${t.clubName} ${t.seasonLabel}`).toBe(true);
+    }
+    const traitIcons = (gameData.traits ?? []).filter(t => t.iconic).length;
+    expect(starred.length).toBeLessThanOrEqual(traitIcons);
+  });
+
+  it('leaves tactics absent rather than defaulted, so the engine decides', () => {
+    // A club-season with nothing recorded must come back null. Defaulting here
+    // would put the decision in two places.
+    const withTraits = new Set((gameData.traits ?? []).map(t => `${t.clubId}-${t.seasonId}`));
+    const missing = gameData.squads.find(s => !withTraits.has(`${s.clubId}-${s.seasonId}`));
+    expect(missing, 'expected at least one club-season with no tactics').toBeDefined();
+    expect(getTraits(missing!.clubId, missing!.seasonId)).toBeNull();
+  });
+
+  it('records a cohesion inside the scale for every side that has one', () => {
+    for (const t of gameData.traits ?? []) {
+      expect(t.cohesion).toBeGreaterThanOrEqual(0);
+      expect(t.cohesion).toBeLessThanOrEqual(100);
+      expect(Object.keys(PLAYSTYLES)).toContain(t.playstyle);
+      expect(t.focus.L + t.focus.C + t.focus.R).toBeGreaterThan(0);
+    }
   });
 });
