@@ -69,6 +69,7 @@ const teams = currentLeague();
 const roles = {
   goalMult: Object.fromEntries(gameData.roles.map(r => [r.name, r.goalMult])),
   assistMult: Object.fromEntries(gameData.roles.map(r => [r.name, r.assistMult])),
+  qualities: Object.fromEntries(gameData.roles.map(r => [r.name, r.qualities ?? {}])),
 };
 
 // One deterministic pass of the league, home and away.

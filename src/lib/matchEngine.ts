@@ -194,10 +194,16 @@ const ROLE_CHANCE_AFFINITY: Record<ChanceType, Partial<Record<PlayerRole, number
   penalty: {},
 };
 
-/** Roles that concede more fouls. Someone has to make the tackles. */
-const ROLE_AGGRESSION: Partial<Record<PlayerRole, number>> = {
-  Enforcer: 2.2, NoNonsenseDefender: 1.8, Anchor: 1.4, BoxToBox: 1.2,
-};
+/**
+ * How much a negative `discipline` quality raises a player's share of the
+ * fouls. This used to be a hardcoded list of role names here in the engine,
+ * which was the trait system reimplemented in the wrong place: adding a rash
+ * defender meant editing the simulator.
+ *
+ * Note this changes WHO fouls, not how many fouls there are — the weights are
+ * a selection among eleven players, so the cards-per-team rate is untouched.
+ */
+const DISCIPLINE_TO_FOULS = 1.8;
 
 // ── Playstyles ───────────────────────────────────────────────────────────────
 //
@@ -300,6 +306,12 @@ export interface TeamSetup {
 export interface RoleMultipliers {
   goalMult: Partial<Record<PlayerRole, number>>;
   assistMult: Partial<Record<PlayerRole, number>>;
+  /**
+   * What each role says a player is good at, as opposed to what he produces.
+   * See docs/roles.md. Absent means the engine falls back to treating every
+   * player as unremarkable, which is right for a caller that has no role data.
+   */
+  qualities?: Partial<Record<PlayerRole, Partial<Record<string, number>>>>;
 }
 
 // ── Outputs ──────────────────────────────────────────────────────────────────
@@ -468,6 +480,19 @@ function buildTeam(setup: TeamSetup): TeamModel {
 
 // ── Selection ────────────────────────────────────────────────────────────────
 
+/**
+ * What a player's roles say about one ability, summed.
+ *
+ * Qualities are how a trait describes what a player is GOOD AT, as distinct
+ * from the goal and assist multipliers, which describe what he produces. The
+ * playstyle interactions are all built on these. See docs/roles.md.
+ */
+function quality(p: MatchPlayer, name: string, roles: RoleMultipliers): number {
+  let total = 0;
+  for (const r of p.roles ?? []) total += roles.qualities?.[r]?.[name] ?? 0;
+  return total;
+}
+
 /** Box-Muller. A performance swing is symmetric around a side's own level. */
 function gaussian(rand: () => number): number {
   let u = 0;
@@ -576,11 +601,14 @@ function pickFouler(
   rand: () => number,
   team: TeamModel,
   booked: (id: number) => boolean,
+  roles: RoleMultipliers,
 ): MatchPlayer | null {
   const weights = team.players.map(p => {
     let w = (DEFEND_WEIGHT[p.position] ?? 0.3) + 0.05;
     if (p.position === 'GK') w *= 0.06;
-    for (const r of p.roles ?? []) w *= ROLE_AGGRESSION[r] ?? 1;
+    // Negative discipline means he gives away more of them; positive means the
+    // opposite, which is why the sign is simply flipped rather than clamped.
+    w *= Math.pow(DISCIPLINE_TO_FOULS, -quality(p, 'discipline', roles));
     if (booked(p.playerId)) w *= BOOKED_FOUL_WEIGHT;
     return w;
   });
@@ -752,7 +780,7 @@ export function simulateMatch(
     // Fouls. The side without the ball concedes them.
     if (rand() < BASE_FOUL_RATE * def.style.aggression) {
       const defSide = isHome ? acc.away : acc.home;
-      const fouler = pickFouler(rand, def, id => stats.get(id)?.yellow ?? false);
+      const fouler = pickFouler(rand, def, id => stats.get(id)?.yellow ?? false, roles);
       if (fouler && !sent.has(fouler.playerId)) {
         const fs = stats.get(fouler.playerId)!;
         fs.fouls++;

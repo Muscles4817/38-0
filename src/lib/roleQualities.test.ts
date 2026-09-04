@@ -12,6 +12,7 @@ import { gameData } from './gameData';
 const VOCABULARY = [
   'aerial', 'pace', 'recovery', 'pressing', 'pressResist', 'creation',
   'dribble', 'shotStopping', 'claiming', 'setPiece', 'penalty', 'longShot',
+  'discipline',
 ];
 
 /** The qualities each playstyle interaction will read. */
@@ -32,25 +33,62 @@ describe('role qualities', () => {
     }
   });
 
-  it('are scored on the same scale everywhere', () => {
-    // 1 notable, 2 strong, 3 defining. A role claiming 9 for something would
-    // quietly dominate whichever interaction reads it.
+  it('are scored on the same scale everywhere, in both directions', () => {
+    // 1 notable, 2 strong, 3 defining, and the same going down. A role claiming
+    // 9 for something would quietly dominate whichever interaction reads it.
     for (const role of gameData.roles) {
       for (const [key, value] of Object.entries(role.qualities ?? {})) {
-        expect(value, `${role.name}.${key}`).toBeGreaterThan(0);
-        expect(value, `${role.name}.${key}`).toBeLessThanOrEqual(3);
+        expect(value, `${role.name}.${key} is zero, which says nothing`).not.toBe(0);
+        expect(Math.abs(value ?? 0), `${role.name}.${key}`).toBeLessThanOrEqual(3);
       }
     }
   });
 
-  it('cover every quality the playstyle work depends on', () => {
-    // Before the trait additions, running threat was inferred from whether a
-    // man was a poacher, and pressing from a set of roles containing no forward
-    // at all. Each of these must have real support, not one obscure role.
+  it('let a trait describe a weakness', () => {
+    // Without negatives every trait is a bonus, so tagging a player is never a
+    // cost and the rating is the only thing that can be bad about him. A slow
+    // centre-half is a real and specific liability against a counter-attack,
+    // and nothing else in the data could say so.
+    const negative = gameData.roles.filter(r =>
+      Object.values(r.qualities ?? {}).some(v => (v ?? 0) < 0));
+    expect(negative.length).toBeGreaterThanOrEqual(5);
+    expect(negative.map(r => r.name)).toContain('Ponderous');
+  });
+
+  it('only assert a weakness the trait actually implies', () => {
+    // Correlation is not definition. Poachers are not quick, aerial threats are
+    // not slow, and target men are not slow — an earlier version asserted all
+    // three and was wrong about all three. These four are checked by name
+    // because they are the ones that were wrong.
+    const noPaceClaim = ['Poacher', 'AerialThreat', 'TargetMan', 'Winger'];
+    for (const name of noPaceClaim) {
+      const role = gameData.roles.find(r => r.name === name);
+      expect(role, `${name} is missing`).toBeDefined();
+      expect(role!.qualities?.pace ?? 0, `${name} should say nothing about pace`).toBe(0);
+    }
+  });
+
+  it('leave nothing in the vocabulary unreachable', () => {
+    // The real risk is a quality no trait can express, which is what happened
+    // to pace: the playstyle interactions would read it and always find zero.
+    //
+    // Not a count. One dedicated trait is a perfectly good way to say something
+    // — pace is now Pacey and Ponderous and nothing else, which is cleaner than
+    // sprinkling it over traits that do not actually imply it. Some qualities
+    // are only ever negative: nobody needs a trait for being averagely
+    // disciplined.
+    for (const quality of VOCABULARY) {
+      const providers = gameData.roles.filter(r => (r.qualities?.[quality] ?? 0) !== 0);
+      expect(providers.length, `nothing can express "${quality}"`).toBeGreaterThan(0);
+    }
+  });
+
+  it('can express every quality the playstyle work reads, in both directions', () => {
     for (const quality of NEEDED_BY_PLAYSTYLES) {
-      const providers = gameData.roles.filter(r => (r.qualities?.[quality] ?? 0) > 0);
-      expect(providers.length, `only ${providers.length} role(s) provide ${quality}`)
-        .toBeGreaterThanOrEqual(3);
+      const up = gameData.roles.filter(r => (r.qualities?.[quality] ?? 0) > 0);
+      const down = gameData.roles.filter(r => (r.qualities?.[quality] ?? 0) < 0);
+      expect(up.length, `no trait grants ${quality}`).toBeGreaterThan(0);
+      expect(down.length, `no trait denies ${quality}`).toBeGreaterThan(0);
     }
   });
 

@@ -74929,9 +74929,7 @@
       "attContrib": 2,
       "midContrib": 0,
       "defContrib": -2,
-      "qualities": {
-        "pace": 1
-      }
+      "qualities": {}
     },
     {
       "name": "BallPlayingDefender",
@@ -74964,8 +74962,7 @@
       "midContrib": -1,
       "defContrib": 1,
       "qualities": {
-        "pressing": 2,
-        "pace": 1
+        "pressing": 2
       }
     },
     {
@@ -75070,7 +75067,7 @@
       "midContrib": 0,
       "defContrib": 0,
       "qualities": {
-        "setPiece": 2
+        "setPiece": 3
       }
     },
     {
@@ -75127,8 +75124,7 @@
       "midContrib": 0,
       "defContrib": 0,
       "qualities": {
-        "dribble": 3,
-        "pace": 1
+        "dribble": 3
       }
     },
     {
@@ -75145,7 +75141,8 @@
       "midContrib": 1,
       "defContrib": 2,
       "qualities": {
-        "pressing": 2
+        "pressing": 2,
+        "discipline": -1
       }
     },
     {
@@ -75167,6 +75164,37 @@
       }
     },
     {
+      "name": "FlapsAtCrosses",
+      "label": "Flaps at Crosses",
+      "goalMult": 0,
+      "assistMult": 0.2,
+      "validPositions": [
+        "GK"
+      ],
+      "description": "Does not command his box, and everyone knows it",
+      "attContrib": 0,
+      "midContrib": 0,
+      "defContrib": -1,
+      "qualities": {
+        "claiming": -2
+      }
+    },
+    {
+      "name": "Immobile",
+      "label": "Immobile",
+      "goalMult": 1,
+      "assistMult": 1,
+      "validPositions": [],
+      "description": "Will not chase it, and the press dies with him",
+      "attContrib": 0,
+      "midContrib": 0,
+      "defContrib": 0,
+      "qualities": {
+        "pressing": -2,
+        "recovery": -1
+      }
+    },
+    {
       "name": "InsideForward",
       "label": "Inside Forward",
       "goalMult": 1.8,
@@ -75182,7 +75210,6 @@
       "midContrib": 0,
       "defContrib": 0,
       "qualities": {
-        "pace": 2,
         "dribble": 2,
         "longShot": 1
       }
@@ -75222,8 +75249,21 @@
       "midContrib": 0,
       "defContrib": 0,
       "qualities": {
-        "pace": 1,
         "longShot": 1
+      }
+    },
+    {
+      "name": "Lightweight",
+      "label": "Lightweight",
+      "goalMult": 1,
+      "assistMult": 1,
+      "validPositions": [],
+      "description": "Loses the physical contest, in the air and on the ground",
+      "attContrib": 0,
+      "midContrib": 0,
+      "defContrib": 0,
+      "qualities": {
+        "aerial": -2
       }
     },
     {
@@ -75251,6 +75291,20 @@
       }
     },
     {
+      "name": "LooseInPossession",
+      "label": "Loose in Possession",
+      "goalMult": 1,
+      "assistMult": 0.9,
+      "validPositions": [],
+      "description": "Gives it away under pressure",
+      "attContrib": 0,
+      "midContrib": -1,
+      "defContrib": 0,
+      "qualities": {
+        "pressResist": -2
+      }
+    },
+    {
       "name": "Mezzala",
       "label": "Mezzala",
       "goalMult": 1.5,
@@ -75267,7 +75321,6 @@
       "defContrib": 0,
       "qualities": {
         "creation": 1,
-        "pace": 1,
         "dribble": 1
       }
     },
@@ -75284,7 +75337,10 @@
       "midContrib": -2,
       "defContrib": 3.5,
       "qualities": {
-        "aerial": 2
+        "aerial": 2,
+        "pressResist": -2,
+        "creation": -2,
+        "discipline": -1
       }
     },
     {
@@ -75331,8 +75387,37 @@
       "attContrib": 0,
       "midContrib": 0,
       "defContrib": 0,
+      "qualities": {}
+    },
+    {
+      "name": "Ponderous",
+      "label": "Ponderous",
+      "goalMult": 1,
+      "assistMult": 1,
+      "validPositions": [],
+      "description": "Strong, perhaps, but slow — and a high line becomes a liability",
+      "attContrib": 0,
+      "midContrib": 0,
+      "defContrib": 0,
       "qualities": {
-        "pace": 1
+        "pace": -2,
+        "recovery": -2
+      }
+    },
+    {
+      "name": "PoorDistribution",
+      "label": "Poor Distribution",
+      "goalMult": 0,
+      "assistMult": 0.1,
+      "validPositions": [
+        "GK"
+      ],
+      "description": "Cannot be trusted with the ball at his feet",
+      "attContrib": 0,
+      "midContrib": -1.5,
+      "defContrib": 0,
+      "qualities": {
+        "pressResist": -2
       }
     },
     {
@@ -75351,8 +75436,21 @@
       "midContrib": 1,
       "defContrib": 0,
       "qualities": {
-        "pressing": 3,
-        "pace": 1
+        "pressing": 3
+      }
+    },
+    {
+      "name": "RashInTheTackle",
+      "label": "Rash in the Tackle",
+      "goalMult": 1,
+      "assistMult": 1,
+      "validPositions": [],
+      "description": "Dives in, and collects what follows",
+      "attContrib": 0,
+      "midContrib": 0,
+      "defContrib": 0,
+      "qualities": {
+        "discipline": -2
       }
     },
     {
@@ -75435,7 +75533,8 @@
       "defContrib": 2.5,
       "qualities": {
         "aerial": 2,
-        "pressing": 2
+        "pressing": 2,
+        "discipline": -1
       }
     },
     {
@@ -75486,7 +75585,7 @@
       "midContrib": 0,
       "defContrib": 0,
       "qualities": {
-        "aerial": 3
+        "aerial": 2
       }
     },
     {
@@ -75506,8 +75605,7 @@
       "defContrib": 0,
       "qualities": {
         "creation": 3,
-        "dribble": 1,
-        "longShot": 1
+        "dribble": 1
       }
     },
     {
@@ -75526,9 +75624,7 @@
       "midContrib": 0,
       "defContrib": 0,
       "qualities": {
-        "setPiece": 1,
-        "dribble": 1,
-        "pace": 1
+        "setPiece": 2
       }
     },
     {
@@ -75548,8 +75644,7 @@
       "midContrib": 1,
       "defContrib": 1,
       "qualities": {
-        "pressing": 2,
-        "pressResist": 1
+        "pressing": 2
       }
     }
   ],

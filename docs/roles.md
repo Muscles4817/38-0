@@ -31,8 +31,10 @@ counter-attacking and of punishing a high line.
 | `setPiece` | Dead-ball delivery |
 | `penalty` | Takes penalties |
 | `longShot` | Shoots from distance |
+| `discipline` | Stays on his feet. Negative means he does not. |
 
-Values are **1 notable, 2 strong, 3 defining**. A role claiming 9 for something
+Values run **−3 to 3**: 1 notable, 2 strong, 3 defining, and the same going
+down. Negative means a weakness. A role claiming 9 for something
 would quietly dominate whichever interaction reads it, so the scale is asserted
 in `roleQualities.test.ts`.
 
@@ -49,11 +51,11 @@ from a set of roles containing no forward at all.
 | --- | --- | --- |
 | `Pacey` | pace 3, recovery 1 | The largest single gap. Nothing expressed speed. |
 | `Sweeper` | recovery 3, pressResist 2 | Makes a high line survivable; needed for catenaccio |
-| `Stopper` | aerial 2, pressing 2 | Steps out; strong against a target man, exposed by runners |
-| `PressingForward` | pressing 3, pace 1 | Pressing is led from the front, and no role said so |
-| `Workhorse` | pressing 2, pressResist 1 | Covers ground |
+| `Stopper` | aerial 2, pressing 2, discipline −1 | Steps out; strong against a target man, exposed by runners |
+| `PressingForward` | pressing 3 | Pressing is led from the front, and no role said so |
+| `Workhorse` | pressing 2 | Covers ground |
 | `Carrier` | pressResist 3, dribble 2 | Beats a press by running through it |
-| `Dribbler` | dribble 3, pace 1 | Beats his man, as distinct from a winger who crosses |
+| `Dribbler` | dribble 3 | Beats his man, as distinct from a winger who crosses |
 | `ShotStopper` | shotStopping 3 | There was exactly one goalkeeping role |
 | `CommandingKeeper` | claiming 3, aerial 1 | Claims crosses — meaningful now set pieces exist |
 | `PenaltyTaker` | penalty 3 | A penalty is 0.78 xG and anyone was taking them |
@@ -62,6 +64,52 @@ from a set of roles containing no forward at all.
 Their goal and assist multipliers are deliberately modest. **A trait that exists
 to describe an ability must not also be a free scoring bonus**; its effect
 belongs in the qualities. That is asserted too.
+
+## The rule for what goes on a trait
+
+**A quality belongs on a trait only if you cannot be that trait without it.**
+
+Correlation is not definition, and an earlier version of this map got that wrong
+three times in a row. Poachers are not quick — Inzaghi, Muller, van Nistelrooy.
+Aerial threats are not slow — Ronaldo, Haaland. Target men are not slow —
+Drogba, Adebayor. All three claims were removed, along with pace on Winger,
+LateRunner, BoxToBox, Mezzala and Dribbler, none of which imply speed either.
+Zidane and Iniesta beat men without any.
+
+What survives are traits whose name asserts the quality. `CompleteForward` is
+the one that legitimately claims everything, because that is what complete
+means. `NoNonsenseDefender` is the clearest negative: it literally says he does
+not attempt anything on the ball.
+
+## Weaknesses
+
+Without negatives, every trait is a bonus, tagging a player is never a cost, and
+the rating is the only thing that can be bad about him. That is wrong about
+football and it flattens drafting: a 78-rated centre-half who is `Ponderous` is
+a specific liability against a counter-attacking side, and nothing else in the
+data could say so. It cuts both ways — an opponent's weaknesses become targets.
+
+| trait | qualities |
+| --- | --- |
+| `Ponderous` | pace −2, recovery −2 |
+| `Lightweight` | aerial −2 |
+| `LooseInPossession` | pressResist −2 |
+| `Immobile` | pressing −2, recovery −1 |
+| `FlapsAtCrosses` | claiming −2 (goalkeeper) |
+| `PoorDistribution` | pressResist −2 (goalkeeper) |
+| `RashInTheTackle` | discipline −2 |
+
+These are allowed to be wholly negative because the weakness *is* the trait.
+A trait that was merely bad at everything would not be a trait — it would be a
+worse player, and the rating already says that.
+
+## Where fouls come from
+
+Who commits them used to be a hardcoded list of role names inside
+`matchEngine.ts` — the trait system reimplemented in the wrong place, where
+adding a rash defender meant editing the simulator. It is now the `discipline`
+quality. Note it changes **who** fouls, not how many: the weights select among
+eleven players, so the cards-per-team rate is untouched.
 
 ## Assigning them
 

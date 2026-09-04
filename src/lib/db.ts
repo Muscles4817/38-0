@@ -1926,50 +1926,70 @@ export const QUALITIES = {
   setPiece: 'Dead-ball delivery',
   penalty: 'Takes penalties',
   longShot: 'Shoots from distance',
+  discipline: 'Stays on his feet. Negative means he does not.',
 } as const;
 
 export type Quality = keyof typeof QUALITIES;
 
 const ROLE_QUALITIES: Record<string, Partial<Record<Quality, number>>> = {
+  // A quality belongs on a trait only if you cannot be that trait without it.
+  // Correlation is not definition: poachers are not quick (Inzaghi, Muller,
+  // van Nistelrooy), aerial threats are not slow (Ronaldo, Haaland), and target
+  // men are not slow either (Drogba, Adebayor). An earlier version of this map
+  // asserted all three and was wrong about all three.
   AerialThreat:        { aerial: 3 },
   Anchor:              { pressing: 1, pressResist: 1 },
-  AttackingFullback:   { pace: 1 },
+  AttackingFullback:   {},
   BallPlayingDefender: { pressResist: 3, creation: 1 },
-  BoxToBox:            { pressing: 2, pace: 1 },
+  BoxToBox:            { pressing: 2 },
   ChanceCreator:       { creation: 3 },
+  // "Complete" is the one trait that genuinely asserts everything.
   CompleteForward:     { aerial: 1, pace: 1, pressing: 1, dribble: 1 },
-  CrossingSpecialist:  { setPiece: 2 },
+  CrossingSpecialist:  { setPiece: 3 },
   DeepLyingForward:    { creation: 2, pressResist: 1 },
   DeepLyingPlaymaker:  { pressResist: 3, creation: 2 },
-  Enforcer:            { pressing: 2 },
+  // An enforcer commits fouls. That is what the word means.
+  Enforcer:            { pressing: 2, discipline: -1 },
   FalseNine:           { creation: 2, pressResist: 2 },
-  InsideForward:       { pace: 2, dribble: 2, longShot: 1 },
+  InsideForward:       { dribble: 2, longShot: 1 },
   InvertedWingback:    { pressResist: 1, creation: 1 },
-  LateRunner:          { pace: 1, longShot: 1 },
-  Mezzala:             { creation: 1, pace: 1, dribble: 1 },
-  NoNonsenseDefender:  { aerial: 2 },
-  Poacher:             { pace: 1 },
+  LateRunner:          { longShot: 1 },
+  Mezzala:             { creation: 1, dribble: 1 },
+  // "No-nonsense" literally asserts the limitation.
+  NoNonsenseDefender:  { aerial: 2, pressResist: -2, creation: -2, discipline: -1 },
+  // Finishing is the goal multiplier and positioning has no quality. Nothing
+  // else about a poacher is definitional.
+  Poacher:             {},
   Regista:             { pressResist: 3, creation: 3, setPiece: 1 },
   SetPieceDeliverer:   { setPiece: 3, penalty: 1 },
   SweeperKeeper:       { pressResist: 2, claiming: 1 },
-  TargetMan:           { aerial: 3 },
-  Trequartista:        { creation: 3, dribble: 1, longShot: 1 },
-  Winger:              { setPiece: 1, dribble: 1, pace: 1 },
+  TargetMan:           { aerial: 2 },
+  Trequartista:        { creation: 3, dribble: 1 },
+  Winger:              { setPiece: 2 },
 
-  // New. These exist because the qualities the playstyle work depends on were
-  // being inferred from proxies: running threat from whether a man is a
-  // poacher, and pressing intensity from a set of roles containing no forward.
   Pacey:               { pace: 3, recovery: 1 },
   Sweeper:             { recovery: 3, pressResist: 2 },
-  Stopper:             { aerial: 2, pressing: 2 },
-  PressingForward:     { pressing: 3, pace: 1 },
-  Workhorse:           { pressing: 2, pressResist: 1 },
+  Stopper:             { aerial: 2, pressing: 2, discipline: -1 },
+  PressingForward:     { pressing: 3 },
+  Workhorse:           { pressing: 2 },
   Carrier:             { pressResist: 3, dribble: 2 },
-  Dribbler:            { dribble: 3, pace: 1 },
+  Dribbler:            { dribble: 3 },
   ShotStopper:         { shotStopping: 3 },
   CommandingKeeper:    { claiming: 3, aerial: 1 },
   PenaltyTaker:        { penalty: 3 },
   LongShot:            { longShot: 3 },
+
+  // Weaknesses. These are allowed to be wholly negative because the weakness
+  // is the whole point of them: nobody is Ponderous without being slow. A trait
+  // that was merely bad at everything would not be a trait, it would be a worse
+  // player, and the rating already says that.
+  Ponderous:           { pace: -2, recovery: -2 },
+  Lightweight:         { aerial: -2 },
+  LooseInPossession:   { pressResist: -2 },
+  Immobile:            { pressing: -2, recovery: -1 },
+  FlapsAtCrosses:      { claiming: -2 },
+  PoorDistribution:    { pressResist: -2 },
+  RashInTheTackle:     { discipline: -2 },
 };
 
 // Deliberately modest goal and assist multipliers. A trait that exists to
@@ -1986,6 +2006,13 @@ const EXTRA_ROLES: typeof ROLE_DEFAULTS = [
   { name: 'ShotStopper', label: 'Shot Stopper', goal_mult: 0.00, assist_mult: 0.20, valid_positions: ['GK'], description: 'Elite reflexes; keeps out what he reaches', att_contrib: 0, mid_contrib: 0, def_contrib: 2 },
   { name: 'CommandingKeeper', label: 'Commanding Keeper', goal_mult: 0.00, assist_mult: 0.30, valid_positions: ['GK'], description: 'Owns his box and claims what comes into it', att_contrib: 0, mid_contrib: 0, def_contrib: 2 },
   { name: 'PenaltyTaker', label: 'Penalty Taker', goal_mult: 1.40, assist_mult: 0.80, valid_positions: [], description: 'The one who takes them, and does not miss often', att_contrib: 0, mid_contrib: 0, def_contrib: 0 },
+  { name: 'Ponderous', label: 'Ponderous', goal_mult: 1.00, assist_mult: 1.00, valid_positions: [], description: 'Strong, perhaps, but slow — and a high line becomes a liability', att_contrib: 0, mid_contrib: 0, def_contrib: 0 },
+  { name: 'Lightweight', label: 'Lightweight', goal_mult: 1.00, assist_mult: 1.00, valid_positions: [], description: 'Loses the physical contest, in the air and on the ground', att_contrib: 0, mid_contrib: 0, def_contrib: 0 },
+  { name: 'LooseInPossession', label: 'Loose in Possession', goal_mult: 1.00, assist_mult: 0.90, valid_positions: [], description: 'Gives it away under pressure', att_contrib: 0, mid_contrib: -1, def_contrib: 0 },
+  { name: 'Immobile', label: 'Immobile', goal_mult: 1.00, assist_mult: 1.00, valid_positions: [], description: 'Will not chase it, and the press dies with him', att_contrib: 0, mid_contrib: 0, def_contrib: 0 },
+  { name: 'FlapsAtCrosses', label: 'Flaps at Crosses', goal_mult: 0.00, assist_mult: 0.20, valid_positions: ['GK'], description: 'Does not command his box, and everyone knows it', att_contrib: 0, mid_contrib: 0, def_contrib: -1 },
+  { name: 'PoorDistribution', label: 'Poor Distribution', goal_mult: 0.00, assist_mult: 0.10, valid_positions: ['GK'], description: 'Cannot be trusted with the ball at his feet', att_contrib: 0, mid_contrib: -1.5, def_contrib: 0 },
+  { name: 'RashInTheTackle', label: 'Rash in the Tackle', goal_mult: 1.00, assist_mult: 1.00, valid_positions: [], description: 'Dives in, and collects what follows', att_contrib: 0, mid_contrib: 0, def_contrib: 0 },
   { name: 'LongShot', label: 'Long Shot', goal_mult: 1.40, assist_mult: 0.80, valid_positions: ['CM', 'CDM', 'CAM', 'LM', 'RM', 'LW', 'RW', 'CF', 'ST'], description: 'A threat from outside the box', att_contrib: 1, mid_contrib: 0, def_contrib: 0 },
 ];
 
@@ -2026,7 +2053,11 @@ function migrateRoleConfig(db: Database.Database): void {
   const insert = db.prepare(
     'INSERT OR IGNORE INTO role_config (name, label, goal_mult, assist_mult, valid_positions, description, att_contrib, mid_contrib, def_contrib, qualities) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)'
   );
-  const setQualities = db.prepare('UPDATE role_config SET qualities = ? WHERE name = ? AND qualities = \'{}\'');
+  // Qualities are owned by the code, not the editor, so they are synced every
+  // time rather than only when unset — otherwise a correction to this map would
+  // never reach a database that already exists. When the editor learns to edit
+  // them, this needs a flag marking a row as customised.
+  const setQualities = db.prepare('UPDATE role_config SET qualities = ? WHERE name = ?');
   db.transaction(() => {
     for (const r of ALL_ROLES) {
       insert.run(r.name, r.label, r.goal_mult, r.assist_mult, JSON.stringify(r.valid_positions),
