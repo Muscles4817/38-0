@@ -1,882 +1,82 @@
 {
   "batch": 7,
-  "of": 53,
+  "of": 72,
   "instructions": "See docs/positions-lookup.md. Fill in \"positions\" for each player, most natural first, using only values from \"allowed\". The first must come from \"primaryMustBeOneOf\". Set confidence to high, medium or low.",
   "players": [
     {
-      "fbrefId": "cc7c360e",
-      "name": "David Howells",
+      "fbrefId": "de2ad53e",
+      "name": "Clive Wilson",
       "nation": "ENG",
-      "fbrefPosition": "MF",
+      "fbrefPosition": "DF",
       "allowed": [
-        "CDM",
-        "CM",
-        "CAM",
-        "LM",
-        "RM"
+        "LB",
+        "CB",
+        "RB",
+        "LWB",
+        "RWB"
       ],
       "primaryMustBeOneOf": [
-        "CDM",
-        "CM",
-        "CAM",
-        "LM",
-        "RM"
+        "LB",
+        "CB",
+        "RB",
+        "LWB",
+        "RWB"
       ],
       "choices": 5,
-      "totalMinutes": 12140,
+      "totalMinutes": 16372,
       "seasons": [
         {
           "season": "1992/93",
-          "club": "Tottenham Hotspur",
-          "minutes": 1285,
-          "starts": 16,
-          "goals": 1,
-          "assists": 1,
-          "fbrefPosition": "MF"
-        },
-        {
-          "season": "1993/94",
-          "club": "Tottenham Hotspur",
-          "minutes": 1251,
-          "starts": 15,
-          "goals": 1,
-          "assists": 1,
-          "fbrefPosition": "MF"
-        },
-        {
-          "season": "1994/95",
-          "club": "Tottenham Hotspur",
-          "minutes": 2315,
-          "starts": 26,
-          "goals": 1,
-          "assists": 1,
-          "fbrefPosition": "MF"
-        },
-        {
-          "season": "1995/96",
-          "club": "Tottenham Hotspur",
-          "minutes": 2505,
-          "starts": 29,
+          "club": "Queens Park Rangers",
+          "minutes": 3571,
+          "starts": 41,
           "goals": 3,
-          "assists": 1,
-          "fbrefPosition": "MF"
-        },
-        {
-          "season": "1996/97",
-          "club": "Tottenham Hotspur",
-          "minutes": 2747,
-          "starts": 32,
-          "goals": 2,
-          "assists": 2,
-          "fbrefPosition": "MF"
-        },
-        {
-          "season": "1997/98",
-          "club": "Tottenham Hotspur",
-          "minutes": 1398,
-          "starts": 14,
-          "goals": 0,
-          "assists": 0,
-          "fbrefPosition": "MF"
-        },
-        {
-          "season": "1998/99",
-          "club": "Southampton",
-          "minutes": 639,
-          "starts": 8,
-          "goals": 1,
-          "assists": 0,
-          "fbrefPosition": "MF"
-        }
-      ],
-      "positions": [
-        "CDM",
-        "CM"
-      ],
-      "confidence": "high",
-      "note": "Holding midfielder who also filled in at the back for Spurs."
-    },
-    {
-      "fbrefId": "7062d368",
-      "name": "Brian Borrows",
-      "nation": "ENG",
-      "fbrefPosition": "DF",
-      "allowed": [
-        "LB",
-        "CB",
-        "RB",
-        "LWB",
-        "RWB"
-      ],
-      "primaryMustBeOneOf": [
-        "LB",
-        "CB",
-        "RB",
-        "LWB",
-        "RWB"
-      ],
-      "choices": 5,
-      "totalMinutes": 12047,
-      "seasons": [
-        {
-          "season": "1992/93",
-          "club": "Coventry City",
-          "minutes": 3217,
-          "starts": 36,
-          "goals": 2,
-          "assists": 1,
-          "fbrefPosition": "DF"
-        },
-        {
-          "season": "1993/94",
-          "club": "Coventry City",
-          "minutes": 2610,
-          "starts": 29,
-          "goals": 0,
-          "assists": 1,
-          "fbrefPosition": "DF"
-        },
-        {
-          "season": "1994/95",
-          "club": "Coventry City",
-          "minutes": 2946,
-          "starts": 33,
-          "goals": 0,
-          "assists": 1,
-          "fbrefPosition": "DF"
-        },
-        {
-          "season": "1995/96",
-          "club": "Coventry City",
-          "minutes": 1839,
-          "starts": 21,
-          "goals": 0,
-          "assists": 1,
-          "fbrefPosition": "DF"
-        },
-        {
-          "season": "1996/97",
-          "club": "Coventry City",
-          "minutes": 1435,
-          "starts": 16,
-          "goals": 0,
-          "assists": 0,
-          "fbrefPosition": "DF"
-        }
-      ],
-      "positions": [
-        "RB"
-      ],
-      "confidence": "high",
-      "note": null
-    },
-    {
-      "fbrefId": "d68181d1",
-      "name": "Spencer Prior",
-      "nation": "ENG",
-      "fbrefPosition": "DF",
-      "allowed": [
-        "LB",
-        "CB",
-        "RB",
-        "LWB",
-        "RWB"
-      ],
-      "primaryMustBeOneOf": [
-        "LB",
-        "CB",
-        "RB",
-        "LWB",
-        "RWB"
-      ],
-      "choices": 5,
-      "totalMinutes": 12013,
-      "seasons": [
-        {
-          "season": "1993/94",
-          "club": "Norwich City",
-          "minutes": 1105,
-          "starts": 13,
-          "goals": 0,
-          "assists": 0,
-          "fbrefPosition": "DF"
-        },
-        {
-          "season": "1994/95",
-          "club": "Norwich City",
-          "minutes": 1198,
-          "starts": 12,
-          "goals": 0,
-          "assists": 2,
-          "fbrefPosition": "DF"
-        },
-        {
-          "season": "1996/97",
-          "club": "Leicester City",
-          "minutes": 2750,
-          "starts": 33,
-          "goals": 0,
-          "assists": 0,
-          "fbrefPosition": "DF"
-        },
-        {
-          "season": "1997/98",
-          "club": "Leicester City",
-          "minutes": 2477,
-          "starts": 28,
-          "goals": 0,
-          "assists": 1,
-          "fbrefPosition": "DF"
-        },
-        {
-          "season": "1998/99",
-          "club": "Derby County",
-          "minutes": 3000,
-          "starts": 33,
-          "goals": 1,
-          "assists": 0,
-          "fbrefPosition": "DF"
-        },
-        {
-          "season": "1999/00",
-          "club": "Derby County",
-          "minutes": 1483,
-          "starts": 15,
-          "goals": 0,
-          "assists": 0,
-          "fbrefPosition": "DF"
-        }
-      ],
-      "positions": [
-        "CB"
-      ],
-      "confidence": "high",
-      "note": null
-    },
-    {
-      "fbrefId": "9f53867c",
-      "name": "Terry Phelan",
-      "nation": "IRL",
-      "fbrefPosition": "DF",
-      "allowed": [
-        "LB",
-        "CB",
-        "RB",
-        "LWB",
-        "RWB"
-      ],
-      "primaryMustBeOneOf": [
-        "LB",
-        "CB",
-        "RB",
-        "LWB",
-        "RWB"
-      ],
-      "choices": 5,
-      "totalMinutes": 11979,
-      "seasons": [
-        {
-          "season": "1992/93",
-          "club": "Manchester City",
-          "minutes": 3283,
-          "starts": 37,
-          "goals": 0,
-          "assists": 4,
-          "fbrefPosition": "DF"
-        },
-        {
-          "season": "1993/94",
-          "club": "Manchester City",
-          "minutes": 2676,
-          "starts": 30,
-          "goals": 1,
-          "assists": 0,
-          "fbrefPosition": "DF"
-        },
-        {
-          "season": "1994/95",
-          "club": "Manchester City",
-          "minutes": 2223,
-          "starts": 26,
-          "goals": 0,
-          "assists": 1,
-          "fbrefPosition": "DF"
-        },
-        {
-          "season": "1995/96",
-          "club": "Chelsea",
-          "minutes": 1035,
-          "starts": 12,
-          "goals": 0,
-          "assists": 1,
-          "fbrefPosition": "DF"
-        },
-        {
-          "season": "1995/96",
-          "club": "Manchester City",
-          "minutes": 805,
-          "starts": 9,
-          "goals": 0,
-          "assists": 0,
-          "fbrefPosition": "DF"
-        },
-        {
-          "season": "1996/97",
-          "club": "Everton",
-          "minutes": 1255,
-          "starts": 15,
-          "goals": 0,
-          "assists": 0,
-          "fbrefPosition": "DF"
-        },
-        {
-          "season": "1997/98",
-          "club": "Everton",
-          "minutes": 702,
-          "starts": 8,
-          "goals": 0,
-          "assists": 0,
-          "fbrefPosition": "DF"
-        }
-      ],
-      "positions": [
-        "LB"
-      ],
-      "confidence": "high",
-      "note": null
-    },
-    {
-      "fbrefId": "08be0359",
-      "name": "Julian Dicks",
-      "nation": "ENG",
-      "fbrefPosition": "DF",
-      "allowed": [
-        "LB",
-        "CB",
-        "RB",
-        "LWB",
-        "RWB"
-      ],
-      "primaryMustBeOneOf": [
-        "LB",
-        "CB",
-        "RB",
-        "LWB",
-        "RWB"
-      ],
-      "choices": 5,
-      "totalMinutes": 11915,
-      "seasons": [
-        {
-          "season": "1993/94",
-          "club": "Liverpool",
-          "minutes": 2129,
-          "starts": 24,
-          "goals": 3,
-          "assists": 1,
-          "fbrefPosition": "DF"
-        },
-        {
-          "season": "1993/94",
-          "club": "West Ham United",
-          "minutes": 630,
-          "starts": 7,
-          "goals": 0,
-          "assists": 0,
-          "fbrefPosition": "DF"
-        },
-        {
-          "season": "1994/95",
-          "club": "West Ham United",
-          "minutes": 2532,
-          "starts": 29,
-          "goals": 5,
-          "assists": 1,
-          "fbrefPosition": "DF"
-        },
-        {
-          "season": "1995/96",
-          "club": "West Ham United",
-          "minutes": 3024,
-          "starts": 34,
-          "goals": 10,
-          "assists": 3,
-          "fbrefPosition": "DF"
-        },
-        {
-          "season": "1996/97",
-          "club": "West Ham United",
-          "minutes": 2790,
-          "starts": 31,
-          "goals": 6,
-          "assists": 2,
-          "fbrefPosition": "DF"
-        },
-        {
-          "season": "1998/99",
-          "club": "West Ham United",
-          "minutes": 810,
-          "starts": 9,
-          "goals": 0,
-          "assists": 0,
-          "fbrefPosition": "DF"
-        }
-      ],
-      "positions": [
-        "LB"
-      ],
-      "confidence": "high",
-      "note": null
-    },
-    {
-      "fbrefId": "9593e964",
-      "name": "Duncan Ferguson",
-      "nation": "SCO",
-      "fbrefPosition": "FW",
-      "allowed": [
-        "LW",
-        "RW",
-        "ST",
-        "CF"
-      ],
-      "primaryMustBeOneOf": [
-        "LW",
-        "RW",
-        "ST",
-        "CF"
-      ],
-      "choices": 4,
-      "totalMinutes": 11894,
-      "seasons": [
-        {
-          "season": "1994/95",
-          "club": "Everton",
-          "minutes": 1896,
-          "starts": 22,
-          "goals": 7,
-          "assists": 2,
-          "fbrefPosition": "FW"
-        },
-        {
-          "season": "1995/96",
-          "club": "Everton",
-          "minutes": 1462,
-          "starts": 16,
-          "goals": 5,
-          "assists": 2,
-          "fbrefPosition": "FW"
-        },
-        {
-          "season": "1996/97",
-          "club": "Everton",
-          "minutes": 2872,
-          "starts": 31,
-          "goals": 10,
           "assists": 5,
-          "fbrefPosition": "FW"
-        },
-        {
-          "season": "1997/98",
-          "club": "Everton",
-          "minutes": 2441,
-          "starts": 28,
-          "goals": 11,
-          "assists": 6,
-          "fbrefPosition": "FW"
-        },
-        {
-          "season": "1998/99",
-          "club": "Everton",
-          "minutes": 1168,
-          "starts": 13,
-          "goals": 4,
-          "assists": 0,
-          "fbrefPosition": "FW"
-        },
-        {
-          "season": "1998/99",
-          "club": "Newcastle United",
-          "minutes": 518,
-          "starts": 7,
-          "goals": 2,
-          "assists": 0,
-          "fbrefPosition": "FW"
-        },
-        {
-          "season": "1999/00",
-          "club": "Newcastle United",
-          "minutes": 1537,
-          "starts": 17,
-          "goals": 6,
-          "assists": 1,
-          "fbrefPosition": "FW"
-        }
-      ],
-      "positions": [
-        "ST"
-      ],
-      "confidence": "high",
-      "note": null
-    },
-    {
-      "fbrefId": "9995820e",
-      "name": "Mark Wright",
-      "nation": "ENG",
-      "fbrefPosition": "DF",
-      "allowed": [
-        "LB",
-        "CB",
-        "RB",
-        "LWB",
-        "RWB"
-      ],
-      "primaryMustBeOneOf": [
-        "LB",
-        "CB",
-        "RB",
-        "LWB",
-        "RWB"
-      ],
-      "choices": 5,
-      "totalMinutes": 11833,
-      "seasons": [
-        {
-          "season": "1992/93",
-          "club": "Liverpool",
-          "minutes": 2778,
-          "starts": 32,
-          "goals": 2,
-          "assists": 0,
           "fbrefPosition": "DF"
         },
         {
           "season": "1993/94",
-          "club": "Liverpool",
-          "minutes": 2726,
-          "starts": 31,
-          "goals": 1,
-          "assists": 0,
-          "fbrefPosition": "DF"
-        },
-        {
-          "season": "1994/95",
-          "club": "Liverpool",
-          "minutes": 495,
-          "starts": 5,
-          "goals": 0,
-          "assists": 0,
-          "fbrefPosition": "DF"
-        },
-        {
-          "season": "1995/96",
-          "club": "Liverpool",
-          "minutes": 2416,
-          "starts": 28,
-          "goals": 2,
-          "assists": 1,
-          "fbrefPosition": "DF"
-        },
-        {
-          "season": "1996/97",
-          "club": "Liverpool",
-          "minutes": 2878,
-          "starts": 33,
-          "goals": 0,
-          "assists": 3,
-          "fbrefPosition": "DF"
-        },
-        {
-          "season": "1997/98",
-          "club": "Liverpool",
-          "minutes": 540,
-          "starts": 6,
-          "goals": 0,
-          "assists": 0,
-          "fbrefPosition": "DF"
-        }
-      ],
-      "positions": [
-        "CB"
-      ],
-      "confidence": "high",
-      "note": null
-    },
-    {
-      "fbrefId": "eb0ae1e9",
-      "name": "Stephen Carr",
-      "nation": "IRL",
-      "fbrefPosition": "DF",
-      "allowed": [
-        "LB",
-        "CB",
-        "RB",
-        "LWB",
-        "RWB"
-      ],
-      "primaryMustBeOneOf": [
-        "LB",
-        "CB",
-        "RB",
-        "LWB",
-        "RWB"
-      ],
-      "choices": 5,
-      "totalMinutes": 11803,
-      "seasons": [
-        {
-          "season": "1996/97",
-          "club": "Tottenham Hotspur",
-          "minutes": 2148,
-          "starts": 24,
-          "goals": 0,
-          "assists": 4,
-          "fbrefPosition": "DF"
-        },
-        {
-          "season": "1997/98",
-          "club": "Tottenham Hotspur",
-          "minutes": 3274,
-          "starts": 37,
-          "goals": 0,
-          "assists": 0,
-          "fbrefPosition": "DF"
-        },
-        {
-          "season": "1998/99",
-          "club": "Tottenham Hotspur",
-          "minutes": 3321,
-          "starts": 37,
-          "goals": 0,
-          "assists": 3,
-          "fbrefPosition": "DF"
-        },
-        {
-          "season": "1999/00",
-          "club": "Tottenham Hotspur",
-          "minutes": 3060,
-          "starts": 34,
-          "goals": 3,
-          "assists": 3,
-          "fbrefPosition": "DF"
-        }
-      ],
-      "positions": [
-        "RB"
-      ],
-      "confidence": "high",
-      "note": null
-    },
-    {
-      "fbrefId": "30184789",
-      "name": "Emile Heskey",
-      "nation": "ENG",
-      "fbrefPosition": "FW",
-      "allowed": [
-        "LW",
-        "RW",
-        "ST",
-        "CF"
-      ],
-      "primaryMustBeOneOf": [
-        "LW",
-        "RW",
-        "ST",
-        "CF"
-      ],
-      "choices": 4,
-      "totalMinutes": 11795,
-      "seasons": [
-        {
-          "season": "1996/97",
-          "club": "Leicester City",
-          "minutes": 3031,
-          "starts": 35,
-          "goals": 10,
-          "assists": 6,
-          "fbrefPosition": "FW"
-        },
-        {
-          "season": "1997/98",
-          "club": "Leicester City",
-          "minutes": 3131,
-          "starts": 35,
-          "goals": 10,
-          "assists": 5,
-          "fbrefPosition": "FW"
-        },
-        {
-          "season": "1998/99",
-          "club": "Leicester City",
-          "minutes": 2589,
-          "starts": 29,
-          "goals": 6,
-          "assists": 3,
-          "fbrefPosition": "FW"
-        },
-        {
-          "season": "1999/00",
-          "club": "Leicester City",
-          "minutes": 2023,
-          "starts": 23,
-          "goals": 7,
-          "assists": 3,
-          "fbrefPosition": "FW"
-        },
-        {
-          "season": "1999/00",
-          "club": "Liverpool",
-          "minutes": 1021,
-          "starts": 12,
-          "goals": 3,
-          "assists": 1,
-          "fbrefPosition": "FW"
-        }
-      ],
-      "positions": [
-        "ST",
-        "LW"
-      ],
-      "confidence": "high",
-      "note": "Centre-forward at Leicester; also used wide left."
-    },
-    {
-      "fbrefId": "eed4ff30",
-      "name": "Stan Collymore",
-      "nation": "ENG",
-      "fbrefPosition": "FW",
-      "allowed": [
-        "LW",
-        "RW",
-        "ST",
-        "CF"
-      ],
-      "primaryMustBeOneOf": [
-        "LW",
-        "RW",
-        "ST",
-        "CF"
-      ],
-      "choices": 4,
-      "totalMinutes": 11789,
-      "seasons": [
-        {
-          "season": "1994/95",
-          "club": "Nottingham Forest",
-          "minutes": 3325,
-          "starts": 37,
-          "goals": 22,
-          "assists": 6,
-          "fbrefPosition": "FW"
-        },
-        {
-          "season": "1995/96",
-          "club": "Liverpool",
-          "minutes": 2567,
-          "starts": 30,
-          "goals": 14,
-          "assists": 11,
-          "fbrefPosition": "FW"
-        },
-        {
-          "season": "1996/97",
-          "club": "Liverpool",
-          "minutes": 2201,
-          "starts": 25,
-          "goals": 12,
-          "assists": 4,
-          "fbrefPosition": "FW"
-        },
-        {
-          "season": "1997/98",
-          "club": "Aston Villa",
-          "minutes": 2098,
-          "starts": 23,
-          "goals": 6,
-          "assists": 4,
-          "fbrefPosition": "FW"
-        },
-        {
-          "season": "1998/99",
-          "club": "Aston Villa",
-          "minutes": 1129,
-          "starts": 11,
-          "goals": 1,
-          "assists": 3,
-          "fbrefPosition": "FW"
-        },
-        {
-          "season": "1999/00",
-          "club": "Leicester City",
-          "minutes": 469,
-          "starts": 6,
-          "goals": 4,
-          "assists": 1,
-          "fbrefPosition": "FW"
-        }
-      ],
-      "positions": [
-        "ST",
-        "CF"
-      ],
-      "confidence": "high",
-      "note": null
-    },
-    {
-      "fbrefId": "ee6208fa",
-      "name": "Mark Bowen",
-      "nation": "WAL",
-      "fbrefPosition": "DF",
-      "allowed": [
-        "LB",
-        "CB",
-        "RB",
-        "LWB",
-        "RWB"
-      ],
-      "primaryMustBeOneOf": [
-        "LB",
-        "CB",
-        "RB",
-        "LWB",
-        "RWB"
-      ],
-      "choices": 5,
-      "totalMinutes": 11780,
-      "seasons": [
-        {
-          "season": "1992/93",
-          "club": "Norwich City",
+          "club": "Queens Park Rangers",
           "minutes": 3780,
           "starts": 42,
-          "goals": 1,
-          "assists": 2,
-          "fbrefPosition": "DF"
-        },
-        {
-          "season": "1993/94",
-          "club": "Norwich City",
-          "minutes": 3685,
-          "starts": 41,
-          "goals": 5,
-          "assists": 4,
+          "goals": 3,
+          "assists": 0,
           "fbrefPosition": "DF"
         },
         {
           "season": "1994/95",
-          "club": "Norwich City",
-          "minutes": 3113,
-          "starts": 34,
+          "club": "Queens Park Rangers",
+          "minutes": 3101,
+          "starts": 36,
           "goals": 2,
           "assists": 1,
           "fbrefPosition": "DF"
         },
         {
+          "season": "1995/96",
+          "club": "Tottenham Hotspur",
+          "minutes": 2520,
+          "starts": 28,
+          "goals": 0,
+          "assists": 4,
+          "fbrefPosition": "DF"
+        },
+        {
           "season": "1996/97",
-          "club": "West Ham United",
-          "minutes": 1202,
-          "starts": 15,
+          "club": "Tottenham Hotspur",
+          "minutes": 2113,
+          "starts": 23,
           "goals": 1,
-          "assists": 0,
+          "assists": 1,
+          "fbrefPosition": "DF"
+        },
+        {
+          "season": "1997/98",
+          "club": "Tottenham Hotspur",
+          "minutes": 1287,
+          "starts": 16,
+          "goals": 0,
+          "assists": 1,
           "fbrefPosition": "DF"
         }
       ],
@@ -884,236 +84,7 @@
         "LB"
       ],
       "confidence": "high",
-      "note": "Attacking left-back for Norwich."
-    },
-    {
-      "fbrefId": "2e448746",
-      "name": "Dave Beasant",
-      "nation": "ENG",
-      "fbrefPosition": "GK",
-      "allowed": [
-        "GK"
-      ],
-      "primaryMustBeOneOf": [
-        "GK"
-      ],
-      "choices": 1,
-      "totalMinutes": 11779,
-      "seasons": [
-        {
-          "season": "1992/93",
-          "club": "Chelsea",
-          "minutes": 1530,
-          "starts": 17,
-          "goals": 0,
-          "assists": 0,
-          "fbrefPosition": "GK"
-        },
-        {
-          "season": "1993/94",
-          "club": "Southampton",
-          "minutes": 2250,
-          "starts": 25,
-          "goals": 0,
-          "assists": 0,
-          "fbrefPosition": "GK"
-        },
-        {
-          "season": "1994/95",
-          "club": "Southampton",
-          "minutes": 1175,
-          "starts": 12,
-          "goals": 0,
-          "assists": 0,
-          "fbrefPosition": "GK"
-        },
-        {
-          "season": "1995/96",
-          "club": "Southampton",
-          "minutes": 3240,
-          "starts": 36,
-          "goals": 0,
-          "assists": 0,
-          "fbrefPosition": "GK"
-        },
-        {
-          "season": "1996/97",
-          "club": "Southampton",
-          "minutes": 1244,
-          "starts": 13,
-          "goals": 0,
-          "assists": 0,
-          "fbrefPosition": "GK"
-        },
-        {
-          "season": "1998/99",
-          "club": "Nottingham Forest",
-          "minutes": 2340,
-          "starts": 26,
-          "goals": 0,
-          "assists": 0,
-          "fbrefPosition": "GK"
-        }
-      ],
-      "positions": [
-        "GK"
-      ],
-      "confidence": "high",
-      "note": null
-    },
-    {
-      "fbrefId": "298a0444",
-      "name": "Tim Breacker",
-      "nation": "ENG",
-      "fbrefPosition": "DF",
-      "allowed": [
-        "LB",
-        "CB",
-        "RB",
-        "LWB",
-        "RWB"
-      ],
-      "primaryMustBeOneOf": [
-        "LB",
-        "CB",
-        "RB",
-        "LWB",
-        "RWB"
-      ],
-      "choices": 5,
-      "totalMinutes": 11757,
-      "seasons": [
-        {
-          "season": "1993/94",
-          "club": "West Ham United",
-          "minutes": 3600,
-          "starts": 40,
-          "goals": 3,
-          "assists": 3,
-          "fbrefPosition": "DF"
-        },
-        {
-          "season": "1994/95",
-          "club": "West Ham United",
-          "minutes": 2954,
-          "starts": 33,
-          "goals": 0,
-          "assists": 5,
-          "fbrefPosition": "DF"
-        },
-        {
-          "season": "1995/96",
-          "club": "West Ham United",
-          "minutes": 1808,
-          "starts": 19,
-          "goals": 0,
-          "assists": 0,
-          "fbrefPosition": "DF"
-        },
-        {
-          "season": "1996/97",
-          "club": "West Ham United",
-          "minutes": 1945,
-          "starts": 22,
-          "goals": 0,
-          "assists": 1,
-          "fbrefPosition": "DF"
-        },
-        {
-          "season": "1997/98",
-          "club": "West Ham United",
-          "minutes": 1450,
-          "starts": 18,
-          "goals": 0,
-          "assists": 2,
-          "fbrefPosition": "DF"
-        }
-      ],
-      "positions": [
-        "RB"
-      ],
-      "confidence": "high",
-      "note": null
-    },
-    {
-      "fbrefId": "be519c25",
-      "name": "Gary Mabbutt",
-      "nation": "ENG",
-      "fbrefPosition": "DFMF",
-      "allowed": [
-        "LB",
-        "CB",
-        "RB",
-        "LWB",
-        "RWB",
-        "CDM",
-        "CM",
-        "CAM",
-        "LM",
-        "RM"
-      ],
-      "primaryMustBeOneOf": [
-        "LB",
-        "CB",
-        "RB",
-        "LWB",
-        "RWB"
-      ],
-      "choices": 10,
-      "totalMinutes": 11717,
-      "seasons": [
-        {
-          "season": "1992/93",
-          "club": "Tottenham Hotspur",
-          "minutes": 2608,
-          "starts": 29,
-          "goals": 2,
-          "assists": 1,
-          "fbrefPosition": "DFMF"
-        },
-        {
-          "season": "1993/94",
-          "club": "Tottenham Hotspur",
-          "minutes": 2526,
-          "starts": 29,
-          "goals": 0,
-          "assists": 1,
-          "fbrefPosition": "DFMF"
-        },
-        {
-          "season": "1994/95",
-          "club": "Tottenham Hotspur",
-          "minutes": 2998,
-          "starts": 33,
-          "goals": 0,
-          "assists": 1,
-          "fbrefPosition": "DFMF"
-        },
-        {
-          "season": "1995/96",
-          "club": "Tottenham Hotspur",
-          "minutes": 2840,
-          "starts": 32,
-          "goals": 0,
-          "assists": 0,
-          "fbrefPosition": "DFMF"
-        },
-        {
-          "season": "1997/98",
-          "club": "Tottenham Hotspur",
-          "minutes": 745,
-          "starts": 8,
-          "goals": 0,
-          "assists": 0,
-          "fbrefPosition": "DFMF"
-        }
-      ],
-      "positions": [
-        "CB",
-        "CM"
-      ],
-      "confidence": "high",
-      "note": "Centre-back by 1992, earlier a midfielder."
+      "note": "Attacking left-back and penalty taker at QPR."
     },
     {
       "fbrefId": "158494ce",
@@ -1135,7 +106,7 @@
         "RM"
       ],
       "choices": 5,
-      "totalMinutes": 11680,
+      "totalMinutes": 16368,
       "seasons": [
         {
           "season": "1992/93",
@@ -1199,6 +170,24 @@
           "goals": 6,
           "assists": 4,
           "fbrefPosition": "MF"
+        },
+        {
+          "season": "2000/01",
+          "club": "Sunderland",
+          "minutes": 2664,
+          "starts": 30,
+          "goals": 8,
+          "assists": 6,
+          "fbrefPosition": "MF"
+        },
+        {
+          "season": "2001/02",
+          "club": "West Ham United",
+          "minutes": 2024,
+          "starts": 24,
+          "goals": 1,
+          "assists": 2,
+          "fbrefPosition": "MF"
         }
       ],
       "positions": [
@@ -1209,9 +198,107 @@
       "note": null
     },
     {
-      "fbrefId": "a976b649",
-      "name": "Jacob Laursen",
-      "nation": "DEN",
+      "fbrefId": "e654196b",
+      "name": "John Barnes",
+      "nation": "ENG",
+      "fbrefPosition": "DFFW",
+      "allowed": [
+        "LB",
+        "CB",
+        "RB",
+        "LWB",
+        "RWB",
+        "LW",
+        "RW",
+        "ST",
+        "CF"
+      ],
+      "primaryMustBeOneOf": [
+        "LB",
+        "CB",
+        "RB",
+        "LWB",
+        "RWB"
+      ],
+      "choices": 9,
+      "totalMinutes": 16362,
+      "seasons": [
+        {
+          "season": "1992/93",
+          "club": "Liverpool",
+          "minutes": 2414,
+          "starts": 26,
+          "goals": 5,
+          "assists": 6,
+          "fbrefPosition": "DFFW"
+        },
+        {
+          "season": "1993/94",
+          "club": "Liverpool",
+          "minutes": 2090,
+          "starts": 24,
+          "goals": 3,
+          "assists": 2,
+          "fbrefPosition": "DFFW"
+        },
+        {
+          "season": "1994/95",
+          "club": "Liverpool",
+          "minutes": 3324,
+          "starts": 38,
+          "goals": 7,
+          "assists": 5,
+          "fbrefPosition": "DFFW"
+        },
+        {
+          "season": "1995/96",
+          "club": "Liverpool",
+          "minutes": 3173,
+          "starts": 36,
+          "goals": 3,
+          "assists": 10,
+          "fbrefPosition": "DFFW"
+        },
+        {
+          "season": "1996/97",
+          "club": "Liverpool",
+          "minutes": 3068,
+          "starts": 34,
+          "goals": 4,
+          "assists": 6,
+          "fbrefPosition": "DFFW"
+        },
+        {
+          "season": "1997/98",
+          "club": "Newcastle United",
+          "minutes": 1842,
+          "starts": 22,
+          "goals": 6,
+          "assists": 0,
+          "fbrefPosition": "DFFW"
+        },
+        {
+          "season": "1998/99",
+          "club": "Charlton Athletic",
+          "minutes": 451,
+          "starts": 2,
+          "goals": 0,
+          "assists": 0,
+          "fbrefPosition": "DFFW"
+        }
+      ],
+      "positions": [
+        "LW",
+        "CM"
+      ],
+      "confidence": "high",
+      "note": "FBref's DFFW is wrong: Barnes was one of England's great left wingers and never a defender. By these seasons he was drifting inside from the left into central midfield for Liverpool.",
+      "labelDisputed": true
+    },
+    {
+      "fbrefId": "3607a95d",
+      "name": "Steve Potts",
+      "nation": "ENG",
       "fbrefPosition": "DF",
       "allowed": [
         "LB",
@@ -1228,56 +315,92 @@
         "RWB"
       ],
       "choices": 5,
-      "totalMinutes": 11640,
+      "totalMinutes": 16245,
       "seasons": [
         {
-          "season": "1996/97",
-          "club": "Derby County",
-          "minutes": 2933,
-          "starts": 35,
-          "goals": 1,
-          "assists": 1,
-          "fbrefPosition": "DF"
-        },
-        {
-          "season": "1997/98",
-          "club": "Derby County",
-          "minutes": 2328,
-          "starts": 27,
-          "goals": 1,
+          "season": "1993/94",
+          "club": "West Ham United",
+          "minutes": 3673,
+          "starts": 41,
+          "goals": 0,
           "assists": 0,
           "fbrefPosition": "DF"
         },
         {
+          "season": "1994/95",
+          "club": "West Ham United",
+          "minutes": 3733,
+          "starts": 42,
+          "goals": 0,
+          "assists": 0,
+          "fbrefPosition": "DF"
+        },
+        {
+          "season": "1995/96",
+          "club": "West Ham United",
+          "minutes": 3007,
+          "starts": 34,
+          "goals": 0,
+          "assists": 1,
+          "fbrefPosition": "DF"
+        },
+        {
+          "season": "1996/97",
+          "club": "West Ham United",
+          "minutes": 1564,
+          "starts": 17,
+          "goals": 0,
+          "assists": 0,
+          "fbrefPosition": "DF"
+        },
+        {
+          "season": "1997/98",
+          "club": "West Ham United",
+          "minutes": 1458,
+          "starts": 14,
+          "goals": 0,
+          "assists": 1,
+          "fbrefPosition": "DF"
+        },
+        {
           "season": "1998/99",
-          "club": "Derby County",
-          "minutes": 3213,
-          "starts": 37,
+          "club": "West Ham United",
+          "minutes": 1061,
+          "starts": 11,
           "goals": 0,
           "assists": 0,
           "fbrefPosition": "DF"
         },
         {
           "season": "1999/00",
-          "club": "Derby County",
-          "minutes": 3166,
-          "starts": 36,
-          "goals": 1,
+          "club": "West Ham United",
+          "minutes": 1463,
+          "starts": 16,
+          "goals": 0,
+          "assists": 0,
+          "fbrefPosition": "DF"
+        },
+        {
+          "season": "2000/01",
+          "club": "West Ham United",
+          "minutes": 286,
+          "starts": 2,
+          "goals": 0,
           "assists": 0,
           "fbrefPosition": "DF"
         }
       ],
       "positions": [
         "CB",
-        "LB"
+        "RB"
       ],
       "confidence": "medium",
-      "note": "Derby defender used at centre-back and on the left."
+      "note": "Versatile West Ham defender; played centre-back despite his size and also at right-back."
     },
     {
-      "fbrefId": "e2cfaafb",
-      "name": "David Bardsley",
-      "nation": "ENG",
+      "fbrefId": "6587459a",
+      "name": "Ian Nolan",
+      "nation": "NIR",
       "fbrefPosition": "DF",
       "allowed": [
         "LB",
@@ -1294,54 +417,254 @@
         "RWB"
       ],
       "choices": 5,
-      "totalMinutes": 11638,
+      "totalMinutes": 16071,
       "seasons": [
         {
-          "season": "1992/93",
-          "club": "Queens Park Rangers",
-          "minutes": 3600,
-          "starts": 40,
-          "goals": 3,
-          "assists": 7,
-          "fbrefPosition": "DF"
-        },
-        {
-          "season": "1993/94",
-          "club": "Queens Park Rangers",
-          "minutes": 2880,
-          "starts": 32,
-          "goals": 0,
-          "assists": 5,
-          "fbrefPosition": "DF"
-        },
-        {
           "season": "1994/95",
-          "club": "Queens Park Rangers",
-          "minutes": 2700,
-          "starts": 30,
+          "club": "Sheffield Wednesday",
+          "minutes": 3778,
+          "starts": 42,
+          "goals": 3,
+          "assists": 2,
+          "fbrefPosition": "DF"
+        },
+        {
+          "season": "1995/96",
+          "club": "Sheffield Wednesday",
+          "minutes": 2475,
+          "starts": 29,
           "goals": 0,
           "assists": 4,
           "fbrefPosition": "DF"
         },
         {
-          "season": "1995/96",
-          "club": "Queens Park Rangers",
-          "minutes": 2458,
+          "season": "1996/97",
+          "club": "Sheffield Wednesday",
+          "minutes": 3375,
+          "starts": 38,
+          "goals": 1,
+          "assists": 2,
+          "fbrefPosition": "DF"
+        },
+        {
+          "season": "1997/98",
+          "club": "Sheffield Wednesday",
+          "minutes": 2365,
+          "starts": 27,
+          "goals": 0,
+          "assists": 6,
+          "fbrefPosition": "DF"
+        },
+        {
+          "season": "1999/00",
+          "club": "Sheffield Wednesday",
+          "minutes": 2483,
           "starts": 28,
+          "goals": 0,
+          "assists": 1,
+          "fbrefPosition": "DF"
+        },
+        {
+          "season": "2000/01",
+          "club": "Bradford City",
+          "minutes": 1595,
+          "starts": 17,
           "goals": 0,
           "assists": 0,
           "fbrefPosition": "DF"
         }
       ],
       "positions": [
+        "LB",
         "RB"
+      ],
+      "confidence": "medium",
+      "note": "Full-back for Sheffield Wednesday on both flanks, more often the left."
+    },
+    {
+      "fbrefId": "59883773",
+      "name": "Gianfranco Zola",
+      "nation": "ITA",
+      "fbrefPosition": "FW",
+      "allowed": [
+        "LW",
+        "RW",
+        "ST",
+        "CF"
+      ],
+      "primaryMustBeOneOf": [
+        "LW",
+        "RW",
+        "ST",
+        "CF"
+      ],
+      "choices": 4,
+      "totalMinutes": 16059,
+      "seasons": [
+        {
+          "season": "1996/97",
+          "club": "Chelsea",
+          "minutes": 1967,
+          "starts": 22,
+          "goals": 8,
+          "assists": 9,
+          "fbrefPosition": "FW"
+        },
+        {
+          "season": "1997/98",
+          "club": "Chelsea",
+          "minutes": 1873,
+          "starts": 23,
+          "goals": 8,
+          "assists": 5,
+          "fbrefPosition": "FW"
+        },
+        {
+          "season": "1998/99",
+          "club": "Chelsea",
+          "minutes": 2907,
+          "starts": 35,
+          "goals": 13,
+          "assists": 6,
+          "fbrefPosition": "FW"
+        },
+        {
+          "season": "1999/00",
+          "club": "Chelsea",
+          "minutes": 2229,
+          "starts": 25,
+          "goals": 4,
+          "assists": 7,
+          "fbrefPosition": "FW"
+        },
+        {
+          "season": "2000/01",
+          "club": "Chelsea",
+          "minutes": 2600,
+          "starts": 31,
+          "goals": 9,
+          "assists": 4,
+          "fbrefPosition": "FW"
+        },
+        {
+          "season": "2001/02",
+          "club": "Chelsea",
+          "minutes": 1788,
+          "starts": 19,
+          "goals": 3,
+          "assists": 4,
+          "fbrefPosition": "FW"
+        },
+        {
+          "season": "2002/03",
+          "club": "Chelsea",
+          "minutes": 2695,
+          "starts": 30,
+          "goals": 14,
+          "assists": 7,
+          "fbrefPosition": "FW"
+        }
+      ],
+      "positions": [
+        "CF"
+      ],
+      "confidence": "high",
+      "note": "Played behind the main striker; the FW label prevents listing him as a CAM."
+    },
+    {
+      "fbrefId": "c1435456",
+      "name": "Dean Saunders",
+      "nation": "WAL",
+      "fbrefPosition": "FW",
+      "allowed": [
+        "LW",
+        "RW",
+        "ST",
+        "CF"
+      ],
+      "primaryMustBeOneOf": [
+        "LW",
+        "RW",
+        "ST",
+        "CF"
+      ],
+      "choices": 4,
+      "totalMinutes": 15970,
+      "seasons": [
+        {
+          "season": "1992/93",
+          "club": "Aston Villa",
+          "minutes": 3150,
+          "starts": 35,
+          "goals": 13,
+          "assists": 2,
+          "fbrefPosition": "FW"
+        },
+        {
+          "season": "1992/93",
+          "club": "Liverpool",
+          "minutes": 490,
+          "starts": 6,
+          "goals": 1,
+          "assists": 1,
+          "fbrefPosition": "FW"
+        },
+        {
+          "season": "1993/94",
+          "club": "Aston Villa",
+          "minutes": 3256,
+          "starts": 37,
+          "goals": 10,
+          "assists": 3,
+          "fbrefPosition": "FW"
+        },
+        {
+          "season": "1994/95",
+          "club": "Aston Villa",
+          "minutes": 3387,
+          "starts": 39,
+          "goals": 15,
+          "assists": 3,
+          "fbrefPosition": "FW"
+        },
+        {
+          "season": "1996/97",
+          "club": "Nottingham Forest",
+          "minutes": 2837,
+          "starts": 33,
+          "goals": 3,
+          "assists": 3,
+          "fbrefPosition": "FW"
+        },
+        {
+          "season": "1999/00",
+          "club": "Bradford City",
+          "minutes": 2451,
+          "starts": 28,
+          "goals": 3,
+          "assists": 2,
+          "fbrefPosition": "FW"
+        },
+        {
+          "season": "2000/01",
+          "club": "Bradford City",
+          "minutes": 399,
+          "starts": 4,
+          "goals": 0,
+          "assists": 0,
+          "fbrefPosition": "FW"
+        }
+      ],
+      "positions": [
+        "ST",
+        "CF"
       ],
       "confidence": "high",
       "note": null
     },
     {
-      "fbrefId": "dfdd51ba",
-      "name": "Keith Curle",
+      "fbrefId": "c1dd78cb",
+      "name": "Steve Howey",
       "nation": "ENG",
       "fbrefPosition": "DF",
       "allowed": [
@@ -1359,51 +682,625 @@
         "RWB"
       ],
       "choices": 5,
-      "totalMinutes": 11637,
+      "totalMinutes": 15923,
       "seasons": [
         {
-          "season": "1992/93",
-          "club": "Manchester City",
-          "minutes": 3510,
-          "starts": 39,
-          "goals": 3,
+          "season": "1993/94",
+          "club": "Newcastle United",
+          "minutes": 1159,
+          "starts": 13,
+          "goals": 0,
           "assists": 0,
           "fbrefPosition": "DF"
         },
         {
-          "season": "1993/94",
-          "club": "Manchester City",
-          "minutes": 2524,
+          "season": "1994/95",
+          "club": "Newcastle United",
+          "minutes": 2671,
           "starts": 29,
+          "goals": 1,
+          "assists": 1,
+          "fbrefPosition": "DF"
+        },
+        {
+          "season": "1995/96",
+          "club": "Newcastle United",
+          "minutes": 2500,
+          "starts": 28,
+          "goals": 1,
+          "assists": 1,
+          "fbrefPosition": "DF"
+        },
+        {
+          "season": "1996/97",
+          "club": "Newcastle United",
+          "minutes": 720,
+          "starts": 8,
+          "goals": 1,
+          "assists": 0,
+          "fbrefPosition": "DF"
+        },
+        {
+          "season": "1997/98",
+          "club": "Newcastle United",
+          "minutes": 867,
+          "starts": 11,
+          "goals": 0,
+          "assists": 0,
+          "fbrefPosition": "DF"
+        },
+        {
+          "season": "1998/99",
+          "club": "Newcastle United",
+          "minutes": 1190,
+          "starts": 14,
+          "goals": 0,
+          "assists": 0,
+          "fbrefPosition": "DF"
+        },
+        {
+          "season": "1999/00",
+          "club": "Newcastle United",
+          "minutes": 693,
+          "starts": 7,
+          "goals": 0,
+          "assists": 0,
+          "fbrefPosition": "DF"
+        },
+        {
+          "season": "2000/01",
+          "club": "Manchester City",
+          "minutes": 3147,
+          "starts": 36,
+          "goals": 6,
+          "assists": 1,
+          "fbrefPosition": "DF"
+        },
+        {
+          "season": "2002/03",
+          "club": "Manchester City",
+          "minutes": 2013,
+          "starts": 24,
+          "goals": 2,
+          "assists": 0,
+          "fbrefPosition": "DF"
+        },
+        {
+          "season": "2003/04",
+          "club": "Leicester City",
+          "minutes": 963,
+          "starts": 13,
+          "goals": 1,
+          "assists": 0,
+          "fbrefPosition": "DF"
+        }
+      ],
+      "positions": [
+        "CB"
+      ],
+      "confidence": "high",
+      "note": null
+    },
+    {
+      "fbrefId": "01c05efb",
+      "name": "Dietmar Hamann",
+      "nation": "GER",
+      "fbrefPosition": "MF",
+      "allowed": [
+        "CDM",
+        "CM",
+        "CAM",
+        "LM",
+        "RM"
+      ],
+      "primaryMustBeOneOf": [
+        "CDM",
+        "CM",
+        "CAM",
+        "LM",
+        "RM"
+      ],
+      "choices": 5,
+      "totalMinutes": 15884,
+      "seasons": [
+        {
+          "season": "1998/99",
+          "club": "Newcastle United",
+          "minutes": 1780,
+          "starts": 22,
+          "goals": 4,
+          "assists": 1,
+          "fbrefPosition": "MF"
+        },
+        {
+          "season": "1999/00",
+          "club": "Liverpool",
+          "minutes": 2249,
+          "starts": 27,
+          "goals": 1,
+          "assists": 2,
+          "fbrefPosition": "MF"
+        },
+        {
+          "season": "2000/01",
+          "club": "Liverpool",
+          "minutes": 2334,
+          "starts": 26,
+          "goals": 2,
+          "assists": 3,
+          "fbrefPosition": "MF"
+        },
+        {
+          "season": "2001/02",
+          "club": "Liverpool",
+          "minutes": 2733,
+          "starts": 31,
+          "goals": 1,
+          "assists": 4,
+          "fbrefPosition": "MF"
+        },
+        {
+          "season": "2002/03",
+          "club": "Liverpool",
+          "minutes": 2545,
+          "starts": 29,
+          "goals": 2,
+          "assists": 2,
+          "fbrefPosition": "MF"
+        },
+        {
+          "season": "2003/04",
+          "club": "Liverpool",
+          "minutes": 2217,
+          "starts": 25,
+          "goals": 2,
+          "assists": 2,
+          "fbrefPosition": "MF"
+        },
+        {
+          "season": "2004/05",
+          "club": "Liverpool",
+          "minutes": 2026,
+          "starts": 23,
+          "goals": 0,
+          "assists": 6,
+          "fbrefPosition": "MF"
+        }
+      ],
+      "positions": [
+        "CDM",
+        "CM"
+      ],
+      "confidence": "high",
+      "note": null
+    },
+    {
+      "fbrefId": "8393a60b",
+      "name": "Lee Carsley",
+      "nation": "IRL",
+      "fbrefPosition": "MF",
+      "allowed": [
+        "CDM",
+        "CM",
+        "CAM",
+        "LM",
+        "RM"
+      ],
+      "primaryMustBeOneOf": [
+        "CDM",
+        "CM",
+        "CAM",
+        "LM",
+        "RM"
+      ],
+      "choices": 5,
+      "totalMinutes": 15881,
+      "seasons": [
+        {
+          "season": "1996/97",
+          "club": "Derby County",
+          "minutes": 1526,
+          "starts": 15,
+          "goals": 0,
+          "assists": 0,
+          "fbrefPosition": "MF"
+        },
+        {
+          "season": "1997/98",
+          "club": "Derby County",
+          "minutes": 3060,
+          "starts": 34,
+          "goals": 1,
+          "assists": 0,
+          "fbrefPosition": "MF"
+        },
+        {
+          "season": "1998/99",
+          "club": "Derby County",
+          "minutes": 1922,
+          "starts": 20,
+          "goals": 1,
+          "assists": 1,
+          "fbrefPosition": "MF"
+        },
+        {
+          "season": "1998/99",
+          "club": "Blackburn Rovers",
+          "minutes": 636,
+          "starts": 7,
+          "goals": 0,
+          "assists": 0,
+          "fbrefPosition": "MF"
+        },
+        {
+          "season": "2000/01",
+          "club": "Coventry City",
+          "minutes": 1801,
+          "starts": 21,
+          "goals": 2,
+          "assists": 1,
+          "fbrefPosition": "MF"
+        },
+        {
+          "season": "2001/02",
+          "club": "Everton",
+          "minutes": 635,
+          "starts": 8,
+          "goals": 1,
+          "assists": 0,
+          "fbrefPosition": "MF"
+        },
+        {
+          "season": "2002/03",
+          "club": "Everton",
+          "minutes": 1866,
+          "starts": 21,
+          "goals": 3,
+          "assists": 1,
+          "fbrefPosition": "MF"
+        },
+        {
+          "season": "2003/04",
+          "club": "Everton",
+          "minutes": 1406,
+          "starts": 15,
+          "goals": 1,
+          "assists": 0,
+          "fbrefPosition": "MF"
+        },
+        {
+          "season": "2004/05",
+          "club": "Everton",
+          "minutes": 3029,
+          "starts": 35,
+          "goals": 4,
+          "assists": 2,
+          "fbrefPosition": "MF"
+        }
+      ],
+      "positions": [
+        "CDM",
+        "CM"
+      ],
+      "confidence": "high",
+      "note": null
+    },
+    {
+      "fbrefId": "dc2e7399",
+      "name": "Dan Petrescu",
+      "nation": "ROU",
+      "fbrefPosition": "DF",
+      "allowed": [
+        "LB",
+        "CB",
+        "RB",
+        "LWB",
+        "RWB"
+      ],
+      "primaryMustBeOneOf": [
+        "LB",
+        "CB",
+        "RB",
+        "LWB",
+        "RWB"
+      ],
+      "choices": 5,
+      "totalMinutes": 15866,
+      "seasons": [
+        {
+          "season": "1994/95",
+          "club": "Sheffield Wednesday",
+          "minutes": 1697,
+          "starts": 20,
+          "goals": 3,
+          "assists": 2,
+          "fbrefPosition": "DF"
+        },
+        {
+          "season": "1995/96",
+          "club": "Chelsea",
+          "minutes": 1978,
+          "starts": 22,
+          "goals": 2,
+          "assists": 7,
+          "fbrefPosition": "DF"
+        },
+        {
+          "season": "1995/96",
+          "club": "Sheffield Wednesday",
+          "minutes": 703,
+          "starts": 8,
+          "goals": 0,
+          "assists": 1,
+          "fbrefPosition": "DF"
+        },
+        {
+          "season": "1996/97",
+          "club": "Chelsea",
+          "minutes": 2967,
+          "starts": 34,
+          "goals": 3,
+          "assists": 8,
+          "fbrefPosition": "DF"
+        },
+        {
+          "season": "1997/98",
+          "club": "Chelsea",
+          "minutes": 2408,
+          "starts": 31,
+          "goals": 5,
+          "assists": 4,
+          "fbrefPosition": "DF"
+        },
+        {
+          "season": "1998/99",
+          "club": "Chelsea",
+          "minutes": 2160,
+          "starts": 23,
+          "goals": 4,
+          "assists": 4,
+          "fbrefPosition": "DF"
+        },
+        {
+          "season": "1999/00",
+          "club": "Chelsea",
+          "minutes": 1989,
+          "starts": 24,
+          "goals": 4,
+          "assists": 5,
+          "fbrefPosition": "DF"
+        },
+        {
+          "season": "2000/01",
+          "club": "Bradford City",
+          "minutes": 1284,
+          "starts": 16,
+          "goals": 1,
+          "assists": 1,
+          "fbrefPosition": "DF"
+        },
+        {
+          "season": "2000/01",
+          "club": "Southampton",
+          "minutes": 680,
+          "starts": 8,
+          "goals": 2,
+          "assists": 1,
+          "fbrefPosition": "DF"
+        }
+      ],
+      "positions": [
+        "RWB",
+        "RB"
+      ],
+      "confidence": "high",
+      "note": "Right wing-back in Chelsea's back three."
+    },
+    {
+      "fbrefId": "d806427e",
+      "name": "David Burrows",
+      "nation": "ENG",
+      "fbrefPosition": "DF",
+      "allowed": [
+        "LB",
+        "CB",
+        "RB",
+        "LWB",
+        "RWB"
+      ],
+      "primaryMustBeOneOf": [
+        "LB",
+        "CB",
+        "RB",
+        "LWB",
+        "RWB"
+      ],
+      "choices": 5,
+      "totalMinutes": 15856,
+      "seasons": [
+        {
+          "season": "1992/93",
+          "club": "Liverpool",
+          "minutes": 2622,
+          "starts": 29,
+          "goals": 2,
+          "assists": 2,
+          "fbrefPosition": "DF"
+        },
+        {
+          "season": "1993/94",
+          "club": "West Ham United",
+          "minutes": 2170,
+          "starts": 25,
           "goals": 1,
           "assists": 0,
           "fbrefPosition": "DF"
         },
         {
           "season": "1994/95",
-          "club": "Manchester City",
-          "minutes": 2723,
-          "starts": 31,
-          "goals": 2,
+          "club": "Everton",
+          "minutes": 1589,
+          "starts": 19,
+          "goals": 0,
+          "assists": 1,
+          "fbrefPosition": "DF"
+        },
+        {
+          "season": "1994/95",
+          "club": "Coventry City",
+          "minutes": 990,
+          "starts": 11,
+          "goals": 0,
+          "assists": 0,
+          "fbrefPosition": "DF"
+        },
+        {
+          "season": "1994/95",
+          "club": "West Ham United",
+          "minutes": 360,
+          "starts": 4,
+          "goals": 0,
           "assists": 0,
           "fbrefPosition": "DF"
         },
         {
           "season": "1995/96",
-          "club": "Manchester City",
-          "minutes": 2880,
-          "starts": 32,
+          "club": "Coventry City",
+          "minutes": 943,
+          "starts": 11,
+          "goals": 0,
+          "assists": 0,
+          "fbrefPosition": "DF"
+        },
+        {
+          "season": "1996/97",
+          "club": "Coventry City",
+          "minutes": 1398,
+          "starts": 17,
+          "goals": 0,
+          "assists": 1,
+          "fbrefPosition": "DF"
+        },
+        {
+          "season": "1997/98",
+          "club": "Coventry City",
+          "minutes": 2970,
+          "starts": 33,
+          "goals": 0,
+          "assists": 2,
+          "fbrefPosition": "DF"
+        },
+        {
+          "season": "1998/99",
+          "club": "Coventry City",
+          "minutes": 1825,
+          "starts": 23,
+          "goals": 0,
+          "assists": 1,
+          "fbrefPosition": "DF"
+        },
+        {
+          "season": "1999/00",
+          "club": "Coventry City",
+          "minutes": 989,
+          "starts": 11,
           "goals": 0,
           "assists": 0,
           "fbrefPosition": "DF"
         }
       ],
       "positions": [
-        "CB",
-        "RB"
+        "LB"
       ],
       "confidence": "high",
       "note": null
+    },
+    {
+      "fbrefId": "4d9a93aa",
+      "name": "Peter Beardsley",
+      "nation": "ENG",
+      "fbrefPosition": "FWMF",
+      "allowed": [
+        "LW",
+        "RW",
+        "ST",
+        "CF",
+        "CDM",
+        "CM",
+        "CAM",
+        "LM",
+        "RM"
+      ],
+      "primaryMustBeOneOf": [
+        "LW",
+        "RW",
+        "ST",
+        "CF"
+      ],
+      "choices": 9,
+      "totalMinutes": 15833,
+      "seasons": [
+        {
+          "season": "1992/93",
+          "club": "Everton",
+          "minutes": 3488,
+          "starts": 39,
+          "goals": 10,
+          "assists": 7,
+          "fbrefPosition": "FWMF"
+        },
+        {
+          "season": "1993/94",
+          "club": "Newcastle United",
+          "minutes": 3149,
+          "starts": 35,
+          "goals": 21,
+          "assists": 8,
+          "fbrefPosition": "FWMF"
+        },
+        {
+          "season": "1994/95",
+          "club": "Newcastle United",
+          "minutes": 2955,
+          "starts": 34,
+          "goals": 12,
+          "assists": 5,
+          "fbrefPosition": "FWMF"
+        },
+        {
+          "season": "1995/96",
+          "club": "Newcastle United",
+          "minutes": 3106,
+          "starts": 35,
+          "goals": 8,
+          "assists": 9,
+          "fbrefPosition": "FWMF"
+        },
+        {
+          "season": "1996/97",
+          "club": "Newcastle United",
+          "minutes": 1938,
+          "starts": 22,
+          "goals": 5,
+          "assists": 4,
+          "fbrefPosition": "FWMF"
+        },
+        {
+          "season": "1997/98",
+          "club": "Bolton Wanderers",
+          "minutes": 1197,
+          "starts": 14,
+          "goals": 2,
+          "assists": 0,
+          "fbrefPosition": "FWMF"
+        }
+      ],
+      "positions": [
+        "CF",
+        "CAM"
+      ],
+      "confidence": "high",
+      "note": "Second striker dropping into the hole."
     },
     {
       "fbrefId": "84d2a0f0",
@@ -1425,7 +1322,7 @@
         "RWB"
       ],
       "choices": 5,
-      "totalMinutes": 11611,
+      "totalMinutes": 15726,
       "seasons": [
         {
           "season": "1994/95",
@@ -1480,295 +1377,32 @@
           "goals": 0,
           "assists": 0,
           "fbrefPosition": "DF"
-        }
-      ],
-      "positions": [
-        "CB"
-      ],
-      "confidence": "high",
-      "note": null
-    },
-    {
-      "fbrefId": "40198f42",
-      "name": "Ian Bishop",
-      "nation": "ENG",
-      "fbrefPosition": "MF",
-      "allowed": [
-        "CDM",
-        "CM",
-        "CAM",
-        "LM",
-        "RM"
-      ],
-      "primaryMustBeOneOf": [
-        "CDM",
-        "CM",
-        "CAM",
-        "LM",
-        "RM"
-      ],
-      "choices": 5,
-      "totalMinutes": 11513,
-      "seasons": [
-        {
-          "season": "1993/94",
-          "club": "West Ham United",
-          "minutes": 3181,
-          "starts": 36,
-          "goals": 1,
-          "assists": 4,
-          "fbrefPosition": "MF"
         },
         {
-          "season": "1994/95",
-          "club": "West Ham United",
-          "minutes": 2740,
-          "starts": 31,
-          "goals": 1,
-          "assists": 1,
-          "fbrefPosition": "MF"
-        },
-        {
-          "season": "1995/96",
-          "club": "West Ham United",
-          "minutes": 3106,
-          "starts": 35,
-          "goals": 1,
-          "assists": 4,
-          "fbrefPosition": "MF"
-        },
-        {
-          "season": "1996/97",
-          "club": "West Ham United",
-          "minutes": 2216,
-          "starts": 26,
-          "goals": 1,
-          "assists": 0,
-          "fbrefPosition": "MF"
-        },
-        {
-          "season": "1997/98",
-          "club": "West Ham United",
-          "minutes": 270,
-          "starts": 3,
+          "season": "2000/01",
+          "club": "Leeds United",
+          "minutes": 1640,
+          "starts": 19,
           "goals": 0,
           "assists": 0,
-          "fbrefPosition": "MF"
-        }
-      ],
-      "positions": [
-        "CM",
-        "CAM"
-      ],
-      "confidence": "medium",
-      "note": "Deep-lying playmaker in West Ham's midfield."
-    },
-    {
-      "fbrefId": "aeeddfc4",
-      "name": "Muzzy Izzet",
-      "nation": "TUR",
-      "fbrefPosition": "MF",
-      "allowed": [
-        "CDM",
-        "CM",
-        "CAM",
-        "LM",
-        "RM"
-      ],
-      "primaryMustBeOneOf": [
-        "CDM",
-        "CM",
-        "CAM",
-        "LM",
-        "RM"
-      ],
-      "choices": 5,
-      "totalMinutes": 11509,
-      "seasons": [
-        {
-          "season": "1996/97",
-          "club": "Leicester City",
-          "minutes": 2913,
-          "starts": 34,
-          "goals": 3,
-          "assists": 1,
-          "fbrefPosition": "MF"
-        },
-        {
-          "season": "1997/98",
-          "club": "Leicester City",
-          "minutes": 3119,
-          "starts": 36,
-          "goals": 4,
-          "assists": 4,
-          "fbrefPosition": "MF"
-        },
-        {
-          "season": "1998/99",
-          "club": "Leicester City",
-          "minutes": 2686,
-          "starts": 31,
-          "goals": 5,
-          "assists": 2,
-          "fbrefPosition": "MF"
-        },
-        {
-          "season": "1999/00",
-          "club": "Leicester City",
-          "minutes": 2791,
-          "starts": 32,
-          "goals": 8,
-          "assists": 3,
-          "fbrefPosition": "MF"
-        }
-      ],
-      "positions": [
-        "CM",
-        "CAM"
-      ],
-      "confidence": "high",
-      "note": null
-    },
-    {
-      "fbrefId": "dee2b65d",
-      "name": "Neil Cox",
-      "nation": "ENG",
-      "fbrefPosition": "DF",
-      "allowed": [
-        "LB",
-        "CB",
-        "RB",
-        "LWB",
-        "RWB"
-      ],
-      "primaryMustBeOneOf": [
-        "LB",
-        "CB",
-        "RB",
-        "LWB",
-        "RWB"
-      ],
-      "choices": 5,
-      "totalMinutes": 11465,
-      "seasons": [
-        {
-          "season": "1992/93",
-          "club": "Aston Villa",
-          "minutes": 642,
-          "starts": 6,
-          "goals": 1,
-          "assists": 1,
           "fbrefPosition": "DF"
         },
         {
-          "season": "1993/94",
-          "club": "Aston Villa",
-          "minutes": 1492,
+          "season": "2002/03",
+          "club": "Leeds United",
+          "minutes": 1515,
           "starts": 16,
-          "goals": 2,
-          "assists": 1,
-          "fbrefPosition": "DF"
-        },
-        {
-          "season": "1995/96",
-          "club": "Middlesbrough",
-          "minutes": 3150,
-          "starts": 35,
-          "goals": 2,
-          "assists": 1,
-          "fbrefPosition": "DF"
-        },
-        {
-          "season": "1996/97",
-          "club": "Middlesbrough",
-          "minutes": 2650,
-          "starts": 29,
           "goals": 0,
-          "assists": 2,
-          "fbrefPosition": "DF"
-        },
-        {
-          "season": "1997/98",
-          "club": "Bolton Wanderers",
-          "minutes": 1776,
-          "starts": 20,
-          "goals": 1,
           "assists": 0,
           "fbrefPosition": "DF"
         },
         {
-          "season": "1999/00",
-          "club": "Watford",
-          "minutes": 1755,
-          "starts": 20,
+          "season": "2003/04",
+          "club": "Leeds United",
+          "minutes": 960,
+          "starts": 11,
           "goals": 0,
-          "assists": 1,
-          "fbrefPosition": "DF"
-        }
-      ],
-      "positions": [
-        "RB",
-        "CB"
-      ],
-      "confidence": "medium",
-      "note": null
-    },
-    {
-      "fbrefId": "c1033941",
-      "name": "Matt Elliott",
-      "nation": "SCO",
-      "fbrefPosition": "DF",
-      "allowed": [
-        "LB",
-        "CB",
-        "RB",
-        "LWB",
-        "RWB"
-      ],
-      "primaryMustBeOneOf": [
-        "LB",
-        "CB",
-        "RB",
-        "LWB",
-        "RWB"
-      ],
-      "choices": 5,
-      "totalMinutes": 11406,
-      "seasons": [
-        {
-          "season": "1996/97",
-          "club": "Leicester City",
-          "minutes": 1440,
-          "starts": 16,
-          "goals": 4,
-          "assists": 1,
-          "fbrefPosition": "DF"
-        },
-        {
-          "season": "1997/98",
-          "club": "Leicester City",
-          "minutes": 3330,
-          "starts": 37,
-          "goals": 7,
-          "assists": 3,
-          "fbrefPosition": "DF"
-        },
-        {
-          "season": "1998/99",
-          "club": "Leicester City",
-          "minutes": 3306,
-          "starts": 37,
-          "goals": 3,
-          "assists": 2,
-          "fbrefPosition": "DF"
-        },
-        {
-          "season": "1999/00",
-          "club": "Leicester City",
-          "minutes": 3330,
-          "starts": 37,
-          "goals": 6,
-          "assists": 4,
+          "assists": 0,
           "fbrefPosition": "DF"
         }
       ],
@@ -1779,78 +1413,109 @@
       "note": null
     },
     {
-      "fbrefId": "0ab916bf",
-      "name": "Roland Nilsson",
-      "nation": "SWE",
-      "fbrefPosition": "DFFW",
+      "fbrefId": "fdb64aeb",
+      "name": "Dean Holdsworth",
+      "nation": "ENG",
+      "fbrefPosition": "FW",
       "allowed": [
-        "LB",
-        "CB",
-        "RB",
-        "LWB",
-        "RWB",
         "LW",
         "RW",
         "ST",
         "CF"
       ],
       "primaryMustBeOneOf": [
-        "LB",
-        "CB",
-        "RB",
-        "LWB",
-        "RWB"
+        "LW",
+        "RW",
+        "ST",
+        "CF"
       ],
-      "choices": 9,
-      "totalMinutes": 11355,
+      "choices": 4,
+      "totalMinutes": 15703,
       "seasons": [
         {
           "season": "1992/93",
-          "club": "Sheffield Wednesday",
-          "minutes": 2758,
-          "starts": 32,
-          "goals": 1,
-          "assists": 0,
-          "fbrefPosition": "DFFW"
+          "club": "Wimbledon",
+          "minutes": 2998,
+          "starts": 34,
+          "goals": 19,
+          "assists": 1,
+          "fbrefPosition": "FW"
         },
         {
           "season": "1993/94",
-          "club": "Sheffield Wednesday",
-          "minutes": 3350,
-          "starts": 38,
-          "goals": 0,
-          "assists": 1,
-          "fbrefPosition": "DFFW"
+          "club": "Wimbledon",
+          "minutes": 3711,
+          "starts": 42,
+          "goals": 17,
+          "assists": 6,
+          "fbrefPosition": "FW"
+        },
+        {
+          "season": "1994/95",
+          "club": "Wimbledon",
+          "minutes": 2270,
+          "starts": 27,
+          "goals": 7,
+          "assists": 4,
+          "fbrefPosition": "FW"
+        },
+        {
+          "season": "1995/96",
+          "club": "Wimbledon",
+          "minutes": 2691,
+          "starts": 31,
+          "goals": 10,
+          "assists": 2,
+          "fbrefPosition": "FW"
+        },
+        {
+          "season": "1996/97",
+          "club": "Wimbledon",
+          "minutes": 1103,
+          "starts": 10,
+          "goals": 5,
+          "assists": 2,
+          "fbrefPosition": "FW"
         },
         {
           "season": "1997/98",
-          "club": "Coventry City",
-          "minutes": 2880,
-          "starts": 32,
-          "goals": 0,
+          "club": "Bolton Wanderers",
+          "minutes": 1484,
+          "starts": 17,
+          "goals": 3,
           "assists": 0,
-          "fbrefPosition": "DFFW"
+          "fbrefPosition": "FW"
         },
         {
-          "season": "1998/99",
-          "club": "Coventry City",
-          "minutes": 2367,
-          "starts": 28,
+          "season": "2001/02",
+          "club": "Bolton Wanderers",
+          "minutes": 1072,
+          "starts": 9,
+          "goals": 2,
+          "assists": 0,
+          "fbrefPosition": "FW"
+        },
+        {
+          "season": "2002/03",
+          "club": "Bolton Wanderers",
+          "minutes": 374,
+          "starts": 5,
           "goals": 0,
           "assists": 1,
-          "fbrefPosition": "DFFW"
+          "fbrefPosition": "FW"
         }
       ],
       "positions": [
-        "RB"
+        "ST",
+        "CF"
       ],
       "confidence": "high",
-      "note": "Orthodox attacking right-back for Sheffield Wednesday; the FW half of the label reflects how far forward he got."
+      "note": null
     },
     {
-      "fbrefId": "27e0c651",
-      "name": "Scot Gemmill",
-      "nation": "SCO",
+      "fbrefId": "2c02df03",
+      "name": "Robbie Mustoe",
+      "nation": "ENG",
       "fbrefPosition": "MF",
       "allowed": [
         "CDM",
@@ -1867,68 +1532,77 @@
         "RM"
       ],
       "choices": 5,
-      "totalMinutes": 11335,
+      "totalMinutes": 15654,
       "seasons": [
         {
           "season": "1992/93",
-          "club": "Nottingham Forest",
-          "minutes": 2960,
-          "starts": 33,
-          "goals": 1,
-          "assists": 5,
-          "fbrefPosition": "MF"
-        },
-        {
-          "season": "1994/95",
-          "club": "Nottingham Forest",
-          "minutes": 1528,
-          "starts": 19,
+          "club": "Middlesbrough",
+          "minutes": 1798,
+          "starts": 21,
           "goals": 1,
           "assists": 1,
           "fbrefPosition": "MF"
         },
         {
           "season": "1995/96",
-          "club": "Nottingham Forest",
-          "minutes": 2258,
-          "starts": 26,
-          "goals": 1,
-          "assists": 4,
-          "fbrefPosition": "MF"
-        },
-        {
-          "season": "1996/97",
-          "club": "Nottingham Forest",
-          "minutes": 1781,
-          "starts": 18,
-          "goals": 0,
-          "assists": 2,
-          "fbrefPosition": "MF"
-        },
-        {
-          "season": "1998/99",
-          "club": "Nottingham Forest",
-          "minutes": 1562,
-          "starts": 18,
-          "goals": 0,
-          "assists": 1,
-          "fbrefPosition": "MF"
-        },
-        {
-          "season": "1998/99",
-          "club": "Everton",
-          "minutes": 612,
-          "starts": 7,
+          "club": "Middlesbrough",
+          "minutes": 1814,
+          "starts": 21,
           "goals": 1,
           "assists": 0,
           "fbrefPosition": "MF"
         },
         {
+          "season": "1996/97",
+          "club": "Middlesbrough",
+          "minutes": 2790,
+          "starts": 31,
+          "goals": 3,
+          "assists": 3,
+          "fbrefPosition": "MF"
+        },
+        {
+          "season": "1998/99",
+          "club": "Middlesbrough",
+          "minutes": 2772,
+          "starts": 32,
+          "goals": 4,
+          "assists": 1,
+          "fbrefPosition": "MF"
+        },
+        {
           "season": "1999/00",
-          "club": "Everton",
-          "minutes": 634,
+          "club": "Middlesbrough",
+          "minutes": 1881,
+          "starts": 18,
+          "goals": 0,
+          "assists": 0,
+          "fbrefPosition": "MF"
+        },
+        {
+          "season": "2000/01",
+          "club": "Middlesbrough",
+          "minutes": 1344,
+          "starts": 13,
+          "goals": 0,
+          "assists": 1,
+          "fbrefPosition": "MF"
+        },
+        {
+          "season": "2001/02",
+          "club": "Middlesbrough",
+          "minutes": 2765,
+          "starts": 31,
+          "goals": 2,
+          "assists": 1,
+          "fbrefPosition": "MF"
+        },
+        {
+          "season": "2002/03",
+          "club": "Charlton Athletic",
+          "minutes": 490,
           "starts": 6,
-          "goals": 1,
+          "goals": 0,
           "assists": 0,
           "fbrefPosition": "MF"
         }
@@ -1939,6 +1613,892 @@
       ],
       "confidence": "high",
       "note": null
+    },
+    {
+      "fbrefId": "65085487",
+      "name": "Michael Hughes",
+      "nation": "NIR",
+      "fbrefPosition": "MF",
+      "allowed": [
+        "CDM",
+        "CM",
+        "CAM",
+        "LM",
+        "RM"
+      ],
+      "primaryMustBeOneOf": [
+        "CDM",
+        "CM",
+        "CAM",
+        "LM",
+        "RM"
+      ],
+      "choices": 5,
+      "totalMinutes": 15625,
+      "seasons": [
+        {
+          "season": "1994/95",
+          "club": "West Ham United",
+          "minutes": 1279,
+          "starts": 15,
+          "goals": 2,
+          "assists": 2,
+          "fbrefPosition": "MF"
+        },
+        {
+          "season": "1995/96",
+          "club": "West Ham United",
+          "minutes": 2377,
+          "starts": 27,
+          "goals": 0,
+          "assists": 6,
+          "fbrefPosition": "MF"
+        },
+        {
+          "season": "1996/97",
+          "club": "West Ham United",
+          "minutes": 2810,
+          "starts": 31,
+          "goals": 3,
+          "assists": 7,
+          "fbrefPosition": "MF"
+        },
+        {
+          "season": "1997/98",
+          "club": "Wimbledon",
+          "minutes": 2586,
+          "starts": 29,
+          "goals": 4,
+          "assists": 3,
+          "fbrefPosition": "MF"
+        },
+        {
+          "season": "1998/99",
+          "club": "Wimbledon",
+          "minutes": 2393,
+          "starts": 28,
+          "goals": 2,
+          "assists": 6,
+          "fbrefPosition": "MF"
+        },
+        {
+          "season": "1999/00",
+          "club": "Wimbledon",
+          "minutes": 1166,
+          "starts": 13,
+          "goals": 2,
+          "assists": 1,
+          "fbrefPosition": "MF"
+        },
+        {
+          "season": "2004/05",
+          "club": "Crystal Palace",
+          "minutes": 3014,
+          "starts": 34,
+          "goals": 2,
+          "assists": 2,
+          "fbrefPosition": "MF"
+        }
+      ],
+      "positions": [
+        "LM",
+        "RM"
+      ],
+      "confidence": "medium",
+      "note": "Left-sided midfielder, occasionally switched to the right."
+    },
+    {
+      "fbrefId": "2903aa4a",
+      "name": "Colin Calderwood",
+      "nation": "SCO",
+      "fbrefPosition": "DF",
+      "allowed": [
+        "LB",
+        "CB",
+        "RB",
+        "LWB",
+        "RWB"
+      ],
+      "primaryMustBeOneOf": [
+        "LB",
+        "CB",
+        "RB",
+        "LWB",
+        "RWB"
+      ],
+      "choices": 5,
+      "totalMinutes": 15616,
+      "seasons": [
+        {
+          "season": "1993/94",
+          "club": "Tottenham Hotspur",
+          "minutes": 2336,
+          "starts": 26,
+          "goals": 0,
+          "assists": 0,
+          "fbrefPosition": "DF"
+        },
+        {
+          "season": "1994/95",
+          "club": "Tottenham Hotspur",
+          "minutes": 3040,
+          "starts": 35,
+          "goals": 2,
+          "assists": 0,
+          "fbrefPosition": "DF"
+        },
+        {
+          "season": "1995/96",
+          "club": "Tottenham Hotspur",
+          "minutes": 2275,
+          "starts": 26,
+          "goals": 0,
+          "assists": 0,
+          "fbrefPosition": "DF"
+        },
+        {
+          "season": "1996/97",
+          "club": "Tottenham Hotspur",
+          "minutes": 2981,
+          "starts": 33,
+          "goals": 0,
+          "assists": 0,
+          "fbrefPosition": "DF"
+        },
+        {
+          "season": "1997/98",
+          "club": "Tottenham Hotspur",
+          "minutes": 1980,
+          "starts": 21,
+          "goals": 4,
+          "assists": 0,
+          "fbrefPosition": "DF"
+        },
+        {
+          "season": "1998/99",
+          "club": "Tottenham Hotspur",
+          "minutes": 953,
+          "starts": 11,
+          "goals": 0,
+          "assists": 0,
+          "fbrefPosition": "DF"
+        },
+        {
+          "season": "1998/99",
+          "club": "Aston Villa",
+          "minutes": 678,
+          "starts": 8,
+          "goals": 0,
+          "assists": 0,
+          "fbrefPosition": "DF"
+        },
+        {
+          "season": "1999/00",
+          "club": "Aston Villa",
+          "minutes": 1373,
+          "starts": 15,
+          "goals": 0,
+          "assists": 0,
+          "fbrefPosition": "DF"
+        }
+      ],
+      "positions": [
+        "CB"
+      ],
+      "confidence": "high",
+      "note": null
+    },
+    {
+      "fbrefId": "3537c18f",
+      "name": "Ian Pearce",
+      "nation": "ENG",
+      "fbrefPosition": "DF",
+      "allowed": [
+        "LB",
+        "CB",
+        "RB",
+        "LWB",
+        "RWB"
+      ],
+      "primaryMustBeOneOf": [
+        "LB",
+        "CB",
+        "RB",
+        "LWB",
+        "RWB"
+      ],
+      "choices": 5,
+      "totalMinutes": 15566,
+      "seasons": [
+        {
+          "season": "1994/95",
+          "club": "Blackburn Rovers",
+          "minutes": 2014,
+          "starts": 22,
+          "goals": 0,
+          "assists": 0,
+          "fbrefPosition": "DF"
+        },
+        {
+          "season": "1995/96",
+          "club": "Blackburn Rovers",
+          "minutes": 1052,
+          "starts": 12,
+          "goals": 1,
+          "assists": 0,
+          "fbrefPosition": "DF"
+        },
+        {
+          "season": "1996/97",
+          "club": "Blackburn Rovers",
+          "minutes": 706,
+          "starts": 7,
+          "goals": 0,
+          "assists": 0,
+          "fbrefPosition": "DF"
+        },
+        {
+          "season": "1997/98",
+          "club": "West Ham United",
+          "minutes": 2693,
+          "starts": 30,
+          "goals": 1,
+          "assists": 2,
+          "fbrefPosition": "DF"
+        },
+        {
+          "season": "1998/99",
+          "club": "West Ham United",
+          "minutes": 2962,
+          "starts": 33,
+          "goals": 2,
+          "assists": 2,
+          "fbrefPosition": "DF"
+        },
+        {
+          "season": "2000/01",
+          "club": "West Ham United",
+          "minutes": 1146,
+          "starts": 13,
+          "goals": 1,
+          "assists": 0,
+          "fbrefPosition": "DF"
+        },
+        {
+          "season": "2001/02",
+          "club": "West Ham United",
+          "minutes": 788,
+          "starts": 8,
+          "goals": 2,
+          "assists": 0,
+          "fbrefPosition": "DF"
+        },
+        {
+          "season": "2002/03",
+          "club": "West Ham United",
+          "minutes": 2330,
+          "starts": 26,
+          "goals": 2,
+          "assists": 1,
+          "fbrefPosition": "DF"
+        },
+        {
+          "season": "2003/04",
+          "club": "Fulham",
+          "minutes": 1095,
+          "starts": 12,
+          "goals": 0,
+          "assists": 0,
+          "fbrefPosition": "DF"
+        },
+        {
+          "season": "2004/05",
+          "club": "Fulham",
+          "minutes": 780,
+          "starts": 11,
+          "goals": 0,
+          "assists": 0,
+          "fbrefPosition": "DF"
+        }
+      ],
+      "positions": [
+        "CB"
+      ],
+      "confidence": "high",
+      "note": null
+    },
+    {
+      "fbrefId": "0012caa1",
+      "name": "Dean Kiely",
+      "nation": "IRL",
+      "fbrefPosition": "GK",
+      "allowed": [
+        "GK"
+      ],
+      "primaryMustBeOneOf": [
+        "GK"
+      ],
+      "choices": 1,
+      "totalMinutes": 15557,
+      "seasons": [
+        {
+          "season": "2000/01",
+          "club": "Charlton Athletic",
+          "minutes": 2205,
+          "starts": 25,
+          "goals": 0,
+          "assists": 0,
+          "fbrefPosition": "GK"
+        },
+        {
+          "season": "2001/02",
+          "club": "Charlton Athletic",
+          "minutes": 3420,
+          "starts": 38,
+          "goals": 0,
+          "assists": 1,
+          "fbrefPosition": "GK"
+        },
+        {
+          "season": "2002/03",
+          "club": "Charlton Athletic",
+          "minutes": 3362,
+          "starts": 38,
+          "goals": 0,
+          "assists": 0,
+          "fbrefPosition": "GK"
+        },
+        {
+          "season": "2003/04",
+          "club": "Charlton Athletic",
+          "minutes": 3330,
+          "starts": 37,
+          "goals": 0,
+          "assists": 1,
+          "fbrefPosition": "GK"
+        },
+        {
+          "season": "2004/05",
+          "club": "Charlton Athletic",
+          "minutes": 3240,
+          "starts": 36,
+          "goals": 0,
+          "assists": 0,
+          "fbrefPosition": "GK"
+        }
+      ],
+      "positions": [
+        "GK"
+      ],
+      "confidence": "high",
+      "note": null
+    },
+    {
+      "fbrefId": "5c1170da",
+      "name": "Gunnar Halle",
+      "nation": "NOR",
+      "fbrefPosition": "DF",
+      "allowed": [
+        "LB",
+        "CB",
+        "RB",
+        "LWB",
+        "RWB"
+      ],
+      "primaryMustBeOneOf": [
+        "LB",
+        "CB",
+        "RB",
+        "LWB",
+        "RWB"
+      ],
+      "choices": 5,
+      "totalMinutes": 15557,
+      "seasons": [
+        {
+          "season": "1992/93",
+          "club": "Oldham Athletic",
+          "minutes": 3644,
+          "starts": 41,
+          "goals": 5,
+          "assists": 7,
+          "fbrefPosition": "DF"
+        },
+        {
+          "season": "1993/94",
+          "club": "Oldham Athletic",
+          "minutes": 2025,
+          "starts": 22,
+          "goals": 1,
+          "assists": 1,
+          "fbrefPosition": "DF"
+        },
+        {
+          "season": "1996/97",
+          "club": "Leeds United",
+          "minutes": 1800,
+          "starts": 20,
+          "goals": 0,
+          "assists": 0,
+          "fbrefPosition": "DF"
+        },
+        {
+          "season": "1997/98",
+          "club": "Leeds United",
+          "minutes": 2606,
+          "starts": 30,
+          "goals": 2,
+          "assists": 1,
+          "fbrefPosition": "DF"
+        },
+        {
+          "season": "1998/99",
+          "club": "Leeds United",
+          "minutes": 1289,
+          "starts": 14,
+          "goals": 2,
+          "assists": 0,
+          "fbrefPosition": "DF"
+        },
+        {
+          "season": "1999/00",
+          "club": "Bradford City",
+          "minutes": 3160,
+          "starts": 37,
+          "goals": 0,
+          "assists": 5,
+          "fbrefPosition": "DF"
+        },
+        {
+          "season": "2000/01",
+          "club": "Bradford City",
+          "minutes": 1033,
+          "starts": 10,
+          "goals": 0,
+          "assists": 0,
+          "fbrefPosition": "DF"
+        }
+      ],
+      "positions": [
+        "RB"
+      ],
+      "confidence": "high",
+      "note": null
+    },
+    {
+      "fbrefId": "caeb5442",
+      "name": "Steven Gerrard",
+      "nation": "ENG",
+      "fbrefPosition": "MF",
+      "allowed": [
+        "CDM",
+        "CM",
+        "CAM",
+        "LM",
+        "RM"
+      ],
+      "primaryMustBeOneOf": [
+        "CDM",
+        "CM",
+        "CAM",
+        "LM",
+        "RM"
+      ],
+      "choices": 5,
+      "totalMinutes": 15534,
+      "seasons": [
+        {
+          "season": "1998/99",
+          "club": "Liverpool",
+          "minutes": 404,
+          "starts": 4,
+          "goals": 0,
+          "assists": 0,
+          "fbrefPosition": "MF"
+        },
+        {
+          "season": "1999/00",
+          "club": "Liverpool",
+          "minutes": 2143,
+          "starts": 26,
+          "goals": 1,
+          "assists": 3,
+          "fbrefPosition": "MF"
+        },
+        {
+          "season": "2000/01",
+          "club": "Liverpool",
+          "minutes": 2523,
+          "starts": 29,
+          "goals": 7,
+          "assists": 2,
+          "fbrefPosition": "MF"
+        },
+        {
+          "season": "2001/02",
+          "club": "Liverpool",
+          "minutes": 2133,
+          "starts": 26,
+          "goals": 3,
+          "assists": 8,
+          "fbrefPosition": "MF"
+        },
+        {
+          "season": "2002/03",
+          "club": "Liverpool",
+          "minutes": 2864,
+          "starts": 32,
+          "goals": 5,
+          "assists": 7,
+          "fbrefPosition": "MF"
+        },
+        {
+          "season": "2003/04",
+          "club": "Liverpool",
+          "minutes": 3004,
+          "starts": 34,
+          "goals": 4,
+          "assists": 7,
+          "fbrefPosition": "MF"
+        },
+        {
+          "season": "2004/05",
+          "club": "Liverpool",
+          "minutes": 2463,
+          "starts": 28,
+          "goals": 7,
+          "assists": 4,
+          "fbrefPosition": "MF"
+        }
+      ],
+      "positions": [
+        "CM",
+        "RM",
+        "CDM"
+      ],
+      "confidence": "high",
+      "note": "As a teenager in 1999/00 he started mostly in central midfield and on the right."
+    },
+    {
+      "fbrefId": "9bbe0ecf",
+      "name": "Paolo Di Canio",
+      "nation": "ITA",
+      "fbrefPosition": "FW",
+      "allowed": [
+        "LW",
+        "RW",
+        "ST",
+        "CF"
+      ],
+      "primaryMustBeOneOf": [
+        "LW",
+        "RW",
+        "ST",
+        "CF"
+      ],
+      "choices": 4,
+      "totalMinutes": 15524,
+      "seasons": [
+        {
+          "season": "1997/98",
+          "club": "Sheffield Wednesday",
+          "minutes": 2960,
+          "starts": 34,
+          "goals": 12,
+          "assists": 6,
+          "fbrefPosition": "FW"
+        },
+        {
+          "season": "1998/99",
+          "club": "West Ham United",
+          "minutes": 1086,
+          "starts": 12,
+          "goals": 4,
+          "assists": 2,
+          "fbrefPosition": "FW"
+        },
+        {
+          "season": "1998/99",
+          "club": "Sheffield Wednesday",
+          "minutes": 440,
+          "starts": 5,
+          "goals": 3,
+          "assists": 0,
+          "fbrefPosition": "FW"
+        },
+        {
+          "season": "1999/00",
+          "club": "West Ham United",
+          "minutes": 2616,
+          "starts": 29,
+          "goals": 16,
+          "assists": 13,
+          "fbrefPosition": "FW"
+        },
+        {
+          "season": "2000/01",
+          "club": "West Ham United",
+          "minutes": 2786,
+          "starts": 31,
+          "goals": 10,
+          "assists": 7,
+          "fbrefPosition": "FW"
+        },
+        {
+          "season": "2001/02",
+          "club": "West Ham United",
+          "minutes": 2254,
+          "starts": 26,
+          "goals": 9,
+          "assists": 6,
+          "fbrefPosition": "FW"
+        },
+        {
+          "season": "2002/03",
+          "club": "West Ham United",
+          "minutes": 1365,
+          "starts": 16,
+          "goals": 9,
+          "assists": 3,
+          "fbrefPosition": "FW"
+        },
+        {
+          "season": "2003/04",
+          "club": "Charlton Athletic",
+          "minutes": 2017,
+          "starts": 23,
+          "goals": 4,
+          "assists": 12,
+          "fbrefPosition": "FW"
+        }
+      ],
+      "positions": [
+        "CF",
+        "ST",
+        "LW"
+      ],
+      "confidence": "medium",
+      "note": "Second striker who dropped off the front man; drifted to the left at West Ham."
+    },
+    {
+      "fbrefId": "250d1973",
+      "name": "Chris Bart-Williams",
+      "nation": "ENG",
+      "fbrefPosition": "DFMF",
+      "allowed": [
+        "LB",
+        "CB",
+        "RB",
+        "LWB",
+        "RWB",
+        "CDM",
+        "CM",
+        "CAM",
+        "LM",
+        "RM"
+      ],
+      "primaryMustBeOneOf": [
+        "LB",
+        "CB",
+        "RB",
+        "LWB",
+        "RWB"
+      ],
+      "choices": 10,
+      "totalMinutes": 15499,
+      "seasons": [
+        {
+          "season": "1992/93",
+          "club": "Sheffield Wednesday",
+          "minutes": 2130,
+          "starts": 21,
+          "goals": 6,
+          "assists": 2,
+          "fbrefPosition": "DFMF"
+        },
+        {
+          "season": "1993/94",
+          "club": "Sheffield Wednesday",
+          "minutes": 2739,
+          "starts": 30,
+          "goals": 8,
+          "assists": 5,
+          "fbrefPosition": "DFMF"
+        },
+        {
+          "season": "1994/95",
+          "club": "Sheffield Wednesday",
+          "minutes": 2984,
+          "starts": 32,
+          "goals": 2,
+          "assists": 7,
+          "fbrefPosition": "DFMF"
+        },
+        {
+          "season": "1995/96",
+          "club": "Nottingham Forest",
+          "minutes": 2970,
+          "starts": 33,
+          "goals": 0,
+          "assists": 2,
+          "fbrefPosition": "DFMF"
+        },
+        {
+          "season": "1996/97",
+          "club": "Nottingham Forest",
+          "minutes": 1357,
+          "starts": 16,
+          "goals": 1,
+          "assists": 0,
+          "fbrefPosition": "DFMF"
+        },
+        {
+          "season": "1998/99",
+          "club": "Nottingham Forest",
+          "minutes": 1794,
+          "starts": 20,
+          "goals": 3,
+          "assists": 1,
+          "fbrefPosition": "DFMF"
+        },
+        {
+          "season": "2001/02",
+          "club": "Charlton Athletic",
+          "minutes": 914,
+          "starts": 10,
+          "goals": 1,
+          "assists": 2,
+          "fbrefPosition": "DFMF"
+        },
+        {
+          "season": "2002/03",
+          "club": "Charlton Athletic",
+          "minutes": 611,
+          "starts": 7,
+          "goals": 1,
+          "assists": 0,
+          "fbrefPosition": "DFMF"
+        }
+      ],
+      "positions": [
+        "CAM",
+        "RM",
+        "CM"
+      ],
+      "confidence": "high",
+      "note": "FBref's DF-first label is wrong: Bart-Williams was Sheffield Wednesday's attacking midfielder, scoring 14 league goals across the two seasons from central and right-sided roles. He did not play in defence.",
+      "labelDisputed": true
+    },
+    {
+      "fbrefId": "e982f824",
+      "name": "John Moncur",
+      "nation": "ENG",
+      "fbrefPosition": "MF",
+      "allowed": [
+        "CDM",
+        "CM",
+        "CAM",
+        "LM",
+        "RM"
+      ],
+      "primaryMustBeOneOf": [
+        "CDM",
+        "CM",
+        "CAM",
+        "LM",
+        "RM"
+      ],
+      "choices": 5,
+      "totalMinutes": 15355,
+      "seasons": [
+        {
+          "season": "1993/94",
+          "club": "Swindon Town",
+          "minutes": 3627,
+          "starts": 41,
+          "goals": 4,
+          "assists": 3,
+          "fbrefPosition": "MF"
+        },
+        {
+          "season": "1994/95",
+          "club": "West Ham United",
+          "minutes": 2652,
+          "starts": 30,
+          "goals": 2,
+          "assists": 6,
+          "fbrefPosition": "MF"
+        },
+        {
+          "season": "1995/96",
+          "club": "West Ham United",
+          "minutes": 1643,
+          "starts": 19,
+          "goals": 0,
+          "assists": 0,
+          "fbrefPosition": "MF"
+        },
+        {
+          "season": "1996/97",
+          "club": "West Ham United",
+          "minutes": 2183,
+          "starts": 26,
+          "goals": 2,
+          "assists": 1,
+          "fbrefPosition": "MF"
+        },
+        {
+          "season": "1997/98",
+          "club": "West Ham United",
+          "minutes": 1548,
+          "starts": 17,
+          "goals": 1,
+          "assists": 1,
+          "fbrefPosition": "MF"
+        },
+        {
+          "season": "1998/99",
+          "club": "West Ham United",
+          "minutes": 697,
+          "starts": 6,
+          "goals": 0,
+          "assists": 0,
+          "fbrefPosition": "MF"
+        },
+        {
+          "season": "1999/00",
+          "club": "West Ham United",
+          "minutes": 1726,
+          "starts": 20,
+          "goals": 1,
+          "assists": 0,
+          "fbrefPosition": "MF"
+        },
+        {
+          "season": "2000/01",
+          "club": "West Ham United",
+          "minutes": 611,
+          "starts": 6,
+          "goals": 0,
+          "assists": 0,
+          "fbrefPosition": "MF"
+        },
+        {
+          "season": "2001/02",
+          "club": "West Ham United",
+          "minutes": 668,
+          "starts": 7,
+          "goals": 0,
+          "assists": 0,
+          "fbrefPosition": "MF"
+        }
+      ],
+      "positions": [
+        "CM",
+        "CAM"
+      ],
+      "confidence": "medium",
+      "note": "Creative central midfielder for West Ham, often playing off the front two."
     }
   ]
 }

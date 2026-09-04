@@ -120,6 +120,12 @@ batches.forEach((group, index) => {
       positions: prior?.positions ?? [],
       confidence: prior?.confidence ?? null,
       note: prior?.note ?? null,
+      // MUST be carried forward with the position it justifies. Re-planning
+      // once dropped it from 28 of 30 disputes: the positions survived, the
+      // flag that makes them legal did not, and the checker then failed on
+      // work that had been correct and reviewed. A dispute is part of the
+      // assignment, not an annotation on it.
+      ...(prior?.labelDisputed ? { labelDisputed: true } : {}),
       // Only for a player who genuinely changed role between seasons.
       perSeason: prior?.perSeason ?? undefined,
     };
