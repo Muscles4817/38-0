@@ -123,6 +123,26 @@ as much as the rating does; the match engine damps role multipliers by a square
 root when choosing who gets on the end of a chance, but it is still the single
 strongest claim available.
 
+## AerialThreat does not go on a striker
+
+`AerialThreat` is a **3.5x goal multiplier**, the largest in the database. On a
+centre-back that is harmless, because a centre-back is not where chances go —
+which is how the rest of the data uses it: Van Dijk, Gabriel, Sergio Ramos,
+Ivanović, and Fellaini arriving late from midfield.
+
+Put it on a striker and it decides the golden boot by itself. Barcelona 2009/10
+simulated with Ibrahimović, rated 87, scoring **66 of the side's 97 goals** while
+Messi, eight rating points better, scored 12. Stacked with another scoring role
+it gets worse: `Poacher` + `AerialThreat` is 7.7x.
+
+**A forward who is strong in the air gets `TargetMan`** — 1.3x, `aerial` 2. That
+says the same thing about the player without handing him the whole season. Ibra
+went to 48 goals and 49%, in line with Henry's 45% for Arsenal 2003/04.
+
+The general form: **a forward should carry at most one big scoring role.** The
+multipliers compound, and the engine's square-root damping is not enough to
+absorb two of them on the player who already receives most of the chances.
+
 ## A failure worth remembering
 
 `NoNonsenseDefender` and `SweeperKeeper` existed **only in the database**. They

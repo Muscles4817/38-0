@@ -1,9 +1,14 @@
 # 38-0 — design documentation
 
 38-0 is a football draft game. You pick an era and a formation, spin for random
-club-seasons from English top-flight history, build an XI out of the players you
-are offered, and drop that XI into a simulated 38-game Premier League season
-against the current real squads.
+club-seasons, build an XI out of the players you are offered, and drop that XI
+into a simulated 38-game Premier League season against the current real squads.
+
+Most of what you can draft is English top-flight history, which is why the
+rating scale in [ratings.md](ratings.md) is expressed in Premier League terms.
+Alongside it sit a small number of iconic sides from Serie A, La Liga, the
+Bundesliga and two World Cup winners. They are draftable but never opponents:
+the season being simulated against is always the current Premier League.
 
 These documents exist so that anyone — including an AI agent starting a fresh
 session with no memory of previous ones — can make a change that fits the way

@@ -60,71 +60,21 @@ and the formula's `odds.projectedPosition` on the final banner and in the
 over/underperformed verdict. The same run reports two different numbers on two
 screens. Pick one.
 
-## 4. Five players are at two clubs at once
+## 4. The draft pool is still lopsided
 
-In 2025/26: Alexander Isak (Newcastle *and* Liverpool), Milos Kerkez, Noni
-Madueke, Christian Nørgaard, Kepa Arrizabalaga. All real 2025 transfers entered
-at the destination without removing the origin. They can appear twice on the
-same league leaderboard.
+307 draftable club-seasons across five leagues, but 2025/26 is still the
+densest single season and the English seasons dominate: PL 288, Serie A 7,
+La Liga 6, Bundesliga 4, World Cup 2.
 
-`Kieran Trippier` also exists as two separate rows in `players`.
-
-Fix in `/editor/squads`, then `npm run export:data`.
-
-## 5. Five 2025/26 opponents have no stored lineup
-
-Bournemouth, Brentford, Brighton, West Ham and Wolves fall back to "best keeper
-plus the ten highest-rated outfielders", which ignores shape. West Ham field
-four centre-backs and no full-backs. Since attack, midfield and defence strength
-are derived from the positions actually fielded, those clubs get systematically
-wrong ratings.
-
-Fix by storing lineups at `/editor/lineups`, or by making the fallback
-formation-aware.
-
-Related: four lineup slots pointed at players no longer in their squad (Onana,
-Eze, Guéhi, Ashley Cole). The export now drops them and warns, which leaves
-those XIs short — they want refilling in the editor. The schema weakness that
-allows it is described in [data-model.md](data-model.md#known-schema-weakness).
-
-## 6. The draft pool is small
-
-52 club-seasons, and 2025/26 is about 43% of all squad entries. Nine seasons
-have a single club and 2002/03 has one player. Eleven spins therefore repeat
-squads often.
+The non-English sides are all iconic ones, so the *quality* ceiling is fine —
+Barcelona 2009/10 rates 88.0 and Sevilla 2009/10 78.0. What is thin is the
+middle of those leagues, so a spin restricted to, say, the Bundesliga has four
+possible answers.
 
 This is the real ceiling on replay value. Every other improvement is bounded by
 it.
 
-## 7. Twelve players exist as two rows each
-
-Found while importing 1992/93. In the seed data that predates the FBref
-pipeline, twelve people each have two `players` rows:
-
-    Kieran Trippier   120 (2018/19, 2025/26)  and 134 (2022/23)
-    Vladimir Smicer   604 (2004/05)           and 686 (2000/01, "Vladimír Šmicer")
-    Ilkay Gundogan    447 (no squad entry)    and 521 (2017/18)
-    Davinson Sanchez, Fabian Schar, Bruno Guimaraes, Miguel Almiron,
-    Emiliano Martinez, Jhon Duran, Jeremy Doku, Caoimhin Kelleher, Igor Biscan
-
-`playerKey` strips accents precisely so `Šmicer` and `Smicer` are one person,
-and it does. The rows survive anyway because `import-squads.mjs` builds its
-lookup map once and keeps only the **first** row per key, so a duplicate already
-in the database is never seen. The import cannot create these — it just cannot
-heal them either.
-
-It matters because the draft pool is built from players, so a duplicated person
-can be drafted twice, as two footballers.
-
-Not fixed yet because it is a merge rather than a delete: the versions have to
-be reparented, and 11 `lineup_slots` rows point at versions belonging to a
-player row that would go away. Done carelessly it breaks the classic lineups.
-
-Going forward `fbref_id` prevents the opposite error too. 1992/93 had a David
-Smith at Coventry and a different David Smith at Norwich; they correctly got two
-rows, and only the id could tell them apart.
-
-## 8. Smaller things
+## 5. Smaller things
 
 - **Line ratings disagree with the simulation.** `LineRatings.tsx` counts LW/RW
   as midfield; `simulation.ts` counts them as attack. The bars do not describe
@@ -140,6 +90,47 @@ rows, and only the id could tell them apart.
 ## Fixed, for reference
 
 Do not re-report these:
+
+- **Ten players were at two clubs at once in 2025/26** — Isak, Kerkez, Madueke,
+  Nørgaard, Kepa, Elanga, Mbeumo, Wissa, Cunha, Brennan Johnson and Marc Guéhi,
+  who was in Manchester City's squad without ever having played for them. Every
+  one was a 2025 summer transfer entered at the destination without removing the
+  origin. The selling club's entry is gone in each case, and 2025/26 is now
+  backed by authored squad files for the four clubs whose FBref exports were
+  refreshed, so `validateAcrossFiles` covers it like every other season.
+
+- **Fifteen people existed as two `players` rows each** — the twelve seed
+  duplicates plus Solskjær, Guðjohnsen and Strand Larsen. Merged: versions
+  reparented, colliding lineup slots resolved, loser rows deleted. Jérémy Doku
+  was in Manchester City's 2025/26 squad under both spellings and could have
+  been fielded twice. Rows where *both* sides carry an FBref id were left alone
+  — those are different men who share a name, and there are two Alan Smiths,
+  two David Smiths and three Paul Robinsons.
+
+- **`playerKey` did not fold ø, đ, ł or ß.** Stripping combining accents does
+  nothing for letters that are their own codepoint, so "Jorgen" and "Jørgen"
+  Strand Larsen were two people and he sat in both Wolves' and Palace's 2025/26
+  squad without the cross-file check noticing. The key folds them now.
+
+- **`aerialQuality` was backwards.** Role names multiplied a player's *weight*
+  in a weighted mean of ratings, and the weight decides how much his rating
+  counts toward the average — so an aerial specialist rated below his team-mates
+  dragged his side's aerial number down. A 79-rated `AerialThreat` made a team
+  worse in the air than a plain 79-rated striker. Position now sets how much of
+  the contest a player is part of and the `aerial` quality scales his
+  contribution, which also picks up `Lightweight` for free.
+
+- **Nothing enforced a legal stored lineup.** Three separate passes found XIs
+  naming a player who was not in the squad, or putting one in a slot
+  `positionFit` rates `none`. `gameData.test.ts` now asserts over every stored
+  lineup that it has eleven distinct slots of its own formation, fields only
+  squad members, plays nobody somewhere he cannot play, and fields exactly one
+  goalkeeper, in the goalkeeper slot. The next one fails the build.
+
+- **Every 2025/26 opponent had no stored lineup, or a wrong one.** All nineteen
+  now have a verified XI. Manchester City had left Rúben Dias out of the side
+  entirely; Southampton played a left-winger in the right-midfield slot, which
+  `positionFit` rates impossible.
 
 - `scaledAvgRating` inverted `ratingScale` with the wrong constant — 0.032
   forward, 0.055 back — dragging every squad 58% of the way toward 80 and making

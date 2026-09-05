@@ -60,8 +60,8 @@ entry rather than a player.
 
 ## JSON snapshot (the game)
 
-`src/data/game-data.json`, committed, ~268 KB pretty-printed. Currently 22
-clubs, 34 seasons, 52 club-seasons, 906 squad entries, 36 lineups, 24 roles.
+`src/data/game-data.json`, committed, ~1.7 MB. Currently 56 clubs, 37 seasons,
+330 club-seasons, 6,701 squad entries, 61 lineups, 66 tactics, 42 roles.
 
 ```jsonc
 {
@@ -120,15 +120,28 @@ fails after an export, fix the database rather than the test:
 - every role a player is given exists in `role_config`
 - every lineup names a formation the app knows, uses slot indices 0–10 at most
   once each, and only names players who are in that squad
+- every lineup fills all eleven slots, plays nobody in a slot `positionFit`
+  rates `none`, and fields exactly one goalkeeper, in the goalkeeper slot
+
+## Competitions
+
+`clubs.league` decides what a club-season is for, and there are two rules:
+
+- `getClassicTeams()` offers every club-season with eleven rated players
+  **except** the one being simulated against — Premier League 2025/26.
+- `getOpponentSquads()` takes **only** Premier League 2025/26.
+
+So adding a club from another league makes it draftable and never makes it an
+opponent. Codes in use are `PL`, `SA`, `LL`, `BL` and `WC`.
+
+A season label is normally `1994/95`. A tournament happens inside one calendar
+year, so a World Cup squad is labelled with the bare year — `1986`. `year_start`
+is the numeric anchor either way, and it is what era filtering reads.
 
 ## Current data gaps
 
 Recorded in more detail in [known-issues.md](known-issues.md):
 
-- 2025/26 is roughly 43% of all squad entries; several older seasons have a
-  single club, and 2002/03 has one player.
-- Five players appear at two clubs in the same 2025/26 season (real transfers
-  entered at the destination without removing the origin), so they can appear
-  twice on a league leaderboard.
-- Only 52 club-seasons exist to draft from, which is the real ceiling on the
-  variety of a run.
+- The draft pool is lopsided rather than small: 307 club-seasons, of which 288
+  are English. A spin restricted to the Bundesliga has four possible answers.
+- 2025/26 is still the densest single season.

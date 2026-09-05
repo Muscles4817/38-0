@@ -43,7 +43,9 @@ export const VALID_POSITIONS = [
 /** Anyone with fewer league appearances than this is not part of the squad. */
 export const MIN_APPEARANCES = 3;
 
-const SEASON_RE = /^(19|20)\d{2}\/\d{2}$/;
+// A league season spans two years and is written 1994/95. A tournament happens
+// inside one, so a World Cup squad is labelled with the bare year.
+const SEASON_RE = /^(19|20)\d{2}(\/\d{2})?$/;
 
 /**
  * Checks one parsed squad file.

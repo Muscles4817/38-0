@@ -6,8 +6,10 @@ This version has breaking changes — APIs, conventions, and file structure may 
 
 # 38-0
 
-A football draft game: spin for random club-seasons from English top-flight
-history, build an XI, simulate a 38-game season against the real current squads.
+A football draft game: spin for random club-seasons — mostly English top-flight
+history, plus a handful of iconic sides from Serie A, La Liga, the Bundesliga
+and two World Cup winners — build an XI, and simulate a 38-game season against
+the real current squads.
 
 ## Read before changing anything
 

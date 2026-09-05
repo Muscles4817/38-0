@@ -177,6 +177,27 @@ nearest anchor, re-check it.
 | Gary Pallister, 1993/94 | 84 | Good, occasionally elite |
 | Colin Hendry, 1994/95 | 79 | Solid title-winning starter, absolutely ordinary |
 
+## Players who never played in England
+
+The bands are written in Premier League terms because that is where most of the
+data is, but the scale is absolute, not English. A Serie A defender is rated
+against the band definitions, not against Serie A.
+
+Two things follow, and both are easy to get wrong:
+
+- **Do not translate.** There is no Serie A discount and no La Liga bonus.
+  Koulibaly in 2015/16 was an elite centre-back by the definition of the band,
+  so he is 84, and nothing about the league he did it in changes that.
+- **A player who appears in both is one player.** Ibrahimović is 88 at Inter in
+  2006/07 and 87 at Barcelona in 2009/10; Cafú is 88 for Brazil in 2002 and 87
+  at Milan in 2006/07. If a rating goes *up* as a player passes thirty, that is
+  a mistake — check it against his other rows before writing it. Cafú was
+  briefly rated 86 at his peak and 87 at thirty-six, which is how this rule got
+  written down.
+
+The whole database is one scale, so cross-check anyone who already exists in it
+before rating them again.
+
 ## Positions are already decided
 
 Positions are assigned in a separate, earlier pass — see
