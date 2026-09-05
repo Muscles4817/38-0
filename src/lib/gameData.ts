@@ -87,6 +87,14 @@ export interface DataRole {
   attContrib: number;
   midContrib: number;
   defContrib: number;
+  /**
+   * What the player is good at, as opposed to what he produces.
+   *
+   * The older fields all describe output — goals, assists, a contribution to a
+   * team-strength number. These describe ability, which is what the playstyle
+   * interactions need: nothing else in the data expresses pace.
+   */
+  qualities?: Partial<Record<string, number>>;
 }
 
 export interface GameData {

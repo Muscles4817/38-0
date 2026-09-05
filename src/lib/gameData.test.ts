@@ -469,3 +469,89 @@ describe('club-season traits', () => {
     }
   });
 });
+
+// ── Stored lineups ───────────────────────────────────────────────────────────
+//
+// Three separate passes over the data have found XIs naming a player who is not
+// in the squad, or putting one in a slot `positionFit` rates 'none' — a
+// left-winger in the right-midfield slot, a striker at right-back. The export
+// drops the first kind and warns; nothing caught the second, so it was found by
+// hand each time. These assert both, so the next one fails the build instead.
+
+describe('every stored lineup is legal', () => {
+  const named = (clubId: number, seasonId: number) => {
+    const club = gameData.clubs.find(c => c.id === clubId)?.name ?? `club ${clubId}`;
+    const season = gameData.seasons.find(s => s.id === seasonId)?.label ?? `season ${seasonId}`;
+    return `${club} ${season}`;
+  };
+
+  it('has lineups to check, so the rest of these are not vacuous', () => {
+    expect(gameData.lineups.length).toBeGreaterThan(0);
+  });
+
+  it('names a formation the game knows', () => {
+    for (const lineup of gameData.lineups) {
+      expect(FORMATIONS[lineup.formation], `${named(lineup.clubId, lineup.seasonId)}`).toBeDefined();
+    }
+  });
+
+  it('fills eleven distinct slots, each one of the formation', () => {
+    for (const lineup of gameData.lineups) {
+      const where = named(lineup.clubId, lineup.seasonId);
+      const shape = FORMATIONS[lineup.formation];
+      if (!shape) continue;
+      expect(lineup.slots.length, `${where} has ${lineup.slots.length} slots`).toBe(11);
+      const indexes = lineup.slots.map(s => s.slotIndex);
+      expect(new Set(indexes).size, `${where} repeats a slot`).toBe(indexes.length);
+      for (const i of indexes) {
+        expect(shape.slots[i], `${where}: ${lineup.formation} has no slot ${i}`).toBeDefined();
+      }
+    }
+  });
+
+  it('only fields players who are in that squad', () => {
+    for (const lineup of gameData.lineups) {
+      const squad = getSquad(lineup.clubId, lineup.seasonId);
+      expect(squad, `${named(lineup.clubId, lineup.seasonId)} has a lineup but no squad`).toBeDefined();
+      for (const slot of lineup.slots) {
+        const player = squad!.players.find(p => p.playerId === slot.playerId);
+        expect(player, `${named(lineup.clubId, lineup.seasonId)} slot ${slot.slotIndex} names a player who is not in the squad`).toBeDefined();
+      }
+    }
+  });
+
+  it('never puts a player somewhere he cannot play', () => {
+    // Out of position is allowed and costs OUT_OF_POSITION_PENALTY. 'none' is
+    // not a penalty, it is an impossible placement.
+    for (const lineup of gameData.lineups) {
+      const squad = getSquad(lineup.clubId, lineup.seasonId);
+      const shape = FORMATIONS[lineup.formation];
+      if (!squad || !shape) continue;
+      for (const slot of lineup.slots) {
+        const player = squad.players.find(p => p.playerId === slot.playerId);
+        const slotPosition = shape.slots[slot.slotIndex]?.position;
+        if (!player || !slotPosition) continue;
+        const positions: Position[] = player.positions?.length ? player.positions : ['CM'];
+        expect(
+          canFillSlot(positions, slotPosition),
+          `${named(lineup.clubId, lineup.seasonId)}: ${player.name} (${positions.join('/')}) cannot play ${slotPosition}`,
+        ).toBe(true);
+      }
+    }
+  });
+
+  it('fields exactly one goalkeeper, in the goalkeeper slot', () => {
+    for (const lineup of gameData.lineups) {
+      const squad = getSquad(lineup.clubId, lineup.seasonId);
+      const shape = FORMATIONS[lineup.formation];
+      if (!squad || !shape) continue;
+      const keepers = lineup.slots.filter(slot => {
+        const p = squad.players.find(x => x.playerId === slot.playerId);
+        return p?.positions?.includes('GK');
+      });
+      expect(keepers.length, `${named(lineup.clubId, lineup.seasonId)} fields ${keepers.length} goalkeepers`).toBe(1);
+      const gkSlot = shape.slots.findIndex(s => s.position === 'GK');
+      expect(keepers[0]?.slotIndex, `${named(lineup.clubId, lineup.seasonId)} plays its keeper outfield`).toBe(gkSlot);
+    }
+  });
+});

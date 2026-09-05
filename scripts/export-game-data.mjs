@@ -113,7 +113,7 @@ const lineups = lineupRows.map(l => {
 
 const roles = db.prepare(`
   SELECT name, label, goal_mult, assist_mult, valid_positions, description,
-         att_contrib, mid_contrib, def_contrib
+         att_contrib, mid_contrib, def_contrib, qualities
   FROM role_config ORDER BY name
 `).all().map(r => ({
   name: r.name,
@@ -125,6 +125,8 @@ const roles = db.prepare(`
   attContrib: r.att_contrib,
   midContrib: r.mid_contrib,
   defContrib: r.def_contrib,
+  // What the player is good at, as opposed to what he produces.
+  qualities: parseJson(r.qualities, {}),
 }));
 
 // How each side plays. Absent rows are not defaulted here: the engine's own

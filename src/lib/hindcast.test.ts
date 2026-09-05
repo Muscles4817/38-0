@@ -123,6 +123,7 @@ function build(label: string): TeamSetup[] {
 const roles = {
   goalMult: Object.fromEntries(gameData.roles.map(r => [r.name, r.goalMult])),
   assistMult: Object.fromEntries(gameData.roles.map(r => [r.name, r.assistMult])),
+  qualities: Object.fromEntries(gameData.roles.map(r => [r.name, r.qualities ?? {}])),
 };
 
 describe('the eight seasons we know the answer to', () => {

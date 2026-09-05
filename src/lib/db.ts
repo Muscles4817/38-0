@@ -1863,13 +1863,15 @@ export interface RoleRow {
   att_contrib: number;
   mid_contrib: number;
   def_contrib: number;
+  /** JSON: what the player is good at, as opposed to what he produces. */
+  qualities: string;
 }
 
 export function loadRoleRows(db: Database.Database): RoleRow[] {
   return db.prepare('SELECT * FROM role_config ORDER BY name').all() as RoleRow[];
 }
 
-const ROLE_DEFAULTS: (Omit<RoleRow, 'valid_positions'> & { valid_positions: string[] })[] = [
+const ROLE_DEFAULTS: (Omit<RoleRow, 'valid_positions' | 'qualities'> & { valid_positions: string[] })[] = [
   // name, label, goal_mult, assist_mult, valid_positions, description, att_contrib, mid_contrib, def_contrib
   { name: 'AerialThreat',        label: 'Aerial Threat',         goal_mult: 3.50, assist_mult: 0.30, valid_positions: [],                                                              description: 'Dominant in the air; major threat at set pieces from any position', att_contrib:  0, mid_contrib:  0, def_contrib:  0 },
   { name: 'Anchor',              label: 'Anchor',                goal_mult: 0.20, assist_mult: 0.40, valid_positions: ['CDM'],                                                          description: 'Pure defensive shield; almost never scores',                         att_contrib:  0, mid_contrib:  0, def_contrib:  3 },
@@ -1887,6 +1889,8 @@ const ROLE_DEFAULTS: (Omit<RoleRow, 'valid_positions'> & { valid_positions: stri
   { name: 'InvertedWingback',    label: 'Inverted Wingback',     goal_mult: 1.10, assist_mult: 1.30, valid_positions: ['LB','RB','LWB','RWB'],                                           description: 'Cuts inside into dangerous half-spaces; box threat from fullback',   att_contrib:  1, mid_contrib:  1, def_contrib: -1 },
   { name: 'LateRunner',          label: 'Late Runner',           goal_mult: 1.80, assist_mult: 0.70, valid_positions: ['CM','CDM','CAM'],                                                description: 'Times runs into the box perfectly; Lampard/Gerrard archetype',       att_contrib:  1, mid_contrib:  0, def_contrib:  0 },
   { name: 'Mezzala',             label: 'Mezzala',               goal_mult: 1.50, assist_mult: 1.30, valid_positions: ['CM','LM','RM','CAM'],                                            description: 'Half-space runner who breaks into the box from midfield',            att_contrib:  1, mid_contrib:  1, def_contrib:  0 },
+  { name: 'NoNonsenseDefender', label: 'No-Nonsense Defender', goal_mult: 0.15, assist_mult: 0.25, valid_positions: ['CB'],                                                    description: 'Heads it, kicks it, and does not attempt anything else',             att_contrib:  0, mid_contrib: -2, def_contrib: 3.5 },
+  { name: 'SweeperKeeper',       label: 'Sweeper Keeper',        goal_mult: 0.00, assist_mult: 1.90, valid_positions: ['GK'],                                                    description: 'Starts the attack and defends the space behind the line',            att_contrib:  0, mid_contrib: 2.5, def_contrib: -1.5 },
   { name: 'Poacher',             label: 'Poacher',               goal_mult: 2.20, assist_mult: 0.40, valid_positions: ['ST','CF'],                                                       description: 'Lives in the box for the tap-in; pure goal threat',                  att_contrib:  0, mid_contrib:  0, def_contrib:  0 },
   { name: 'Regista',             label: 'Regista',               goal_mult: 0.20, assist_mult: 2.20, valid_positions: ['CDM','CM'],                                                      description: 'Orchestrates from deep; elite passer, minimal open-play goal threat', att_contrib:  0, mid_contrib:  3, def_contrib: -2 },
   { name: 'SetPieceDeliverer',   label: 'Set Piece Deliverer',   goal_mult: 0.30, assist_mult: 2.50, valid_positions: ['LM','RM','LW','RW','LB','RB','LWB','RWB','CM','CAM'],           description: 'Corner and free kick specialist; rarely scores directly',            att_contrib:  0, mid_contrib:  0, def_contrib:  0 },
@@ -1894,6 +1898,126 @@ const ROLE_DEFAULTS: (Omit<RoleRow, 'valid_positions'> & { valid_positions: stri
   { name: 'Trequartista',        label: 'Trequartista',          goal_mult: 1.40, assist_mult: 1.30, valid_positions: ['CAM','CF'],                                                      description: 'Floats between the lines; creative and dangerous in pockets of space', att_contrib:  0, mid_contrib:  0, def_contrib:  0 },
   { name: 'Winger',              label: 'Winger',                goal_mult: 0.50, assist_mult: 1.80, valid_positions: ['LW','RW','LM','RM'],                                             description: 'Stays wide to deliver crosses; rarely attempts shots on goal',       att_contrib:  0, mid_contrib:  0, def_contrib:  0 },
 ];
+
+// ── The trait vocabulary ─────────────────────────────────────────────────────
+//
+// Until now a role could say exactly three things: how much a player scores,
+// how much he creates, and what he adds to attack, midfield or defence. That is
+// why AerialThreat is a 3.5x GOAL multiplier rather than "wins headers" — there
+// was no other slot to put it in.
+//
+// Qualities are that missing vocabulary. They describe what a player is good at
+// rather than what he produces, which is what the playstyle work needs: nothing
+// in the data currently expresses pace, and running in behind is the whole
+// basis of counter-attacking. See docs/playstyles.md and docs/roles.md.
+//
+// Stored as JSON so a new quality does not need a migration. Values are roughly
+// 1 = notable, 2 = strong, 3 = defining.
+export const QUALITIES = {
+  aerial: 'Wins the ball in the air',
+  pace: 'Genuine speed; runs in behind',
+  recovery: 'Gets back and covers the space behind the defence',
+  pressing: 'Presses from the front or through midfield',
+  pressResist: 'Keeps the ball under pressure',
+  creation: 'Unlocks a set defence',
+  dribble: 'Beats a man one on one',
+  shotStopping: 'Goalkeeping reflexes',
+  claiming: 'Commands his box; claims crosses',
+  setPiece: 'Dead-ball delivery',
+  penalty: 'Takes penalties',
+  longShot: 'Shoots from distance',
+  discipline: 'Stays on his feet. Negative means he does not.',
+} as const;
+
+export type Quality = keyof typeof QUALITIES;
+
+const ROLE_QUALITIES: Record<string, Partial<Record<Quality, number>>> = {
+  // A quality belongs on a trait only if you cannot be that trait without it.
+  // Correlation is not definition: poachers are not quick (Inzaghi, Muller,
+  // van Nistelrooy), aerial threats are not slow (Ronaldo, Haaland), and target
+  // men are not slow either (Drogba, Adebayor). An earlier version of this map
+  // asserted all three and was wrong about all three.
+  AerialThreat:        { aerial: 3 },
+  Anchor:              { pressing: 1, pressResist: 1 },
+  AttackingFullback:   {},
+  BallPlayingDefender: { pressResist: 3, creation: 1 },
+  BoxToBox:            { pressing: 2 },
+  ChanceCreator:       { creation: 3 },
+  // "Complete" is the one trait that genuinely asserts everything.
+  CompleteForward:     { aerial: 1, pace: 1, pressing: 1, dribble: 1 },
+  CrossingSpecialist:  { setPiece: 3 },
+  DeepLyingForward:    { creation: 2, pressResist: 1 },
+  DeepLyingPlaymaker:  { pressResist: 3, creation: 2 },
+  // An enforcer commits fouls. That is what the word means.
+  Enforcer:            { pressing: 2, discipline: -1 },
+  FalseNine:           { creation: 2, pressResist: 2 },
+  InsideForward:       { dribble: 2, longShot: 1 },
+  InvertedWingback:    { pressResist: 1, creation: 1 },
+  LateRunner:          { longShot: 1 },
+  Mezzala:             { creation: 1, dribble: 1 },
+  // "No-nonsense" literally asserts the limitation.
+  NoNonsenseDefender:  { aerial: 2, pressResist: -2, creation: -2, discipline: -1 },
+  // Finishing is the goal multiplier and positioning has no quality. Nothing
+  // else about a poacher is definitional.
+  Poacher:             {},
+  Regista:             { pressResist: 3, creation: 3, setPiece: 1 },
+  SetPieceDeliverer:   { setPiece: 3, penalty: 1 },
+  SweeperKeeper:       { pressResist: 2, claiming: 1 },
+  TargetMan:           { aerial: 2 },
+  Trequartista:        { creation: 3, dribble: 1 },
+  Winger:              { setPiece: 2 },
+
+  Pacey:               { pace: 3, recovery: 1 },
+  Sweeper:             { recovery: 3, pressResist: 2 },
+  Stopper:             { aerial: 2, pressing: 2, discipline: -1 },
+  PressingForward:     { pressing: 3 },
+  Workhorse:           { pressing: 2 },
+  Carrier:             { pressResist: 3, dribble: 2 },
+  Dribbler:            { dribble: 3 },
+  ShotStopper:         { shotStopping: 3 },
+  CommandingKeeper:    { claiming: 3, aerial: 1 },
+  PenaltyTaker:        { penalty: 3 },
+  LongShot:            { longShot: 3 },
+
+  // Weaknesses. These are allowed to be wholly negative because the weakness
+  // is the whole point of them: nobody is Ponderous without being slow. A trait
+  // that was merely bad at everything would not be a trait, it would be a worse
+  // player, and the rating already says that.
+  Ponderous:           { pace: -2, recovery: -2 },
+  Lightweight:         { aerial: -2 },
+  LooseInPossession:   { pressResist: -2 },
+  Immobile:            { pressing: -2, recovery: -1 },
+  FlapsAtCrosses:      { claiming: -2 },
+  PoorDistribution:    { pressResist: -2 },
+  RashInTheTackle:     { discipline: -2 },
+};
+
+// Deliberately modest goal and assist multipliers. A trait that exists to
+// describe an ability should not also be a free scoring bonus; its effect
+// belongs in the qualities above.
+const EXTRA_ROLES: typeof ROLE_DEFAULTS = [
+  { name: 'Pacey', label: 'Pacey', goal_mult: 1.10, assist_mult: 1.00, valid_positions: [], description: 'Genuine speed; runs in behind and punishes a high line', att_contrib: 0, mid_contrib: 0, def_contrib: 0 },
+  { name: 'Sweeper', label: 'Sweeper', goal_mult: 0.30, assist_mult: 0.80, valid_positions: ['CB'], description: 'Covers the space behind the line and reads danger early', att_contrib: 0, mid_contrib: 1, def_contrib: 2 },
+  { name: 'Stopper', label: 'Stopper', goal_mult: 0.50, assist_mult: 0.30, valid_positions: ['CB'], description: 'Steps out to meet the ball and wins it high up the pitch', att_contrib: 0, mid_contrib: 0, def_contrib: 2.5 },
+  { name: 'PressingForward', label: 'Pressing Forward', goal_mult: 1.20, assist_mult: 1.00, valid_positions: ['ST', 'CF', 'LW', 'RW'], description: 'Leads the press from the front and gives defenders no rest', att_contrib: 1, mid_contrib: 1, def_contrib: 0 },
+  { name: 'Workhorse', label: 'Workhorse', goal_mult: 0.80, assist_mult: 0.90, valid_positions: [], description: 'Covers ground for ninety minutes', att_contrib: 0, mid_contrib: 1, def_contrib: 1 },
+  { name: 'Carrier', label: 'Ball Carrier', goal_mult: 1.00, assist_mult: 1.40, valid_positions: [], description: 'Beats a press by driving through it with the ball', att_contrib: 1, mid_contrib: 2, def_contrib: 0 },
+  { name: 'Dribbler', label: 'Dribbler', goal_mult: 1.30, assist_mult: 1.50, valid_positions: [], description: 'Beats his man one on one', att_contrib: 1, mid_contrib: 0, def_contrib: 0 },
+  { name: 'ShotStopper', label: 'Shot Stopper', goal_mult: 0.00, assist_mult: 0.20, valid_positions: ['GK'], description: 'Elite reflexes; keeps out what he reaches', att_contrib: 0, mid_contrib: 0, def_contrib: 2 },
+  { name: 'CommandingKeeper', label: 'Commanding Keeper', goal_mult: 0.00, assist_mult: 0.30, valid_positions: ['GK'], description: 'Owns his box and claims what comes into it', att_contrib: 0, mid_contrib: 0, def_contrib: 2 },
+  { name: 'PenaltyTaker', label: 'Penalty Taker', goal_mult: 1.40, assist_mult: 0.80, valid_positions: [], description: 'The one who takes them, and does not miss often', att_contrib: 0, mid_contrib: 0, def_contrib: 0 },
+  { name: 'Ponderous', label: 'Ponderous', goal_mult: 1.00, assist_mult: 1.00, valid_positions: [], description: 'Strong, perhaps, but slow — and a high line becomes a liability', att_contrib: 0, mid_contrib: 0, def_contrib: 0 },
+  { name: 'Lightweight', label: 'Lightweight', goal_mult: 1.00, assist_mult: 1.00, valid_positions: [], description: 'Loses the physical contest, in the air and on the ground', att_contrib: 0, mid_contrib: 0, def_contrib: 0 },
+  { name: 'LooseInPossession', label: 'Loose in Possession', goal_mult: 1.00, assist_mult: 0.90, valid_positions: [], description: 'Gives it away under pressure', att_contrib: 0, mid_contrib: -1, def_contrib: 0 },
+  { name: 'Immobile', label: 'Immobile', goal_mult: 1.00, assist_mult: 1.00, valid_positions: [], description: 'Will not chase it, and the press dies with him', att_contrib: 0, mid_contrib: 0, def_contrib: 0 },
+  { name: 'FlapsAtCrosses', label: 'Flaps at Crosses', goal_mult: 0.00, assist_mult: 0.20, valid_positions: ['GK'], description: 'Does not command his box, and everyone knows it', att_contrib: 0, mid_contrib: 0, def_contrib: -1 },
+  { name: 'PoorDistribution', label: 'Poor Distribution', goal_mult: 0.00, assist_mult: 0.10, valid_positions: ['GK'], description: 'Cannot be trusted with the ball at his feet', att_contrib: 0, mid_contrib: -1.5, def_contrib: 0 },
+  { name: 'RashInTheTackle', label: 'Rash in the Tackle', goal_mult: 1.00, assist_mult: 1.00, valid_positions: [], description: 'Dives in, and collects what follows', att_contrib: 0, mid_contrib: 0, def_contrib: 0 },
+  { name: 'LongShot', label: 'Long Shot', goal_mult: 1.40, assist_mult: 0.80, valid_positions: [], description: 'A threat from outside the box', att_contrib: 1, mid_contrib: 0, def_contrib: 0 },
+];
+
+/** Every role the game knows: the original set plus the trait additions. */
+const ALL_ROLES = [...ROLE_DEFAULTS, ...EXTRA_ROLES];
 
 function migrateRoleConfig(db: Database.Database): void {
   db.exec(`
@@ -1917,20 +2041,34 @@ function migrateRoleConfig(db: Database.Database): void {
   if (!have.has('att_contrib')) db.exec('ALTER TABLE role_config ADD COLUMN att_contrib REAL NOT NULL DEFAULT 0');
   if (!have.has('mid_contrib')) db.exec('ALTER TABLE role_config ADD COLUMN mid_contrib REAL NOT NULL DEFAULT 0');
   if (!have.has('def_contrib')) db.exec('ALTER TABLE role_config ADD COLUMN def_contrib REAL NOT NULL DEFAULT 0');
+  if (!have.has('qualities')) {
+    db.exec("ALTER TABLE role_config ADD COLUMN qualities TEXT NOT NULL DEFAULT '{}'");
+  }
+
+  // Every role, every time. This used to run only when the table was EMPTY,
+  // which meant a role added after a database existed would never appear in it
+  // — the same shape of mistake as the batch planners, where work was only
+  // carried forward if the thing it belonged to was considered finished.
+  // INSERT OR IGNORE leaves anything the editor has changed alone.
+  const insert = db.prepare(
+    'INSERT OR IGNORE INTO role_config (name, label, goal_mult, assist_mult, valid_positions, description, att_contrib, mid_contrib, def_contrib, qualities) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)'
+  );
+  // Qualities are owned by the code, not the editor, so they are synced every
+  // time rather than only when unset — otherwise a correction to this map would
+  // never reach a database that already exists. When the editor learns to edit
+  // them, this needs a flag marking a row as customised.
+  const setQualities = db.prepare('UPDATE role_config SET qualities = ? WHERE name = ?');
+  db.transaction(() => {
+    for (const r of ALL_ROLES) {
+      insert.run(r.name, r.label, r.goal_mult, r.assist_mult, JSON.stringify(r.valid_positions),
+        r.description, r.att_contrib, r.mid_contrib, r.def_contrib,
+        JSON.stringify(ROLE_QUALITIES[r.name] ?? {}));
+      setQualities.run(JSON.stringify(ROLE_QUALITIES[r.name] ?? {}), r.name);
+    }
+  })();
 
   const { c } = db.prepare('SELECT COUNT(*) as c FROM role_config').get() as { c: number };
-  if (c === 0) {
-    // Fresh database — insert all defaults.
-    const insert = db.prepare(
-      'INSERT OR IGNORE INTO role_config (name, label, goal_mult, assist_mult, valid_positions, description, att_contrib, mid_contrib, def_contrib) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)'
-    );
-    const insertAll = db.transaction(() => {
-      for (const r of ROLE_DEFAULTS) {
-        insert.run(r.name, r.label, r.goal_mult, r.assist_mult, JSON.stringify(r.valid_positions), r.description, r.att_contrib, r.mid_contrib, r.def_contrib);
-      }
-    });
-    insertAll();
-  } else if (needsContribMigration) {
+  if (c > 0 && needsContribMigration) {
     // Existing database — columns were just added as 0; seed the non-zero contrib values.
     const update = db.prepare('UPDATE role_config SET att_contrib=?, mid_contrib=?, def_contrib=? WHERE name=?');
     const updateAll = db.transaction(() => {
