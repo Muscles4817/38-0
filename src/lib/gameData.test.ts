@@ -11,8 +11,11 @@ import {
   getOpponentSquads,
   getRoleConfig,
   getSquad,
+  getTacticOptions,
   getTraits,
   getTeamStrengths,
+  describeCompetition,
+  listCompetitions,
   listDraftableSquads,
   pickRandomSquad,
   runSeasonSimulation,
@@ -553,5 +556,140 @@ describe('every stored lineup is legal', () => {
       const gkSlot = shape.slots.findIndex(s => s.position === 'GK');
       expect(keepers[0]?.slotIndex, `${named(lineup.clubId, lineup.seasonId)} plays its keeper outfield`).toBe(gkSlot);
     }
+  });
+});
+
+// ── Choosing a season ────────────────────────────────────────────────────────
+
+describe('listCompetitions', () => {
+  const competitions = listCompetitions();
+
+  it('offers at least the season the game defaults to', () => {
+    expect(competitions.length).toBeGreaterThan(0);
+    expect(competitions.some(c => c.isDefault)).toBe(true);
+  });
+
+  it('offers only fields that can play a 38-game season', () => {
+    for (const c of competitions) {
+      // Nineteen opponents plus the drafted XI is twenty teams, which is
+      // 38 games. An even number of opponents could not be scheduled at all.
+      expect(c.opponentCount, `${c.leagueName} ${c.seasonLabel}`).toBe(19);
+      expect(c.opponentCount % 2, `${c.leagueName} ${c.seasonLabel}`).toBe(1);
+    }
+  });
+
+  it('says which clubs make way when a season had more than twenty', () => {
+    for (const c of competitions) {
+      expect(c.displaced).toHaveLength(c.clubCount - c.opponentCount);
+    }
+    // The Premier League had 22 clubs until 1995/96.
+    const early = competitions.find(c => c.seasonLabel === '1992/93');
+    expect(early?.clubCount).toBe(22);
+    expect(early?.displaced).toHaveLength(3);
+  });
+
+  it('names no competition twice', () => {
+    const keys = competitions.map(c => `${c.league}-${c.seasonId}`);
+    expect(new Set(keys).size).toBe(keys.length);
+  });
+});
+
+describe('getOpponentSquads for a chosen season', () => {
+  const chosen = listCompetitions().find(c => c.seasonLabel === '1992/93')!;
+  const squads = getOpponentSquads(chosen.seasonId, chosen.league);
+
+  it('fields nineteen clubs from that season', () => {
+    expect(squads).toHaveLength(19);
+    for (const squad of squads) {
+      expect(squad.players).toHaveLength(11);
+    }
+  });
+
+  it('drops the weakest sides rather than an arbitrary nineteen', () => {
+    const played = new Set(squads.map(s => s.clubName));
+    for (const name of chosen.displaced) {
+      expect(played.has(name), `${name} should have made way`).toBe(false);
+    }
+    const weakestPlaying = Math.min(...squads.map(s => s.strength));
+    const all = gameData.squads
+      .filter(sq => sq.seasonId === chosen.seasonId)
+      .map(sq => gameData.clubs.find(c => c.id === sq.clubId)?.name);
+    // Every club that did make way was in the season to begin with.
+    for (const name of chosen.displaced) expect(all).toContain(name);
+    expect(weakestPlaying).toBeGreaterThan(0);
+  });
+
+  it('never mixes in a club from another season', () => {
+    const namesThen = new Set(
+      gameData.squads
+        .filter(sq => sq.seasonId === chosen.seasonId)
+        .map(sq => gameData.clubs.find(c => c.id === sq.clubId)?.name),
+    );
+    for (const squad of squads) expect(namesThen.has(squad.clubName)).toBe(true);
+  });
+
+  it('describes the same field it fields', () => {
+    const described = describeCompetition(chosen.seasonId, chosen.league)!;
+    expect(described.opponentCount).toBe(squads.length);
+  });
+});
+
+describe('a season played in a chosen year', () => {
+  /** The 1992/93 champions, fielded as the classic page would. */
+  const chosen = listCompetitions().find(c => c.seasonLabel === '1994/95')!;
+
+  it('still plays 38 games against a twenty-team league', () => {
+    const picks = gameData.squads
+      .filter(sq => sq.seasonId === chosen.seasonId)
+      .flatMap(sq => sq.players)
+      .slice(0, 11)
+      .map((p, i): SquadPick => ({
+        slotIndex: i, position: p.positions[0], playerId: p.playerId,
+        playerName: p.name, nationality: p.nationality, rating: p.rating,
+        clubName: 'Test XI', seasonLabel: chosen.seasonLabel, positions: p.positions,
+      }));
+
+    const result = runSeasonSimulation(picks, 4242, { seasonId: chosen.seasonId });
+    expect(result.gameweeks).toHaveLength(38);
+    expect(result.finalTable).toHaveLength(20);
+    expect(result.wins + result.draws + result.losses).toBe(38);
+  });
+
+  it('plays a different league from the default season', () => {
+    const picks = gameData.squads
+      .filter(sq => sq.seasonId === chosen.seasonId)
+      .flatMap(sq => sq.players)
+      .slice(0, 11)
+      .map((p, i): SquadPick => ({
+        slotIndex: i, position: p.positions[0], playerId: p.playerId,
+        playerName: p.name, nationality: p.nationality, rating: p.rating,
+        clubName: 'Test XI', seasonLabel: chosen.seasonLabel, positions: p.positions,
+      }));
+
+    const then = runSeasonSimulation(picks, 4242, { seasonId: chosen.seasonId });
+    const now  = runSeasonSimulation(picks, 4242);
+    const namesThen = then.finalTable.map(r => r.name).sort();
+    const namesNow  = now.finalTable.map(r => r.name).sort();
+    expect(namesThen).not.toEqual(namesNow);
+  });
+});
+
+describe('getTacticOptions', () => {
+  const picks = gameData.squads[0].players.slice(0, 11).map((p, i): SquadPick => ({
+    slotIndex: i, position: p.positions[0], playerId: p.playerId,
+    playerName: p.name, nationality: p.nationality, rating: p.rating,
+    clubName: 'Test XI', seasonLabel: 'x', positions: p.positions, roles: p.roles,
+  }));
+
+  it('offers every style the engine knows', () => {
+    expect(getTacticOptions(picks).map(t => t.style).sort())
+      .toEqual(Object.keys(PLAYSTYLES).sort());
+  });
+
+  it('reads the qualities out of the snapshot, so fit is not always the same', () => {
+    // Without role qualities every style would fit every side identically,
+    // which is the failure mode this guards: getRoleConfig has to pass them on.
+    const fits = new Set(getTacticOptions(picks).map(t => Math.round(t.fit * 100)));
+    expect(fits.size).toBeGreaterThan(1);
   });
 });

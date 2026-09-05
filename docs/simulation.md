@@ -26,6 +26,20 @@ picks (11 SquadPick)                 opponents (19 OpponentSquad)
                               player stats, awards, leaderboards
 ```
 
+## The plan
+
+`simulateSeason` takes two things the player decides after the draft: the
+opponents it is handed (nineteen clubs from whichever season was chosen) and a
+playstyle. The style moves the same three team-strength numbers the players do,
+and scales the chances the player's own matches produce. `balanced` is the
+origin of all three axes and changes nothing, so every measurement in this
+document still describes a balanced season.
+
+The rules, the constants and the measured effect are in
+[pre-season.md](pre-season.md). What matters here is the shape of the seam:
+tactics are a handful of rating points and a tempo multiplier, not a second
+engine.
+
 ## Team strength
 
 Each team gets three numbers — attack, midfield, defence — from the players
@@ -91,6 +105,7 @@ When no seed is passed, `Date.now() % 999983` is used.
 | Home advantage, score spread | `simulateScore` |
 | Role multipliers | **the database** (`role_config`), not the defaults in code |
 | Pre-season projection | `preSeasonOdds` |
+| What a style is worth | `LINE_ATT`, `LINE_DEF`, `BUILD_MID`, `BUILD_ATT`, `TEMPO_WEIGHT` — see [pre-season.md](pre-season.md) |
 
 ## Calibration
 

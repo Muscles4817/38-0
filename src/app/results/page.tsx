@@ -2,9 +2,12 @@
 
 import { useState, useEffect, useMemo } from 'react';
 import { useRouter } from 'next/navigation';
+import Link from 'next/link';
 import { getFormation, canFillSlot, Formation } from '@/lib/formations';
-import { getTeamStrengths, runSeasonSimulation, type DataPlayer } from '@/lib/gameData';
+import { describeCompetition, runSeasonSimulation, type DataPlayer } from '@/lib/gameData';
 import { useStoredJson, clearStored } from '@/lib/clientStorage';
+import { getTacticEffect } from '@/lib/gameData';
+import type { StoredPlan } from '@/app/squad/page';
 import {
   SquadPick, SimulationResult, TeamStanding, LeagueEntry,
   computeOverall, preSeasonOdds,
@@ -132,41 +135,55 @@ function WhatCouldHaveBeen({ formation, actualPicks }: { formation: Formation; a
 export default function ResultsPage() {
   const router = useRouter();
 
-  // The drafted XI and the setup that produced it are handed over in
-  // localStorage by the draft and classic pages.
+  // The drafted XI, the setup that produced it and the plan chosen before
+  // kick-off are all handed over in localStorage.
   const picks     = useStoredJson<SquadPick[]>('38-0-squad') ?? NO_PICKS;
   const setup     = useStoredJson<{ formation: string; draftMode?: string }>('38-0-setup');
-  // Classic mode writes draftMode 'classic', so back goes where the XI came from.
-  const cameFromClassic = setup?.draftMode === 'classic';
+  const plan      = useStoredJson<StoredPlan>('38-0-plan');
   const formation = useMemo(() => getFormation(setup?.formation ?? '4-4-2'), [setup]);
 
-  const [simResult, setSimResult]   = useState<SimulationResult | null>(null);
-  const [simulating, setSimulating] = useState(false);
-  const [showFinal, setShowFinal]   = useState(false);
-  const teamRatings = useMemo(() => getTeamStrengths(), []);
+  const [simResult, setSimResult] = useState<SimulationResult | null>(null);
+  const [showFinal, setShowFinal] = useState(false);
+  // Bumping this re-runs the season with the same squad and plan.
+  const [run, setRun]             = useState(0);
+
+  const opponent = useMemo(
+    () => describeCompetition(plan?.seasonId, plan?.league),
+    [plan?.seasonId, plan?.league],
+  );
+  const tactic   = useMemo(
+    () => (picks.length ? getTacticEffect(picks, plan?.style ?? 'balanced') : null),
+    [picks, plan?.style],
+  );
 
   // Nothing to report on without a squad.
   useEffect(() => {
     if (localStorage.getItem('38-0-squad') === null) router.push('/');
   }, [router]);
 
-  function simulate() {
-    setSimulating(true);
-    // The simulation runs on this thread; yield first so the button can repaint
-    // into its pending state before it blocks.
-    setTimeout(() => {
-      try {
-        setSimResult(runSeasonSimulation(picks));
-      } finally {
-        setSimulating(false);
-      }
+  // The season plays as soon as the player arrives: everything it needs was
+  // decided on the pre-season screen, so a second button here would only be a
+  // step between them and the result. It runs in a timeout because the
+  // simulation blocks this thread, and the placeholder below should paint
+  // first.
+  useEffect(() => {
+    if (!picks.length) return;
+    let cancelled = false;
+    const t = setTimeout(() => {
+      const result = runSeasonSimulation(picks, undefined, {
+        seasonId: plan?.seasonId,
+        league:   plan?.league,
+        style:    plan?.style,
+      });
+      if (!cancelled) setSimResult(result);
     }, 0);
-  }
+    return () => { cancelled = true; clearTimeout(t); };
+  }, [picks, plan?.seasonId, plan?.league, plan?.style, run]);
 
   function handleResim() {
     setShowFinal(false);
     setSimResult(null);
-    simulate();
+    setRun(n => n + 1);
   }
 
   if (!picks.length) {
@@ -175,10 +192,6 @@ export default function ResultsPage() {
 
   const overall = computeOverall(picks);
   const odds    = preSeasonOdds(overall);
-  // Count how many of the 19 opponents have a higher best-XI OVR than the user
-  const projectedPosition = teamRatings.length > 0
-    ? teamRatings.filter(t => t.overall > overall).length + 1
-    : odds.projectedPosition;
 
   // While the season is playing out, the live panel is the only thing changing.
   // On a phone the squad list above it is several screens tall, so the match
@@ -189,9 +202,9 @@ export default function ResultsPage() {
     <main className="min-h-screen bg-[#0a0a0a] text-white">
       <div className="max-w-5xl mx-auto py-6 px-4 flex flex-col gap-6">
 
-        {/* Back to wherever this XI came from. */}
+        {/* Back to the pre-season screen, where the plan can be changed. */}
         <div className="order-none">
-          <BackLink href={cameFromClassic ? '/classic' : '/draft'} label={cameFromClassic ? 'Classic' : 'Draft'} />
+          <BackLink href="/squad" label="Team Talk" />
         </div>
 
         {/* Squad header */}
@@ -226,35 +239,34 @@ export default function ResultsPage() {
           </div>
         </div>
 
-        {/* Pre-season odds */}
+        {/* The plan this season is being played under. */}
+        <div className={`bg-[#111] rounded-2xl px-5 py-4 flex items-center gap-4 flex-wrap ${liveSim ? 'order-3' : 'order-2'}`}>
+          <div className="min-w-0">
+            <div className="text-[10px] text-[#555] uppercase tracking-widest font-bold mb-1">Playing</div>
+            <div className="font-black text-sm truncate">
+              {opponent ? `${opponent.leagueName} ${opponent.seasonLabel}` : 'Premier League'}
+            </div>
+          </div>
+          <div className="min-w-0">
+            <div className="text-[10px] text-[#555] uppercase tracking-widest font-bold mb-1">Tactic</div>
+            <div className="font-black text-sm truncate">
+              {tactic?.label ?? 'Balanced'}
+              {tactic && <span className="text-[#555] font-bold ml-2">fit {Math.round(tactic.fit * 100)}%</span>}
+            </div>
+          </div>
+          <Link
+            href="/squad"
+            className="ml-auto shrink-0 px-3 py-2.5 rounded-lg border border-[#2a2a2a] text-[#888] text-xs font-bold hover:border-[#444] hover:text-white transition-colors touch-manipulation"
+          >
+            Change
+          </Link>
+        </div>
+
+        {/* The season is running: nothing to show yet but what it is running. */}
         {!simResult && (
-          <div className="order-2 bg-[#111] rounded-2xl p-6 space-y-4">
-            <div className="text-xs text-[#555] uppercase tracking-widest font-bold">Pre-Season Odds</div>
-            <div className="text-xs text-[#444]">Based on your squad&apos;s overall rating</div>
-            <div className="grid grid-cols-2 gap-4">
-              <div>
-                <div className="text-xs text-[#555]">Projected Finish</div>
-                <div className="text-3xl font-black">{ordinal(projectedPosition)}</div>
-              </div>
-              <div>
-                <div className="text-xs text-[#555]">Expected Points</div>
-                <div className="text-3xl font-black text-[#00c896]">{odds.expectedPoints}</div>
-              </div>
-            </div>
-            <div className="space-y-2">
-              <OddsBar label="Win the league" pct={odds.winLeague}   color="#00c896" />
-              <OddsBar label="Top 4"           pct={odds.top4}       color="#3b82f6" />
-              <OddsBar label="Top 6"           pct={odds.top6}       color="#8b5cf6" />
-              <OddsBar label="Top 10"          pct={odds.top10}      color="#f59e0b" />
-              <OddsBar label="Relegation"      pct={odds.relegation} color="#ef4444" />
-            </div>
-            <button
-              onClick={simulate}
-              disabled={simulating}
-              className="w-full py-4 rounded-xl font-black text-lg bg-[#00c896] text-black hover:bg-[#00b385] transition-colors disabled:opacity-50"
-            >
-              {simulating ? 'Simulating season…' : 'Simulate Season →'}
-            </button>
+          <div className="order-3 bg-[#111] rounded-2xl p-6 text-center">
+            <div className="text-sm font-black text-[#00c896] animate-pulse">Playing the season…</div>
+            <div className="text-[#555] text-xs mt-1">38 games against the {opponent?.seasonLabel ?? 'current'} field</div>
           </div>
         )}
 
@@ -284,7 +296,7 @@ export default function ResultsPage() {
           <button
             type="button"
             onClick={() => {
-              clearStored('38-0-draft', '38-0-squad', '38-0-seen-squads');
+              clearStored('38-0-draft', '38-0-squad', '38-0-seen-squads', '38-0-plan');
               router.push('/');
             }}
             className="text-[#444] text-xs hover:text-white transition-colors px-4 py-3 touch-manipulation"
@@ -309,14 +321,19 @@ function LiveSimulation({
   const [playing, setPlaying] = useState(true);
   const [speed, setSpeed]     = useState<'normal' | 'fast'>('normal');
 
-  // Auto-advance. Stops at GW 38, at which point the play/pause control is
-  // replaced by the season report button.
+  // The league is twenty teams, so a season is 38 rounds — but read it off the
+  // result rather than assume it, so a shorter field cannot leave the controls
+  // stuck one gameweek from the end.
+  const lastGw = simResult.gameweeks.length;
+
+  // Auto-advance. Stops at the last gameweek, at which point the play/pause
+  // control is replaced by the season report button.
   useEffect(() => {
-    if (!playing || gw >= 38) return;
+    if (!playing || gw >= lastGw) return;
     const delay = speed === 'fast' ? 300 : 1100;
     const t = setTimeout(() => setGw(g => g + 1), delay);
     return () => clearTimeout(t);
-  }, [playing, gw, speed]);
+  }, [playing, gw, speed, lastGw]);
 
   const gwData        = simResult.gameweeks[gw - 1];
   const table         = gwData?.tableSnapshot ?? [];
@@ -328,7 +345,7 @@ function LiveSimulation({
   const opponent      = userFixture ? (isHome ? userFixture.away : userFixture.home) : '';
   const result        = userGoals > oppGoals ? 'W' : userGoals === oppGoals ? 'D' : 'L';
   const rCol          = result === 'W' ? '#00c896' : result === 'D' ? '#f59e0b' : '#ef4444';
-  const seasonDone    = gw >= 38;
+  const seasonDone    = gw >= lastGw;
 
   return (
     <div className="space-y-4">
@@ -338,7 +355,7 @@ function LiveSimulation({
           <div className="flex items-center gap-3">
             <span className="text-[#555] text-[10px] uppercase tracking-widest font-bold">Gameweek</span>
             <span className="text-3xl font-black leading-none">{gw}</span>
-            <span className="text-[#444] text-sm">/ 38</span>
+            <span className="text-[#444] text-sm">/ {lastGw}</span>
           </div>
           <div className="flex items-center gap-2">
             {!seasonDone ? (
@@ -356,7 +373,7 @@ function LiveSimulation({
                   {speed === 'fast' ? '3×' : '1×'}
                 </button>
                 <button
-                  onClick={() => { setGw(38); setPlaying(false); }}
+                  onClick={() => { setGw(lastGw); setPlaying(false); }}
                   className="px-3 py-2.5 rounded-lg text-xs font-bold bg-[#1a1a1a] text-[#888] hover:text-white transition-colors touch-manipulation"
                 >
                   Skip ⏭
@@ -373,7 +390,7 @@ function LiveSimulation({
           </div>
         </div>
         <div className="w-full bg-[#1a1a1a] rounded-full h-1.5">
-          <div className="h-1.5 rounded-full transition-all duration-500" style={{ width: `${(gw / 38) * 100}%`, background: '#00c896' }} />
+          <div className="h-1.5 rounded-full transition-all duration-500" style={{ width: `${(gw / lastGw) * 100}%`, background: '#00c896' }} />
         </div>
       </div>
 
@@ -757,18 +774,6 @@ function LeagueLeaderboards({ scorers, assisters, keepers }: { scorers: LeagueEn
 }
 
 // ── Helper components ─────────────────────────────────────────────────────────
-
-function OddsBar({ label, pct, color }: { label: string; pct: number; color: string }) {
-  return (
-    <div className="flex items-center gap-3">
-      <div className="text-xs text-[#666] w-28 flex-shrink-0">{label}</div>
-      <div className="flex-1 bg-[#1a1a1a] rounded-full h-1.5">
-        <div className="h-1.5 rounded-full" style={{ width: `${Math.min(100, pct)}%`, background: color }} />
-      </div>
-      <div className="text-xs text-[#888] w-10 text-right">{pct.toFixed(1)}%</div>
-    </div>
-  );
-}
 
 function Award({ icon, title, name, stat }: { icon: string; title: string; name: string; stat: string }) {
   return (

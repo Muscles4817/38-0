@@ -168,8 +168,8 @@ export default function ClassicPage() {
     };
     writeStored('38-0-setup', setup);
     writeStored('38-0-squad', picks);
-    clearStored('38-0-seen-squads');
-    router.push('/results');
+    clearStored('38-0-seen-squads', '38-0-plan');
+    router.push('/squad');
   }
 
   const fmt = getFormation(formation);

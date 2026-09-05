@@ -224,7 +224,9 @@ export default function DraftPage() {
 
     if (next.length === 11) {
       writeStored('38-0-squad', next);
-      router.push('/results');
+      // The XI is complete, but the run is not: the tactic and the season to
+      // play it in are still to be chosen. See src/app/squad.
+      router.push('/squad');
     }
   }
 

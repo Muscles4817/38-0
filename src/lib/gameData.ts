@@ -13,13 +13,16 @@ import { Position } from './formations';
 import { bestFormation } from './lineupFit';
 import {
   simulateSeason,
+  tacticEffect,
   type PlayerRole,
   type SquadPick,
   type OpponentPlayer,
   type OpponentSquad,
   type RoleConfig,
   type SimulationResult,
+  type TacticEffect,
 } from './simulation';
+import { PLAYSTYLES, type PlaystyleName } from './matchEngine';
 
 // ── Snapshot types ───────────────────────────────────────────────────────────
 
@@ -123,9 +126,33 @@ const traitsByKey = new Map<string, DataTraits>(
   (gameData.traits ?? []).map(t => [key(t.clubId, t.seasonId), t]),
 );
 
-/** The season the user's XI is dropped into and plays against. */
+/** The season the user's XI is dropped into unless they choose another. */
 export const SIMULATED_SEASON_START = 2025;
 export const SIMULATED_LEAGUE = 'PL';
+
+/**
+ * Opponents in a season, so that the league is the twenty teams the game is
+ * named after: 19 of them plus the player's XI is 38 games.
+ *
+ * A league that was bigger at the time has to give up places. The Premier
+ * League had 22 clubs until 1995, and 1992/93 in the snapshot is all 22 of
+ * them, so three sides make way — the weakest three, as if the player's XI had
+ * come up and the rest had gone down.
+ */
+const OPPONENTS_PER_SEASON = 19;
+
+/** Display names for the league codes stored on a club. */
+const LEAGUE_NAMES: Record<string, string> = {
+  PL: 'Premier League',
+  SA: 'Serie A',
+  LL: 'La Liga',
+  BL: 'Bundesliga',
+  WC: 'World Cup',
+};
+
+export function leagueName(code: string): string {
+  return LEAGUE_NAMES[code] ?? code;
+}
 
 const simulatedSeason = gameData.seasons.find(s => s.yearStart === SIMULATED_SEASON_START) ?? null;
 
@@ -319,15 +346,24 @@ function toOpponentPlayer(player: DataPlayer, index: number): OpponentPlayer {
   };
 }
 
-/** The 19 clubs the user's XI plays against, using stored lineups where set. */
-export function getOpponentSquads(): OpponentSquad[] {
-  if (!simulatedSeason) return [];
+/**
+ * The clubs the user's XI plays against, using stored lineups where set.
+ *
+ * Defaults to the current season. Pass a season the player chose on the
+ * pre-season screen to drop the XI into that league instead.
+ */
+export function getOpponentSquads(
+  seasonId?: number,
+  league: string = SIMULATED_LEAGUE,
+): OpponentSquad[] {
+  const season = seasonId != null ? seasonById.get(seasonId) ?? null : simulatedSeason;
+  if (!season) return [];
   const result: OpponentSquad[] = [];
 
   for (const squad of gameData.squads) {
-    if (squad.seasonId !== simulatedSeason.id) continue;
+    if (squad.seasonId !== season.id) continue;
     const club = clubById.get(squad.clubId);
-    if (!club || club.league !== SIMULATED_LEAGUE) continue;
+    if (!club || club.league !== league) continue;
 
     const lineup = lineupByKey.get(key(squad.clubId, squad.seasonId));
     const byId = new Map(squad.players.map(p => [p.playerId, p]));
@@ -348,14 +384,134 @@ export function getOpponentSquads(): OpponentSquad[] {
       strength: averageRating(eleven),
     });
   }
-  return result;
+  return trimToLeague(result);
+}
+
+/**
+ * Cuts a season's field down to an opponent list the schedule can use.
+ *
+ * Two things have to be true of it: it has to be small enough that the player
+ * still plays 38 games, and it has to be odd, because with the XI added the
+ * double round robin needs an even number of teams. The sides that make way
+ * are the weakest, which is also the least interesting XI to lose.
+ */
+function trimToLeague(squads: OpponentSquad[]): OpponentSquad[] {
+  const cut = displacedFrom(squads);
+  if (cut.size === 0) return squads;
+  return squads.filter(s => !cut.has(s.clubName));
+}
+
+/** The clubs `trimToLeague` would drop, weakest first. */
+function displacedFrom(squads: OpponentSquad[]): Set<string> {
+  let keep = Math.min(squads.length, OPPONENTS_PER_SEASON);
+  if (keep % 2 === 0) keep -= 1;
+  const drop = squads.length - keep;
+  if (drop <= 0) return new Set();
+  return new Set(
+    [...squads]
+      .sort((a, b) => a.strength - b.strength)
+      .slice(0, drop)
+      .map(s => s.clubName),
+  );
 }
 
 /** Best-XI overall for each opponent, used for the pre-season projection. */
-export function getTeamStrengths(): { clubName: string; overall: number }[] {
-  return getOpponentSquads()
+export function getTeamStrengths(
+  seasonId?: number,
+  league: string = SIMULATED_LEAGUE,
+): { clubName: string; overall: number }[] {
+  return getOpponentSquads(seasonId, league)
     .map(s => ({ clubName: s.clubName, overall: s.strength }))
     .sort((a, b) => b.overall - a.overall);
+}
+
+// ── Competitions ─────────────────────────────────────────────────────────────
+
+/** A league-season the drafted XI can be dropped into. */
+export interface Competition {
+  league: string;
+  leagueName: string;
+  seasonId: number;
+  seasonLabel: string;
+  yearStart: number;
+  /** Clubs the snapshot holds for this league-season. */
+  clubCount: number;
+  /** How many of them take the field once the league is cut to twenty teams. */
+  opponentCount: number;
+  /** The sides that make way for the player's XI, weakest first. */
+  displaced: string[];
+  /** Average best-XI rating of the field, so a season can be read at a glance. */
+  averageRating: number;
+  /** The season simulated when the player has not chosen one. */
+  isDefault: boolean;
+}
+
+/**
+ * Every league-season with a field big enough to play a real season against.
+ *
+ * Generic in the league on purpose: the snapshot only has a full Premier
+ * League today, so that is all this returns, but a Serie A season imported
+ * later becomes selectable without touching this function or the screen that
+ * calls it.
+ */
+export function listCompetitions(): Competition[] {
+  const leagues = new Set(gameData.clubs.map(c => c.league));
+  const result: Competition[] = [];
+
+  for (const league of leagues) {
+    for (const season of gameData.seasons) {
+      const competition = describeCompetition(season.id, league);
+      if (competition) result.push(competition);
+    }
+  }
+  return result.sort((a, b) =>
+    a.leagueName.localeCompare(b.leagueName) || b.yearStart - a.yearStart);
+}
+
+/**
+ * One league-season, or null when it cannot field a league.
+ *
+ * A season is playable only with the full `OPPONENTS_PER_SEASON`: a short
+ * field would mean fewer than 38 games, and the game is called 38-0.
+ */
+export function describeCompetition(
+  seasonId?: number,
+  league: string = SIMULATED_LEAGUE,
+): Competition | null {
+  const season = seasonId != null ? seasonById.get(seasonId) ?? null : simulatedSeason;
+  if (!season) return null;
+
+  const field: OpponentSquad[] = [];
+  for (const squad of gameData.squads) {
+    if (squad.seasonId !== season.id) continue;
+    const club = clubById.get(squad.clubId);
+    if (!club || club.league !== league) continue;
+    const rated = squad.players.filter(p => p.rating > 0);
+    if (rated.length < 11) continue;
+    field.push({ clubName: club.name, players: [], strength: averageRating(bestXI(rated)) });
+  }
+  if (field.length < OPPONENTS_PER_SEASON) return null;
+
+  const displaced = displacedFrom(field);
+  const playing = field.filter(s => !displaced.has(s.clubName));
+
+  return {
+    league,
+    leagueName: leagueName(league),
+    seasonId: season.id,
+    seasonLabel: season.label,
+    yearStart: season.yearStart,
+    clubCount: field.length,
+    opponentCount: playing.length,
+    displaced: [...field]
+      .sort((a, b) => a.strength - b.strength)
+      .filter(s => displaced.has(s.clubName))
+      .map(s => s.clubName),
+    averageRating: playing.length
+      ? Math.round(playing.reduce((sum, s) => sum + s.strength, 0) / playing.length)
+      : 0,
+    isDefault: league === SIMULATED_LEAGUE && season.yearStart === SIMULATED_SEASON_START,
+  };
 }
 
 // ── Role tuning ──────────────────────────────────────────────────────────────
@@ -375,7 +531,32 @@ export function getRoleConfig(): RoleConfig {
         .filter(r => r.attContrib !== 0 || r.midContrib !== 0 || r.defContrib !== 0)
         .map(r => [r.name, { att: r.attContrib, mid: r.midContrib, def: r.defContrib }]),
     ),
+    qualities: Object.fromEntries(
+      gameData.roles
+        .filter(r => r.qualities && Object.keys(r.qualities).length > 0)
+        .map(r => [r.name, r.qualities as Partial<Record<string, number>>]),
+    ),
   };
+}
+
+// ── Tactics ──────────────────────────────────────────────────────────────────
+
+/**
+ * Every style, and what each would do to this particular XI.
+ *
+ * The order is the one the styles are declared in, which runs from the most
+ * patient to the most defensive, so the screen showing them does not have to
+ * impose an order of its own.
+ */
+export function getTacticOptions(picks: SquadPick[]): TacticEffect[] {
+  const roleConfig = getRoleConfig();
+  return (Object.keys(PLAYSTYLES) as PlaystyleName[])
+    .map(style => tacticEffect(picks, style, roleConfig));
+}
+
+/** What one style would do to this XI. */
+export function getTacticEffect(picks: SquadPick[], style: PlaystyleName): TacticEffect {
+  return tacticEffect(picks, style, getRoleConfig());
 }
 
 // ── Simulation ───────────────────────────────────────────────────────────────
@@ -388,8 +569,28 @@ function rolesForPick(pick: SquadPick): PlayerRole[] {
   return player?.roles ?? pick.roles ?? [];
 }
 
+/** What the player settled on before kick-off. */
+export interface SeasonPlan {
+  /** The season whose league the XI is dropped into. Defaults to the current one. */
+  seasonId?: number;
+  /** The league within that season. Only the Premier League has a full field today. */
+  league?: string;
+  /** How the XI is set up to play. */
+  style?: PlaystyleName;
+}
+
 /** Runs a full 38-game season for the drafted XI against the stored opponents. */
-export function runSeasonSimulation(picks: SquadPick[], seed?: number): SimulationResult {
+export function runSeasonSimulation(
+  picks: SquadPick[],
+  seed?: number,
+  plan: SeasonPlan = {},
+): SimulationResult {
   const enriched = picks.map(pick => ({ ...pick, roles: rolesForPick(pick) }));
-  return simulateSeason(enriched, getOpponentSquads(), seed, getRoleConfig());
+  return simulateSeason(
+    enriched,
+    getOpponentSquads(plan.seasonId, plan.league ?? SIMULATED_LEAGUE),
+    seed,
+    getRoleConfig(),
+    plan.style ?? 'balanced',
+  );
 }

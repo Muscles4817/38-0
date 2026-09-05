@@ -113,6 +113,21 @@ label, and it is what makes drafting a squad *for* a style meaningful.
 Press beats short build-up, long ball beats press, possession beats long ball.
 That triangle falls out of rules 2 and 3; nobody writes it down.
 
+## Where the styles are used today
+
+Two engines read this taxonomy, and they read different parts of it.
+
+`matchEngine.ts` plays a match out possession by possession and uses all of it —
+`chanceMix`, `aggression`, the four interaction rules. It is not yet what a
+season is built from.
+
+`simulation.ts`, which is, reads only the three axes: `line`, `buildUp` and
+`tempo`, plus `needs` through `fitForStyle`. That is the layer the player's
+tactic reaches today, and its measured effect is recorded in
+[pre-season.md](pre-season.md): about 1.3–2.4 points per ten games between the
+best and worst style for a given squad, with the best style differing by squad.
+The 9.1-point ladder below is what that replaced.
+
 ## What must be true when it is finished
 
 - the calibration rates are unchanged: shots, conversion, cards, ~2.8 goals

@@ -1,14 +1,17 @@
 # 38-0 — design documentation
 
 38-0 is a football draft game. You pick an era and a formation, spin for random
-club-seasons, build an XI out of the players you are offered, and drop that XI
-into a simulated 38-game Premier League season against the current real squads.
+club-seasons, build an XI out of the players you are offered, choose how it
+plays and which Premier League season it walks into, and simulate 38 games
+against the real squads of that season.
 
 Most of what you can draft is English top-flight history, which is why the
 rating scale in [ratings.md](ratings.md) is expressed in Premier League terms.
 Alongside it sit a small number of iconic sides from Serie A, La Liga, the
 Bundesliga and two World Cup winners. They are draftable but never opponents:
-the season being simulated against is always the current Premier League.
+the league being simulated is always the Premier League, because those are the
+only seasons the snapshot holds a full field for. Which Premier League season
+is the player's choice, on the pre-season screen.
 
 These documents exist so that anyone — including an AI agent starting a fresh
 session with no memory of previous ones — can make a change that fits the way
@@ -25,6 +28,7 @@ the codebase already works.
 | [conventions.md](conventions.md) | Before writing React, tests or commits. |
 | [data-model.md](data-model.md) | Before touching squads, lineups, roles or the JSON snapshot. |
 | [simulation.md](simulation.md) | Before changing anything that affects match results, ratings or awards. |
+| [pre-season.md](pre-season.md) | Before touching the screen between the draft and the season: choosing a tactic, choosing a season, and how both reach the simulation. |
 | [ci-and-deployment.md](ci-and-deployment.md) | Before changing the build, the workflows, or how the site is published. |
 | [squad-data-pipeline.md](squad-data-pipeline.md) | Before adding squad data. How the 680 club-seasons get collected, rated and imported. |
 | [positions-lookup.md](positions-lookup.md) | Before assigning positions. Why it is lookup work and what the rules are. |

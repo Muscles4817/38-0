@@ -22,10 +22,11 @@ database. They are never deployed.
         ▲                                     src/lib/gameData.ts
         │                                            │
   src/app/api/**/route.dev.ts                        ▼
-        ▲                              src/lib/simulation.ts  formations.ts
-        │ fetch                                      │
-  src/app/editor/**/page.dev.tsx                     ▼
-                                       app/page.tsx  draft  results  classic
+        ▲                        src/lib/simulation.ts  matchEngine.ts
+        │ fetch                        formations.ts  lineupFit.ts
+  src/app/editor/**/page.dev.tsx                     │
+                                                     ▼
+                                app/page.tsx  draft  squad  results  classic
         │                                            │
         └────── npm run export:data ─────────────────┘
 ```
@@ -58,17 +59,20 @@ the target architecture, arrived at early.
 
 | Layer | Files | ~Lines | Depends on |
 | --- | --- | --- | --- |
-| Game logic | `src/lib/formations.ts`, `simulation.ts`, `nationalities.ts` | 1,140 | nothing |
-| Data access | `src/lib/gameData.ts`, `src/data/game-data.json` | 330 | game logic |
-| Game UI | `src/app/{page,draft,results,classic}`, `src/components/*` | 2,300 | data access, game logic |
+| Game logic | `src/lib/formations.ts`, `simulation.ts`, `matchEngine.ts`, `lineupFit.ts`, `nationalities.ts` | 2,830 | nothing |
+| Data access | `src/lib/gameData.ts`, `src/data/game-data.json` | 600 | game logic |
+| Game UI | `src/app/{page,draft,squad,results,classic}`, `src/components/*` | 2,900 | data access, game logic |
 | Authoring | `src/lib/db.ts`, `src/app/api/**`, `src/app/editor/**`, `scripts/export-game-data.mjs` | 4,600 | SQLite |
-| Tests | `src/lib/*.test.ts` | 865 | everything above |
+| Tests | `src/lib/*.test.ts` | 3,565 | everything above |
 
 ### Dependency rules
 
-- **`src/lib/formations.ts` and `src/lib/simulation.ts` import nothing.** Not
-  React, not Next, not Node built-ins, not the DOM. They are the part that
-  survives a move to React Native unchanged. Keep them that way.
+- **`src/lib/formations.ts`, `simulation.ts` and `matchEngine.ts` import
+  nothing outside `src/lib`.** Not React, not Next, not Node built-ins, not the
+  DOM. They are the part that survives a move to React Native unchanged. Keep
+  them that way. `simulation.ts` reads the playstyle definitions out of
+  `matchEngine.ts` so there is one place a style is defined; that is the only
+  edge between them.
 - **`src/lib/gameData.ts` imports only the JSON snapshot and the game logic.**
   Same reasoning; it is the data API a mobile client would also use.
 - **Nothing outside `src/app/api/**`, `src/lib/db.ts` and `scripts/` may import
@@ -116,13 +120,25 @@ something has bypassed `prebuild`; remove `.next` and try again.
 
 ## State and navigation
 
-A run in progress lives in `localStorage`, not in a server session:
+A run is five screens, and each hands the next one its state through
+`localStorage` rather than a server session:
+
+```
+  /  ──►  /draft  ──►  /squad  ──►  /results
+          /classic ──────┘
+```
+
+`/squad` is the pre-season screen: the XI is reviewed there, and the tactic and
+the season to play it in are chosen there. `/results` runs the simulation as
+soon as it loads, because everything it needs was decided before it.
+See [pre-season.md](pre-season.md).
 
 | Key | Written by | Read by |
 | --- | --- | --- |
-| `38-0-setup` | setup page, classic page | draft, results |
+| `38-0-setup` | setup page, classic page | draft, squad, results |
 | `38-0-draft` | draft page | draft |
-| `38-0-squad` | draft page, classic page | results |
+| `38-0-squad` | draft page, classic page | squad, results |
+| `38-0-plan` | squad page | squad, results |
 | `38-0-seen-squads` | draft page | results ("What Could Have Been") |
 
 Those keys are read through `src/lib/clientStorage.ts`, which wraps them in

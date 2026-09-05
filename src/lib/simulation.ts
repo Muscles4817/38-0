@@ -1,4 +1,5 @@
 import { Position, effectiveRating } from './formations';
+import { PLAYSTYLES, fitForStyle, type MatchPlayer, type PlaystyleName } from './matchEngine';
 
 // ── Player roles (weight modifiers) ──────────────────────────────────────────
 // Roles tweak per-player goal/assist probability during attribution.
@@ -101,6 +102,12 @@ export interface RoleConfig {
   assistMult?:     Partial<Record<string, number>>;
   validPositions?: Partial<Record<string, Position[]>>;
   teamContrib?:    Partial<Record<string, { att: number; mid: number; def: number }>>;
+  /**
+   * What each role says a player is GOOD AT, as opposed to what he produces.
+   * Only the tactics below read it: a style's demands are expressed in these
+   * names, so without them every style fits every side equally.
+   */
+  qualities?:      Partial<Record<string, Partial<Record<string, number>>>>;
 }
 
 // ── Public Types ──────────────────────────────────────────────────────────────
@@ -266,9 +273,15 @@ function genName(rand: () => number): string {
 
 // ── Scheduling ────────────────────────────────────────────────────────────────
 
-// Standard circle/Berger round-robin for n teams.
-// Team at index 0 is fixed; others rotate each round.
-// Returns 2*(n-1) rounds, each with n/2 fixtures as [homeIdx, awayIdx] pairs.
+/**
+ * Standard circle/Berger double round robin: `n - 1` rounds, then the same
+ * rounds with home and away swapped, each of n/2 `[homeIdx, awayIdx]` pairs.
+ * The team at index 0 is fixed and the others rotate.
+ *
+ * `n` must be even — with an odd field one team would have to sit out each
+ * round, and the rotation has nowhere to put it. A caller assembling an
+ * opponent list is responsible for handing over an odd number of opponents.
+ */
 function buildSchedule(n: number): [number, number][][] {
   const schedule: [number, number][][] = [];
   const order = Array.from({ length: n }, (_, i) => i);
@@ -326,14 +339,17 @@ function simulateScore(
   homeAtt: number, homeDef: number,
   awayAtt: number, awayDef: number,
   homeMid: number, awayMid: number,
+  // How fast the game is played, from the tactics of whichever side chose them.
+  // It moves both teams together on purpose — see the tactics section.
+  tempo = 1,
 ) {
   const midDiff = (homeMid - awayMid) / 10;
   const homeMult = Math.max(0.7, Math.min(1.35, 1.0 + midDiff * 0.2));
   const awayMult = Math.max(0.7, Math.min(1.35, 1.0 - midDiff * 0.2));
   const homeDiff = (homeAtt + 3 - awayDef) / 10;
   const awayDiff = (awayAtt - homeDef) / 10;
-  const lh = Math.max(0.3, (1.3 + homeDiff * 0.38) * homeMult);
-  const la = Math.max(0.2, (1.0 + awayDiff * 0.30) * awayMult);
+  const lh = Math.max(0.3, (1.3 + homeDiff * 0.38) * homeMult * tempo);
+  const la = Math.max(0.2, (1.0 + awayDiff * 0.30) * awayMult * tempo);
   return { homeGoals: poissonSample(rand, lh), awayGoals: poissonSample(rand, la), lh, la };
 }
 
@@ -453,6 +469,109 @@ function roleStrBonus(
   return { att, mid, def };
 }
 
+// ── Tactics ───────────────────────────────────────────────────────────────────
+//
+// A style is three decisions — how high the line sits, how patiently the ball
+// is moved, and how fast the game is played. The styles themselves live in
+// matchEngine.ts and are described in docs/playstyles.md; what is decided here
+// is only what those three axes are worth across 38 games of this model.
+//
+// Two rules stop a style being a free bonus:
+//
+//   1. **The cost is paid in full; the benefit is collected in proportion to
+//      fit.** Tiki-taka without technicians buys the low tempo and none of the
+//      control. This is the rule that makes drafting *for* a style meaningful.
+//   2. **Tempo scales both sides' chances**, so there is no right answer to it:
+//      signal grows with the number of chances in a match and noise with its
+//      square root, which is exactly why a weaker side slows a game down and a
+//      stronger one speeds it up.
+//
+// Balanced sits at the origin of all three axes, so choosing it reproduces the
+// untactical season this model played before tactics existed.
+
+/** Rating points of attacking pressure the highest line is worth. */
+const LINE_ATT  = 6;
+/** Rating points of defensive exposure that same line concedes. */
+const LINE_DEF  = 6;
+/** Rating points of midfield control the most patient build-up is worth. */
+const BUILD_MID = 6;
+/** Rating points of attacking directness that patience gives up. */
+const BUILD_ATT = 5;
+/** How much of a style's tempo reaches the number of chances in a match. */
+const TEMPO_WEIGHT = 0.75;
+
+/** What choosing a style does to a specific eleven. */
+export interface TacticEffect {
+  style: PlaystyleName;
+  label: string;
+  /** 0-1: how well this eleven can execute the style it has been given. */
+  fit: number;
+  /** The style's own axes, unscaled: deep at 0 and high at 1. */
+  line: number;
+  /** Long ball at 0, short and patient at 1. */
+  buildUp: number;
+  /** Rating points added to the side's attack, defence and midfield. */
+  att: number;
+  def: number;
+  mid: number;
+  /** Multiplier on the chances both sides get in this side's matches. */
+  tempo: number;
+}
+
+function toMatchPlayer(pick: SquadPick): MatchPlayer {
+  return {
+    playerId:  pick.playerId,
+    name:      pick.playerName,
+    position:  pick.position,
+    rating:    ratingInSlot(pick),
+    roles:     pick.roles,
+    positions: pick.positions,
+  };
+}
+
+/**
+ * What a style is worth to this eleven, in the units the season model uses.
+ *
+ * Exported because the pre-season screen shows it: a player choosing a tactic
+ * is shown the same numbers the simulation will use, rather than a label.
+ */
+export function tacticEffect(
+  picks: SquadPick[],
+  style: PlaystyleName = 'balanced',
+  roleConfig?: RoleConfig,
+): TacticEffect {
+  const chosen = PLAYSTYLES[style] ?? PLAYSTYLES.balanced;
+  const fit = fitForStyle(picks.map(toMatchPlayer), chosen.name, {
+    goalMult:   roleConfig?.goalMult   ?? {},
+    assistMult: roleConfig?.assistMult ?? {},
+    qualities:  roleConfig?.qualities,
+  });
+
+  // Rule 1, in one line: what a style costs you happens whoever is playing;
+  // what it buys you happens only as far as they can play it.
+  //
+  // Negative zero is a real value in JavaScript and would reach the screen as
+  // "-0", so an axis that comes out at nothing is normalised to positive zero.
+  const earned = (points: number) => {
+    const value = points > 0 ? points * fit : points;
+    return value === 0 ? 0 : value;
+  };
+  const line  = chosen.line    - 0.5;
+  const build = chosen.buildUp - 0.5;
+
+  return {
+    style: chosen.name,
+    label: chosen.label,
+    fit,
+    line:    chosen.line,
+    buildUp: chosen.buildUp,
+    att:   earned(LINE_ATT  *  line) + earned(BUILD_ATT * -build),
+    def:   earned(LINE_DEF  * -line),
+    mid:   earned(BUILD_MID *  build),
+    tempo: 1 + TEMPO_WEIGHT * (chosen.tempo - 1),
+  };
+}
+
 // ── Main export ───────────────────────────────────────────────────────────────
 
 /**
@@ -492,6 +611,8 @@ export function simulateSeason(
   opponentSquads: OpponentSquad[] = [],
   seed?: number,
   roleConfig?: RoleConfig,
+  /** The style the player chose before kick-off. Balanced changes nothing. */
+  tactic: PlaystyleName = 'balanced',
 ): SimulationResult {
   const rand = rng(seed ?? Date.now() % 999983);
   const USER = 'Your XI';
@@ -525,11 +646,14 @@ export function simulateSeason(
   const midStr = new Map<string, number>();
 
   const userBonus = roleStrBonus(picks, effectiveTeamContrib, effectiveValidPos);
+  // The chosen style moves the same three numbers the players do, so a tactic
+  // is worth a few rating points either way rather than a separate system.
+  const plan = tacticEffect(picks, tactic, roleConfig);
   // Out-of-position players contribute at their reduced rating.
   const inSlot = picks.map(p => ({ ...p, rating: ratingInSlot(p) }));
-  attStr.set(USER, scaledAvgRating(inSlot.filter(p => isAttPosition(p.position))) + userBonus.att);
-  defStr.set(USER, scaledAvgRating(inSlot.filter(p => isDefPosition(p.position))) + userBonus.def);
-  midStr.set(USER, scaledAvgRating(inSlot.filter(p => isMidPosition(p.position))) + userBonus.mid);
+  attStr.set(USER, scaledAvgRating(inSlot.filter(p => isAttPosition(p.position))) + userBonus.att + plan.att);
+  defStr.set(USER, scaledAvgRating(inSlot.filter(p => isDefPosition(p.position))) + userBonus.def + plan.def);
+  midStr.set(USER, scaledAvgRating(inSlot.filter(p => isMidPosition(p.position))) + userBonus.mid + plan.mid);
 
   // ── Squad representation for player attribution ─────────────────────────────
   interface FPLayer { id: string; name: string; team: string; role: string; position: Position; roles: PlayerRole[]; rating: number }
@@ -600,7 +724,9 @@ export function simulateSeason(
   }
 
   // ── Schedule ────────────────────────────────────────────────────────────────
-  const schedule = buildSchedule(n); // 38 rounds × 10 fixtures
+  // 38 rounds of 10 fixtures for the twenty-team league the game is named
+  // after; the caller decides how many opponents it hands over.
+  const schedule = buildSchedule(n);
 
   // ── Simulate ────────────────────────────────────────────────────────────────
   const gameweeks: Gameweek[] = [];
@@ -611,14 +737,17 @@ export function simulateSeason(
     for (const [hi, ai] of schedule[r]) {
       const homeTeam = teams[hi];
       const awayTeam = teams[ai];
+      const userInvolved = homeTeam === USER || awayTeam === USER;
       const { homeGoals, awayGoals, lh, la } = simulateScore(
         rand,
         attStr.get(homeTeam)!, defStr.get(homeTeam)!,
         attStr.get(awayTeam)!, defStr.get(awayTeam)!,
         midStr.get(homeTeam)!, midStr.get(awayTeam)!,
+        // Only your own matches are played at your tempo. The other nineteen
+        // clubs play each other at the rate the model already produced.
+        userInvolved ? plan.tempo : 1,
       );
 
-      const userInvolved = homeTeam === USER || awayTeam === USER;
       const scorers: { name: string; minute: number }[] = [];
       const usedMins = new Set<number>();
       const pgGoals   = new Map<number, number>();
