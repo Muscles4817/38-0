@@ -582,6 +582,19 @@ function styleFit(players: MatchPlayer[], style: Playstyle, roles: RoleMultiplie
   return Math.max(0, Math.min(1, have / (want * FIT_REFERENCE)));
 }
 
+/**
+ * How well an eleven could play a style it has not been given yet, 0 to 1.
+ *
+ * The same measure `buildTeam` applies to a side that is already set up,
+ * exposed so a player can be shown what his XI is equipped to do before he
+ * commits to it, and so the season model can scale a style's benefit by it.
+ */
+export function fitForStyle(
+  players: MatchPlayer[], style: PlaystyleName, roles: RoleMultipliers,
+): number {
+  return styleFit(players, PLAYSTYLES[style] ?? PLAYSTYLES.balanced, roles);
+}
+
 function buildTeam(setup: TeamSetup, roles: RoleMultipliers): TeamModel {
   const style = PLAYSTYLES[setup.style] ?? PLAYSTYLES.balanced;
   const players = setup.players;

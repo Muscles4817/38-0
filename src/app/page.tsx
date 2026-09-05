@@ -37,6 +37,8 @@ export default function SetupPage() {
     const setup = { formation, difficulty, showRatings, draftMode, playerRating, yearStart, yearEnd };
     localStorage.setItem('38-0-setup', JSON.stringify(setup));
     localStorage.removeItem('38-0-draft');
+    // A tactic and a season chosen for a previous XI mean nothing to this one.
+    localStorage.removeItem('38-0-plan');
     router.push('/draft');
   }
 

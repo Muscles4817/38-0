@@ -55,10 +55,11 @@ once issue 1 is fixed.
 
 ## 3. Two different "Projected" finishes
 
-`src/app/results/page.tsx` shows an OVR-ranked projection on the pre-season card
-and the formula's `odds.projectedPosition` on the final banner and in the
-over/underperformed verdict. The same run reports two different numbers on two
-screens. Pick one.
+`src/app/squad/page.tsx` shows an OVR-ranked projection on the pre-season card
+and `src/app/results/page.tsx` shows the formula's `odds.projectedPosition` on
+the final banner and in the over/underperformed verdict. The same run reports
+two different numbers on two screens. Pick one. Moving the odds to the
+pre-season screen made the two screens further apart, not closer.
 
 ## 4. The draft pool is still lopsided
 
@@ -83,9 +84,14 @@ it.
   Fine for a game, not fine for calibration work.
 - **Match ratings are compressed.** A sample season had every defender on 6.8
   and the whole XI within 6.8–7.3, on a nominal 4.0–10.0 scale.
-- **The draft pool includes 2025/26**, so you can draft players who are
-  simultaneously your opponents. Classic mode deliberately excludes that season;
-  the draft does not.
+- **The draft pool includes the season you play in.** It has always included
+  2025/26, so a drafted player could be his own opponent; now that the season
+  is chosen on the pre-season screen, any of the fourteen playable seasons can
+  be picked to face an XI drafted out of it. Classic mode still excludes the
+  default season, and nothing excludes a chosen one. The pre-season screen now
+  says so when the chosen season is one the XI was drafted from, which is the
+  cheap half of the fix; the real one is to leave a drafted player out of his
+  club's XI for that season.
 
 ## Fixed, for reference
 

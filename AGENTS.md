@@ -8,8 +8,8 @@ This version has breaking changes — APIs, conventions, and file structure may 
 
 A football draft game: spin for random club-seasons — mostly English top-flight
 history, plus a handful of iconic sides from Serie A, La Liga, the Bundesliga
-and two World Cup winners — build an XI, and simulate a 38-game season against
-the real current squads.
+and two World Cup winners — build an XI, pick how it plays and which season it
+plays in, and simulate a 38-game league campaign against the real squads.
 
 ## Read before changing anything
 
