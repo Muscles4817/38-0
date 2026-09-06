@@ -46,28 +46,38 @@ export default function SetupPage() {
   const totalSeasons = yearEnd - yearStart;
 
   return (
-    <main className="min-h-screen bg-[#0a0a0a] text-white flex flex-col items-center py-12 px-4">
-      <h1 className="text-6xl font-black mb-2 tracking-tight">
-        <span className="text-white">38</span>
-        <span className="text-[#00c896]">-0</span>
-      </h1>
-      <p className="text-[#888] text-sm mb-10">Draft your greatest all-time English top-flight XI</p>
+    <main className="min-h-screen bg-[#0a0a0a] text-white py-8 px-4 sm:py-12">
+      <div className="max-w-7xl mx-auto">
+        <header className="text-center mb-8 lg:mb-10">
+          <h1 className="text-5xl sm:text-6xl font-black mb-2 tracking-tight">
+            <span className="text-white">38</span>
+            <span className="text-[#00c896]">-0</span>
+          </h1>
+          <p className="text-[#888] text-sm">Draft your greatest all-time English top-flight XI</p>
+        </header>
 
-      <div className="w-full max-w-xl space-y-8">
+        {/*
+          Settings on the left, the consequence of the first one on the right.
+          The pitch is not decoration here — it is what the formation tile you
+          just pressed does — so putting the two beside each other is the whole
+          reason this screen earns a second column. See docs/desktop-ux.md.
+        */}
+        <div className="flex flex-col gap-8 lg:flex-row lg:items-start lg:gap-10">
+        <div className="w-full max-w-xl mx-auto space-y-8 lg:mx-0 lg:flex-1">
 
         {/* Formation */}
         <section>
           <Label>Formation</Label>
-          <div className="grid grid-cols-2 gap-2 mb-2 sm:grid-cols-3 lg:grid-cols-4">
+          <div className="grid grid-cols-2 gap-2 mb-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5">
             {Object.keys(FORMATIONS).map(f => (
               <OptionCard key={f} label={f} selected={formation === f} onClick={() => setFormation(f)} />
             ))}
           </div>
-          <p className="text-[#666] text-xs text-center mt-1">{FORMATIONS[formation]?.description}</p>
+          <p className="text-[#888] text-xs text-center mt-1 lg:hidden">{FORMATIONS[formation]?.description}</p>
         </section>
 
-        {/* Pitch preview */}
-        <div className="flex justify-center">
+        {/* The pitch lives in the side panel from lg: up. */}
+        <div className="flex justify-center lg:hidden">
           <PitchView formation={fmt} picks={[]} compact />
         </div>
 
@@ -76,19 +86,43 @@ export default function SetupPage() {
           <Label>Difficulty</Label>
           <div className="grid grid-cols-1 gap-3 sm:grid-cols-3">
             <OptionCard label="Easy"   description="3 rerolls available"          selected={difficulty === 'easy'}   onClick={() => setDifficulty('easy')} />
-            <OptionCard label="Normal" description="1 reroll available"            selected={difficulty === 'normal'} onClick={() => setDifficulty('normal')} accent="amber" />
+            <OptionCard label="Normal" description="1 reroll available"            selected={difficulty === 'normal'} onClick={() => setDifficulty('normal')} />
             <OptionCard label="Hard"   description="No rerolls · ratings hidden"   selected={difficulty === 'hard'}   onClick={() => setDifficulty('hard')} />
           </div>
         </section>
 
-        {/* Show Ratings */}
-        <section>
-          <Label>Show Ratings</Label>
-          <div className="grid grid-cols-2 gap-3">
-            <OptionCard label="On"  description="Player overalls visible"      selected={showRatings}  onClick={() => setShowRatings(true)} />
-            <OptionCard label="Off" description="Blind mode — trust your gut"  selected={!showRatings} onClick={() => setShowRatings(false)} accent="purple" />
-          </div>
-        </section>
+        {/*
+          Three two-option settings, all of them "how much does the game tell
+          you and how much do you choose". Stacked four deep they were most of
+          this page's height; side by side they are one band of it.
+        */}
+        <div className="grid gap-8 md:grid-cols-2 md:gap-6">
+          <section>
+            <Label>Show Ratings</Label>
+            <div className="grid grid-cols-2 gap-3">
+              <OptionCard label="On"  description="Player overalls visible"      selected={showRatings}  onClick={() => setShowRatings(true)} />
+              <OptionCard label="Off" description="Blind mode — trust your gut"  selected={!showRatings} onClick={() => setShowRatings(false)} />
+            </div>
+          </section>
+
+          <section>
+            <Label>Player Ratings</Label>
+            <div className="grid grid-cols-2 gap-3">
+              <OptionCard
+                label="Career Seasons"
+                description="Rated as they were that season"
+                selected={playerRating === 'career'}
+                onClick={() => setPlayerRating('career')}
+              />
+              <OptionCard
+                label="Prime Mode"
+                description="Everyone at their career best"
+                selected={playerRating === 'prime'}
+                onClick={() => setPlayerRating('prime')}
+              />
+            </div>
+          </section>
+        </div>
 
         {/* Draft Mode */}
         <section>
@@ -96,35 +130,15 @@ export default function SetupPage() {
           <div className="grid grid-cols-2 gap-3">
             <OptionCard
               label="Squad First"
-              description="Spin a club, pick any player, choose their position"
+              description="Spin a club, then pick any player"
               selected={draftMode === 'squad-first'}
               onClick={() => setDraftMode('squad-first')}
             />
             <OptionCard
               label="Position First"
-              description="Pick a slot, then spin for a club to fill it"
+              description="Pick a slot, then spin to fill it"
               selected={draftMode === 'position-first'}
               onClick={() => setDraftMode('position-first')}
-            />
-          </div>
-        </section>
-
-        {/* Player Ratings */}
-        <section>
-          <Label>Player Ratings</Label>
-          <div className="grid grid-cols-2 gap-3">
-            <OptionCard
-              label="Career Seasons"
-              description="Players rated as they were that exact season"
-              selected={playerRating === 'career'}
-              onClick={() => setPlayerRating('career')}
-            />
-            <OptionCard
-              label="Prime Mode"
-              description="Every player at their career-best rating"
-              selected={playerRating === 'prime'}
-              onClick={() => setPlayerRating('prime')}
-              accent="amber"
             />
           </div>
         </section>
@@ -140,13 +154,13 @@ export default function SetupPage() {
           <div className="space-y-3">
             <div className="flex gap-4">
               <div className="flex-1">
-                <div className="text-[10px] text-[#555] mb-1">From</div>
+                <div className="text-[10px] text-[#888] mb-1">From</div>
                 <input type="range" min={1992} max={2025} value={yearStart}
                   onChange={e => { setYearStart(+e.target.value); setEraPreset(''); }}
                   className="w-full h-8 accent-[#00c896] touch-manipulation" />
               </div>
               <div className="flex-1">
-                <div className="text-[10px] text-[#555] mb-1">To</div>
+                <div className="text-[10px] text-[#888] mb-1">To</div>
                 <input type="range" min={1993} max={2026} value={yearEnd}
                   onChange={e => { setYearEnd(+e.target.value); setEraPreset(''); }}
                   className="w-full h-8 accent-[#00c896] touch-manipulation" />
@@ -157,7 +171,7 @@ export default function SetupPage() {
               <span className="text-[#00c896]">{totalSeasons} of 34 seasons</span>
               <span>{yearEnd - 1}/{String(yearEnd).slice(-2)}</span>
             </div>
-            <p className="text-[#555] text-[11px] text-center">
+            <p className="text-[#888] text-[11px] text-center">
               Only club-seasons in this range can be spun — narrow it to draft from an era you know.
             </p>
           </div>
@@ -170,7 +184,7 @@ export default function SetupPage() {
             <span className="text-lg">🏴󠁧󠁢󠁥󠁮󠁧󠁿</span>
             <div className="flex-1 min-w-0">
               <div className="font-bold text-sm text-white">Premier League</div>
-              <div className="text-[#555] text-[11px]">English top flight</div>
+              <div className="text-[#888] text-[11px]">English top flight</div>
             </div>
             <span className="text-[9px] text-[#00c896] font-bold uppercase tracking-widest bg-[#00c896]/10 px-1.5 py-0.5 rounded shrink-0">
               Active
@@ -222,11 +236,14 @@ export default function SetupPage() {
         </section>
 
         {/*
-          Start sticks to the bottom of the phone viewport. Every setting here
-          has a sensible default, so the primary action should not be several
-          screens of scrolling away.
+          Start sticks to the bottom of the viewport at every width where the
+          page still scrolls. Every setting has a sensible default, so the
+          primary action should never be several screens away — that was true
+          on a phone and it was just as true in a 1440x900 window, where this
+          button used to sit 2,000px down. Above lg: it lives in the side
+          panel instead, which does not scroll at all.
         */}
-        <div className="sticky bottom-0 z-30 py-3 bg-[#0a0a0a]/95 backdrop-blur-sm sm:static sm:py-0 sm:bg-transparent sm:backdrop-blur-none">
+        <div className="sticky bottom-0 z-30 py-3 bg-[#0a0a0a]/95 backdrop-blur-sm lg:hidden">
           <button
             type="button"
             onClick={startDraft}
@@ -243,14 +260,70 @@ export default function SetupPage() {
           Classic Mode — pick a legendary side
         </Link>
 
-        <SiteNav />
+        <div className="lg:hidden">
+          <SiteNav />
+        </div>
+        </div>
+
+        {/*
+          The side panel: what the settings add up to, and the way out of the
+          screen. `sticky top-8` keeps both in view however far the settings
+          column scrolls.
+        */}
+        <aside className="hidden lg:block lg:w-[340px] lg:shrink-0">
+          <div className="sticky top-8 space-y-5">
+            <div className="bg-[#111] rounded-2xl p-5 flex flex-col items-center">
+              <PitchView formation={fmt} picks={[]} compact />
+              <div className="mt-4 text-center">
+                <div className="text-2xl font-black tracking-tight">{formation}</div>
+                <p className="text-[#888] text-xs mt-1">{FORMATIONS[formation]?.description}</p>
+              </div>
+            </div>
+
+            <div className="bg-[#111] rounded-2xl px-5 py-4 space-y-2">
+              <Summary label="Difficulty" value={difficulty === 'easy' ? 'Easy' : difficulty === 'hard' ? 'Hard' : 'Normal'} />
+              <Summary label="Ratings"    value={showRatings ? 'Visible' : 'Blind'} />
+              <Summary label="Draft"      value={draftMode === 'squad-first' ? 'Squad first' : 'Position first'} />
+              <Summary label="Players"    value={playerRating === 'prime' ? 'Prime mode' : 'Career seasons'} />
+              <Summary label="Era"        value={`${yearStart}–${yearEnd - 1}`} />
+            </div>
+
+            <button
+              type="button"
+              onClick={startDraft}
+              className="w-full py-4 rounded-xl font-black text-lg bg-[#00c896] text-black hover:bg-[#00b385] transition-colors touch-manipulation"
+            >
+              Start Draft →
+            </button>
+
+            <Link
+              href="/classic"
+              className="block w-full py-3 rounded-xl font-bold text-sm border border-[#1a1a1a] text-[#888] hover:border-[#333] hover:text-white transition-colors text-center"
+            >
+              Classic Mode
+            </Link>
+
+            <SiteNav />
+          </div>
+        </aside>
+        </div>
       </div>
     </main>
   );
 }
 
 function Label({ children }: { children: React.ReactNode }) {
-  return <div className="text-[10px] font-bold tracking-widest text-[#555] uppercase mb-2">{children}</div>;
+  return <div className="text-[10px] font-bold tracking-widest text-[#888] uppercase mb-2">{children}</div>;
+}
+
+/** One line of the side panel's read-back of the current settings. */
+function Summary({ label, value }: { label: string; value: string }) {
+  return (
+    <div className="flex items-baseline gap-3 text-xs">
+      <span className="text-[#666] uppercase tracking-widest text-[10px] w-20 shrink-0">{label}</span>
+      <span className="font-bold text-white truncate">{value}</span>
+    </div>
+  );
 }
 
 /**
@@ -261,7 +334,7 @@ function Label({ children }: { children: React.ReactNode }) {
 function ComingSoon({ summary, children }: { summary: string; children: React.ReactNode }) {
   return (
     <details className="group rounded-lg border border-[#1a1a1a] bg-[#0d0d0d]/50 mt-2">
-      <summary className="cursor-pointer list-none px-4 py-3 flex items-center gap-2 text-xs text-[#555] hover:text-[#888] transition-colors touch-manipulation">
+      <summary className="cursor-pointer list-none px-4 py-3 flex items-center gap-2 text-xs text-[#888] hover:text-white transition-colors touch-manipulation">
         <span className="text-[#444] transition-transform group-open:rotate-90">▶</span>
         <span className="flex-1">{summary}</span>
         <span className="text-[9px] font-bold uppercase tracking-widest text-[#444] bg-[#1a1a1a] px-1.5 py-0.5 rounded">Soon</span>

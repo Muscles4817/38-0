@@ -91,11 +91,21 @@ no `setState`, such as redirecting when a run has not been started.
 Do not read `ref.current` during render — it is a lint error. If a value needs
 to appear in the output, it is state.
 
-## Mobile
+## Layout
 
 This is headed for a phone, so a layout that only works on a desktop is a bug,
 not a later refinement. Design for 360px first and add breakpoints upward
-(`sm:` is 640px, `lg:` is 1024px).
+(`sm:` 640px, `md:` 768px, `lg:` 1024px, `xl:` 1280px).
+
+The rules below are not phone rules. Every one of them is as true at 1920 as at
+360, and two of the worst problems this codebase has had were a desktop
+breakpoint quietly switching one of them off — a primary action released from
+the bottom of the viewport at `sm:`, and the live simulation pushed below the
+fold by an `lg:order` reversal. What a wide screen buys is **adjacency**: things
+that were stacked can sit beside each other, so there is less scrolling and one
+decision is visible at once. It does not buy bigger type, a bigger pitch or a
+wider reading column. See [desktop-ux.md](desktop-ux.md) for the full argument
+and the measurements behind it.
 
 Rules that the current layouts hold to:
 
@@ -122,6 +132,20 @@ Rules that the current layouts hold to:
 - Grids: `grid-cols-2 sm:grid-cols-3 lg:grid-cols-4` rather than a fixed
   `grid-cols-4`, which turns long labels like "4-3-3 (CDM-CAM)" into three
   wrapped lines at 360px.
+- **Cap a reading column; do not stretch it.** A row with a name on the left and
+  a number on the right stops reading as one fact somewhere past 480px — the eye
+  has to cross the gap to pair them. Give the leftover width to a second column
+  or back to the margin. `max-w-xl` on the XI lists is the worked example.
+- **Text is `#888` or brighter.** Against the `#0a0a0a` ground, `#888` is 5.6:1
+  and `#666` is 3.8:1; `#555` is 2.7:1 and fails, and `#333` is invisible.
+  `#666` is for a label that only has to be noticed, and anything below it is
+  decoration. Greys that read as quiet at arm's length read as absent across a
+  desk.
+- **One meaning per colour, per screen.** Selected is green. A ranked quantity —
+  a rating band, an odds ladder — is one hue at varying intensity, not four
+  hues. Ratings go through `src/components/ratingColor.ts` so there is one
+  scale; `LineRatings`' four colours are the legitimate categorical exception,
+  since GK/DEF/MID/ATT are four different things rather than four levels of one.
 - **Nothing inert may look interactive.** A disabled-looking chip next to a real
   button gets clicked, and a click that does nothing reads as a broken app. If
   something is a label, make it plainly a label and `pointer-events-none` when
@@ -141,11 +165,24 @@ cd "$(mktemp -d)" && npm init -y && npm i playwright && npx playwright install c
 ```
 
 Then drive `npm run dev` (or a static server over `./out`) at 360×740 and
-390×844, seeding `localStorage` with `38-0-setup` and `38-0-squad` to reach the
-draft and results pages. Assert `scrollWidth - innerWidth === 0` and collect any
-control under 32px tall; those two measurements catch most regressions without
-having to eyeball anything. Check the real static build too, not just the dev
-server — the dev overlay badge is not present in production.
+390×844, seeding `localStorage` with `38-0-setup`, `38-0-squad` and `38-0-plan`
+to reach the draft, pre-season and results pages. Assert
+`scrollWidth - innerWidth === 0` and collect any control under 32px tall; those
+two measurements catch most regressions without having to eyeball anything.
+Check the real static build too, not just the dev server — the dev overlay badge
+is not present in production.
+
+Take the same two measurements at **1440×900 and 820×1180**, plus four more
+that only fail on a big screen:
+
+- the primary action of the screen is visible without scrolling;
+- the thing that is currently changing is in the top half of the viewport;
+- `scrollHeight / innerHeight` — how many screens the page is. Setup, the
+  pre-season screen and the live results were 2.5, 2.7 and 2.0 screens at
+  1440×900, and classic mode was 13.1;
+- no text below `#666` that a player is expected to read.
+
+If 820px looks like 360px with wider margins, the middle has not been designed.
 
 ## Files and naming
 

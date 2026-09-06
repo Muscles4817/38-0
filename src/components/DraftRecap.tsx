@@ -33,11 +33,11 @@ export default function DraftRecap({ picks }: Props) {
 
   return (
     <div className="w-full space-y-3 pt-3 border-t border-[#1a1a1a]">
-      <div className="text-[10px] font-bold tracking-widest text-[#444] uppercase">Squad Story</div>
+      <div className="text-[10px] font-bold tracking-widest text-[#888] uppercase">Squad Story</div>
 
       {/* Clubs */}
       <div>
-        <div className="text-[9px] text-[#333] uppercase tracking-widest mb-1">Clubs</div>
+        <div className="text-[9px] text-[#888] uppercase tracking-widest mb-1">Clubs</div>
         <div className="flex flex-col gap-0.5">
           {clubs.map(([name, count]) => (
             <div key={name} className="flex items-center gap-2">
@@ -55,7 +55,7 @@ export default function DraftRecap({ picks }: Props) {
       {/* Eras */}
       {decades.length > 0 && (
         <div>
-          <div className="text-[9px] text-[#333] uppercase tracking-widest mb-1">Era</div>
+          <div className="text-[9px] text-[#888] uppercase tracking-widest mb-1">Era</div>
           <div className="flex gap-1.5 flex-wrap">
             {decades.map(d => (
               <span key={d} className="text-[9px] px-1.5 py-0.5 rounded bg-[#1a1a1a] text-[#666]">
@@ -69,7 +69,7 @@ export default function DraftRecap({ picks }: Props) {
       {/* Nations */}
       {nations.length > 0 && (
         <div>
-          <div className="text-[9px] text-[#333] uppercase tracking-widest mb-1">Nations</div>
+          <div className="text-[9px] text-[#888] uppercase tracking-widest mb-1">Nations</div>
           <div className="flex flex-wrap gap-1">
             {nations.map(([nat, count]) => (
               <span key={nat} className="text-[9px] px-1.5 py-0.5 rounded bg-[#1a1a1a] text-[#666]">

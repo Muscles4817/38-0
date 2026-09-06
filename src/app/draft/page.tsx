@@ -265,15 +265,28 @@ export default function DraftPage() {
   const isSpinning = spinPhase !== 'idle';
 
   return (
-    <main className="min-h-screen bg-[#0a0a0a] text-white flex flex-col lg:flex-row">
-      {/* Left — pitch + recap */}
-      <aside className="lg:w-[320px] flex-shrink-0 flex flex-col items-center py-6 px-4 border-b lg:border-b-0 lg:border-r border-[#1a1a1a] lg:overflow-y-auto">
+    <main className="min-h-screen bg-[#0a0a0a] text-white flex flex-col md:flex-row md:items-start">
+      {/*
+        Left rail — pitch and recap.
+        The split starts at 768px, not 1024px: on an iPad in portrait this was
+        the phone stack, so the squad you had just spun for began about 1,000px
+        down an 1,180px viewport and pressing spin looked like nothing had
+        happened.
+
+        `sticky top-0` with its own `max-h-screen overflow-y-auto` is what makes
+        this a rail. It used to be `lg:overflow-y-auto` with no height to scroll
+        inside, so the whole page scrolled instead and the pitch — the feedback
+        for the pick just made — left the viewport.
+      */}
+      <aside className="md:w-[300px] lg:w-[320px] flex-shrink-0 flex flex-col items-center py-6 px-4
+                        border-b md:border-b-0 md:border-r border-[#1a1a1a]
+                        md:sticky md:top-0 md:max-h-screen md:overflow-y-auto">
         <div className="w-full mb-2">
           <BackLink href="/" label="Setup" />
         </div>
-        <div className="text-xs font-bold tracking-widest text-[#555] uppercase mb-1">Formation</div>
+        <div className="text-xs font-bold tracking-widest text-[#888] uppercase mb-1">Formation</div>
         <div className="text-xl font-black mb-3">{setup.formation}</div>
-        <div className="text-xs text-[#555] mb-3 flex items-center gap-2">
+        <div className="text-xs text-[#888] mb-3 flex items-center gap-2">
           <span>Rerolls:</span>
           {Array.from({ length: rerollsTotal }).map((_, i) => (
             <span key={i} className={`inline-block w-2 h-2 rounded-full ${i < rerollsLeft ? 'bg-amber-400' : 'bg-[#333]'}`} />
@@ -298,9 +311,9 @@ export default function DraftPage() {
 
         <div className="mt-4 w-full px-1 space-y-1">
           <div className="flex items-center justify-between mb-2">
-            <span className="text-[10px] text-[#444] uppercase tracking-widest font-bold">Line Ratings</span>
+            <span className="text-[10px] text-[#888] uppercase tracking-widest font-bold">Line Ratings</span>
             {picks.length > 0 && (
-              <span className="text-[10px] text-[#555]">Overall <span className="text-white font-bold">{overall}</span></span>
+              <span className="text-[10px] text-[#888]">Overall <span className="text-white font-bold">{overall}</span></span>
             )}
           </div>
           <LineRatings formation={formation} picks={picks} />
@@ -317,12 +330,12 @@ export default function DraftPage() {
         {/* Idle — show spin button */}
         {!spinResult && !isSpinning && (
           <div className="flex flex-col items-center gap-6 mt-8">
-            <div className="text-[#555] text-sm uppercase tracking-widest font-bold">Spin for a Squad</div>
-            <div className="text-3xl font-black text-[#333]">
+            <div className="text-[#888] text-sm uppercase tracking-widest font-bold">Spin for a Squad</div>
+            <div className="text-3xl font-black text-[#666]">
               {openSlots.length} position{openSlots.length !== 1 ? 's' : ''} left to fill
             </div>
             {setup.draftMode === 'position-first' && (
-              <div className="text-[#555] text-sm">Click a slot on the pitch to begin</div>
+              <div className="text-[#888] text-sm">Click a slot on the pitch to begin</div>
             )}
             {setup.draftMode === 'squad-first' && (
               <button
@@ -332,7 +345,7 @@ export default function DraftPage() {
                 🎰 Spin the Wheel
               </button>
             )}
-            <div className="text-[#333] text-xs">or tap anywhere to spin</div>
+            <div className="text-[#888] text-xs">or tap anywhere to spin</div>
             {spinNotice && (
               <div className="max-w-sm text-center rounded-xl border border-amber-500/40 bg-amber-500/10 px-4 py-3 text-amber-300 text-sm">
                 {spinNotice}
@@ -344,7 +357,7 @@ export default function DraftPage() {
         {/* Spin animation */}
         {isSpinning && (
           <div className="flex flex-col items-center gap-6 mt-16 select-none">
-            <div className="text-[#555] text-xs uppercase tracking-widest font-bold">
+            <div className="text-[#888] text-xs uppercase tracking-widest font-bold">
               {spinPhase === 'reveal' ? 'Squad Landed' : 'Spinning…'}
             </div>
 
@@ -433,13 +446,13 @@ function SpinPanel({
       {/* Header */}
       <div className="flex items-start justify-between gap-3 mb-4">
         <div className="min-w-0">
-          <div className="text-xs text-[#555] uppercase tracking-widest mb-1">Squad Spun</div>
+          <div className="text-xs text-[#888] uppercase tracking-widest mb-1">Squad Spun</div>
           <div className="flex items-center gap-2 flex-wrap">
             <span className="inline-block w-3 h-3 rounded-full shrink-0" style={{ background: result.color }} />
             <span className="font-black text-lg">{result.clubName}</span>
             <span className="text-[#00c896] font-bold">{result.seasonLabel}</span>
           </div>
-          <div className="text-xs text-[#555] mt-1">Pick any player, then choose which open position to slot them into.</div>
+          <div className="text-xs text-[#888] mt-1">Pick any player, then choose which open position to slot them into.</div>
         </div>
         {onReroll && (
           <button type="button" onClick={onReroll}
@@ -461,12 +474,12 @@ function SpinPanel({
             <button
               type="button"
               onClick={onCancelSelection}
-              className="shrink-0 text-[#555] text-xs hover:text-white px-3 py-2 -mr-2 touch-manipulation"
+              className="shrink-0 text-[#888] text-xs hover:text-white px-3 py-2 -mr-2 touch-manipulation"
             >
               Cancel
             </button>
           </div>
-          <div className="text-[10px] text-[#555] uppercase tracking-widest mb-2">
+          <div className="text-[10px] text-[#888] uppercase tracking-widest mb-2">
             Where they can play
           </div>
           <div className="flex flex-wrap gap-2">
@@ -477,7 +490,7 @@ function SpinPanel({
               </button>
             ) : null)}
           </div>
-          <div className="text-[11px] text-[#555] mt-3">
+          <div className="text-[11px] text-[#888] mt-3">
             Tap a position above, or one of the highlighted spots on the pitch.
           </div>
         </div>
@@ -513,14 +526,14 @@ function SpinPanel({
               </div>
               <div className="flex-1 min-w-0">
                 <div className="font-bold text-sm truncate">{player.name}</div>
-                <div className="text-[#555] text-xs">{player.nationality}</div>
+                <div className="text-[#888] text-xs">{player.nationality}</div>
               </div>
               <div className="flex gap-1 flex-wrap justify-end">
                 {pp.map(pos => <PositionBadge key={pos} pos={pos} size="xs" />)}
               </div>
               {showRatings
                 ? <div className="text-[#00c896] font-black text-sm ml-2 w-6 text-right">{player.rating}</div>
-                : <div className="text-[#333] font-black text-sm ml-2 w-6 text-right">?</div>
+                : <div className="text-[#666] font-black text-sm ml-2 w-6 text-right">?</div>
               }
             </button>
           );

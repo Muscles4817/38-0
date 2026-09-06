@@ -14,6 +14,7 @@ import PitchView from '@/components/PitchView';
 import PositionBadge from '@/components/PositionBadge';
 import LineRatings from '@/components/LineRatings';
 import BackLink from '@/components/BackLink';
+import { ratingColor } from '@/components/ratingColor';
 
 /**
  * What the player settles on between drafting and kick-off.
@@ -91,12 +92,12 @@ export default function SquadPage() {
 
   return (
     <main className="min-h-screen bg-[#0a0a0a] text-white">
-      <div className="max-w-3xl mx-auto py-6 px-4 space-y-8">
+      <div className="max-w-6xl mx-auto py-6 px-4 space-y-8">
 
         <div>
           <BackLink href={cameFromClassic ? '/classic' : '/draft'} label={cameFromClassic ? 'Classic' : 'Draft'} />
           <h1 className="text-3xl font-black tracking-tight mt-2">Team Talk</h1>
-          <p className="text-[#666] text-sm mt-1">
+          <p className="text-[#888] text-sm mt-1">
             Your XI is picked. Decide how they play and whose league they are walking into.
           </p>
         </div>
@@ -106,18 +107,20 @@ export default function SquadPage() {
           <div className="flex justify-center shrink-0">
             <PitchView formation={formation} picks={picks} compact />
           </div>
-          <div className="flex-1 space-y-4 min-w-0">
+          {/*
+            Capped at max-w-xl rather than stretched to the column: a row of a
+            name and a rating becomes two facts with a gap between them once it
+            passes about 480px.
+          */}
+          <div className="flex-1 space-y-4 min-w-0 max-w-xl">
             <div className="flex items-end gap-4">
               <div>
                 <Label>Your XI</Label>
-                <div className="text-sm text-[#555]">{formation.name}</div>
+                <div className="text-sm text-[#888]">{formation.name}</div>
               </div>
               <div className="ml-auto text-right">
                 <Label>Overall</Label>
-                <div
-                  className="text-5xl font-black leading-none"
-                  style={{ color: overall >= 90 ? '#00c896' : overall >= 85 ? '#3b82f6' : overall >= 80 ? '#f59e0b' : '#ef4444' }}
-                >
+                <div className="text-5xl font-black leading-none" style={{ color: ratingColor(overall) }}>
                   {overall}
                 </div>
               </div>
@@ -127,8 +130,8 @@ export default function SquadPage() {
                 <div key={p.slotIndex} className="flex items-center gap-3 py-1.5">
                   <PositionBadge pos={p.position} size="xs" />
                   <span className="font-bold text-sm flex-1 min-w-0 truncate">{p.playerName}</span>
-                  <span className="text-[#555] text-xs shrink-0">{p.clubName.slice(0, 3).toUpperCase()} {p.seasonLabel}</span>
-                  <span className="text-[#00c896] font-black text-sm w-6 text-right shrink-0">{p.rating}</span>
+                  <span className="text-[#888] text-xs shrink-0">{p.clubName.slice(0, 3).toUpperCase()} {p.seasonLabel}</span>
+                  <span className="font-black text-sm w-6 text-right shrink-0" style={{ color: ratingColor(p.rating) }}>{p.rating}</span>
                 </div>
               ))}
             </div>
@@ -136,82 +139,110 @@ export default function SquadPage() {
           </div>
         </section>
 
+        {/*
+          Both decisions on this screen are a choice and its consequence, and
+          they used to be laid out one after the other so that no pair was ever
+          on screen together — choosing a tactic scrolled its own summary out of
+          view. From lg: up the summary sits beside the grid and stays there
+          while the player moves through the options.
+        */}
+
         {/* ── Tactic ─────────────────────────────────────────────────────── */}
         <section>
           <Label>Tactic</Label>
-          <p className="text-[#555] text-[11px] mb-3">
+          <p className="text-[#888] text-[11px] mb-3">
             A style costs you the same whoever is playing it; what it wins back depends on whether
             your XI can carry it out. Fit is how much of the benefit these eleven collect.
           </p>
-          <div className="grid grid-cols-2 gap-2 sm:grid-cols-3">
-            {tactics.map(tactic => (
-              <TacticCard
-                key={tactic.style}
-                tactic={tactic}
-                selected={tactic.style === style}
-                onClick={() => choose({ style: tactic.style })}
-              />
-            ))}
+          <div className="grid gap-4 lg:grid-cols-[1fr_320px] lg:items-start">
+            <div className="grid grid-cols-2 gap-2 sm:grid-cols-3 xl:grid-cols-4">
+              {tactics.map(tactic => (
+                <TacticCard
+                  key={tactic.style}
+                  tactic={tactic}
+                  selected={tactic.style === style}
+                  onClick={() => choose({ style: tactic.style })}
+                />
+              ))}
+            </div>
+            {chosen && (
+              <div className="lg:sticky lg:top-6">
+                <TacticSummary tactic={chosen} />
+              </div>
+            )}
           </div>
-          {chosen && <TacticSummary tactic={chosen} />}
         </section>
 
         {/* ── Opponents ──────────────────────────────────────────────────── */}
         <section>
           <Label>Season</Label>
-          <p className="text-[#555] text-[11px] mb-3">
+          <p className="text-[#888] text-[11px] mb-3">
             The league your XI is dropped into for all 38 games.
           </p>
-          <CompetitionPicker
-            competitions={competitions}
-            seasonId={seasonId}
-            onChoose={c => choose({ seasonId: c.seasonId, league: c.league })}
-          />
-          {opponent && (
-            <CompetitionSummary
-              competition={opponent}
-              draftedFrom={draftedFrom.has(opponent.seasonId)}
+          <div className="grid gap-4 lg:grid-cols-[1fr_320px] lg:items-start">
+            <CompetitionPicker
+              competitions={competitions}
+              seasonId={seasonId}
+              onChoose={c => choose({ seasonId: c.seasonId, league: c.league })}
             />
-          )}
+            {opponent && (
+              <div className="lg:sticky lg:top-6">
+                <CompetitionSummary
+                  competition={opponent}
+                  draftedFrom={draftedFrom.has(opponent.seasonId)}
+                />
+              </div>
+            )}
+          </div>
         </section>
 
         {/* ── Odds ───────────────────────────────────────────────────────── */}
         <section className="bg-[#111] rounded-2xl p-6 space-y-4">
           <div>
             <Label>Pre-Season Odds</Label>
-            <div className="text-xs text-[#444]">
+            <div className="text-xs text-[#888]">
               Your squad&apos;s overall against {opponent ? `the ${opponent.seasonLabel} field` : 'the field'}
             </div>
           </div>
           <div className="grid grid-cols-2 gap-4">
             <div>
-              <div className="text-xs text-[#555]">Projected Finish</div>
+              <div className="text-xs text-[#888]">Projected Finish</div>
               <div className="text-3xl font-black">{ordinal(projectedPosition)}</div>
             </div>
             <div>
-              <div className="text-xs text-[#555]">Expected Points</div>
+              <div className="text-xs text-[#888]">Expected Points</div>
               <div className="text-3xl font-black text-[#00c896]">{odds.expectedPoints}</div>
             </div>
           </div>
+          {/*
+            One ladder, one hue. These are five points on a single quantity —
+            how good an outcome is — and colouring them green/blue/purple/amber
+            made them read as four unrelated things. Relegation is the one that
+            genuinely means something else, so it is the one that changes hue.
+          */}
           <div className="space-y-2">
             <OddsBar label="Win the league" pct={odds.winLeague}   color="#00c896" />
-            <OddsBar label="Top 4"          pct={odds.top4}        color="#3b82f6" />
-            <OddsBar label="Top 6"          pct={odds.top6}        color="#8b5cf6" />
-            <OddsBar label="Top 10"         pct={odds.top10}       color="#f59e0b" />
+            <OddsBar label="Top 4"          pct={odds.top4}        color="#00c896" opacity={0.8} />
+            <OddsBar label="Top 6"          pct={odds.top6}        color="#00c896" opacity={0.6} />
+            <OddsBar label="Top 10"         pct={odds.top10}       color="#00c896" opacity={0.4} />
             <OddsBar label="Relegation"     pct={odds.relegation}  color="#ef4444" />
           </div>
         </section>
 
         {/*
-          Kick-off sticks to the bottom of the phone viewport: the two decisions
-          above it are a screen each, and the button that acts on them should
-          not be a scroll away from either.
+          Kick-off sticks to the bottom of the viewport at every width: the two
+          decisions above it are a screen each, and the button that acts on them
+          should not be a scroll away from either. That was never a phone-only
+          argument — it used to be released at 640px.
         */}
-        <div className="sticky bottom-0 z-30 py-3 bg-[#0a0a0a]/95 backdrop-blur-sm sm:static sm:py-0 sm:bg-transparent sm:backdrop-blur-none">
+        <div className="sticky bottom-0 z-30 py-3 bg-[#0a0a0a]/95 backdrop-blur-sm
+                        lg:bg-transparent lg:backdrop-blur-none lg:pb-6">
           <button
             type="button"
             onClick={() => { choose({}); router.push('/results'); }}
-            className="w-full py-4 rounded-xl font-black text-lg bg-[#00c896] text-black hover:bg-[#00b385] transition-colors touch-manipulation"
+            className="w-full py-4 rounded-xl font-black text-lg bg-[#00c896] text-black
+                       hover:bg-[#00b385] transition-colors touch-manipulation
+                       lg:w-80 lg:ml-auto lg:block lg:shadow-lg lg:shadow-black/40"
           >
             Simulate Season →
           </button>
@@ -237,7 +268,7 @@ function TacticCard({ tactic, selected, onClick }: {
         ${selected ? 'border-[#00c896] text-[#00c896]' : 'border-[#2a2a2a] text-white hover:border-[#444]'}`}
     >
       <div className="font-bold text-sm truncate">{tactic.label}</div>
-      <div className="text-[10px] text-[#666] mt-0.5">{shapeOf(tactic)}</div>
+      <div className="text-[10px] text-[#888] mt-0.5">{shapeOf(tactic)}</div>
       <div className="flex items-center gap-2 mt-2">
         <div className="flex-1 h-1 rounded-full bg-[#1f1f1f] overflow-hidden">
           <div className="h-1 rounded-full" style={{ width: `${pct}%`, background: fitColor(tactic.fit) }} />
@@ -261,15 +292,17 @@ function TacticSummary({ tactic }: { tactic: TacticEffect }) {
     <div className="mt-3 rounded-xl border border-[#1a1a1a] bg-[#0d0d0d] px-4 py-3">
       <div className="flex items-baseline gap-2 flex-wrap">
         <span className="font-black text-sm text-[#00c896]">{tactic.label}</span>
-        <span className="text-[11px] text-[#666]">fit {Math.round(tactic.fit * 100)}%</span>
+        <span className="text-[11px] text-[#888]">fit {Math.round(tactic.fit * 100)}%</span>
       </div>
-      <div className="grid grid-cols-2 gap-x-4 gap-y-1 mt-2 sm:grid-cols-4">
+      {/* Two columns, always: this panel is 320px wide in the rail, and four
+          columns of a label and a number ran into each other there. */}
+      <div className="grid grid-cols-2 gap-x-4 gap-y-1.5 mt-2">
         <Delta label="Attack"   value={tactic.att} />
         <Delta label="Midfield" value={tactic.mid} />
         <Delta label="Defence"  value={tactic.def} />
         <Delta label="Chances"  value={tempoPct} suffix="%" />
       </div>
-      <p className="text-[#555] text-[11px] mt-2">
+      <p className="text-[#888] text-[11px] mt-2">
         {tempoPct === 0
           ? 'Your matches are played at the league\'s usual rate.'
           : tempoPct > 0
@@ -282,10 +315,10 @@ function TacticSummary({ tactic }: { tactic: TacticEffect }) {
 
 function Delta({ label, value, suffix = '' }: { label: string; value: number; suffix?: string }) {
   const rounded = suffix === '%' ? Math.round(value) : Math.round(value * 10) / 10;
-  const color = rounded > 0 ? '#00c896' : rounded < 0 ? '#ef4444' : '#555';
+  const color = rounded > 0 ? '#00c896' : rounded < 0 ? '#ef4444' : '#888';
   return (
     <div className="flex items-baseline gap-1.5">
-      <span className="text-[10px] text-[#555] uppercase tracking-widest">{label}</span>
+      <span className="text-[10px] text-[#888] uppercase tracking-widest">{label}</span>
       <span className="text-sm font-black" style={{ color }}>
         {rounded > 0 ? '+' : ''}{rounded}{suffix}
       </span>
@@ -332,7 +365,7 @@ function CompetitionPicker({ competitions, seasonId, onChoose }: {
         <div key={league}>
           <div className="flex items-baseline gap-2 mb-2">
             <span className="font-bold text-sm">{league}</span>
-            <span className="text-[#444] text-[11px]">{seasons.length} seasons</span>
+            <span className="text-[#888] text-[11px]">{seasons.length} seasons</span>
           </div>
           <div className="grid grid-cols-3 gap-2 sm:grid-cols-4">
             {seasons.map(season => (
@@ -346,13 +379,13 @@ function CompetitionPicker({ competitions, seasonId, onChoose }: {
                     : 'border-[#2a2a2a] text-white hover:border-[#444]'}`}
               >
                 <div className="font-bold text-sm">{season.seasonLabel}</div>
-                <div className="text-[10px] text-[#666]">avg {season.averageRating}</div>
+                <div className="text-[10px] text-[#888]">avg {season.averageRating}</div>
               </button>
             ))}
           </div>
         </div>
       ))}
-      <p className="text-[#555] text-[11px]">
+      <p className="text-[#888] text-[11px]">
         Only leagues the snapshot can field a full season for are listed. Serie A, La Liga and the
         Bundesliga are in the draft pool but have a handful of clubs each, so there is no season to
         play in them yet.
@@ -370,7 +403,7 @@ function CompetitionSummary({ competition, draftedFrom }: {
       <div className="font-black text-sm text-[#00c896]">
         {competition.leagueName} {competition.seasonLabel}
       </div>
-      <div className="text-[11px] text-[#666] mt-1">
+      <div className="text-[11px] text-[#888] mt-1">
         {competition.opponentCount} opponents · average XI {competition.averageRating} · 38 games
       </div>
       {draftedFrom && (
@@ -380,7 +413,7 @@ function CompetitionSummary({ competition, draftedFrom }: {
         </p>
       )}
       {competition.displaced.length > 0 && (
-        <p className="text-[#555] text-[11px] mt-2">
+        <p className="text-[#888] text-[11px] mt-2">
           That season had {competition.clubCount} clubs. The league here is twenty, so{' '}
           {competition.displaced.length === 1 ? 'the weakest side makes' : `the ${competition.displaced.length} weakest sides make`}{' '}
           way for you: {competition.displaced.join(', ')}.
@@ -393,16 +426,18 @@ function CompetitionSummary({ competition, draftedFrom }: {
 // ── Bits ─────────────────────────────────────────────────────────────────────
 
 function Label({ children }: { children: React.ReactNode }) {
-  return <div className="text-[10px] font-bold tracking-widest text-[#555] uppercase mb-2">{children}</div>;
+  return <div className="text-[10px] font-bold tracking-widest text-[#888] uppercase mb-2">{children}</div>;
 }
 
 // Moved here with the odds themselves, from the results page.
-function OddsBar({ label, pct, color }: { label: string; pct: number; color: string }) {
+function OddsBar({ label, pct, color, opacity = 1 }: {
+  label: string; pct: number; color: string; opacity?: number;
+}) {
   return (
     <div className="flex items-center gap-3">
-      <div className="text-xs text-[#666] w-28 flex-shrink-0">{label}</div>
+      <div className="text-xs text-[#888] w-28 flex-shrink-0">{label}</div>
       <div className="flex-1 bg-[#1a1a1a] rounded-full h-1.5">
-        <div className="h-1.5 rounded-full" style={{ width: `${Math.min(100, pct)}%`, background: color }} />
+        <div className="h-1.5 rounded-full" style={{ width: `${Math.min(100, pct)}%`, background: color, opacity }} />
       </div>
       <div className="text-xs text-[#888] w-10 text-right">{pct.toFixed(1)}%</div>
     </div>
