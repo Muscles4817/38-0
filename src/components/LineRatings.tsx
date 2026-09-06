@@ -48,12 +48,12 @@ export default function LineRatings({ formation, picks }: Props) {
 
             {/* Rating */}
             <span className="text-xs font-black w-6 text-right"
-              style={{ color: avg !== null ? line.color : '#333' }}>
+              style={{ color: avg !== null ? line.color : '#666' }}>
               {avg ?? '—'}
             </span>
 
             {/* Fill count */}
-            <span className="text-[10px] text-[#444] w-6 text-right flex-shrink-0">
+            <span className="text-[10px] text-[#888] w-6 text-right flex-shrink-0">
               {filled}/{totalSlots}
             </span>
           </div>

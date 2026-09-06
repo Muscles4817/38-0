@@ -14,7 +14,7 @@ export default function SiteNav() {
   const links = process.env.NODE_ENV === 'development' ? [...LINKS, EDITOR_LINK] : LINKS;
 
   return (
-    <nav className="flex justify-center gap-2 text-xs text-[#444] pt-2 pb-8">
+    <nav className="flex justify-center gap-2 text-xs text-[#888] pt-2 pb-8">
       {links.map(link => (
         <Link
           key={link.href}
