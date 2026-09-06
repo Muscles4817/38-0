@@ -590,19 +590,147 @@ export function computeOverall(picks: SquadPick[]): number {
   return Math.round(picks.reduce((s, p) => s + ratingInSlot(p), 0) / picks.length);
 }
 
-export function preSeasonOdds(overall: number) {
-  // Calibrated for real PL squad ratings (avg XI typically 76–86 OVR).
-  // 79 OVR ≈ 9th/mid-table, 85 OVR ≈ 2nd/title contender, 90 OVR ≈ 1st.
-  const pos = Math.max(1,  Math.min(20,  Math.round(115 - overall * 1.33)));
-  const ep  = Math.max(20, Math.min(105, Math.round(50 + (overall - 79) * 3.7)));
+// ── Pre-season odds ───────────────────────────────────────────────────────────
+//
+// What the projection is, and why it is not a formula in `overall`.
+//
+// The old version was five straight lines in the squad's overall rating, fitted
+// to nothing: it told an 88-rated XI it would finish 1st on 83 points with a 60%
+// title chance, when the same XI actually averaged 4.9th and 63 points and won
+// 23% of the time. It also could not have been right, because it never looked
+// at who the XI was playing — and now that the player picks the season, an 86
+// against the 2025/26 field (20% title) and an 86 against 1992/93 (67%) are not
+// the same bet.
+//
+// So the projection reads the field. Three measured facts do all the work:
+//
+//   1. A team's points depend on how far it is above the *average of its own
+//      league*, on a curve that saturates at both ends because a season cannot
+//      produce fewer than 0 or more than 114 points.
+//   2. A season lands about 8 points either side of that expectation.
+//   3. Everyone in the league is measured on the same scale, so the same curve
+//      gives every opponent an expectation too.
+//
+// From those, the chance of finishing above any one opponent is a normal
+// comparison, and the chance of finishing in the top `n` is the chance that at
+// most `n - 1` opponents finish above you — a Poisson binomial over the whole
+// field, which is exact and cheap for nineteen opponents.
+//
+// The one thing that cannot be treated as independent is the player's own
+// season: when it goes badly, *every* opponent passes them at once. Ignoring
+// that made the odds far too confident — a squad measured to go down 41% of the
+// time was told 7%. Conditioning on the player's own points and integrating
+// over them fixes it, and is why this is a weighted sum over `SEASON_NODES`
+// rather than one comparison.
+//
+// Measured against 90,000 simulated team-seasons across the 2025/26, 2003/04
+// and 1992/93 fields, at squad ratings from 62 to 98: expected points within
+// about 1 of measured across the whole range, projected finish within 0.7 of
+// where the XI actually finishes, and no probability more than 12 points out.
+// See docs/simulation.md for the table.
+
+/** 38 wins. The ceiling the points curve saturates against. */
+const MAX_POINTS = 114;
+/** How sharply points rise with a rating edge over the field. */
+const POINTS_STEEPNESS = 0.113;
+/** The rating edge at which a side is worth half the maximum points. */
+const POINTS_MIDPOINT = 1.56;
+/** How far the player's own season lands either side of its expectation. */
+const SEASON_SD = 7.6;
+/** The same for an opponent's season, which is not shared across comparisons. */
+const OPPONENT_SD = 8.6;
+/** Quadrature nodes for integrating over the player's own season. */
+const SEASON_NODES = 41;
+
+/** Expected points for a side this many rating points above its league. */
+function expectedSeasonPoints(edge: number): number {
+  return MAX_POINTS / (1 + Math.exp(-POINTS_STEEPNESS * (edge - POINTS_MIDPOINT)));
+}
+
+/** Standard normal CDF, Abramowitz & Stegun 26.2.17. */
+function normalCdf(z: number): number {
+  const t = 1 / (1 + 0.2316419 * Math.abs(z));
+  const d = 0.3989422804014327 * Math.exp(-z * z / 2);
+  const p = d * t * (0.319381530 + t * (-0.356563782 + t * (1.781477937
+          + t * (-1.821255978 + t * 1.330274429))));
+  return z >= 0 ? 1 - p : p;
+}
+
+/**
+ * The chance that exactly `n` of the given independent events happen, for every
+ * `n`. Exact, and O(events²) — nothing here is big enough to want anything else.
+ */
+function poissonBinomial(probabilities: number[]): number[] {
+  let distribution = [1];
+  for (const p of probabilities) {
+    const next = new Array(distribution.length + 1).fill(0);
+    for (let i = 0; i < distribution.length; i++) {
+      next[i]     += distribution[i] * (1 - p);
+      next[i + 1] += distribution[i] * p;
+    }
+    distribution = next;
+  }
+  return distribution;
+}
+
+export interface SeasonOdds {
+  /** Where the XI is expected to finish, on average. */
+  projectedPosition: number;
+  expectedPoints: number;
+  /** Percentages, 0-100. */
+  winLeague: number;
+  top4: number;
+  top6: number;
+  top10: number;
+  relegation: number;
+}
+
+/**
+ * What a squad of this overall should expect against this particular field.
+ *
+ * `fieldOveralls` is every opponent's overall — `getTeamStrengths()` in
+ * gameData.ts produces exactly it. Without a field there is nothing to be
+ * better or worse than, so an empty one is treated as a league of the XI's own
+ * equals, which lands it mid-table.
+ */
+export function preSeasonOdds(overall: number, fieldOveralls: readonly number[] = []): SeasonOdds {
+  const field = fieldOveralls.length > 0 ? fieldOveralls : new Array(19).fill(overall);
+  const fieldMean = field.reduce((sum, o) => sum + o, 0) / field.length;
+
+  const mine   = expectedSeasonPoints(overall - fieldMean);
+  const theirs = field.map(o => expectedSeasonPoints(o - fieldMean));
+
+  // Integrate over the player's own season, which every comparison shares.
+  const aboveMe = new Array(field.length + 1).fill(0);
+  let expectedAbove = 0;
+  let weightSum = 0;
+  for (let i = 0; i < SEASON_NODES; i++) {
+    const z = -4 + (8 * i) / (SEASON_NODES - 1);
+    const weight = Math.exp(-z * z / 2);
+    weightSum += weight;
+
+    const mySeason = mine + z * SEASON_SD;
+    const beatsMe = theirs.map(t => normalCdf((t - mySeason) / OPPONENT_SD));
+    expectedAbove += weight * beatsMe.reduce((sum, p) => sum + p, 0);
+
+    const distribution = poissonBinomial(beatsMe);
+    for (let n = 0; n < distribution.length; n++) aboveMe[n] += weight * distribution[n];
+  }
+
+  const clamp = (p: number) => Math.max(0, Math.min(100, Math.round(p * 1000) / 10));
+  /** The chance of finishing in the top `n` — at most `n - 1` sides above. */
+  const topN = (n: number) => aboveMe.slice(0, n).reduce((sum, p) => sum + p, 0) / weightSum;
+  const places = field.length + 1;
+
   return {
-    projectedPosition: pos,
-    expectedPoints:    ep,
-    winLeague:    Math.max(0.1, Math.min(99, Math.round((overall - 76) * 5))),
-    top4:         Math.max(1,   Math.min(99, Math.round((overall - 72) * 5))),
-    top6:         Math.max(2,   Math.min(99, Math.round((overall - 70) * 6))),
-    top10:        Math.max(10,  Math.min(99, Math.round((overall - 66) * 6))),
-    relegation:   Math.max(0.1, Math.min(70, Math.round((83 - overall) * 4))),
+    projectedPosition: Math.max(1, Math.min(places, Math.round(1 + expectedAbove / weightSum))),
+    expectedPoints:    Math.round(mine),
+    winLeague:  clamp(topN(1)),
+    top4:       clamp(topN(4)),
+    top6:       clamp(topN(6)),
+    top10:      clamp(topN(10)),
+    // Bottom three of a twenty-team league, and of a shorter one too.
+    relegation: clamp(1 - topN(places - 3)),
   };
 }
 

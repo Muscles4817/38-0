@@ -104,7 +104,7 @@ When no seed is passed, `Date.now() % 999983` is used.
 | Attack/defence split by position | `zoneWeight` |
 | Home advantage, score spread | `simulateScore` |
 | Role multipliers | **the database** (`role_config`), not the defaults in code |
-| Pre-season projection | `preSeasonOdds` |
+| Pre-season projection | `POINTS_STEEPNESS`, `POINTS_MIDPOINT`, `SEASON_SD`, `OPPONENT_SD` — measured, not chosen; see below |
 | What a style is worth | `LINE_ATT`, `LINE_DEF`, `BUILD_MID`, `BUILD_ATT`, `TEMPO_WEIGHT` — see [pre-season.md](pre-season.md) |
 
 ## Calibration
@@ -146,33 +146,66 @@ fixture congestion, a manager sacked in November — and forcing the table to lo
 right by inflating goal difference buys a realistic league with unrealistic
 scorelines.
 
-### 2. `preSeasonOdds` does not match the simulator (open)
+### 2. `preSeasonOdds` did not match the simulator (fixed)
 
-It is a hand-written linear formula that was never checked against the thing it
-predicts. Measured over 30 seasons per rating, **before the curve fix** — the
-gap narrows with it but does not close:
+It was five straight lines in the squad's overall rating, fitted to nothing, and
+it had never been checked against the thing it predicted:
 
-| XI OVR | Odds promise | Actually happens |
+| XI OVR | Old promise | What happened |
 | --- | --- | --- |
 | 80 | 9th, 54 pts, 20% title | 11.7th, 49.7 pts, 0% |
 | 85 | 2nd, 72 pts, 45% title | 5.9th, 59.7 pts, 13% |
 | 88 | 1st, 83 pts, 60% title | 4.9th, 62.9 pts, 23% |
 | 90 | 1st, 91 pts, 70% title | 3.3rd, 66.1 pts, 33% |
 
-The player is told they will win the league, finishes fifth, and is labelled
-UNDERPERFORMED. The curve fix moves an 88-rated XI from 4.9th to 2.6th, so some
-of this is already recovered; the rest needs refitting against measured output.
+It also could not have been right, because it never looked at the opposition.
+Once the player could choose the season, the same 86-rated XI was a 20% title
+shot against 2025/26 and a 67% one against 1992/93, and the formula gave both
+the same answer.
 
-`src/lib/simulation.test.ts` deliberately tests only the *shape* of
-`preSeasonOdds` — bounded probabilities, monotonic in rating — so that fixing
-the calibration does not require rewriting the tests.
+It is now a measured model of the simulation, described in the pre-season odds
+section of `simulation.ts`. The projection reads the field: everything follows
+from how far the XI is above its league's average, on a curve that saturates at
+both ends because a season cannot yield fewer than 0 or more than 114 points.
 
-### 3. Two different projections are shown (open)
+    expected points = 114 / (1 + exp(-0.113 * (edge - 1.56)))
 
-The pre-season card ranks the user's OVR against the real opponents; the final
-banner and the OVERPERFORMED/UNDERPERFORMED verdict use `odds.projectedPosition`
-from the formula. The same run reports two different "Projected" finishes on two
-screens. See `src/app/results/page.tsx`.
+A season lands about 7.6 points either side of that for the player and 8.6 for
+an opponent, so the chance of finishing above any one opponent is a normal
+comparison, and the chance of a top-`n` finish is the chance that at most
+`n - 1` opponents finish above — a Poisson binomial over the whole field, exact
+and cheap at nineteen opponents.
+
+The one thing that cannot be treated as independent is the player's own season:
+when it goes badly, *every* opponent passes them at once. Ignoring that made the
+odds far too confident — a squad that went down 41% of the time was told 7% —
+so the model integrates over the player's own points rather than taking a single
+comparison.
+
+Measured over 90,000 team-seasons across the 2025/26, 2003/04 and 1992/93
+fields, at squad ratings from 62 to 98:
+
+| | expected points | projected finish | any probability |
+| --- | --- | --- | --- |
+| worst error vs measured | ~1 pt | 0.7 places | 12 points |
+
+`preSeasonOdds.calibration.test.ts` plays real seasons and asserts the
+projection still matches them. **If it fails after a deliberate change to the
+simulation, the model is out of date, not the test**: re-fit the constants and
+update the numbers here.
+
+What it still cannot see: the tactic. `preSeasonOdds` takes the squad's overall
+and the field, and a style is worth a few rating points either way on top of
+that (see [pre-season.md](pre-season.md)), so a park-the-bus side and a
+gegenpress side of the same overall are given the same odds.
+
+### 3. Two different projections were shown (fixed)
+
+The pre-season card ranked the user's OVR against the real opponents while the
+final banner and the OVERPERFORMED/UNDERPERFORMED verdict used the formula's
+`odds.projectedPosition`, so one run reported two different "Projected" finishes
+on two screens. There is now one projection, `odds.projectedPosition`, computed
+from the squad and the field it is actually playing, and both screens read it.
 
 ## Changing the simulation safely
 
