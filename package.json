@@ -16,6 +16,7 @@
     "data:status": "node scripts/scaffold-fbref-files.mjs --status",
     "data:ingest": "node scripts/ingest-fbref.mjs",
     "export:data": "node scripts/export-game-data.mjs",
+    "derive:lineups": "node --experimental-strip-types --import ./scripts/lib/register-ts.mjs scripts/derive-lineups.mjs",
     "import:squads": "node scripts/import-squads.mjs",
     "check": "npm run lint && npm run typecheck && npm test && npm run build"
   },

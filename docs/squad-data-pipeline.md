@@ -51,6 +51,15 @@ what `--status` reports on.
 `ingest-fbref.mjs` parses those into `data/raw/rosters/<season>/<club>.json`,
 keeping both the squad and everyone excluded, with the reason.
 
+One hazard is worth knowing about before it eats an afternoon. FBref writes its
+sort-direction arrow into the header cell of whichever column the table is
+sorted by, so an export copied while sorted by name has `Player▲` where the
+parser looks for `Player` — and the whole club-season fails with the rows
+underneath perfectly intact. Four of the 2005/06–2009/10 files arrived that way.
+Header cells are now normalised before matching, which is the right place for
+it: the arrow can land on any column, and pasting by hand will keep meeting it.
+
+
 ### Squad inclusion is by minutes
 
 **270 minutes — three full matches.** Not an appearance count: three substitute
@@ -192,15 +201,48 @@ eyes and the source data does not.
 
 ## Phase 6 — lineups
 
-Most-used XI comes from the appearance counts, formation from phase 2. This is
-what the simulation fields for opponents and what Classic mode loads, and it is
-currently the weakest data in the game — five 2025/26 clubs have no stored
-lineup and fall back to "best keeper plus the ten highest-rated outfielders",
-which puts four centre-backs and no full-backs in West Ham's side.
+```bash
+npm run derive:lineups -- --dry-run     # report, change nothing
+npm run derive:lineups                  # fill in the missing ones
+npm run derive:lineups -- --overwrite   # replace stored lineups too
+```
+
+The XI comes from minutes played, the shape from `bestFormation`. Both are
+computed, not researched: take the squad, and find the formation whose eleven
+slots its players fill best.
+
+Minutes come from the roster files rather than the database, which records
+appearances but not minutes. A player with no roster row falls back to his
+rating, which is what `bestXI` uses in the game when it has nothing better.
+
+**The script runs the game's own `bestFormation`, not a copy of it.** That is
+the whole point of a derived formation — a second implementation would drift,
+and then the stored shape would no longer be the shape the game computes. A
+plain `.mjs` script cannot import a TypeScript module with extensionless
+imports, so `scripts/lib/ts-hooks.mjs` resolves them and node's
+`--experimental-strip-types` handles the rest. It needs node 22.6 or newer.
+
+**Stored lineups are left alone unless `--overwrite` is passed.** Nineteen were
+verified by hand after the 2025/26 problems in [known-issues.md](known-issues.md),
+and a fresh derivation is not a reason to discard that.
+
+### The shape is often genuinely ambiguous
+
+`equallyGoodFormations` reports every formation that ties on slots filled,
+natural fits and minutes. It ties often: on the first full run, 150 of 265
+derived club-seasons had at least two shapes fitting equally well, and the
+winner among them is decided alphabetically. So a stored formation is a
+reasonable shape the side could have played, not a claim about what it did.
+
+That is the honest reading of the data and it is what phase 5 is for — the
+ties are the list a confirmation pass should work through, and it is much
+shorter than 686.
 
 ## Phase 7 — import
 
 ```bash
+node scripts/build-squad-files.mjs --season 2007/08          # join the three phases
+node scripts/build-squad-files.mjs --season 2006/07   --competition premier-league                               # one league of a season
 node scripts/import-squads.mjs --dry-run   # validate everything, change nothing
 node scripts/import-squads.mjs             # write to SQLite
 npm run export:data                        # refresh the shipped snapshot
@@ -210,6 +252,18 @@ Only this script writes to the database. Agents write files; the files are
 reviewable in git; the import is idempotent and replaces a club-season
 wholesale. Validation rules are in `scripts/lib/squad-file.mjs` and run in CI,
 so a squad that breaks them cannot reach main.
+
+`--competition` exists because **a season directory is not always one league.**
+2006/07 also holds Internazionale and Roma, 2009/10 four La Liga sides, and
+those were authored before the rating batches existed — so rebuilding their
+season wholesale would re-rate finished, shipped squads. The mid-season-transfer
+dedupe still reads every roster in the season either way, because which club a
+January move belongs to is a fact about the season, not about the clubs being
+written.
+
+The `source` URL is built per competition for the same reason. It used to be
+hardcoded to the Premier League for every file in a season, which was invisible
+while seasons held only Premier League clubs and wrong the moment one did not.
 
 ## Second passes
 
