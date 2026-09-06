@@ -62,6 +62,13 @@ it.
 
 ## 3. Smaller things
 
+- **Four club-seasons ship with a single player.** 2017/18 Liverpool holds only
+  Adam Lallana, and AC Milan 1994/95, 2002/03 and 2004/05 hold one man each
+  (Maldini, Seedorf, Maldini). They are leftovers from seeding a player without
+  the squad around him, they reach `game-data.json`, and none of them can field
+  an eleven — `derive-lineups.mjs` reports them and skips them. Either collect
+  the squad or delete the club-season; a one-man club-season is not something
+  the game should offer.
 - **Line ratings disagree with the simulation.** `LineRatings.tsx` counts LW/RW
   as midfield; `simulation.ts` counts them as attack. The bars do not describe
   the numbers being simulated.
@@ -81,6 +88,31 @@ it.
 ## Fixed, for reference
 
 Do not re-report these:
+
+- **Every squad file in a season was stamped with a Premier League source
+  URL.** `build-squad-files.mjs` built one URL from the season and applied it to
+  every club it wrote. That was invisible for as long as a season directory held
+  only Premier League clubs, and wrong the moment one did not: 2006/07 also
+  holds Internazionale and Roma, 2009/10 four La Liga sides. Regenerating either
+  season relabelled them. The URL is now built from the roster's own
+  competition, and `--competition` limits which clubs a rebuild writes at all —
+  those iconic sides have squad files but no rows in the rating batches, so a
+  wholesale rebuild would have re-rated finished, shipped squads.
+
+- **One character in a header cost four club-seasons.** FBref writes its
+  sort-direction arrow into the header cell of the column the table is sorted
+  by, so an export copied while sorted by name reads `Player▲`. The parser
+  matched `Player` exactly and rejected the file, with every data row underneath
+  it intact. Header cells are normalised before matching now, and the parser has
+  a test — it had none at all before.
+
+- **`AerialThreat` was on two forwards.** It is a 3.5x goal multiplier and
+  `docs/roles.md` is explicit that a forward strong in the air gets `TargetMan`
+  instead, because on someone who already receives most of the chances it
+  decides the golden boot by itself. Tim Cahill and Brian McBride both carried
+  it; both are recorded with a forward as their primary position. Both now carry
+  `TargetMan`. Two independent rating agents flagged it in the same pass, which
+  is the argument for the phase 5 check existing at all.
 
 - **Pre-season odds promised more than the simulation delivered.** An 88-rated
   XI was told 1st on 83 points with a 60% title chance; it averaged 4.9th and 63
