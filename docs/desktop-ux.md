@@ -334,12 +334,13 @@ for the season list and its "19 opponents, average XI 75, these three make way"
 card. Simulate stays pinned. Total height should come down to about 1.5 screens.
 
 The pre-season odds panel is a partial exception and worth understanding before
-moving it: `preSeasonOdds` is a function of overall alone, so it does not
-respond to the tactic at all, and only its projected finish moves when the
-season changes. It is not the consequence of either decision, and it makes a
-promise the simulation does not keep — see known-issues.md items 2 and 3.
-Leave it where it is, at the end, until that is settled. Do not promote it to
-a hero panel on the strength of extra space.
+moving it. At the time this was written `preSeasonOdds` was a function of
+overall alone: it responded to neither decision on the screen and promised what
+the simulation did not deliver. It has since been refitted and now reads the
+field, so it does answer the season choice — but still not the tactic, which is
+worth a few rating points the odds cannot see. Half a consequence is not a
+consequence, so it stays where it is, at the end. Do not promote it to a hero
+panel on the strength of extra space.
 
 **At phone width:** unchanged; the pairs re-stack in the order they already
 have.
@@ -539,6 +540,6 @@ All seven were done in one pass, in this order.
 | 7 | Final report: verdict first, two columns, merge duplicated awards | Done — 4.6 → 3.2 screens |
 
 What is left, and deliberately: the pre-season and final-report heights are
-above the targets in this document, and the odds panel still promises what the
-simulation does not deliver — see known-issues.md items 2 and 3, which are
-about the numbers rather than the layout.
+above the targets in this document. (The odds panel's numbers, listed here as a
+reason not to promote it, have since been refitted — it now reads the field it
+is playing, though still not the tactic.)

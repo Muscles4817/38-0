@@ -4,7 +4,7 @@ import { useState, useEffect, useMemo } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { getFormation, canFillSlot, Formation } from '@/lib/formations';
-import { describeCompetition, runSeasonSimulation, type DataPlayer } from '@/lib/gameData';
+import { describeCompetition, getTeamStrengths, runSeasonSimulation, type DataPlayer } from '@/lib/gameData';
 import { useStoredJson, clearStored } from '@/lib/clientStorage';
 import { getTacticEffect } from '@/lib/gameData';
 import type { StoredPlan } from '@/app/squad/page';
@@ -156,6 +156,10 @@ export default function ResultsPage() {
     () => (picks.length ? getTacticEffect(picks, plan?.style ?? 'balanced') : null),
     [picks, plan?.style],
   );
+  const field    = useMemo(
+    () => getTeamStrengths(plan?.seasonId, plan?.league),
+    [plan?.seasonId, plan?.league],
+  );
 
   // Nothing to report on without a squad.
   useEffect(() => {
@@ -192,7 +196,9 @@ export default function ResultsPage() {
   }
 
   const overall = computeOverall(picks);
-  const odds    = preSeasonOdds(overall);
+  // The same projection the pre-season screen showed, against the same field —
+  // it is what the final report judges the season against.
+  const odds    = preSeasonOdds(overall, field.map(t => t.overall));
 
   // While the season is playing out, the live panel is the only thing changing.
   // On a phone the squad list above it is several screens tall, so the match

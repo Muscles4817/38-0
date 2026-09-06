@@ -297,30 +297,68 @@ describe('zoneWeight', () => {
 });
 
 describe('preSeasonOdds', () => {
-  // These assert the shape of the projection, not its accuracy. The numbers are
-  // known to be optimistic against what simulateSeason actually produces; see
-  // docs/simulation.md.
-  it('keeps every probability within range', () => {
-    for (let overall = 60; overall <= 99; overall++) {
-      const odds = preSeasonOdds(overall);
-      for (const value of [odds.winLeague, odds.top4, odds.top6, odds.top10, odds.relegation]) {
-        expect(value).toBeGreaterThanOrEqual(0);
-        expect(value).toBeLessThanOrEqual(100);
+  // Whether the projection matches what the simulation actually produces is
+  // measured in preSeasonOdds.calibration.test.ts. These assert the properties
+  // that must hold for any field, including ones the calibration never saw.
+
+  /** A twenty-team league of the given overalls. */
+  const FIELD_2025 = [86, 85, 84, 84, 83, 82, 81, 81, 80, 80, 80, 79, 79, 79, 78, 78, 77, 77, 76];
+  const FIELD_WEAK = FIELD_2025.map(o => o - 6);
+
+  it('keeps every probability within range, against any field', () => {
+    for (const field of [FIELD_2025, FIELD_WEAK, []]) {
+      for (let overall = 50; overall <= 99; overall++) {
+        const odds = preSeasonOdds(overall, field);
+        for (const value of [odds.winLeague, odds.top4, odds.top6, odds.top10, odds.relegation]) {
+          expect(value, `${overall} v field of ${field.length}`).toBeGreaterThanOrEqual(0);
+          expect(value, `${overall} v field of ${field.length}`).toBeLessThanOrEqual(100);
+        }
+        expect(odds.projectedPosition).toBeGreaterThanOrEqual(1);
+        expect(odds.projectedPosition).toBeLessThanOrEqual(20);
+        expect(odds.expectedPoints).toBeGreaterThanOrEqual(0);
+        expect(odds.expectedPoints).toBeLessThanOrEqual(114);
       }
-      expect(odds.projectedPosition).toBeGreaterThanOrEqual(1);
-      expect(odds.projectedPosition).toBeLessThanOrEqual(20);
+    }
+  });
+
+  it('nests the outcomes, since finishing top four is finishing top six', () => {
+    for (let overall = 50; overall <= 99; overall++) {
+      const odds = preSeasonOdds(overall, FIELD_2025);
+      expect(odds.winLeague).toBeLessThanOrEqual(odds.top4 + 0.1);
+      expect(odds.top4).toBeLessThanOrEqual(odds.top6 + 0.1);
+      expect(odds.top6).toBeLessThanOrEqual(odds.top10 + 0.1);
+      expect(odds.top10 + odds.relegation).toBeLessThanOrEqual(100.1);
     }
   });
 
   it('improves the projection as the squad improves', () => {
-    for (let overall = 61; overall <= 99; overall++) {
-      const worse = preSeasonOdds(overall - 1);
-      const better = preSeasonOdds(overall);
+    for (let overall = 51; overall <= 99; overall++) {
+      const worse  = preSeasonOdds(overall - 1, FIELD_2025);
+      const better = preSeasonOdds(overall, FIELD_2025);
       expect(better.projectedPosition).toBeLessThanOrEqual(worse.projectedPosition);
       expect(better.expectedPoints).toBeGreaterThanOrEqual(worse.expectedPoints);
       expect(better.winLeague).toBeGreaterThanOrEqual(worse.winLeague);
       expect(better.relegation).toBeLessThanOrEqual(worse.relegation);
     }
+  });
+
+  it('reads the field, not just the squad', () => {
+    // The same XI is a title favourite in one league and a top-four side in
+    // another. The old projection could not express this at all: it was a
+    // function of the squad's own rating and nothing else.
+    const strong = preSeasonOdds(86, FIELD_2025);
+    const weak   = preSeasonOdds(86, FIELD_WEAK);
+    expect(weak.winLeague).toBeGreaterThan(strong.winLeague + 20);
+    expect(weak.projectedPosition).toBeLessThanOrEqual(strong.projectedPosition);
+    expect(weak.expectedPoints).toBeGreaterThan(strong.expectedPoints);
+  });
+
+  it('puts a side level with its field in mid-table', () => {
+    const level = preSeasonOdds(80, new Array(19).fill(80));
+    expect(level.projectedPosition).toBeGreaterThanOrEqual(9);
+    expect(level.projectedPosition).toBeLessThanOrEqual(12);
+    expect(level.winLeague).toBeLessThan(20);
+    expect(level.relegation).toBeLessThan(25);
   });
 });
 

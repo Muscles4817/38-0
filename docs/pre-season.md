@@ -83,6 +83,18 @@ and they had gone down. It costs three clubs in 1992/93, 1993/94 and 1994/95,
 when the division had 22, and one in every 20-club season. The screen says
 which, by name.
 
+## The odds
+
+The panel at the bottom of the screen is not a consequence of either decision on
+it. `preSeasonOdds` reads the squad's overall and the field it has been pointed
+at, so it answers the season choice; it does not see the tactic, which is worth
+a few rating points either way on top. The model itself, and the measurements it
+was fitted to, are in [simulation.md](simulation.md).
+
+The projection it returns is the only one in the game. Both this screen and the
+final report read `odds.projectedPosition`, which is what the season is judged
+against when the report calls a run over- or underperforming.
+
 ## What is not decided here
 
 - **Focus** (how much of the attack goes down each side) exists on a

@@ -73,12 +73,14 @@ export default function SquadPage() {
   );
 
   const overall = computeOverall(picks);
-  const odds    = preSeasonOdds(overall);
   const field   = useMemo(() => getTeamStrengths(seasonId, league), [seasonId, league]);
-  // Where this XI would rank in the season it has chosen, on overall alone.
-  const projectedPosition = field.length > 0
-    ? field.filter(t => t.overall > overall).length + 1
-    : odds.projectedPosition;
+  // One projection, from one place. This screen used to rank the XI against the
+  // field by overall while the results screen used the odds formula, so the same
+  // run was given two different projected finishes on two screens.
+  const odds = useMemo(
+    () => preSeasonOdds(overall, field.map(t => t.overall)),
+    [overall, field],
+  );
 
   function choose(next: Partial<StoredPlan>) {
     writeStored('38-0-plan', { style, seasonId, league, ...next });
@@ -201,13 +203,13 @@ export default function SquadPage() {
           <div>
             <Label>Pre-Season Odds</Label>
             <div className="text-xs text-[#888]">
-              Your squad&apos;s overall against {opponent ? `the ${opponent.seasonLabel} field` : 'the field'}
+              Measured from this XI against {opponent ? `the ${opponent.seasonLabel} field` : 'the field'}
             </div>
           </div>
           <div className="grid grid-cols-2 gap-4">
             <div>
               <div className="text-xs text-[#888]">Projected Finish</div>
-              <div className="text-3xl font-black">{ordinal(projectedPosition)}</div>
+              <div className="text-3xl font-black">{ordinal(odds.projectedPosition)}</div>
             </div>
             <div>
               <div className="text-xs text-[#888]">Expected Points</div>

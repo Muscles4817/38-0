@@ -46,22 +46,7 @@ Raising the coefficients alone therefore widens the table without moving 2.51
 toward 2.80 — it would make good teams beat bad ones by more while the league
 still scores too little. Both wants changing, and measuring together.
 
-## 2. Pre-season odds promise more than the simulation delivers
-
-An 88-rated XI is told it will finish 1st on 83 points with a 60% title chance.
-It actually averages 4.9th and 63 points, wins 23% of the time, and is then
-labelled UNDERPERFORMED. `preSeasonOdds` needs refitting against measured output
-once issue 1 is fixed.
-
-## 3. Two different "Projected" finishes
-
-`src/app/squad/page.tsx` shows an OVR-ranked projection on the pre-season card
-and `src/app/results/page.tsx` shows the formula's `odds.projectedPosition` on
-the final banner and in the over/underperformed verdict. The same run reports
-two different numbers on two screens. Pick one. Moving the odds to the
-pre-season screen made the two screens further apart, not closer.
-
-## 4. The draft pool is still lopsided
+## 2. The draft pool is still lopsided
 
 307 draftable club-seasons across five leagues, but 2025/26 is still the
 densest single season and the English seasons dominate: PL 288, Serie A 7,
@@ -75,7 +60,7 @@ possible answers.
 This is the real ceiling on replay value. Every other improvement is bounded by
 it.
 
-## 5. Smaller things
+## 3. Smaller things
 
 - **Line ratings disagree with the simulation.** `LineRatings.tsx` counts LW/RW
   as midfield; `simulation.ts` counts them as attack. The bars do not describe
@@ -96,6 +81,22 @@ it.
 ## Fixed, for reference
 
 Do not re-report these:
+
+- **Pre-season odds promised more than the simulation delivered.** An 88-rated
+  XI was told 1st on 83 points with a 60% title chance; it averaged 4.9th and 63
+  points, won 23% of the time, and was then labelled UNDERPERFORMED. The odds
+  were five straight lines in the squad's rating, fitted to nothing, and blind
+  to the opposition — the same 86-rated XI is a 20% title shot against 2025/26
+  and a 67% one against 1992/93, and the formula gave both the same answer.
+  They are now a measured model of the simulation that reads the field, within
+  about a point of measured expected points and 12 points of any probability,
+  with `preSeasonOdds.calibration.test.ts` playing real seasons to keep it
+  honest. See [simulation.md](simulation.md).
+
+- **Two different "Projected" finishes.** The pre-season screen ranked the XI's
+  overall against the field while the results screen used the odds formula, so
+  one run reported two numbers on two screens. There is one projection now, and
+  both screens read it.
 
 - **Ten players were at two clubs at once in 2025/26** — Isak, Kerkez, Madueke,
   Nørgaard, Kepa, Elanga, Mbeumo, Wissa, Cunha, Brennan Johnson and Marc Guéhi,
