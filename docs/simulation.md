@@ -170,7 +170,7 @@ both ends because a season cannot yield fewer than 0 or more than 114 points.
 
     expected points = 114 / (1 + exp(-0.113 * (edge - 1.56)))
 
-A season lands about 7.6 points either side of that for the player and 8.6 for
+A season lands about 7.6 points either side of that for the player and 7.5 for
 an opponent, so the chance of finishing above any one opponent is a normal
 comparison, and the chance of a top-`n` finish is the chance that at most
 `n - 1` opponents finish above — a Poisson binomial over the whole field, exact
@@ -188,6 +188,44 @@ fields, at squad ratings from 62 to 98:
 | | expected points | projected finish | any probability |
 | --- | --- | --- | --- |
 | worst error vs measured | ~1 pt | 0.7 places | 12 points |
+
+Re-measured after every club-season gained a derived, minutes-based XI, which
+changed what the field is made of. `OPPONENT_SD` was 8.6 and the simulation now
+puts it at 7.5 — measured directly as the spread of each opponent's points over
+120 seasons, 7.4 to 7.6 across three fields — so it is 7.5. Expected points stay
+within 2.2 and projected finish within 0.9 across all nine cases.
+
+### The one place the projection is genuinely out
+
+**A two-horse race is projected as a one-horse race.** An 82-rated XI in
+1992/93 is told it wins the title 32% of the time and actually wins 53%.
+Everything else about that case is right — 76 points projected against 76.8
+played, 2nd projected against 1.9th played.
+
+The cause is not the curve, which is already near its best fit for this
+functional form (re-fitting on 180 measured club-seasons moves RMSE from 3.14
+to 3.12). It is that a club's `strength` is the **flat mean of its XI's
+ratings**, while the match engine reads a team as three lines through
+`scaledAvgRating`. Those disagree for a lopsided XI, and a minutes-based XI is
+more lopsided than the rating-optimised `bestXI` that used to stand in for it.
+
+1992/93 makes that visible because its top is a dead heat and its middle is far
+back:
+
+| | strength | model expects | actually plays |
+| --- | ---: | ---: | ---: |
+| the 82-rated XI | 82 | 76.0 | 77.0 |
+| Manchester United | 83 | 78.3 | 76.9 |
+| Arsenal | 80 | 69.5 | 63.3 |
+
+The model has United 2.3 points clear of the XI; the simulation has them level.
+At the top of a two-horse race that 2.3 is worth twenty points of title
+probability, which is why this one number is out while the rest are not.
+
+Fixing it means making `strength` line-based like the engine, and `strength`
+also decides which clubs make way and what the pre-season screen shows — so it
+is its own change, not a constant to re-fit. Recorded in
+[known-issues.md](known-issues.md).
 
 `preSeasonOdds.calibration.test.ts` plays real seasons and asserts the
 projection still matches them. **If it fails after a deliberate change to the

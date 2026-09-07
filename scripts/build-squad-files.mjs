@@ -20,6 +20,15 @@ const args = process.argv.slice(2);
 const value = n => { const i = args.indexOf(`--${n}`); return i === -1 ? null : args[i + 1]; };
 const SEASON = value('season');
 const dryRun = args.includes('--dry-run');
+// Rebuild only one competition's clubs.
+//
+// A season directory is not always one league: 2006/07 also holds
+// Internazionale and Roma, and 2009/10 four La Liga sides. Those were authored
+// before the rating batches existed, so rebuilding their season wholesale would
+// re-rate squads that are already finished and shipped. The dedupe below still
+// reads every roster in the season, because which club a January transfer
+// belongs to is a fact about the whole season, not about the clubs written.
+const ONLY_COMPETITION = value('competition');
 
 if (!SEASON) {
   console.error('Pass --season, e.g. --season 1992/93');
@@ -53,6 +62,17 @@ const NATIONS = {
   SCG: 'Serbia and Montenegro',
   BEL: 'Belgium', SUI: 'Switzerland', GHA: 'Ghana', RSA: 'South Africa',
   NZL: 'New Zealand', FIN: 'Finland', GRE: 'Greece', ROU: 'Romania',
+  // Added with 2005/06-2009/10 and 2025/26. Senegal alone accounted for 42 of
+  // the players this map was silently dropping.
+  SEN: 'Senegal', KOR: 'South Korea', ECU: 'Ecuador', PAR: 'Paraguay',
+  TUN: 'Tunisia', TOG: 'Togo', GRN: 'Grenada', CGO: 'Congo',
+  MEX: 'Mexico', CHN: 'China', SLE: 'Sierra Leone', BLR: 'Belarus',
+  GLP: 'Guadeloupe', GIB: 'Gibraltar', ALB: 'Albania', UZB: 'Uzbekistan',
+  PAK: 'Pakistan', OMA: 'Oman', MOZ: 'Mozambique', IRN: 'Iran',
+  HAI: 'Haiti', GNB: 'Guinea-Bissau', GAM: 'Gambia', GAB: 'Gabon',
+  ATG: 'Antigua and Barbuda', ANG: 'Angola',
+  HON: 'Honduras', BRB: 'Barbados', BOL: 'Bolivia', SEY: 'Seychelles',
+  SUR: 'Suriname',
 };
 
 // A handful of FBref exports have an empty nation cell. That is a gap in the
@@ -112,9 +132,36 @@ for (const r of rosters) {
 const gaps = [];
 const moved = [];
 const outDir = path.join(ROOT, 'data', 'squads', slug);
+
+// The season URL FBref serves these tables from, per competition.
+//
+// This used to stamp every file in a season with the Premier League URL. Most
+// seasons hold only Premier League clubs so it went unnoticed, but 2006/07 also
+// holds Internazionale and Roma and 2009/10 holds four La Liga sides — and
+// regenerating either season silently relabelled them as Premier League. The
+// competition is already on the roster, so use it.
+const FBREF_COMPS = {
+  'premier-league': { id: 9,  name: 'Premier-League' },
+  'serie-a':        { id: 11, name: 'Serie-A' },
+  'la-liga':        { id: 12, name: 'La-Liga' },
+  'bundesliga':     { id: 20, name: 'Bundesliga' },
+  // A World Cup is one summer, not a season that spans two years, so it has
+  // no <year>-<year+1> path segment.
+  'world-cup':      { id: 1,  name: 'World-Cup', singleYear: true },
+};
+
+function sourceUrl(competition, season) {
+  const comp = FBREF_COMPS[competition];
+  if (!comp) throw new Error(`no FBref URL known for competition "${competition}"`);
+  if (comp.singleYear) return `https://fbref.com/en/comps/${comp.id}/${comp.name}-Stats`;
+  const yr = Number(String(season).slice(0, 4));
+  return `https://fbref.com/en/comps/${comp.id}/${yr}-${yr + 1}/${yr}-${yr + 1}-${comp.name}-Stats`;
+}
+
 const written = [];
 
 for (const r of rosters) {
+  if (ONLY_COMPETITION && r.competition !== ONLY_COMPETITION) continue;
   const players = [];
   for (const p of r.squad) {
     const home = minutesByPlayer.get(p.fbrefId);
@@ -128,8 +175,16 @@ for (const r of rosters) {
     if (!rating) { gaps.push(`${p.name} (${r.club}): no rating`); continue; }
     const nationality = overrides[p.fbrefId]?.nationality ?? NATIONS[p.nation];
     if (!nationality) {
-      gaps.push(`${p.name} (${r.club}) [${p.fbrefId}]: no nation — FBref cell is ` +
-        `"${p.nation}". Add it to data/raw/nation-overrides.json.`);
+      // Two different failures wear the same message otherwise, and they have
+      // different fixes: a blank cell is a gap in the source and needs a
+      // per-player override, while a code that is simply not in NATIONS needs
+      // one line adding here. Sending the second case to the override file
+      // would mean writing out hundreds of players by hand.
+      gaps.push(p.nation
+        ? `${p.name} (${r.club}) [${p.fbrefId}]: FBref says "${p.nation}", which ` +
+          `is not in the NATIONS map in this script. Add it there.`
+        : `${p.name} (${r.club}) [${p.fbrefId}]: FBref records no nation at all. ` +
+          `Look it up and add it to data/raw/nation-overrides.json.`);
       continue;
     }
     if ((p.matchesPlayed ?? 0) < MIN_APPEARANCES) continue;
@@ -148,16 +203,11 @@ for (const r of rosters) {
     data: {
       club: r.club,
       season: r.season,
-      source: `https://fbref.com/en/comps/9/${slug.replace('-', '-19').replace(/^(\d{4})-19(\d{2})$/, '$1-$2')}/`,
+      source: sourceUrl(r.competition, r.season),
       players,
     },
   });
 }
-
-// The season URL FBref serves these tables from. Built once, plainly.
-const yr = Number(slug.slice(0, 4));
-const seasonUrl = `https://fbref.com/en/comps/9/${yr}-${yr + 1}/${yr}-${yr + 1}-Premier-League-Stats`;
-for (const w of written) w.data.source = seasonUrl;
 
 const errors = [];
 for (const w of written) {
@@ -183,7 +233,9 @@ if (moved.length) {
 }
 
 const total = written.reduce((n, w) => n + w.data.players.length, 0);
-console.log(`\n${written.length} club(s), ${total} squad entries for ${SEASON}.`);
+console.log(`
+${written.length} club(s), ${total} squad entries for ${SEASON}` +
+  (ONLY_COMPETITION ? ` (${ONLY_COMPETITION} only)` : '') + '.');
 
 if (dryRun) { console.log('Dry run; nothing written.'); process.exit(0); }
 fs.mkdirSync(outDir, { recursive: true });

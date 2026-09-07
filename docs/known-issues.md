@@ -60,8 +60,46 @@ possible answers.
 This is the real ceiling on replay value. Every other improvement is bounded by
 it.
 
-## 3. Smaller things
+## 3. A club's strength is a flat mean; the engine reads three lines
 
+`getOpponentSquads` gives every club a `strength` that is the arithmetic mean of
+its XI's ratings. The match engine does not read a team that way: it takes
+attack, midfield and defence separately, each through `scaledAvgRating`. The two
+agree for a balanced XI and disagree for a lopsided one.
+
+That used to be hidden, because clubs without a stored lineup were represented
+by `bestXI`, which picks the best-shaped eleven available. Now that every
+club-season has a **minutes-based** XI — who actually played, not who was best —
+the elevens are more lopsided and the gap shows.
+
+What it costs, measured on 1992/93:
+
+| | strength | model expects | actually plays |
+| --- | ---: | ---: | ---: |
+| an 82-rated XI | 82 | 76.0 | 77.0 |
+| Manchester United | 83 | 78.3 | 76.9 |
+| Arsenal | 80 | 69.5 | 63.3 |
+
+The model has United 2.3 points clear when the simulation has them level, so an
+82-rated XI is told it wins the title 32% of the time and wins it 53%. Points
+and finishing position stay accurate — 76 against 76.8, 2nd against 1.9th — and
+every other field and rating in `preSeasonOdds.calibration.test.ts` is inside
+its 15-point bound. It is specifically the top of a compressed field that breaks.
+
+The fix is to make `strength` line-based, the way the engine reads it. It is not
+a constant to re-fit: `strength` also decides which clubs make way when a season
+had more than twenty, and it is the number the pre-season screen shows, so
+changing it moves three things at once and wants measuring on its own.
+
+## 4. Smaller things
+
+- **Four club-seasons ship with a single player.** 2017/18 Liverpool holds only
+  Adam Lallana, and AC Milan 1994/95, 2002/03 and 2004/05 hold one man each
+  (Maldini, Seedorf, Maldini). They are leftovers from seeding a player without
+  the squad around him, they reach `game-data.json`, and none of them can field
+  an eleven — `derive-lineups.mjs` reports them and skips them. Either collect
+  the squad or delete the club-season; a one-man club-season is not something
+  the game should offer.
 - **Line ratings disagree with the simulation.** `LineRatings.tsx` counts LW/RW
   as midfield; `simulation.ts` counts them as attack. The bars do not describe
   the numbers being simulated.
@@ -81,6 +119,31 @@ it.
 ## Fixed, for reference
 
 Do not re-report these:
+
+- **Every squad file in a season was stamped with a Premier League source
+  URL.** `build-squad-files.mjs` built one URL from the season and applied it to
+  every club it wrote. That was invisible for as long as a season directory held
+  only Premier League clubs, and wrong the moment one did not: 2006/07 also
+  holds Internazionale and Roma, 2009/10 four La Liga sides. Regenerating either
+  season relabelled them. The URL is now built from the roster's own
+  competition, and `--competition` limits which clubs a rebuild writes at all —
+  those iconic sides have squad files but no rows in the rating batches, so a
+  wholesale rebuild would have re-rated finished, shipped squads.
+
+- **One character in a header cost four club-seasons.** FBref writes its
+  sort-direction arrow into the header cell of the column the table is sorted
+  by, so an export copied while sorted by name reads `Player▲`. The parser
+  matched `Player` exactly and rejected the file, with every data row underneath
+  it intact. Header cells are normalised before matching now, and the parser has
+  a test — it had none at all before.
+
+- **`AerialThreat` was on two forwards.** It is a 3.5x goal multiplier and
+  `docs/roles.md` is explicit that a forward strong in the air gets `TargetMan`
+  instead, because on someone who already receives most of the chances it
+  decides the golden boot by itself. Tim Cahill and Brian McBride both carried
+  it; both are recorded with a forward as their primary position. Both now carry
+  `TargetMan`. Two independent rating agents flagged it in the same pass, which
+  is the argument for the phase 5 check existing at all.
 
 - **Pre-season odds promised more than the simulation delivered.** An 88-rated
   XI was told 1st on 83 points with a 60% title chance; it averaged 4.9th and 63

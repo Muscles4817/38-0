@@ -1,5 +1,6 @@
 import {
-  FORMATIONS, Formation, Position, canFillSlot, fillsSlotNaturally, slotFit,
+  FORMATIONS, canFillSlot, fillsSlotNaturally, slotFit,
+  type Formation, type Position,
 } from './formations';
 
 /**

@@ -28,6 +28,17 @@ function splitRow(line) {
   return out.map(s => s.trim());
 }
 
+/**
+ * Strips FBref's sort-direction glyph from a header cell.
+ *
+ * Copying the table while it is sorted carries the arrow into the header:
+ * "Player▲" rather than "Player". The data below it is unaffected, so a
+ * whole club-season used to fail to parse over one character.
+ */
+function headerName(cell) {
+  return cell.replace(/[▲▼]/g, '').trim();
+}
+
 const num = v => (v === '' || v == null ? null : Number.isNaN(Number(v)) ? null : Number(v));
 
 /**
@@ -60,10 +71,10 @@ export function parseFbrefCsv(text, { competition, season, club, source = null }
   if (lines.length < 3) throw new Error('file has no data rows');
 
   // The header row is the one that starts with "Player".
-  const headerIndex = lines.findIndex(l => splitRow(l)[0] === 'Player');
+  const headerIndex = lines.findIndex(l => headerName(splitRow(l)[0]) === 'Player');
   if (headerIndex === -1) throw new Error('no header row starting with "Player"');
 
-  const header = splitRow(lines[headerIndex]);
+  const header = splitRow(lines[headerIndex]).map(headerName);
   const col = name => header.indexOf(name);
 
   // Duplicated names (Gls, Ast appear again under "Per 90 Minutes") resolve to

@@ -10,6 +10,52 @@
 /** A jump larger than this between adjacent seasons wants explaining. */
 export const MAX_UNEXPLAINED_SWING = 8;
 
+/** Positions the match engine sends most of the chances to. */
+const FORWARD_POSITIONS = ['LW', 'RW', 'ST', 'CF'];
+
+/**
+ * Roles that multiply how often a player scores.
+ *
+ * Two of them on the same forward compound, and the engine's square-root
+ * damping does not absorb it — see docs/roles.md, where Ibrahimović took 66 of
+ * Barcelona's 97 goals while Messi, eight rating points better, scored 12.
+ */
+const SCORING_ROLES = [
+  'AerialThreat', 'Poacher', 'CompleteForward', 'TargetMan',
+  'InsideForward', 'FalseNine', 'DeepLyingForward',
+];
+
+/**
+ * The two role rules that are about the simulation rather than about taste.
+ *
+ * Both are in docs/roles.md and neither was enforced anywhere, so both kept
+ * being rediscovered — three separate rating passes flagged the same two
+ * players in one afternoon. A rule that costs a golden boot should not depend
+ * on whoever is writing the batch having read the right paragraph.
+ */
+function checkRoles(player, season, who) {
+  const problems = [];
+  const roles = Array.isArray(season.roles) ? season.roles : [];
+  const positions = Array.isArray(player.positions) ? player.positions : [];
+  if (positions.length === 0 || !FORWARD_POSITIONS.includes(positions[0])) return problems;
+
+  if (roles.includes('AerialThreat')) {
+    problems.push(
+      `${who}: AerialThreat is a 3.5x goal multiplier and ${positions[0]} is where ` +
+      `the chances go — it decides the golden boot by itself. A forward strong ` +
+      `in the air gets TargetMan.`
+    );
+  }
+  const scoring = roles.filter(r => SCORING_ROLES.includes(r));
+  if (scoring.length > 1) {
+    problems.push(
+      `${who}: a forward carries at most one big scoring role, and this has ` +
+      `${scoring.length} (${scoring.join(', ')}). They compound.`
+    );
+  }
+  return problems;
+}
+
 export function checkRatingEntry(player, { validRoles = null } = {}) {
   const problems = [];
   const warnings = [];
@@ -35,10 +81,13 @@ export function checkRatingEntry(player, { validRoles = null } = {}) {
     if (s.roles !== undefined) {
       if (!Array.isArray(s.roles)) {
         problems.push(`${where}: "roles" must be an array`);
-      } else if (validRoles) {
-        for (const r of s.roles) {
-          if (!validRoles.includes(r)) problems.push(`${where}: unknown role "${r}"`);
+      } else {
+        if (validRoles) {
+          for (const r of s.roles) {
+            if (!validRoles.includes(r)) problems.push(`${where}: unknown role "${r}"`);
+          }
         }
+        problems.push(...checkRoles(player, s, where));
       }
     }
   }
