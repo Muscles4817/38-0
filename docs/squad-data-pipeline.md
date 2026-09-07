@@ -193,6 +193,38 @@ Mick Stockwell 67 on 3780.
 
 Check the within-batch figure when a season finishes, not the gradient.
 
+### That check stops working once batches hold whole careers
+
+The 1992/93 figure was measured on a dataset with **one season per player**, so
+a batch ordered by total minutes was also ordered by season minutes, and the
+range inside a batch was too narrow to correlate with anything. Neither is true
+now. A batch holds careers, and a player's own peak years carry both more
+minutes and a higher rating — which is a fact about footballers, not drift.
+
+Measured over all 66 batches after the 2005/06–2009/10 pass:
+
+| | min | max | mean |
+| --- | ---: | ---: | ---: |
+| all rows within a batch | −0.17 | 0.67 | 0.32 |
+| within one player's own seasons | −0.99 | 0.97 | 0.46 |
+| between players, within a batch | −0.17 | 0.68 | 0.28 |
+
+Read against the old −0.03 to 0.17 benchmark that looks alarming, and it is not
+— the benchmark simply does not transfer. **Use the spot check instead**, which
+does not care how the data is shaped: are there players rated high on few
+minutes, and low on many?
+
+- **39 player-seasons rated 82+ on under 900 minutes.** Ledley King 84 on 289,
+  Joe Cole 82 on 472, Jermain Defoe 82 on 541.
+- **48 rated 70 or under on 3,000+ minutes.** Francis Benali 68 on 3,067, John
+  Moncur 69 on 3,627 — ever-presents for sides that were going down.
+- Near-ever-present seasons span 66–97 and thin seasons span 62–99, so the whole
+  scale is reachable from either end.
+
+That is what "they were reading ability" looks like. Prefer it to the
+correlation, and do not re-derive the correlation benchmark from a
+single-season season.
+
 ## Phase 5 — verification
 
 A second agent checks ratings and positions independently, with the phase 1
@@ -245,6 +277,7 @@ node scripts/build-squad-files.mjs --season 2007/08          # join the three ph
 node scripts/build-squad-files.mjs --season 2006/07   --competition premier-league                               # one league of a season
 node scripts/import-squads.mjs --dry-run   # validate everything, change nothing
 node scripts/import-squads.mjs             # write to SQLite
+node scripts/import-squads.mjs --prune data/squads/2025-26   # …and drop who left
 npm run export:data                        # refresh the shipped snapshot
 ```
 
@@ -264,6 +297,24 @@ written.
 The `source` URL is built per competition for the same reason. It used to be
 hardcoded to the Premier League for every file in a season, which was invisible
 while seasons held only Premier League clubs and wrong the moment one did not.
+
+### `--prune`, and the relegated clubs nobody removed
+
+A club-season is replaced wholesale, so a player dropped from a file leaves the
+squad. **A club that left the league has no file at all**, so nothing ever
+removed it.
+
+2025/26 shipped with Ipswich Town and Southampton in it, both relegated at the
+end of 2024/25, and without the three promoted clubs — a 19-team season built
+from the previous year's table. Importing Burnley, Leeds and Sunderland into
+that would have made it 22, and `trimToLeague` cuts a field to 19 opponents by
+dropping the **weakest**, so the game would have fielded the two relegated sides
+and dropped promoted ones.
+
+`--prune` removes club-seasons of an imported season that the import does not
+cover, scoped to the leagues its files actually speak for. That scoping is the
+whole safety of it: Internazionale and Roma sit against 2006/07 and Barcelona
+against 2009/10, and a Premier League import must never touch them.
 
 ## Second passes
 
