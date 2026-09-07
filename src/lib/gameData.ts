@@ -356,35 +356,57 @@ export function getOpponentSquads(
   seasonId?: number,
   league: string = SIMULATED_LEAGUE,
 ): OpponentSquad[] {
+  return trimToLeague(assembleField(seasonId, league).map(({ clubName, eleven }) => ({
+    clubName,
+    players: eleven.map(toOpponentPlayer),
+    strength: averageRating(eleven),
+  })));
+}
+
+/**
+ * The eleven every club in a league-season actually fields, before trimming.
+ *
+ * This exists so that the side the player is *told* about and the side he
+ * *plays* are the same side. `describeCompetition` used to work the strength out
+ * from `bestXI` while this path preferred the stored lineup, and the two only
+ * agreed for as long as no club had a stored lineup. Deriving XIs for 364
+ * club-seasons ended that: the pre-season screen named Middlesbrough as having
+ * made way from 1992/93 and the season then fielded them, because the two
+ * functions had ranked the field on different elevens.
+ */
+function assembleField(
+  seasonId: number | undefined,
+  league: string,
+): { clubName: string; eleven: DataPlayer[] }[] {
   const season = seasonId != null ? seasonById.get(seasonId) ?? null : simulatedSeason;
   if (!season) return [];
-  const result: OpponentSquad[] = [];
+  const field: { clubName: string; eleven: DataPlayer[] }[] = [];
 
   for (const squad of gameData.squads) {
     if (squad.seasonId !== season.id) continue;
     const club = clubById.get(squad.clubId);
     if (!club || club.league !== league) continue;
 
+    // An unrated player cannot be judged, so he cannot be picked.
+    const rated = squad.players.filter(p => p.rating > 0);
+    if (rated.length < 11) continue;
+
     const lineup = lineupByKey.get(key(squad.clubId, squad.seasonId));
-    const byId = new Map(squad.players.map(p => [p.playerId, p]));
+    const byId = new Map(rated.map(p => [p.playerId, p]));
 
     let eleven: DataPlayer[];
     if (lineup && lineup.slots.length === 11) {
       const fromSlots = lineup.slots
         .map(slot => byId.get(slot.playerId))
         .filter((p): p is DataPlayer => p != null);
-      eleven = fromSlots.length === 11 ? fromSlots : bestXI(squad.players);
+      eleven = fromSlots.length === 11 ? fromSlots : bestXI(rated);
     } else {
-      eleven = bestXI(squad.players);
+      eleven = bestXI(rated);
     }
 
-    result.push({
-      clubName: club.name,
-      players: eleven.map(toOpponentPlayer),
-      strength: averageRating(eleven),
-    });
+    field.push({ clubName: club.name, eleven });
   }
-  return trimToLeague(result);
+  return field;
 }
 
 /**
@@ -401,7 +423,16 @@ function trimToLeague(squads: OpponentSquad[]): OpponentSquad[] {
   return squads.filter(s => !cut.has(s.clubName));
 }
 
-/** The clubs `trimToLeague` would drop, weakest first. */
+/**
+ * The clubs `trimToLeague` would drop, weakest first.
+ *
+ * Ties break on the club name, and that is not cosmetic. Strength is a rounded
+ * mean, so ties are common — four clubs sat on 70 in 1992/93 — and sorting on
+ * strength alone leaves the cut decided by the order the caller happened to
+ * build its array in. `listCompetitions` and `getOpponentSquads` build theirs
+ * differently, so they disagreed: the pre-season screen named Middlesbrough as
+ * having made way and the season then fielded them.
+ */
 function displacedFrom(squads: OpponentSquad[]): Set<string> {
   let keep = Math.min(squads.length, OPPONENTS_PER_SEASON);
   if (keep % 2 === 0) keep -= 1;
@@ -409,7 +440,7 @@ function displacedFrom(squads: OpponentSquad[]): Set<string> {
   if (drop <= 0) return new Set();
   return new Set(
     [...squads]
-      .sort((a, b) => a.strength - b.strength)
+      .sort((a, b) => a.strength - b.strength || a.clubName.localeCompare(b.clubName))
       .slice(0, drop)
       .map(s => s.clubName),
   );
@@ -481,15 +512,8 @@ export function describeCompetition(
   const season = seasonId != null ? seasonById.get(seasonId) ?? null : simulatedSeason;
   if (!season) return null;
 
-  const field: OpponentSquad[] = [];
-  for (const squad of gameData.squads) {
-    if (squad.seasonId !== season.id) continue;
-    const club = clubById.get(squad.clubId);
-    if (!club || club.league !== league) continue;
-    const rated = squad.players.filter(p => p.rating > 0);
-    if (rated.length < 11) continue;
-    field.push({ clubName: club.name, players: [], strength: averageRating(bestXI(rated)) });
-  }
+  const field: OpponentSquad[] = assembleField(season.id, league)
+    .map(({ clubName, eleven }) => ({ clubName, players: [], strength: averageRating(eleven) }));
   if (field.length < OPPONENTS_PER_SEASON) return null;
 
   const displaced = displacedFrom(field);

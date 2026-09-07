@@ -20,13 +20,25 @@
 // Existing lineups are LEFT ALONE unless --overwrite is passed. Nineteen of
 // them were verified by hand after the 2025/26 lineup problems recorded in
 // docs/known-issues.md, and a fresh derivation is not a reason to discard that.
+//
+// A STALE one is different. When a club-season's squad is re-imported, players
+// who moved on are gone and positions may have been reassigned, so a stored
+// lineup can stop being a legal eleven — the exporter drops orphaned slots and
+// ships a nine-man side, and `gameData.test.ts` fails the build on a player
+// standing somewhere he cannot play. A stored lineup is therefore rebuilt,
+// with or without --overwrite, when it names anyone no longer in the squad or
+// plays anyone in a slot `positionFit` rates `none`.
+//
+// Refreshing the 2025/26 squads broke thirteen of them: twelve on players who
+// had moved club, and Crystal Palace on Ismaïla Sarr, who stayed but whose
+// looked-up positions came back RM/LM against a lineup that had him at CAM.
 
 import Database from 'better-sqlite3';
 import fs from 'node:fs';
 import path from 'node:path';
 import process from 'node:process';
 import { bestFormation, equallyGoodFormations } from '../src/lib/lineupFit.ts';
-import { FORMATIONS } from '../src/lib/formations.ts';
+import { FORMATIONS, slotFit } from '../src/lib/formations.ts';
 
 const ROOT = process.cwd();
 const DB_PATH = path.join(ROOT, 'data', '38-0.db');
@@ -95,6 +107,27 @@ for (const l of db.prepare('SELECT id, club_id, season_id FROM team_lineups').al
   existing.set(`${l.club_id}|${l.season_id}`, l.id);
 }
 
+const storedLineup = db.prepare('SELECT formation FROM team_lineups WHERE id = ?');
+const slotsOf = db.prepare(
+  'SELECT slot_index, player_id FROM lineup_slots WHERE lineup_id = ?');
+
+/**
+ * True when a stored lineup no longer describes a legal eleven for this squad —
+ * because it names someone who has left, or plays someone somewhere he cannot.
+ */
+function isStale(lineupId, players) {
+  const byId = new Map(players.map(p => [p.playerId, p]));
+  const formation = FORMATIONS[storedLineup.get(lineupId)?.formation];
+  for (const slot of slotsOf.all(lineupId)) {
+    const player = byId.get(slot.player_id);
+    if (!player) return true;                       // no longer in the squad
+    const target = formation?.slots[slot.slot_index];
+    if (!target) return true;                       // formation gone or reshaped
+    if (slotFit(player.positions, target.position) === 'none') return true;
+  }
+  return false;
+}
+
 // ── Derive ───────────────────────────────────────────────────────────────────
 
 const insertLineup = db.prepare(
@@ -104,6 +137,7 @@ const insertSlot = db.prepare(
   'INSERT INTO lineup_slots (lineup_id, slot_index, player_id) VALUES (?, ?, ?)');
 
 let keptExisting = 0, tooFew = 0, unfillable = 0;
+const staleRebuilt = [];
 const shapes = {};
 const ties = [];
 const problems = [];
@@ -111,7 +145,10 @@ const work = [];
 
 for (const squad of squads.values()) {
   const k = `${squad.clubId}|${squad.seasonId}`;
-  if (existing.has(k) && !overwrite) { keptExisting++; continue; }
+  const storedId = existing.get(k) ?? null;
+  const stale = storedId !== null && isStale(storedId, squad.players);
+  if (storedId !== null && !overwrite && !stale) { keptExisting++; continue; }
+  if (stale) staleRebuilt.push(`${squad.season} ${squad.club}`);
 
   if (squad.players.length < 11) {
     tooFew++;
@@ -163,6 +200,12 @@ if (!dryRun) apply(work);
 
 console.log(`${work.length} lineup(s) ${dryRun ? 'would be ' : ''}written.`);
 console.log(`${keptExisting} left alone (already stored; pass --overwrite to replace).`);
+if (staleRebuilt.length) {
+  console.log(`${staleRebuilt.length} stored lineup(s) rebuilt because they were no ` +
+    `longer a legal eleven for the squad:`);
+  for (const x of staleRebuilt.slice(0, 20)) console.log(`  ${x}`);
+  if (staleRebuilt.length > 20) console.log(`  … +${staleRebuilt.length - 20}`);
+}
 if (tooFew) console.log(`${tooFew} club-season(s) have fewer than eleven players.`);
 if (unfillable) console.log(`${unfillable} club-season(s) could not fill any shape.`);
 

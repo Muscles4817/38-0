@@ -638,7 +638,7 @@ const POINTS_MIDPOINT = 1.56;
 /** How far the player's own season lands either side of its expectation. */
 const SEASON_SD = 7.6;
 /** The same for an opponent's season, which is not shared across comparisons. */
-const OPPONENT_SD = 8.6;
+const OPPONENT_SD = 7.5;
 /** Quadrature nodes for integrating over the player's own season. */
 const SEASON_NODES = 41;
 

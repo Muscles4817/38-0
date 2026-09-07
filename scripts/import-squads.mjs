@@ -22,6 +22,19 @@ const CLUBS_PATH = path.join(ROOT, 'data', 'clubs.json');
 
 const args = process.argv.slice(2);
 const dryRun = args.includes('--dry-run');
+// Remove club-seasons of an imported season that this import does not cover.
+//
+// A club-season is normally replaced wholesale, but a club that LEFT the league
+// has no file at all, so nothing ever removed it. 2025/26 shipped with Ipswich
+// and Southampton in it — both relegated at the end of 2024/25 — and adding the
+// three promoted clubs would have made it a 22-team season. `trimToLeague` then
+// cuts the field to 19 by dropping the WEAKEST, so the game would have fielded
+// the two relegated sides and dropped the promoted ones.
+//
+// Scoped to the leagues the imported files actually cover, so the iconic Serie
+// A, La Liga and Bundesliga sides stored against a Premier League season are
+// never touched.
+const prune = args.includes('--prune');
 const filter = args.find(a => !a.startsWith('--'));
 
 // ── Load staging files ───────────────────────────────────────────────────────
@@ -126,6 +139,14 @@ const insertEntry = db.prepare(
 const entriesFor = db.prepare(
   'SELECT se.id, se.player_version_id FROM squad_entries se WHERE se.club_id = ? AND se.season_id = ?'
 );
+const clubSeasonsIn = db.prepare(`
+  SELECT DISTINCT c.id AS clubId, c.name AS club, c.league AS league
+  FROM squad_entries se JOIN clubs c ON c.id = se.club_id
+  WHERE se.season_id = ?
+`);
+const leagueOfClub = db.prepare('SELECT league FROM clubs WHERE id = ?');
+const deleteLineupFor = db.prepare(
+  'DELETE FROM team_lineups WHERE club_id = ? AND season_id = ?');
 const deleteEntry = db.prepare('DELETE FROM squad_entries WHERE id = ?');
 const deleteVersion = db.prepare('DELETE FROM player_versions WHERE id = ?');
 
@@ -216,6 +237,8 @@ function playerId(name, nationality, fbrefId) {
 let clubSeasons = 0, playerSeasons = 0, newPlayers = 0;
 const before = db.prepare('SELECT COUNT(*) AS c FROM players').get().c;
 
+const pruned = [];
+
 const run = db.transaction(() => {
   for (const { data } of files) {
     const cid = clubId(data.club);
@@ -241,6 +264,34 @@ const run = db.transaction(() => {
     }
     clubSeasons++;
   }
+
+  if (!prune) return;
+
+  // Which (season, league) pairs this import actually speaks for. A season is
+  // only pruned in the leagues it brought files for.
+  const covered = new Map();   // seasonId -> Set(league)
+  const staged = new Set();    // "seasonId|clubId"
+  for (const { data } of files) {
+    const sid = seasonId(data.season);
+    const cid = clubId(data.club);
+    staged.add(`${sid}|${cid}`);
+    const league = leagueOfClub.get(cid)?.league ?? 'PL';
+    if (!covered.has(sid)) covered.set(sid, new Set());
+    covered.get(sid).add(league);
+  }
+
+  for (const [sid, leagues] of covered) {
+    for (const row of clubSeasonsIn.all(sid)) {
+      if (!leagues.has(row.league)) continue;             // another competition
+      if (staged.has(`${sid}|${row.clubId}`)) continue;   // this import covers it
+      for (const existing of entriesFor.all(row.clubId, sid)) {
+        deleteEntry.run(existing.id);
+        deleteVersion.run(existing.player_version_id);
+      }
+      deleteLineupFor.run(row.clubId, sid);
+      pruned.push(`${row.club} (${row.league})`);
+    }
+  }
 });
 
 run();
@@ -250,4 +301,7 @@ console.log(
   `\nImported ${playerSeasons} player-seasons across ${clubSeasons} club-seasons ` +
   `(${newPlayers} new player${newPlayers === 1 ? '' : 's'}).`
 );
+if (pruned.length) {
+  console.log(`Pruned ${pruned.length} club-season(s) the import does not cover: ${pruned.join(', ')}.`);
+}
 console.log('Run "npm run export:data" to refresh the snapshot the game ships with.');

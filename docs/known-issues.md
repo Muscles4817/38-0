@@ -60,7 +60,38 @@ possible answers.
 This is the real ceiling on replay value. Every other improvement is bounded by
 it.
 
-## 3. Smaller things
+## 3. A club's strength is a flat mean; the engine reads three lines
+
+`getOpponentSquads` gives every club a `strength` that is the arithmetic mean of
+its XI's ratings. The match engine does not read a team that way: it takes
+attack, midfield and defence separately, each through `scaledAvgRating`. The two
+agree for a balanced XI and disagree for a lopsided one.
+
+That used to be hidden, because clubs without a stored lineup were represented
+by `bestXI`, which picks the best-shaped eleven available. Now that every
+club-season has a **minutes-based** XI — who actually played, not who was best —
+the elevens are more lopsided and the gap shows.
+
+What it costs, measured on 1992/93:
+
+| | strength | model expects | actually plays |
+| --- | ---: | ---: | ---: |
+| an 82-rated XI | 82 | 76.0 | 77.0 |
+| Manchester United | 83 | 78.3 | 76.9 |
+| Arsenal | 80 | 69.5 | 63.3 |
+
+The model has United 2.3 points clear when the simulation has them level, so an
+82-rated XI is told it wins the title 32% of the time and wins it 53%. Points
+and finishing position stay accurate — 76 against 76.8, 2nd against 1.9th — and
+every other field and rating in `preSeasonOdds.calibration.test.ts` is inside
+its 15-point bound. It is specifically the top of a compressed field that breaks.
+
+The fix is to make `strength` line-based, the way the engine reads it. It is not
+a constant to re-fit: `strength` also decides which clubs make way when a season
+had more than twenty, and it is the number the pre-season screen shows, so
+changing it moves three things at once and wants measuring on its own.
+
+## 4. Smaller things
 
 - **Four club-seasons ship with a single player.** 2017/18 Liverpool holds only
   Adam Lallana, and AC Milan 1994/95, 2002/03 and 2004/05 hold one man each
