@@ -62,6 +62,17 @@ const NATIONS = {
   SCG: 'Serbia and Montenegro',
   BEL: 'Belgium', SUI: 'Switzerland', GHA: 'Ghana', RSA: 'South Africa',
   NZL: 'New Zealand', FIN: 'Finland', GRE: 'Greece', ROU: 'Romania',
+  // Added with 2005/06-2009/10 and 2025/26. Senegal alone accounted for 42 of
+  // the players this map was silently dropping.
+  SEN: 'Senegal', KOR: 'South Korea', ECU: 'Ecuador', PAR: 'Paraguay',
+  TUN: 'Tunisia', TOG: 'Togo', GRN: 'Grenada', CGO: 'Congo',
+  MEX: 'Mexico', CHN: 'China', SLE: 'Sierra Leone', BLR: 'Belarus',
+  GLP: 'Guadeloupe', GIB: 'Gibraltar', ALB: 'Albania', UZB: 'Uzbekistan',
+  PAK: 'Pakistan', OMA: 'Oman', MOZ: 'Mozambique', IRN: 'Iran',
+  HAI: 'Haiti', GNB: 'Guinea-Bissau', GAM: 'Gambia', GAB: 'Gabon',
+  ATG: 'Antigua and Barbuda', ANG: 'Angola',
+  HON: 'Honduras', BRB: 'Barbados', BOL: 'Bolivia', SEY: 'Seychelles',
+  SUR: 'Suriname',
 };
 
 // A handful of FBref exports have an empty nation cell. That is a gap in the
@@ -164,8 +175,16 @@ for (const r of rosters) {
     if (!rating) { gaps.push(`${p.name} (${r.club}): no rating`); continue; }
     const nationality = overrides[p.fbrefId]?.nationality ?? NATIONS[p.nation];
     if (!nationality) {
-      gaps.push(`${p.name} (${r.club}) [${p.fbrefId}]: no nation — FBref cell is ` +
-        `"${p.nation}". Add it to data/raw/nation-overrides.json.`);
+      // Two different failures wear the same message otherwise, and they have
+      // different fixes: a blank cell is a gap in the source and needs a
+      // per-player override, while a code that is simply not in NATIONS needs
+      // one line adding here. Sending the second case to the override file
+      // would mean writing out hundreds of players by hand.
+      gaps.push(p.nation
+        ? `${p.name} (${r.club}) [${p.fbrefId}]: FBref says "${p.nation}", which ` +
+          `is not in the NATIONS map in this script. Add it there.`
+        : `${p.name} (${r.club}) [${p.fbrefId}]: FBref records no nation at all. ` +
+          `Look it up and add it to data/raw/nation-overrides.json.`);
       continue;
     }
     if ((p.matchesPlayed ?? 0) < MIN_APPEARANCES) continue;
