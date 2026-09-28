@@ -35,10 +35,15 @@ export default function SetupPage() {
 
   function startDraft() {
     const setup = { formation, difficulty, showRatings, draftMode, playerRating, yearStart, yearEnd };
-    localStorage.setItem('38-0-setup', JSON.stringify(setup));
+    // Clear the previous run before saving this one, so a browser whose storage
+    // is full frees space before the one write that has to succeed.
     localStorage.removeItem('38-0-draft');
     // A tactic and a season chosen for a previous XI mean nothing to this one.
     localStorage.removeItem('38-0-plan');
+    // Nor do the squads it was offered. Without this the list outlived every
+    // run started from here; see src/lib/seenSquads.ts.
+    localStorage.removeItem('38-0-seen-squads');
+    localStorage.setItem('38-0-setup', JSON.stringify(setup));
     router.push('/draft');
   }
 

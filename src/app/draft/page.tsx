@@ -6,6 +6,7 @@ import { getFormation, canFillSlot, Formation, Position } from '@/lib/formations
 import { SquadPick, computeOverall } from '@/lib/simulation';
 import { listDraftableSquads, type DataPlayer, type SpunSquad } from '@/lib/gameData';
 import { useStoredJson, readStored, writeStored } from '@/lib/clientStorage';
+import { parseSeenSquads, SEEN_SQUADS_KEY, withSeenSquad } from '@/lib/seenSquads';
 import PitchView from '@/components/PitchView';
 import PositionBadge from '@/components/PositionBadge';
 import LineRatings from '@/components/LineRatings';
@@ -20,14 +21,6 @@ interface Setup {
   playerRating: 'career' | 'prime';
   yearStart: number;
   yearEnd: number;
-}
-
-// Stored so "what could have been" on the results page can read every player
-// the draft offered, not just the ones taken.
-interface StoredSquad {
-  clubName: string;
-  seasonLabel: string;
-  players: DataPlayer[];
 }
 
 type SpinPhase = 'idle' | 'spinning' | 'reveal';
@@ -82,6 +75,16 @@ export default function DraftPage() {
   useEffect(() => {
     if (localStorage.getItem('38-0-setup') === null) router.push('/');
   }, [router]);
+
+  // A browser that drafted before seen-squads stored references can still be
+  // holding megabytes of full squad copies, enough to fill the quota. Rewriting
+  // the key keeps this run's references and drops the rest. See seenSquads.ts.
+  useEffect(() => {
+    const stored = readStored<unknown>(SEEN_SQUADS_KEY);
+    if (stored === null) return;
+    const refs = parseSeenSquads(stored);
+    if (!Array.isArray(stored) || refs.length !== stored.length) writeStored(SEEN_SQUADS_KEY, refs);
+  }, []);
 
   // Clean up timers on unmount
   useEffect(() => () => {
@@ -172,12 +175,12 @@ export default function DraftPage() {
     setSpinResult(null);
     setSelectedPlayer(null);
 
-    // Record the squad for "what could have been", whether or not it is used.
-    const stored = readStored<StoredSquad[]>('38-0-seen-squads') ?? [];
-    stored.push({ clubName: found.clubName, seasonLabel: found.seasonLabel, players: found.players });
-    writeStored('38-0-seen-squads', stored);
-
     runSpinAnimation(found);
+
+    // Record the squad for "what could have been", whether or not it is used.
+    // After the animation has started: history is a nice-to-have, the spin is not.
+    const seen = parseSeenSquads(readStored<unknown>(SEEN_SQUADS_KEY));
+    writeStored(SEEN_SQUADS_KEY, withSeenSquad(seen, found));
   }
 
   function selectPlayer(player: DataPlayer) {
