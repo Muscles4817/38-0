@@ -1,12 +1,14 @@
 'use client';
 
-import { useState } from 'react';
+import { useMemo, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { FORMATIONS, getFormation } from '@/lib/formations';
 import PitchView from '@/components/PitchView';
 import OptionCard from '@/components/OptionCard';
 import SiteNav from '@/components/SiteNav';
+import { clubChoices, nationChoices, poolCanFieldXI, type DraftFilter } from '@/lib/draftPool';
+import { BUDGET_MAX_RATING, CHALLENGE_ERAS, CHALLENGES, type ChallengeId } from '@/lib/challenges';
 
 const ERA_PRESETS = [
   { label: 'All-time',       start: 1992, end: 2026 },
@@ -25,16 +27,101 @@ export default function SetupPage() {
   const [eraPreset,    setEraPreset]    = useState('All-time');
   const [yearStart,    setYearStart]    = useState(1992);
   const [yearEnd,      setYearEnd]      = useState(2026);
+  const [challenge,    setChallenge]    = useState<ChallengeId>('none');
+  const [clubId,       setClubId]       = useState<number | null>(null);
+  const [nation,       setNation]       = useState<string | null>(null);
+
+  // Golden Era, Modern Masters and Pure Chaos are shortcuts for settings on
+  // this page. Changing the setting they made afterwards means the player has
+  // left the challenge, so these handlers drop back to None rather than leave
+  // a label claiming something that is no longer true.
+  function leaveChallengeIf(ids: ChallengeId[]) {
+    if (ids.includes(challenge)) setChallenge('none');
+  }
 
   function handleEraPreset(label: string) {
     const p = ERA_PRESETS.find(e => e.label === label)!;
     setEraPreset(label);
     setYearStart(p.start);
     setYearEnd(p.end);
+    leaveChallengeIf(['golden-era', 'modern-masters']);
   }
 
+  function chooseFormation(f: string) {
+    setFormation(f);
+    leaveChallengeIf(['pure-chaos']);
+  }
+
+  function chooseDifficulty(d: string) {
+    setDifficulty(d);
+    if (d !== 'hard') leaveChallengeIf(['pure-chaos']);
+  }
+
+  function chooseChallenge(id: ChallengeId) {
+    setChallenge(id);
+    const era = CHALLENGE_ERAS[id];
+    if (era) {
+      setEraPreset('');
+      setYearStart(era.start);
+      setYearEnd(era.end);
+    }
+    if (id === 'pure-chaos') {
+      setDifficulty('hard');
+      setShowRatings(false);
+    }
+  }
+
+  // Only choices that can field the formation within the era are offered, so
+  // a challenge cannot start a draft that has no way to finish. Worked out only
+  // while that challenge is selected: the nation list is a few thousand
+  // feasibility checks.
+  const rating = playerRating === 'prime' ? 'prime' : 'career';
+  const clubs = useMemo(
+    () => (challenge === 'one-club' ? clubChoices({ yearStart, yearEnd, playerRating: rating }, getFormation(formation)) : []),
+    [challenge, yearStart, yearEnd, rating, formation],
+  );
+  const nations = useMemo(
+    () => (challenge === 'one-nation' ? nationChoices({ yearStart, yearEnd, playerRating: rating }, getFormation(formation)) : []),
+    [challenge, yearStart, yearEnd, rating, formation],
+  );
+  const budgetFits = useMemo(
+    () => challenge !== 'budget' || poolCanFieldXI(
+      { yearStart, yearEnd, playerRating: rating, filter: { kind: 'max-rating', maxRating: BUDGET_MAX_RATING } },
+      getFormation(formation),
+    ),
+    [challenge, yearStart, yearEnd, rating, formation],
+  );
+
+  const chosenClub   = clubs.find(c => c.value === clubId) ?? null;
+  const chosenNation = nations.find(n => n.value === nation) ?? null;
+
+  let filter: DraftFilter | null = null;
+  let blocked: string | null = null;
+  if (challenge === 'one-club') {
+    if (chosenClub) filter = { kind: 'club', clubId: chosenClub.value };
+    else blocked = clubs.length === 0 ? 'No club can field this formation in this era.' : 'Choose a club for One Club.';
+  } else if (challenge === 'one-nation') {
+    if (chosenNation) filter = { kind: 'nation', nation: chosenNation.value };
+    else blocked = nations.length === 0 ? 'No nation can field this formation in this era.' : 'Choose a nation for One Nation.';
+  } else if (challenge === 'budget') {
+    filter = { kind: 'max-rating', maxRating: BUDGET_MAX_RATING };
+    if (!budgetFits) blocked = `No XI rated ${BUDGET_MAX_RATING} or below fits this formation in this era.`;
+  }
+
+  const challengeSummary =
+    challenge === 'one-club'   ? `One Club · ${chosenClub?.label ?? '—'}` :
+    challenge === 'one-nation' ? `One Nation · ${chosenNation?.label ?? '—'}` :
+    CHALLENGES.find(c => c.id === challenge)?.label.replace(/^\S+\s/, '') ?? 'None';
+
   function startDraft() {
-    const setup = { formation, difficulty, showRatings, draftMode, playerRating, yearStart, yearEnd };
+    if (blocked) return;
+    // Pure Chaos picks the formation now, so not even the setup page knows it.
+    const keys = Object.keys(FORMATIONS);
+    const chosenFormation = challenge === 'pure-chaos' ? keys[Math.floor(Math.random() * keys.length)] : formation;
+    const setup = {
+      formation: chosenFormation, difficulty, showRatings, draftMode, playerRating, yearStart, yearEnd,
+      challenge, filter,
+    };
     // Clear the previous run before saving this one, so a browser whose storage
     // is full frees space before the one write that has to succeed.
     localStorage.removeItem('38-0-draft');
@@ -75,7 +162,7 @@ export default function SetupPage() {
           <Label>Formation</Label>
           <div className="grid grid-cols-2 gap-2 mb-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5">
             {Object.keys(FORMATIONS).map(f => (
-              <OptionCard key={f} label={f} selected={formation === f} onClick={() => setFormation(f)} />
+              <OptionCard key={f} label={f} selected={formation === f} onClick={() => chooseFormation(f)} />
             ))}
           </div>
           <p className="text-muted text-xs text-center mt-1 lg:hidden">{FORMATIONS[formation]?.description}</p>
@@ -90,9 +177,9 @@ export default function SetupPage() {
         <section>
           <Label>Difficulty</Label>
           <div className="grid grid-cols-1 gap-3 sm:grid-cols-3">
-            <OptionCard label="Easy"   description="3 rerolls available"          selected={difficulty === 'easy'}   onClick={() => setDifficulty('easy')} />
-            <OptionCard label="Normal" description="1 reroll available"            selected={difficulty === 'normal'} onClick={() => setDifficulty('normal')} />
-            <OptionCard label="Hard"   description="No rerolls · ratings hidden"   selected={difficulty === 'hard'}   onClick={() => setDifficulty('hard')} />
+            <OptionCard label="Easy"   description="3 rerolls available"          selected={difficulty === 'easy'}   onClick={() => chooseDifficulty('easy')} />
+            <OptionCard label="Normal" description="1 reroll available"            selected={difficulty === 'normal'} onClick={() => chooseDifficulty('normal')} />
+            <OptionCard label="Hard"   description="No rerolls · ratings hidden"   selected={difficulty === 'hard'}   onClick={() => chooseDifficulty('hard')} />
           </div>
         </section>
 
@@ -161,13 +248,13 @@ export default function SetupPage() {
               <div className="flex-1">
                 <div className="text-[10px] text-muted mb-1">From</div>
                 <input type="range" min={1992} max={2025} value={yearStart}
-                  onChange={e => { setYearStart(+e.target.value); setEraPreset(''); }}
+                  onChange={e => { setYearStart(+e.target.value); setEraPreset(''); leaveChallengeIf(['golden-era', 'modern-masters']); }}
                   className="w-full h-8 accent-[#00c896] touch-manipulation" />
               </div>
               <div className="flex-1">
                 <div className="text-[10px] text-muted mb-1">To</div>
                 <input type="range" min={1993} max={2026} value={yearEnd}
-                  onChange={e => { setYearEnd(+e.target.value); setEraPreset(''); }}
+                  onChange={e => { setYearEnd(+e.target.value); setEraPreset(''); leaveChallengeIf(['golden-era', 'modern-masters']); }}
                   className="w-full h-8 accent-[#00c896] touch-manipulation" />
               </div>
             </div>
@@ -219,25 +306,36 @@ export default function SetupPage() {
         {/* Challenge Modes */}
         <section>
           <Label>Challenge Modes</Label>
-          <ComingSoon summary="Extra constraints for a harder draft">
-            {[
-              { label: '🏟️ One Club',        desc: 'All 11 players from the same club-season' },
-              { label: '🌍 One Nation',       desc: 'Full XI from a single nationality' },
-              { label: '⏳ Golden Era',        desc: 'Only players from 1992–2004' },
-              { label: '⚡ Modern Masters',   desc: 'Only players from 2015 onwards' },
-              { label: '💰 Budget XI',         desc: 'Every player rated 78 or below' },
-              { label: '🎲 Pure Chaos',        desc: 'No rerolls, ratings hidden, random formation' },
-            ].map(c => (
-              <div key={c.label}
-                className="relative rounded-lg border border-line bg-inset px-4 py-3 opacity-50 cursor-not-allowed select-none overflow-hidden">
-                <div className="absolute top-2 right-2 text-[9px] text-fainter font-bold uppercase tracking-widest bg-raised px-1.5 py-0.5 rounded">
-                  Soon
-                </div>
-                <div className="font-bold text-sm text-subtle">{c.label}</div>
-                <div className="text-fainter text-xs mt-0.5">{c.desc}</div>
-              </div>
+          <div className="grid grid-cols-2 gap-2 sm:grid-cols-3">
+            {CHALLENGES.map(c => (
+              <OptionCard key={c.id} label={c.label} description={c.description}
+                selected={challenge === c.id} onClick={() => chooseChallenge(c.id)} />
             ))}
-          </ComingSoon>
+          </div>
+          {challenge === 'one-club' && (
+            <ChoiceSelect
+              label="Club"
+              placeholder="Choose a club"
+              value={chosenClub ? String(chosenClub.value) : ''}
+              options={clubs.map(c => ({ value: String(c.value), label: `${c.label} · ${c.seasons} season${c.seasons === 1 ? '' : 's'}` }))}
+              onChange={v => setClubId(v ? Number(v) : null)}
+            />
+          )}
+          {challenge === 'one-nation' && (
+            <ChoiceSelect
+              label="Nation"
+              placeholder="Choose a nation"
+              value={chosenNation?.value ?? ''}
+              options={nations.map(n => ({ value: n.value, label: n.label }))}
+              onChange={v => setNation(v || null)}
+            />
+          )}
+          {(challenge === 'one-club' || challenge === 'one-nation') && (
+            <p className="text-muted text-[11px] mt-2">
+              Only {challenge === 'one-club' ? 'clubs' : 'nations'} that can field a {formation} within the era are listed.
+            </p>
+          )}
+          {blocked && <p className="text-(--c-yellow) text-xs mt-2">{blocked}</p>}
         </section>
 
         {/*
@@ -249,10 +347,12 @@ export default function SetupPage() {
           panel instead, which does not scroll at all.
         */}
         <div className="sticky bottom-0 z-30 py-3 bg-ground/95 backdrop-blur-sm lg:hidden">
+          {blocked && <p className="text-center text-xs text-muted mb-2">{blocked}</p>}
           <button
             type="button"
             onClick={startDraft}
-            className="w-full py-4 rounded-xl font-black text-lg bg-[#00c896] text-black hover:bg-[#00b385] transition-colors touch-manipulation"
+            disabled={blocked !== null}
+            className="w-full py-4 rounded-xl font-black text-lg bg-[#00c896] text-black hover:bg-[#00b385] transition-colors touch-manipulation disabled:opacity-40 disabled:cursor-not-allowed"
           >
             Start Draft →
           </button>
@@ -280,8 +380,10 @@ export default function SetupPage() {
             <div className="bg-card rounded-2xl p-5 flex flex-col items-center">
               <PitchView formation={fmt} picks={[]} compact />
               <div className="mt-4 text-center">
-                <div className="text-2xl font-black tracking-tight">{formation}</div>
-                <p className="text-muted text-xs mt-1">{FORMATIONS[formation]?.description}</p>
+                <div className="text-2xl font-black tracking-tight">{challenge === 'pure-chaos' ? 'Random formation' : formation}</div>
+                <p className="text-muted text-xs mt-1">
+                  {challenge === 'pure-chaos' ? 'Drawn when the draft starts.' : FORMATIONS[formation]?.description}
+                </p>
               </div>
             </div>
 
@@ -291,12 +393,15 @@ export default function SetupPage() {
               <Summary label="Draft"      value={draftMode === 'squad-first' ? 'Squad first' : 'Position first'} />
               <Summary label="Players"    value={playerRating === 'prime' ? 'Prime mode' : 'Career seasons'} />
               <Summary label="Era"        value={`${yearStart}–${yearEnd - 1}`} />
+              <Summary label="Challenge"  value={challengeSummary} />
             </div>
 
+            {blocked && <p className="text-center text-xs text-muted -mb-2">{blocked}</p>}
             <button
               type="button"
               onClick={startDraft}
-              className="w-full py-4 rounded-xl font-black text-lg bg-[#00c896] text-black hover:bg-[#00b385] transition-colors touch-manipulation"
+              disabled={blocked !== null}
+              className="w-full py-4 rounded-xl font-black text-lg bg-[#00c896] text-black hover:bg-[#00b385] transition-colors touch-manipulation disabled:opacity-40 disabled:cursor-not-allowed"
             >
               Start Draft →
             </button>
@@ -328,6 +433,30 @@ function Summary({ label, value }: { label: string; value: string }) {
       <span className="text-subtle uppercase tracking-widest text-[10px] w-20 shrink-0">{label}</span>
       <span className="font-bold text-fg truncate">{value}</span>
     </div>
+  );
+}
+
+/** A native picker for a challenge's club or nation: one tap on a phone, typeahead on a desktop. */
+function ChoiceSelect({ label, placeholder, value, options, onChange }: {
+  label: string;
+  placeholder: string;
+  value: string;
+  options: { value: string; label: string }[];
+  onChange: (value: string) => void;
+}) {
+  return (
+    <label className="block mt-3">
+      <span className="block text-[10px] text-muted mb-1 uppercase tracking-widest font-bold">{label}</span>
+      <select
+        value={value}
+        onChange={e => onChange(e.target.value)}
+        className="w-full min-h-11 rounded-lg border-2 border-line-strong bg-card px-3 py-2.5 text-sm font-bold text-fg
+                   focus:border-[#00c896] focus:outline-none touch-manipulation"
+      >
+        <option value="">{placeholder}</option>
+        {options.map(o => <option key={o.value} value={o.value}>{o.label}</option>)}
+      </select>
+    </label>
   );
 }
 
