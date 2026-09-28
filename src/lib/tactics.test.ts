@@ -1,9 +1,10 @@
-// Choosing a style, and what it is worth.
+// Choosing a style, and what it does to a season.
 //
-// The thing worth testing here is not a number but a rule: a style costs the
-// same whoever plays it, and pays out only as far as the eleven can carry it
-// out. Tests that pinned a style's points total would break on the first piece
-// of tuning; these assert the shape of the trade.
+// A style is played by the match engine; the interaction rules themselves are
+// tested in playstyles.test.ts. What is tested here is the seam: what the
+// pre-season screen is told about a style, and that the choice reaches the
+// season. Tests that pinned a style's points total would break on the first
+// piece of tuning; these assert the shape of the trade.
 
 import { describe, expect, it } from 'vitest';
 import type { Position } from './formations';
@@ -70,68 +71,28 @@ const STYLES = Object.keys(PLAYSTYLES) as PlaystyleName[];
 // ── The effect of a style ────────────────────────────────────────────────────
 
 describe('tacticEffect', () => {
-  it('leaves a balanced side exactly where it was', () => {
-    // Balanced sits at the origin of all three axes, which is what makes it a
-    // safe choice rather than a weak one — and what lets every season measured
-    // before tactics existed still be reproduced.
+  it('asks nothing of a balanced side, which is what makes it safe', () => {
     const plan = tacticEffect(makeXI(80), 'balanced');
-    expect(plan.att).toBe(0);
-    expect(plan.def).toBe(0);
-    expect(plan.mid).toBe(0);
-    expect(plan.tempo).toBe(1);
     expect(plan.fit).toBe(1);
+    expect(plan.tempo).toBe(1);
   });
 
-  it('charges a side that cannot play the style, and pays it nothing', () => {
-    // Gegenpress asks for pressing and pace. An XI with no roles at all has
-    // neither, so it buys the high line's exposure and collects none of the
-    // pressure that is supposed to pay for it.
-    const plan = tacticEffect(makeXI(80), 'gegenpress');
-    expect(plan.fit).toBe(0);
-    expect(plan.def).toBeLessThan(0);
-    // Gegenpress builds up slightly short as well, so even its attack is a
-    // small cost here rather than the pressure it is supposed to buy.
-    expect(plan.att).toBeLessThanOrEqual(0);
+  it('gives no fit to a side without the players a style needs', () => {
+    // Gegenpress asks for pressing and pace. An XI with no roles has neither.
+    expect(tacticEffect(makeXI(80), 'gegenpress').fit).toBe(0);
   });
 
-  it('pays a side that can play it', () => {
-    const cannot = tacticEffect(makeXI(80), 'gegenpress');
-    const can    = tacticEffect(makeXI(80, ['Complete']), 'gegenpress', COMPLETE);
-    expect(can.fit).toBeGreaterThan(0.9);
-    expect(can.att).toBeGreaterThan(cannot.att);
-    // The cost is the same either way; only the benefit moved.
-    expect(can.def).toBeCloseTo(cannot.def, 5);
+  it('gives full fit to a side that has them', () => {
+    expect(tacticEffect(makeXI(80, ['Complete']), 'gegenpress', COMPLETE).fit).toBeGreaterThan(0.9);
   });
 
-  it('never lets fit reduce a cost', () => {
+  it('reports the style as the engine plays it', () => {
     for (const style of STYLES) {
-      const cannot = tacticEffect(makeXI(80), style);
-      const can    = tacticEffect(makeXI(80, ['Complete']), style, COMPLETE);
-      for (const axis of ['att', 'def', 'mid'] as const) {
-        // Every axis is either unchanged or better for the side that can play
-        // the style: fit only ever adds.
-        expect(can[axis]).toBeGreaterThanOrEqual(cannot[axis] - 1e-9);
-      }
-    }
-  });
-
-  it('reports the style axes unscaled, so a style can be described honestly', () => {
-    const parked = tacticEffect(makeXI(80), 'parkTheBus');
-    expect(parked.line).toBe(PLAYSTYLES.parkTheBus.line);
-    expect(parked.buildUp).toBe(PLAYSTYLES.parkTheBus.buildUp);
-    // Fit is zero for this XI, so the benefit is nil even though the style is
-    // as deep as they come.
-    expect(parked.def).toBe(0);
-  });
-
-  it('keeps every style within a few rating points and a quarter of the tempo', () => {
-    for (const style of STYLES) {
-      const plan = tacticEffect(makeXI(80, ['Complete']), style, COMPLETE);
-      for (const axis of ['att', 'def', 'mid'] as const) {
-        expect(Math.abs(plan[axis]), `${style} ${axis}`).toBeLessThanOrEqual(6);
-      }
-      expect(plan.tempo, style).toBeGreaterThan(0.7);
-      expect(plan.tempo, style).toBeLessThan(1.25);
+      const plan = tacticEffect(makeXI(80), style);
+      expect(plan.line, style).toBe(PLAYSTYLES[style].line);
+      expect(plan.buildUp, style).toBe(PLAYSTYLES[style].buildUp);
+      expect(plan.tempo, style).toBe(PLAYSTYLES[style].tempo);
+      expect(plan.possessionBias, style).toBe(PLAYSTYLES[style].possessionBias);
     }
   });
 
@@ -146,13 +107,20 @@ describe('tacticEffect', () => {
 describe('a season played to a plan', () => {
   const SEEDS = [11, 29, 57, 83, 101, 137];
 
-  function seasons(style: PlaystyleName, rating: number) {
-    return SEEDS.map(seed =>
-      simulateSeason(makeXI(rating, ['Complete']), makeOpponents(78), seed, COMPLETE, style));
+  // Every season here is 380 matches played out possession by possession,
+  // about a tenth of a second each, so these tests get a longer timeout.
+  const SLOW = { timeout: 60_000 };
+
+  function seasons(style: PlaystyleName, rating: number, complete = true) {
+    return SEEDS.map(seed => complete
+      ? simulateSeason(makeXI(rating, ['Complete']), makeOpponents(78), seed, COMPLETE, style)
+      : simulateSeason(makeXI(rating), makeOpponents(78), seed, undefined, style));
   }
 
-  function average(style: PlaystyleName, rating: number, of: (r: ReturnType<typeof seasons>[number]) => number) {
-    const runs = seasons(style, rating);
+  function average(
+    style: PlaystyleName, rating: number, of: (r: ReturnType<typeof seasons>[number]) => number, complete = true,
+  ) {
+    const runs = seasons(style, rating, complete);
     return runs.reduce((sum, r) => sum + of(r), 0) / runs.length;
   }
 
@@ -168,7 +136,7 @@ describe('a season played to a plan', () => {
     expect(parked.points).not.toBe(balanced.points);
   });
 
-  it('produces a quieter season the slower the tempo', () => {
+  it('produces a quieter season the slower the tempo', SLOW, () => {
     // The whole underdog argument rests on this: fewer chances, fewer goals at
     // both ends. If it stops being true, slowing a game down stops being a
     // real decision.
@@ -177,10 +145,9 @@ describe('a season played to a plan', () => {
     expect(parked).toBeLessThan(gegen);
   });
 
-  it('leaves the other nineteen clubs playing at their own rate', () => {
-    // Tempo belongs to the side that chose it, so only the ten fixtures a
-    // gameweek that involve the user should move. The rest of the league's
-    // goals must be identical for the same seed.
+  it('leaves the other nineteen clubs playing their own football', () => {
+    // The player's style is played in the player's matches. The rest of the
+    // league keeps scoring whatever the XI chose.
     const goalsElsewhere = (style: PlaystyleName) => {
       const result = simulateSeason(makeXI(80), makeOpponents(78), 777, undefined, style);
       return result.gameweeks.flatMap(gw => gw.fixtures)
@@ -193,7 +160,7 @@ describe('a season played to a plan', () => {
     expect(goalsElsewhere('balanced')).toBeGreaterThan(0);
   });
 
-  it('does not hand any style a season the others cannot match', () => {
+  it('does not hand any style a season the others cannot match', SLOW, () => {
     // Measured, not asserted from the constants: no style may be worth more
     // than about a fifth of a season's points over the worst one. A ladder of
     // styles would make picking one matter more than picking players, which is
@@ -203,12 +170,17 @@ describe('a season played to a plan', () => {
     expect(spread).toBeLessThan(20);
   });
 
-  it('suits a strong side and a weak side differently', () => {
+  it('suits a strong side and a weak side differently', SLOW, () => {
     // The point of a tactic: the best answer depends on who is playing. A
     // strong side is better off in a fast game, a weak one in a slow game,
     // because signal grows with the chances and noise with their square root.
-    const strongFast = average('gegenpress', 88, r => r.points) - average('parkTheBus', 88, r => r.points);
-    const weakFast   = average('gegenpress', 68, r => r.points) - average('parkTheBus', 68, r => r.points);
+    //
+    // Played without the Complete role on purpose. It gives every player the
+    // most of every quality, and the engine reads those as real advantages —
+    // in the air, on the ball, in behind — so a "68" side of them took 74
+    // points off 78-rated opposition. That is not an underdog.
+    const strongFast = average('gegenpress', 88, r => r.points, false) - average('parkTheBus', 88, r => r.points, false);
+    const weakFast   = average('gegenpress', 68, r => r.points, false) - average('parkTheBus', 68, r => r.points, false);
     expect(strongFast).toBeGreaterThan(weakFast);
   });
 });

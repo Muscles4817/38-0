@@ -282,63 +282,58 @@ function TacticCard({ tactic, selected, onClick }: {
 }
 
 /**
- * What the chosen style is actually worth, in the units the simulation uses.
+ * What the chosen style does, in the terms the match engine plays it.
  *
- * Showing the numbers rather than an adjective is the point: a tactic that
- * cannot be checked against the result is a label, and this game has been
- * careful not to add any of those.
+ * A style is not a bonus: the engine plays it possession by possession, and
+ * what it is worth depends on the opponent's style as much as on this one.
+ * So this describes the style, and says what fit buys, rather than showing a
+ * number of points it cannot honestly promise.
  */
 function TacticSummary({ tactic }: { tactic: TacticEffect }) {
-  const tempoPct = Math.round((tactic.tempo - 1) * 100);
+  // A match is played at the average tempo of the two styles in it, so against
+  // an ordinary side a style moves the number of chances by about half its own
+  // tempo. The engine takes the geometric mean; this is that.
+  const chances = Math.round((Math.sqrt(tactic.tempo) - 1) * 100);
+  const possession = tactic.possessionBias > 1.15 ? 'keeps the ball'
+    : tactic.possessionBias < 0.85 ? 'lets the opponent have the ball' : 'shares the ball';
   return (
     <div className="mt-3 rounded-xl border border-line bg-inset px-4 py-3">
       <div className="flex items-baseline gap-2 flex-wrap">
         <span className="font-black text-sm text-accent">{tactic.label}</span>
         <span className="text-[11px] text-muted">fit {Math.round(tactic.fit * 100)}%</span>
       </div>
-      {/* Two columns, always: this panel is 320px wide in the rail, and four
-          columns of a label and a number ran into each other there. */}
-      <div className="grid grid-cols-2 gap-x-4 gap-y-1.5 mt-2">
-        <Delta label="Attack"   value={tactic.att} />
-        <Delta label="Midfield" value={tactic.mid} />
-        <Delta label="Defence"  value={tactic.def} />
-        <Delta label="Chances"  value={tempoPct} suffix="%" />
-      </div>
+      <p className="text-fg-soft text-xs mt-2">
+        Plays a {lineOf(tactic)}, moves the ball {buildOf(tactic)} and {possession}.
+      </p>
       <p className="text-muted text-[11px] mt-2">
-        {tempoPct === 0
-          ? 'Your matches are played at the league\'s usual rate.'
-          : tempoPct > 0
-            ? `Your matches produce about ${tempoPct}% more chances — for both sides. Speeding a game up suits the better team.`
-            : `Your matches produce about ${-tempoPct}% fewer chances — for both sides. Slowing a game down is how an underdog gets a result.`}
+        {chances === 0
+          ? 'Its matches produce the usual number of chances.'
+          : chances > 0
+            ? `Its matches produce about ${chances}% more chances, for both sides. A quick game suits the better team.`
+            : `Its matches produce about ${-chances}% fewer chances, for both sides. A slow game is how an underdog gets a result.`}
+        {tactic.fit < 1 && ' Fit is how much of its press and its running in behind this XI can actually deliver.'}
       </p>
     </div>
   );
 }
 
-function Delta({ label, value, suffix = '' }: { label: string; value: number; suffix?: string }) {
-  const rounded = suffix === '%' ? Math.round(value) : Math.round(value * 10) / 10;
-  const color = rounded > 0 ? 'var(--c-accent)' : rounded < 0 ? 'var(--c-red)' : 'var(--t-muted)';
-  return (
-    <div className="flex items-baseline gap-1.5">
-      <span className="text-[10px] text-muted uppercase tracking-widest">{label}</span>
-      <span className="text-sm font-black" style={{ color }}>
-        {rounded > 0 ? '+' : ''}{rounded}{suffix}
-      </span>
-    </div>
-  );
+function lineOf(tactic: TacticEffect): string {
+  return tactic.line > 0.65 ? 'high line' : tactic.line < 0.35 ? 'deep block' : 'mid block';
+}
+
+function buildOf(tactic: TacticEffect): string {
+  return tactic.buildUp > 0.65 ? 'patiently' : tactic.buildUp < 0.35 ? 'directly' : 'both ways';
 }
 
 /**
  * The style's own axes, said in words.
  *
- * Read off the style rather than off the effect: the effect is scaled by fit,
- * so a side with nobody to play a deep block would otherwise see it described
- * as a mid block.
+ * Read off the style itself, whatever the fit: a deep block is a deep block
+ * whether or not the XI is suited to it.
  */
 function shapeOf(tactic: TacticEffect): string {
-  const line  = tactic.line > 0.65 ? 'high line' : tactic.line < 0.35 ? 'deep block' : 'mid block';
   const build = tactic.buildUp > 0.65 ? 'patient' : tactic.buildUp < 0.35 ? 'direct' : 'mixed';
-  return `${line} · ${build}`;
+  return `${lineOf(tactic)} · ${build}`;
 }
 
 function fitColor(fit: number): string {

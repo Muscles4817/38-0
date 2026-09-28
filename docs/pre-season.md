@@ -23,49 +23,34 @@ Fourteen styles, defined once in `src/lib/matchEngine.ts` and described in
 (`line`), how patiently the ball is moved (`buildUp`), and how fast the game is
 played (`tempo`).
 
-`tacticEffect` in `src/lib/simulation.ts` turns those into what the season
-model actually uses — rating points on attack, midfield and defence, plus a
-multiplier on the chances the player's own matches produce. Two rules do the
-work:
+The style is played by the match engine. Its line, build-up and tempo decide
+who has the ball, how chances arise and how many a match produces, and the
+engine's four interaction rules decide how it meets the opponent's style: a
+press against a side playing out, a deep block against a patient one, runners
+against a high line, recovery pace covering the space. Nobody writes down that a
+counter-attacking side punishes a possession side; it falls out of those rules.
 
-1. **The cost is paid in full; the benefit is collected × fit.** A high line
-   concedes space behind whoever is playing it, and only pays back pressure to
-   a side that can press. `fit` is `fitForStyle`, the same 0–1 measure the
-   match engine applies to a side it has already been given, computed from the
-   qualities on a player's roles. Tiki-taka without technicians buys the low
-   tempo and none of the control.
-2. **Tempo scales both sides' chances**, and is not scaled by fit — nobody
-   needs talent to slow a game down. Signal grows with the number of chances in
-   a match and noise with its square root, so a fast game suits the better side
-   and a slow one is an underdog's best friend. That is arithmetic, not a thumb
-   on the scale.
+`fit` is `fitForStyle`, the 0–1 measure of whether the eleven has the qualities
+a style asks for. The engine scales what the style's demands buy — how hard its
+press bites, how dangerous its runners are in behind — by it.
 
-Balanced sits at the origin of all three axes: fit 1, no rating change, tempo 1.
-Choosing it reproduces exactly the season this model played before tactics
-existed, which is why none of the calibration work in
-[simulation.md](simulation.md) had to be redone.
+`tacticEffect` in `src/lib/simulation.ts` only describes a style for this
+screen: its line, build-up, tempo, possession bias and fit. Tempo is a property
+of the match, the geometric mean of both sides' styles, so the screen says a
+style moves the number of chances by about half its own tempo against an
+ordinary side.
 
 ### Measured
 
-Average points over 30 seeded seasons against the 2025/26 field, for three
-drafted XIs, with every style played by each:
+For Liverpool 2019/20 in the 2025/26 field, 40 seasons each on the same seeds:
+Park the bus 67.5 points, Total football 74.6; title odds from 18% to 60%. For a
+flat 74-rated XI in 1992/93, 20 seasons each: Catenaccio 56.6, Gegenpress 47.8,
+Balanced 51.1. The best style differs by squad and by field, and a weak side is
+better off slowing the game down — a 68-rated XI takes 36 points parking the
+bus and 29 pressing, where an 88 is about level between the two.
 
-| | best style | worst style | spread |
-| --- | --- | --- | ---: |
-| 89 OVR (2003/04 Arsenal, Man Utd, Chelsea) | gegenpress 69.6 | park the bus 60.6 | 9.0 |
-| 77 OVR (1999/00 Leicester, Southampton, Everton) | balanced 27.8 | gegenpress 23.1 | 4.8 |
-| 74 OVR (1997/98 Barnsley, Palace, Bolton) | possession 25.2 | gegenpress 19.2 | 6.0 |
-
-Two things matter in that table and neither is a single number. The best style
-is **different for each squad**, and the two extremes swap ends: gegenpress is
-worth nine points to the strong XI and costs the weak one two. And the spread
-is about 1.3–2.4 points per ten games, against the 9.1-point ladder the old six
-styles produced — picking a style is worth a place or two, not a title.
-
-The constants those trade-offs are made of (`LINE_ATT`, `LINE_DEF`,
-`BUILD_MID`, `BUILD_ATT`, `TEMPO_WEIGHT`) are at the top of the tactics section
-in `simulation.ts`. If you move one, re-measure this table rather than
-reasoning about it.
+Run `npm run sim:report -- --club <club> --season <season> --tactic all` to
+measure any XI.
 
 ## The season
 
@@ -87,8 +72,9 @@ which, by name.
 
 The panel at the bottom of the screen is not a consequence of either decision on
 it. `preSeasonOdds` reads the squad's overall and the field it has been pointed
-at, so it answers the season choice; it does not see the tactic, which is worth
-a few rating points either way on top. The model itself, and the measurements it
+at, so it answers the season choice; it does not see the tactic — neither the
+player's nor the opponents' — and under the match engine a style is worth
+points. The model itself, and the measurements it
 was fitted to, are in [simulation.md](simulation.md).
 
 The projection it returns is the only one in the game. Both this screen and the
@@ -97,9 +83,9 @@ against when the report calls a run over- or underperforming.
 
 ## What is not decided here
 
-- **Focus** (how much of the attack goes down each side) exists on a
-  `TeamSetup` in the match engine and is not offered. The season model has no
-  zones, so there would be nothing for it to do.
+- **Focus** (how much of the attack goes down each side) is inferred from the
+  XI's shape and not offered. The engine plays it, so offering it is now a
+  screen, not a model change.
 - **Cohesion** belongs to a club-season in the data, not to a drafted XI.
 - **Competitions other than a league.** The rule is deliberately about fielding
   a full league; a cup would be a different schedule, not a different opponent
