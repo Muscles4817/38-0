@@ -65,13 +65,23 @@ then multiplies by up to 2.8 for a role.
 
 Three separate problems:
 
-1. **The pre-season screen shows 0% fit for every style but Balanced.** Fit is
-   read from the players' roles, and the XI saved by the draft and by Classic
-   mode carries none; `runSeasonSimulation` adds them before simulating, but
-   `getTacticOptions` does not. Barcelona 2009/10 is shown Tiki-taka 0%.
-2. **With roles, fit saturates.** The same Barcelona is 100% for Tiki-taka and
-   also 100% for Route one and Park the bus; eleven good players clear
-   `FIT_REFERENCE` for almost everything, so fit says nothing about style.
+1. **Fixed: the pre-season screen showed 0% fit for every style but
+   Balanced.** Fit is read from the players' roles, and the XI saved by the
+   draft and by Classic mode carries none; `runSeasonSimulation` added them
+   before simulating, but `getTacticOptions` did not. Both now go through
+   `withSeasonRoles` in `gameData.ts`, and `gameData.test.ts` covers it.
+2. **Fit is absolute, so elite sides fit almost everything.** Barcelona
+   2009/10 is 100% for Tiki-taka and also for Route one and Park the bus. It is
+   not general saturation: across all 423 stored XIs only about 7% reach 100%
+   for any one style. A side with many highly rated, heavily traited players
+   clears a sparse demand (Park the bus asks only for `aerial`) without being
+   built for it. Measuring "fully meets" against real sides, the 90th
+   percentile of each quality instead of the fixed 0.45, barely changes this.
+   Fit would have to describe a side's profile rather than its total.
+   Separately, **`recovery` is 0 for 90% of stored XIs** (at most 0.59), and
+   Counter-attack, Catenaccio and Low block all demand it, so almost nothing
+   can fit them. That is the trait data, which lives in the authoring
+   database.
 3. **The effect is small next to a season's noise.** For Liverpool 2019/20 all
    fourteen styles span 70.5 to 76.5 points against a season-to-season spread
    of 7–9. Most of what a style does comes from tempo (Park the bus 47 GF,

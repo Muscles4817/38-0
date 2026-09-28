@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { FORMATIONS, canFillSlot, type Position } from './formations';
+import { FORMATIONS, canFillSlot, getFormation, type Position } from './formations';
 import { PLAYSTYLES } from './matchEngine';
 import {
   SIMULATED_LEAGUE,
@@ -11,6 +11,7 @@ import {
   getOpponentSquads,
   getRoleConfig,
   getSquad,
+  getTacticEffect,
   getTacticOptions,
   getTraits,
   getTeamStrengths,
@@ -691,5 +692,35 @@ describe('getTacticOptions', () => {
     // which is the failure mode this guards: getRoleConfig has to pass them on.
     const fits = new Set(getTacticOptions(picks).map(t => Math.round(t.fit * 100)));
     expect(fits.size).toBeGreaterThan(1);
+  });
+});
+
+describe('tactic fit for a saved XI', () => {
+  // The draft and Classic mode save an XI without roles. The season looked the
+  // roles up before simulating; the tactic screen did not, and showed 0% fit
+  // for every style but Balanced.
+  const club = gameData.clubs.find(c => c.name === 'Barcelona')!;
+  const season = gameData.seasons.find(s => s.label === '2009/10')!;
+  const squad = getSquad(club.id, season.id)!;
+  const lineup = getLineup(club.id, season.id)!;
+  const formation = getFormation(lineup.formation);
+  const saved: SquadPick[] = lineup.slots.map(({ slotIndex, playerId }) => {
+    const p = squad.players.find(x => x.playerId === playerId)!;
+    return {
+      slotIndex, position: formation.slots[slotIndex].position, playerId, playerName: p.name,
+      rating: p.rating, clubName: club.name, seasonLabel: season.label, positions: p.positions,
+      clubId: club.id, seasonId: season.id,
+    };
+  });
+
+  it('reads the roles of the club-season each player was drafted from', () => {
+    const withRoles = saved.map(pick => ({
+      ...pick, roles: squad.players.find(p => p.playerId === pick.playerId)!.roles,
+    }));
+    expect(getTacticOptions(saved).map(t => t.fit)).toEqual(getTacticOptions(withRoles).map(t => t.fit));
+  });
+
+  it('gives a side built for tiki-taka a real fit for it', () => {
+    expect(getTacticEffect(saved, 'tikiTaka').fit).toBeGreaterThan(0.5);
   });
 });

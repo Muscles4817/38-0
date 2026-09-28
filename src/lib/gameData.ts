@@ -574,13 +574,14 @@ export function getRoleConfig(): RoleConfig {
  */
 export function getTacticOptions(picks: SquadPick[]): TacticEffect[] {
   const roleConfig = getRoleConfig();
+  const withRoles = withSeasonRoles(picks);
   return (Object.keys(PLAYSTYLES) as PlaystyleName[])
-    .map(style => tacticEffect(picks, style, roleConfig));
+    .map(style => tacticEffect(withRoles, style, roleConfig));
 }
 
 /** What one style would do to this XI. */
 export function getTacticEffect(picks: SquadPick[], style: PlaystyleName): TacticEffect {
-  return tacticEffect(picks, style, getRoleConfig());
+  return tacticEffect(withSeasonRoles(picks), style, getRoleConfig());
 }
 
 // ── Simulation ───────────────────────────────────────────────────────────────
@@ -591,6 +592,18 @@ function rolesForPick(pick: SquadPick): PlayerRole[] {
   const squad = squadByKey.get(key(pick.clubId, pick.seasonId));
   const player = squad?.players.find(p => p.playerId === pick.playerId);
   return player?.roles ?? pick.roles ?? [];
+}
+
+/**
+ * The XI with each player's roles from the club-season he was drafted from.
+ *
+ * A saved XI does not carry roles, and fit is read from them. The season
+ * always added them before simulating, but the tactic screen did not, so it
+ * showed 0% fit for every style but Balanced while the season played the real
+ * fit. Everything that reads roles off picks goes through here.
+ */
+function withSeasonRoles(picks: SquadPick[]): SquadPick[] {
+  return picks.map(pick => ({ ...pick, roles: rolesForPick(pick) }));
 }
 
 /** What the player settled on before kick-off. */
@@ -609,9 +622,8 @@ export function runSeasonSimulation(
   seed?: number,
   plan: SeasonPlan = {},
 ): SimulationResult {
-  const enriched = picks.map(pick => ({ ...pick, roles: rolesForPick(pick) }));
   return simulateSeason(
-    enriched,
+    withSeasonRoles(picks),
     getOpponentSquads(plan.seasonId, plan.league ?? SIMULATED_LEAGUE),
     seed,
     getRoleConfig(),
