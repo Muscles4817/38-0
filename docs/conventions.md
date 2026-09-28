@@ -136,11 +136,23 @@ Rules that the current layouts hold to:
   a number on the right stops reading as one fact somewhere past 480px — the eye
   has to cross the gap to pair them. Give the leftover width to a second column
   or back to the margin. `max-w-xl` on the XI lists is the worked example.
-- **Text is `#888` or brighter.** Against the `#0a0a0a` ground, `#888` is 5.6:1
-  and `#666` is 3.8:1; `#555` is 2.7:1 and fails, and `#333` is invisible.
-  `#666` is for a label that only has to be noticed, and anything below it is
-  decoration. Greys that read as quiet at arm's length read as absent across a
-  desk.
+- **Colours are theme tokens, not hex.** There is a light and a dark theme
+  (Auto / Light / Dark in the footer; Auto follows the OS), so a neutral is
+  never written as `bg-[#111]` or `text-[#888]`. Use the token that names its
+  job — `bg-ground`, `bg-card`, `bg-raised`, `border-line`, `text-fg`,
+  `text-muted`, `text-subtle`, `text-accent` — defined in `globals.css`. An
+  inline style uses the variable: `color: 'var(--t-muted)'`,
+  `'var(--c-accent)'`. Literal hex is for colours that read on either ground:
+  the `bg-[#00c896]` button with black text, team colours, the pitch. Anything
+  used as *text* needs a light value too, because `#00c896` or `#fbbf24` on
+  white is under 2.5:1. Check a change in both themes (Playwright's
+  `colorScheme: 'light'`).
+- **Text is `text-muted` or stronger.** In the dark theme `text-muted` is `#888`,
+  5.6:1 against the `#0a0a0a` ground, and `text-subtle` (`#666`) is 3.8:1;
+  `text-faint` (`#555`) is 2.7:1 and fails, and `text-ghost` is invisible. The
+  light theme keeps the same order. `text-subtle` is for a label that only has
+  to be noticed, and anything below it is decoration. Greys that read as quiet
+  at arm's length read as absent across a desk.
 - **One meaning per colour, per screen.** Selected is green. A ranked quantity —
   a rating band, an odds ladder — is one hue at varying intensity, not four
   hues. Ratings go through `src/components/ratingColor.ts` so there is one
@@ -180,7 +192,8 @@ that only fail on a big screen:
 - `scrollHeight / innerHeight` — how many screens the page is. Setup, the
   pre-season screen and the live results were 2.5, 2.7 and 2.0 screens at
   1440×900, and classic mode was 13.1;
-- no text below `#666` that a player is expected to read.
+- no text below `text-subtle` (`#666` in the dark theme) that a player is
+  expected to read.
 
 If 820px looks like 360px with wider margins, the middle has not been designed.
 

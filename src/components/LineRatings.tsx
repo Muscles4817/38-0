@@ -4,10 +4,10 @@ import { Formation, Position } from '@/lib/formations';
 import { SquadPick } from '@/lib/simulation';
 
 const LINES: { key: string; label: string; positions: Position[]; color: string }[] = [
-  { key: 'gk',  label: 'GK',  positions: ['GK'],                                     color: '#f59e0b' },
-  { key: 'def', label: 'DEF', positions: ['LB','CB','RB','LWB','RWB'],               color: '#3b82f6' },
-  { key: 'mid', label: 'MID', positions: ['CDM','CM','CAM','LM','RM','LW','RW'],     color: '#00c896' },
-  { key: 'att', label: 'ATT', positions: ['ST','CF'],                                 color: '#ef4444' },
+  { key: 'gk',  label: 'GK',  positions: ['GK'],                                     color: 'var(--c-yellow)' },
+  { key: 'def', label: 'DEF', positions: ['LB','CB','RB','LWB','RWB'],               color: 'var(--c-blue)' },
+  { key: 'mid', label: 'MID', positions: ['CDM','CM','CAM','LM','RM','LW','RW'],     color: 'var(--c-accent)' },
+  { key: 'att', label: 'ATT', positions: ['ST','CF'],                                 color: 'var(--c-red)' },
 ];
 
 interface Props {
@@ -39,7 +39,7 @@ export default function LineRatings({ formation, picks }: Props) {
             </span>
 
             {/* Bar track */}
-            <div className="flex-1 h-1.5 bg-[#1a1a1a] rounded-full overflow-hidden">
+            <div className="flex-1 h-1.5 bg-raised rounded-full overflow-hidden">
               <div
                 className="h-full rounded-full transition-all duration-500"
                 style={{ width: `${barPct}%`, background: line.color, opacity: filled === 0 ? 0 : 1 }}
@@ -48,12 +48,12 @@ export default function LineRatings({ formation, picks }: Props) {
 
             {/* Rating */}
             <span className="text-xs font-black w-6 text-right"
-              style={{ color: avg !== null ? line.color : '#666' }}>
+              style={{ color: avg !== null ? line.color : 'var(--t-subtle)' }}>
               {avg ?? '—'}
             </span>
 
             {/* Fill count */}
-            <span className="text-[10px] text-[#888] w-6 text-right flex-shrink-0">
+            <span className="text-[10px] text-muted w-6 text-right flex-shrink-0">
               {filled}/{totalSlots}
             </span>
           </div>

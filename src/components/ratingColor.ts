@@ -9,16 +9,20 @@
 // Green is the top band, because green is what this game means by good
 // everywhere else: the primary action, the selected option, the player's own
 // row in the league table.
+//
+// The colours are CSS variables from globals.css, so a band keeps its hue in
+// both themes but is darkened enough to read as text on a light ground. Use
+// them only as a `color` or `background`; they cannot take an alpha suffix.
 
 /** Rating bands, best first. A rating below the last one is unrated grey. */
 const BANDS: { floor: number; color: string; label: string }[] = [
-  { floor: 88, color: '#00c896', label: 'World class' },
-  { floor: 83, color: '#60a5fa', label: 'Excellent' },
-  { floor: 78, color: '#fbbf24', label: 'Good' },
-  { floor: 70, color: '#f97316', label: 'Squad player' },
+  { floor: 88, color: 'var(--c-accent)', label: 'World class' },
+  { floor: 83, color: 'var(--c-sky)',    label: 'Excellent' },
+  { floor: 78, color: 'var(--c-amber)',  label: 'Good' },
+  { floor: 70, color: 'var(--c-orange)', label: 'Squad player' },
 ];
 
-const UNRATED = '#888';
+const UNRATED = 'var(--t-muted)';
 
 /** The colour for a rating on the shared scale. */
 export function ratingColor(rating: number): string {

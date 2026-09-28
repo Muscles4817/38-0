@@ -13,7 +13,7 @@ export default function BackLink({ href, label }: { href: string; label: string 
     <Link
       href={href}
       className="inline-flex items-center gap-1.5 px-3 py-2.5 -ml-3 rounded-lg text-xs font-bold
-                 text-[#666] hover:text-white transition-colors touch-manipulation"
+                 text-subtle hover:text-fg transition-colors touch-manipulation"
     >
       <span aria-hidden="true">←</span>
       {label}

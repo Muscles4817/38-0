@@ -1,13 +1,206 @@
 @import "tailwindcss";
 
+/*
+ * Theme.
+ *
+ * Every neutral in the UI is a token rather than a hex literal, so one set of
+ * class names serves both themes: `bg-card`, `border-line`, `text-muted`. The
+ * dark values are exactly the greys the game was designed in; the light values
+ * keep the same order of emphasis (ground < card < raised, fg > muted > subtle)
+ * rather than mechanically inverting them, because a light UI puts its cards
+ * above the ground in white instead of below it.
+ *
+ * Which set applies is decided here, in CSS, not in React:
+ *   - no preference stored → follow the OS (`prefers-color-scheme`);
+ *   - `data-theme="light"` / `"dark"` on <html> → that, whatever the OS says.
+ * The attribute is set by the inline script in layout.tsx before first paint
+ * and by ThemePicker afterwards. See docs/conventions.md, "Colour and theme".
+ *
+ * The saturated brand colours (`bg-[#00c896]` buttons with black text, team
+ * colours, pitch green) read on either ground and stay literal. Only colours
+ * used as *text* get a darker light-mode value, since #00c896 or #fbbf24 on
+ * white is under 2.5:1.
+ */
+
+@theme inline {
+  --color-ground:       var(--t-ground);
+  --color-inset:        var(--t-inset);
+  --color-card:         var(--t-card);
+  --color-card-hi:      var(--t-card-hi);
+  --color-raised:       var(--t-raised);
+  --color-raised-hi:    var(--t-raised-hi);
+  --color-raised-max:   var(--t-raised-max);
+  --color-track:        var(--t-track);
+  --color-accent-tint:  var(--t-accent-tint);
+
+  --color-line:         var(--t-line);
+  --color-line-hi:      var(--t-line-hi);
+  --color-line-strong:  var(--t-line-strong);
+  --color-line-max:     var(--t-line-max);
+  --color-line-hover:   var(--t-line-hover);
+
+  --color-fg:           var(--t-fg);
+  --color-fg-soft:      var(--t-fg-soft);
+  --color-muted:        var(--t-muted);
+  --color-muted-2:      var(--t-muted-2);
+  --color-subtle:       var(--t-subtle);
+  --color-faint:        var(--t-faint);
+  --color-fainter:      var(--t-fainter);
+  --color-ghost:        var(--t-ghost);
+
+  --color-accent:       var(--c-accent);
+  --color-gold:         var(--c-gold);
+  --color-sky:          var(--c-sky);
+  --color-violet:       var(--c-violet);
+}
+
 :root {
-  --background: #0a0a0a;
-  --foreground: #ffffff;
+  color-scheme: dark;
+
+  --t-ground:      #0a0a0a;
+  --t-inset:       #0d0d0d;
+  --t-card:        #111111;
+  --t-card-hi:     #151515;
+  --t-raised:      #1a1a1a;
+  --t-raised-hi:   #1f1f1f;
+  --t-raised-max:  #222222;
+  --t-track:       #333333;
+  --t-accent-tint: #0d1a14;
+
+  --t-line:        #1a1a1a;
+  --t-line-hi:     #222222;
+  --t-line-strong: #2a2a2a;
+  --t-line-max:    #333333;
+  --t-line-hover:  #444444;
+
+  --t-fg:          #ffffff;
+  --t-fg-soft:     #cccccc;
+  --t-muted:       #888888;
+  --t-muted-2:     #777777;
+  --t-subtle:      #666666;
+  --t-faint:       #555555;
+  --t-fainter:     #444444;
+  --t-ghost:       #333333;
+
+  /* Hues used as text or thin marks, readable on the ground. */
+  --c-accent: #00c896;
+  --c-gold:   #c9b84e;
+  --c-sky:    #60a5fa;
+  --c-violet: #8b5cf6;
+  --c-amber:  #fbbf24;
+  --c-orange: #f97316;
+  --c-yellow: #f59e0b;
+  --c-blue:   #3b82f6;
+  --c-red:    #ef4444;
+}
+
+/*
+ * The light palette, twice: once for an explicit choice and once for "follow
+ * the system". Keep the two blocks identical.
+ */
+:root[data-theme='light'] {
+  color-scheme: light;
+
+  --t-ground:      #f3f3f0;
+  --t-inset:       #fafaf8;
+  --t-card:        #ffffff;
+  --t-card-hi:     #f6f6f3;
+  --t-raised:      #ebebe7;
+  --t-raised-hi:   #e5e5e0;
+  --t-raised-max:  #dfdfda;
+  --t-track:       #cfcfc8;
+  --t-accent-tint: #e1f4ec;
+
+  --t-line:        #e3e3de;
+  --t-line-hi:     #dadad4;
+  --t-line-strong: #cdcdc6;
+  --t-line-max:    #bdbdb5;
+  --t-line-hover:  #9f9f97;
+
+  --t-fg:          #141414;
+  --t-fg-soft:     #333333;
+  --t-muted:       #5a5a5a;
+  --t-muted-2:     #636363;
+  --t-subtle:      #6e6e6e;
+  --t-faint:       #858585;
+  --t-fainter:     #9c9c9c;
+  --t-ghost:       #c2c2c2;
+
+  --c-accent: #00805c;
+  --c-gold:   #7f6f14;
+  --c-sky:    #2563eb;
+  --c-violet: #7c3aed;
+  --c-amber:  #b45309;
+  --c-orange: #c2410c;
+  --c-yellow: #b45309;
+  --c-blue:   #2563eb;
+  --c-red:    #dc2626;
+
+  /* Tailwind's own light shades, where the markup uses them as text. */
+  --color-red-300:    #dc2626;
+  --color-red-400:    #dc2626;
+  --color-amber-300:  #b45309;
+  --color-amber-400:  #b45309;
+  --color-green-400:  #15803d;
+  --color-orange-400: #c2410c;
+  --color-purple-400: #7e22ce;
+  --color-blue-400:   #1d4ed8;
+}
+
+@media (prefers-color-scheme: light) {
+  :root:not([data-theme='dark']) {
+    color-scheme: light;
+
+    --t-ground:      #f3f3f0;
+    --t-inset:       #fafaf8;
+    --t-card:        #ffffff;
+    --t-card-hi:     #f6f6f3;
+    --t-raised:      #ebebe7;
+    --t-raised-hi:   #e5e5e0;
+    --t-raised-max:  #dfdfda;
+    --t-track:       #cfcfc8;
+    --t-accent-tint: #e1f4ec;
+
+    --t-line:        #e3e3de;
+    --t-line-hi:     #dadad4;
+    --t-line-strong: #cdcdc6;
+    --t-line-max:    #bdbdb5;
+    --t-line-hover:  #9f9f97;
+
+    --t-fg:          #141414;
+    --t-fg-soft:     #333333;
+    --t-muted:       #5a5a5a;
+    --t-muted-2:     #636363;
+    --t-subtle:      #6e6e6e;
+    --t-faint:       #858585;
+    --t-fainter:     #9c9c9c;
+    --t-ghost:       #c2c2c2;
+
+    --c-accent: #00805c;
+    --c-gold:   #7f6f14;
+    --c-sky:    #2563eb;
+    --c-violet: #7c3aed;
+    --c-amber:  #b45309;
+    --c-orange: #c2410c;
+    --c-yellow: #b45309;
+    --c-blue:   #2563eb;
+    --c-red:    #dc2626;
+
+    /* Tailwind's own light shades, where the markup uses them as text. */
+    --color-red-300:    #dc2626;
+    --color-red-400:    #dc2626;
+    --color-amber-300:  #b45309;
+    --color-amber-400:  #b45309;
+    --color-green-400:  #15803d;
+    --color-orange-400: #c2410c;
+    --color-purple-400: #7e22ce;
+    --color-blue-400:   #1d4ed8;
+  }
 }
 
 body {
-  background: #0a0a0a;
-  color: #ffffff;
+  background: var(--t-ground);
+  color: var(--t-fg);
   font-family: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
   -webkit-font-smoothing: antialiased;
 }
@@ -18,9 +211,9 @@ body {
 
 /* Custom scrollbar */
 ::-webkit-scrollbar        { width: 4px; height: 4px; }
-::-webkit-scrollbar-track  { background: #0a0a0a; }
-::-webkit-scrollbar-thumb  { background: #2a2a2a; border-radius: 2px; }
-::-webkit-scrollbar-thumb:hover { background: #444; }
+::-webkit-scrollbar-track  { background: var(--t-ground); }
+::-webkit-scrollbar-thumb  { background: var(--t-line-strong); border-radius: 2px; }
+::-webkit-scrollbar-thumb:hover { background: var(--t-line-hover); }
 
 /* Range input */
 input[type=range] {

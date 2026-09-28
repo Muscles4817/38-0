@@ -46,14 +46,14 @@ export default function SetupPage() {
   const totalSeasons = yearEnd - yearStart;
 
   return (
-    <main className="min-h-screen bg-[#0a0a0a] text-white py-8 px-4 sm:py-12">
+    <main className="min-h-screen bg-ground text-fg py-8 px-4 sm:py-12">
       <div className="max-w-7xl mx-auto">
         <header className="text-center mb-8 lg:mb-10">
           <h1 className="text-5xl sm:text-6xl font-black mb-2 tracking-tight">
-            <span className="text-white">38</span>
-            <span className="text-[#00c896]">-0</span>
+            <span className="text-fg">38</span>
+            <span className="text-accent">-0</span>
           </h1>
-          <p className="text-[#888] text-sm">Draft your greatest all-time English top-flight XI</p>
+          <p className="text-muted text-sm">Draft your greatest all-time English top-flight XI</p>
         </header>
 
         {/*
@@ -73,7 +73,7 @@ export default function SetupPage() {
               <OptionCard key={f} label={f} selected={formation === f} onClick={() => setFormation(f)} />
             ))}
           </div>
-          <p className="text-[#888] text-xs text-center mt-1 lg:hidden">{FORMATIONS[formation]?.description}</p>
+          <p className="text-muted text-xs text-center mt-1 lg:hidden">{FORMATIONS[formation]?.description}</p>
         </section>
 
         {/* The pitch lives in the side panel from lg: up. */}
@@ -154,24 +154,24 @@ export default function SetupPage() {
           <div className="space-y-3">
             <div className="flex gap-4">
               <div className="flex-1">
-                <div className="text-[10px] text-[#888] mb-1">From</div>
+                <div className="text-[10px] text-muted mb-1">From</div>
                 <input type="range" min={1992} max={2025} value={yearStart}
                   onChange={e => { setYearStart(+e.target.value); setEraPreset(''); }}
                   className="w-full h-8 accent-[#00c896] touch-manipulation" />
               </div>
               <div className="flex-1">
-                <div className="text-[10px] text-[#888] mb-1">To</div>
+                <div className="text-[10px] text-muted mb-1">To</div>
                 <input type="range" min={1993} max={2026} value={yearEnd}
                   onChange={e => { setYearEnd(+e.target.value); setEraPreset(''); }}
                   className="w-full h-8 accent-[#00c896] touch-manipulation" />
               </div>
             </div>
-            <div className="flex justify-between text-xs text-[#888]">
+            <div className="flex justify-between text-xs text-muted">
               <span>{yearStart}/{String(yearStart + 1).slice(-2)}</span>
-              <span className="text-[#00c896]">{totalSeasons} of 34 seasons</span>
+              <span className="text-accent">{totalSeasons} of 34 seasons</span>
               <span>{yearEnd - 1}/{String(yearEnd).slice(-2)}</span>
             </div>
-            <p className="text-[#888] text-[11px] text-center">
+            <p className="text-muted text-[11px] text-center">
               Only club-seasons in this range can be spun — narrow it to draft from an era you know.
             </p>
           </div>
@@ -180,13 +180,13 @@ export default function SetupPage() {
         {/* Draft Pool */}
         <section>
           <Label>Draft Pool</Label>
-          <div className="rounded-lg border border-[#00c896]/30 bg-[#0d0d0d] px-4 py-3 flex items-center gap-3 select-none">
+          <div className="rounded-lg border border-[#00c896]/30 bg-inset px-4 py-3 flex items-center gap-3 select-none">
             <span className="text-lg">🏴󠁧󠁢󠁥󠁮󠁧󠁿</span>
             <div className="flex-1 min-w-0">
-              <div className="font-bold text-sm text-white">Premier League</div>
-              <div className="text-[#888] text-[11px]">English top flight</div>
+              <div className="font-bold text-sm text-fg">Premier League</div>
+              <div className="text-muted text-[11px]">English top flight</div>
             </div>
-            <span className="text-[9px] text-[#00c896] font-bold uppercase tracking-widest bg-[#00c896]/10 px-1.5 py-0.5 rounded shrink-0">
+            <span className="text-[9px] text-accent font-bold uppercase tracking-widest bg-[#00c896]/10 px-1.5 py-0.5 rounded shrink-0">
               Active
             </span>
           </div>
@@ -199,13 +199,13 @@ export default function SetupPage() {
               { flag: '🏆', name: 'Champions League', desc: 'European elite only' },
             ].map(l => (
               <div key={l.name}
-                className="relative rounded-lg border border-[#1a1a1a] bg-[#0d0d0d] px-3 py-3 opacity-40 cursor-not-allowed select-none overflow-hidden">
-                <div className="absolute top-2 right-2 text-[9px] text-[#444] font-bold uppercase tracking-widest bg-[#1a1a1a] px-1.5 py-0.5 rounded">
+                className="relative rounded-lg border border-line bg-inset px-3 py-3 opacity-40 cursor-not-allowed select-none overflow-hidden">
+                <div className="absolute top-2 right-2 text-[9px] text-fainter font-bold uppercase tracking-widest bg-raised px-1.5 py-0.5 rounded">
                   Soon
                 </div>
                 <div className="text-lg mb-1">{l.flag}</div>
-                <div className="font-bold text-sm text-[#666]">{l.name}</div>
-                <div className="text-[#444] text-[11px] mt-0.5">{l.desc}</div>
+                <div className="font-bold text-sm text-subtle">{l.name}</div>
+                <div className="text-fainter text-[11px] mt-0.5">{l.desc}</div>
               </div>
             ))}
           </ComingSoon>
@@ -224,12 +224,12 @@ export default function SetupPage() {
               { label: '🎲 Pure Chaos',        desc: 'No rerolls, ratings hidden, random formation' },
             ].map(c => (
               <div key={c.label}
-                className="relative rounded-lg border border-[#1a1a1a] bg-[#0d0d0d] px-4 py-3 opacity-50 cursor-not-allowed select-none overflow-hidden">
-                <div className="absolute top-2 right-2 text-[9px] text-[#444] font-bold uppercase tracking-widest bg-[#1a1a1a] px-1.5 py-0.5 rounded">
+                className="relative rounded-lg border border-line bg-inset px-4 py-3 opacity-50 cursor-not-allowed select-none overflow-hidden">
+                <div className="absolute top-2 right-2 text-[9px] text-fainter font-bold uppercase tracking-widest bg-raised px-1.5 py-0.5 rounded">
                   Soon
                 </div>
-                <div className="font-bold text-sm text-[#666]">{c.label}</div>
-                <div className="text-[#444] text-xs mt-0.5">{c.desc}</div>
+                <div className="font-bold text-sm text-subtle">{c.label}</div>
+                <div className="text-fainter text-xs mt-0.5">{c.desc}</div>
               </div>
             ))}
           </ComingSoon>
@@ -243,7 +243,7 @@ export default function SetupPage() {
           button used to sit 2,000px down. Above lg: it lives in the side
           panel instead, which does not scroll at all.
         */}
-        <div className="sticky bottom-0 z-30 py-3 bg-[#0a0a0a]/95 backdrop-blur-sm lg:hidden">
+        <div className="sticky bottom-0 z-30 py-3 bg-ground/95 backdrop-blur-sm lg:hidden">
           <button
             type="button"
             onClick={startDraft}
@@ -255,7 +255,7 @@ export default function SetupPage() {
 
         <Link
           href="/classic"
-          className="block w-full py-3 rounded-xl font-bold text-base border border-[#1a1a1a] text-[#888] hover:border-[#333] hover:text-white transition-colors text-center"
+          className="block w-full py-3 rounded-xl font-bold text-base border border-line text-muted hover:border-line-max hover:text-fg transition-colors text-center"
         >
           Classic Mode — pick a legendary side
         </Link>
@@ -272,15 +272,15 @@ export default function SetupPage() {
         */}
         <aside className="hidden lg:block lg:w-[340px] lg:shrink-0">
           <div className="sticky top-8 space-y-5">
-            <div className="bg-[#111] rounded-2xl p-5 flex flex-col items-center">
+            <div className="bg-card rounded-2xl p-5 flex flex-col items-center">
               <PitchView formation={fmt} picks={[]} compact />
               <div className="mt-4 text-center">
                 <div className="text-2xl font-black tracking-tight">{formation}</div>
-                <p className="text-[#888] text-xs mt-1">{FORMATIONS[formation]?.description}</p>
+                <p className="text-muted text-xs mt-1">{FORMATIONS[formation]?.description}</p>
               </div>
             </div>
 
-            <div className="bg-[#111] rounded-2xl px-5 py-4 space-y-2">
+            <div className="bg-card rounded-2xl px-5 py-4 space-y-2">
               <Summary label="Difficulty" value={difficulty === 'easy' ? 'Easy' : difficulty === 'hard' ? 'Hard' : 'Normal'} />
               <Summary label="Ratings"    value={showRatings ? 'Visible' : 'Blind'} />
               <Summary label="Draft"      value={draftMode === 'squad-first' ? 'Squad first' : 'Position first'} />
@@ -298,7 +298,7 @@ export default function SetupPage() {
 
             <Link
               href="/classic"
-              className="block w-full py-3 rounded-xl font-bold text-sm border border-[#1a1a1a] text-[#888] hover:border-[#333] hover:text-white transition-colors text-center"
+              className="block w-full py-3 rounded-xl font-bold text-sm border border-line text-muted hover:border-line-max hover:text-fg transition-colors text-center"
             >
               Classic Mode
             </Link>
@@ -313,15 +313,15 @@ export default function SetupPage() {
 }
 
 function Label({ children }: { children: React.ReactNode }) {
-  return <div className="text-[10px] font-bold tracking-widest text-[#888] uppercase mb-2">{children}</div>;
+  return <div className="text-[10px] font-bold tracking-widest text-muted uppercase mb-2">{children}</div>;
 }
 
 /** One line of the side panel's read-back of the current settings. */
 function Summary({ label, value }: { label: string; value: string }) {
   return (
     <div className="flex items-baseline gap-3 text-xs">
-      <span className="text-[#666] uppercase tracking-widest text-[10px] w-20 shrink-0">{label}</span>
-      <span className="font-bold text-white truncate">{value}</span>
+      <span className="text-subtle uppercase tracking-widest text-[10px] w-20 shrink-0">{label}</span>
+      <span className="font-bold text-fg truncate">{value}</span>
     </div>
   );
 }
@@ -333,11 +333,11 @@ function Summary({ label, value }: { label: string; value: string }) {
  */
 function ComingSoon({ summary, children }: { summary: string; children: React.ReactNode }) {
   return (
-    <details className="group rounded-lg border border-[#1a1a1a] bg-[#0d0d0d]/50 mt-2">
-      <summary className="cursor-pointer list-none px-4 py-3 flex items-center gap-2 text-xs text-[#888] hover:text-white transition-colors touch-manipulation">
-        <span className="text-[#444] transition-transform group-open:rotate-90">▶</span>
+    <details className="group rounded-lg border border-line bg-inset/50 mt-2">
+      <summary className="cursor-pointer list-none px-4 py-3 flex items-center gap-2 text-xs text-muted hover:text-fg transition-colors touch-manipulation">
+        <span className="text-fainter transition-transform group-open:rotate-90">▶</span>
         <span className="flex-1">{summary}</span>
-        <span className="text-[9px] font-bold uppercase tracking-widest text-[#444] bg-[#1a1a1a] px-1.5 py-0.5 rounded">Soon</span>
+        <span className="text-[9px] font-bold uppercase tracking-widest text-fainter bg-raised px-1.5 py-0.5 rounded">Soon</span>
       </summary>
       <div className="grid grid-cols-1 gap-2 px-3 pb-3 sm:grid-cols-2">
         {children}
