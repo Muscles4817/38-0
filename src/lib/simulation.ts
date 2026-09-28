@@ -1,4 +1,4 @@
-import { Position, effectiveRating } from './formations';
+import { type Position, effectiveRating } from './formations';
 import { PLAYSTYLES, fitForStyle, type MatchPlayer, type PlaystyleName } from './matchEngine';
 
 // ── Player roles (weight modifiers) ──────────────────────────────────────────

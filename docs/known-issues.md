@@ -3,6 +3,85 @@
 Recorded so they are not rediscovered. Ordered by value, highest first. Numbers
 here were measured; the method is in [simulation.md](simulation.md).
 
+## 0. Who scores, who creates, who is rated, and what tactics do
+
+Measured with `npm run sim:report` (see [simulation.md](simulation.md#measuring-a-change)),
+Liverpool 2019/20 in the 2025/26 field and Liverpool 2008/09 in its own
+2008/09 field, 40–60 seasons each. Real 2019/20 Liverpool figures are from the
+public record (there is no FBref export for that season in `data/raw`); real
+2008/09 and 2025/26 figures are from the exports.
+
+**The season does not use `matchEngine.ts`.** `simulateSeason` still draws a
+scoreline from two Poisson rates and then holds a separate weighted lottery for
+the scorer and the assister. The possession engine, which already damps role
+multipliers for exactly the problem below (`ROLE_SELECTION_POWER`), only lends
+the season its playstyle definitions and `fitForStyle`.
+
+### Player of the Season is goals + 0.7 × assists
+
+Both awards in `simulateSeason` are `argmax(goals + 0.7 × assists)`, so a
+defender or holding midfielder cannot win either: the league award went to a
+forward in 100% of 80 seasons. Match ratings are
+`6.5 + result + goals + 0.7 × assists + zone`, where the zone term is the
+team's goals for/against against expectation, identical for every player in a
+line. A player's own quality never enters it: Van Dijk (94) averaged 7.29,
+Matip (85) 7.23, Wijnaldum (85, 5.6 goals) 7.43, and the whole XI sat within
+7.2–7.6.
+
+### Goals are concentrated on one striker per side
+
+A scorer's weight is `posGoalWeight × role multiplier × ratingScale`, all
+multiplied, with no damping. ST is 20 against 10 for a winger, and `Poacher` is
+2.2, so a lone striker takes about half his side's goals.
+
+| | sim | real |
+| --- | ---: | ---: |
+| Golden Boot, 2025/26 field | 38.5 on average, 50 at most | 27 (Haaland) |
+| Golden Boot, 2008/09 field | 37.8 on average | 19 (Anelka) |
+| Record (36) equalled or broken | 60–68% of seasons | once, in 2022/23 |
+| Top-20 scorers' goals by forwards, 2025/26 | 92% | 64% |
+| Torres's share of Liverpool 2008/09 goals | 50% (31.8) | 18% (14 of 77) |
+| Liverpool 2019/20: Salah / Mané / Firmino | 16.6 / 17.2 / 17.2 | 19 / 18 / 9 |
+
+Firmino gets a striker's share because the ST slot weight (20) outweighs his
+`FalseNine`/creator profile; Salah and Mané get less than they did because a
+winger's base weight is half a striker's.
+
+### Assists: the right total, concentrated on one creator
+
+76% of goals carry an assist, against a real ~74%, so the total is right. The
+distribution is not: `posAssistWeight` gives a CAM 25 against a full-back's 4,
+then multiplies by up to 2.8 for a role.
+
+| | sim | real |
+| --- | ---: | ---: |
+| Top assists, 2025/26 field | 30.9 on average, 43 at most | 21 (Bruno Fernandes) |
+| Record (20) equalled or broken | 100% of seasons (2025/26), 83% (2008/09) | twice ever |
+| Ødegaard leads the league | 38 of 40 seasons | — |
+| Alexander-Arnold / Robertson, 2019/20 | 7.8 / 8.0 | 13 / 12 |
+| Riera (LM, 79), 2008/09 | 14.4 | 3 |
+
+### Tactics are invisible, and the fit does not discriminate
+
+Three separate problems:
+
+1. **The pre-season screen shows 0% fit for every style but Balanced.** Fit is
+   read from the players' roles, and the XI saved by the draft and by Classic
+   mode carries none; `runSeasonSimulation` adds them before simulating, but
+   `getTacticOptions` does not. Barcelona 2009/10 is shown Tiki-taka 0%.
+2. **With roles, fit saturates.** The same Barcelona is 100% for Tiki-taka and
+   also 100% for Route one and Park the bus; eleven good players clear
+   `FIT_REFERENCE` for almost everything, so fit says nothing about style.
+3. **The effect is small next to a season's noise.** For Liverpool 2019/20 all
+   fourteen styles span 70.5 to 76.5 points against a season-to-season spread
+   of 7–9. Most of what a style does comes from tempo (Park the bus 47 GF,
+   Gegenpress 80), not from the ±2 rating points it moves.
+
+### And the top of the table is flat
+
+Liverpool 2019/20 averages 75 points and 64 goals in the 2025/26 field; the
+real side took 99 and scored 85. That is issue 1 below, seen from the top.
+
 ## 1. The scoring coefficients are too gentle
 
 `simulateScore` in `src/lib/simulation.ts` converts a 10-point strength edge

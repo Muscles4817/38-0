@@ -245,6 +245,26 @@ final banner and the OVERPERFORMED/UNDERPERFORMED verdict used the formula's
 on two screens. There is now one projection, `odds.projectedPosition`, computed
 from the squad and the field it is actually playing, and both screens read it.
 
+## Measuring a change
+
+```bash
+npm run sim:report -- --club Liverpool --season 2019/20 --runs 40
+npm run sim:report -- --club Liverpool --season 2008/09 --tactic all
+```
+
+`scripts/sim-report.mjs` plays one club-season's stored XI through many
+seeded seasons with `runSeasonSimulation`, the function the results page
+calls, and prints: the team's points, finish and goals; each player's goals,
+share, assists, match rating and how often he wins Player of the Season, next
+to his real goals and assists where an FBref export exists; the league's Golden
+Boot and top assister against the real season and the records; and who the
+top-20 scorers and assisters are by position. `--tactic all` plays every style
+on the same seeds, so the differences are the tactic and not luck. It takes
+about a second for 40 seasons.
+
+Run it before and after a change and compare. `--league` picks the field; it
+defaults to the XI's own season when that season has one, else 2025/26.
+
 ## Changing the simulation safely
 
 1. `src/lib/simulation.test.ts` covers the invariants that must hold whatever

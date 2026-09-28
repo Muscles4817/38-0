@@ -13,6 +13,7 @@
     "test:watch": "vitest",
     "hindcast": "vitest run src/lib/hindcast.test.ts",
     "calibrate": "vitest run src/lib/matchEngine.calibration.test.ts",
+    "sim:report": "node --experimental-strip-types --no-warnings --import ./scripts/lib/register-ts.mjs scripts/sim-report.mjs",
     "data:status": "node scripts/scaffold-fbref-files.mjs --status",
     "data:ingest": "node scripts/ingest-fbref.mjs",
     "export:data": "node scripts/export-game-data.mjs",

@@ -9,7 +9,7 @@
 // never run in a deployed build.
 
 import rawData from '@/data/game-data.json';
-import { Position } from './formations';
+import { type Position } from './formations';
 import { bestFormation } from './lineupFit';
 import {
   simulateSeason,
