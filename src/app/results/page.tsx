@@ -7,6 +7,7 @@ import { getFormation, canFillSlot, Formation } from '@/lib/formations';
 import { describeCompetition, getTeamStrengths, runSeasonSimulation, type DataPlayer } from '@/lib/gameData';
 import { useStoredJson, clearStored } from '@/lib/clientStorage';
 import { parseSeenSquads, resolveSeenSquads, SEEN_SQUADS_KEY, type SeenSquad } from '@/lib/seenSquads';
+import { applyRules, type DraftFilter, type PoolRules } from '@/lib/draftPool';
 import { getTacticEffect } from '@/lib/gameData';
 import type { StoredPlan } from '@/app/squad/page';
 import {
@@ -74,13 +75,22 @@ function computeBestXI(formation: Formation, seenSquads: SeenSquad[]): SquadPick
   return result;
 }
 
-function WhatCouldHaveBeen({ formation, actualPicks }: { formation: Formation; actualPicks: SquadPick[] }) {
+function WhatCouldHaveBeen({ formation, actualPicks, rules }: {
+  formation: Formation;
+  actualPicks: SquadPick[];
+  rules: Pick<PoolRules, 'playerRating' | 'filter'>;
+}) {
   const [show, setShow] = useState(false);
   const stored = useStoredJson<unknown>(SEEN_SQUADS_KEY);
   const bestXI = useMemo(() => {
-    const seenSquads = resolveSeenSquads(parseSeenSquads(stored));
+    // The same rules the draft applied, so the best XI is built from players
+    // this run could have picked, at the ratings it offered them at: no
+    // German in a France-only run, and Prime ratings in Prime mode.
+    const seenSquads = resolveSeenSquads(parseSeenSquads(stored))
+      .map(squad => ({ ...squad, players: applyRules(squad.players, rules) }))
+      .filter(squad => squad.players.length > 0);
     return seenSquads.length ? computeBestXI(formation, seenSquads) : [];
-  }, [formation, stored]);
+  }, [formation, stored, rules]);
   if (!bestXI.length) return null;
   const bestOverall = computeOverall(bestXI);
   const actualOverall = computeOverall(actualPicks);
@@ -133,9 +143,18 @@ export default function ResultsPage() {
   // The drafted XI, the setup that produced it and the plan chosen before
   // kick-off are all handed over in localStorage.
   const picks     = useStoredJson<SquadPick[]>('38-0-squad') ?? NO_PICKS;
-  const setup     = useStoredJson<{ formation: string; draftMode?: string }>('38-0-setup');
+  const setup     = useStoredJson<{
+    formation: string;
+    draftMode?: string;
+    playerRating?: 'career' | 'prime';
+    filter?: DraftFilter | null;
+  }>('38-0-setup');
   const plan      = useStoredJson<StoredPlan>('38-0-plan');
   const formation = useMemo(() => getFormation(setup?.formation ?? '4-4-2'), [setup]);
+  const poolRules = useMemo(() => ({
+    playerRating: setup?.playerRating === 'prime' ? 'prime' as const : 'career' as const,
+    filter:       setup?.filter ?? null,
+  }), [setup]);
 
   const [simResult, setSimResult] = useState<SimulationResult | null>(null);
   const [showFinal, setShowFinal] = useState(false);
@@ -264,7 +283,7 @@ export default function ResultsPage() {
         <SquadPanel formation={formation} picks={picks} overall={overall} />
 
         {/* What Could Have Been */}
-        <WhatCouldHaveBeen formation={formation} actualPicks={picks} />
+        <WhatCouldHaveBeen formation={formation} actualPicks={picks} rules={poolRules} />
 
         <div className="text-center pb-8">
           <button

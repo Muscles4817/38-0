@@ -4,7 +4,9 @@ import { useState, useEffect, useMemo, useRef } from 'react';
 import { useRouter } from 'next/navigation';
 import { getFormation, canFillSlot, Formation, Position } from '@/lib/formations';
 import { SquadPick, computeOverall } from '@/lib/simulation';
-import { listDraftableSquads, type DataPlayer, type SpunSquad } from '@/lib/gameData';
+import { getClub, type DataPlayer, type SpunSquad } from '@/lib/gameData';
+import { draftPool, feasibility, type DraftFilter, type Feasibility } from '@/lib/draftPool';
+import { CHALLENGES, describeFilter, type ChallengeId } from '@/lib/challenges';
 import { useStoredJson, readStored, writeStored } from '@/lib/clientStorage';
 import { parseSeenSquads, SEEN_SQUADS_KEY, withSeenSquad } from '@/lib/seenSquads';
 import PitchView from '@/components/PitchView';
@@ -21,6 +23,9 @@ interface Setup {
   playerRating: 'career' | 'prime';
   yearStart: number;
   yearEnd: number;
+  /** Absent in a setup saved before challenge modes existed. */
+  challenge?: ChallengeId;
+  filter?: DraftFilter | null;
 }
 
 type SpinPhase = 'idle' | 'spinning' | 'reveal';
@@ -29,12 +34,7 @@ const REROLLS_BY_DIFFICULTY = { easy: 3, normal: 1, hard: 0 };
 // Stable empty array so an unstarted draft does not hand out a new reference
 // on every render.
 const NO_PICKS: SquadPick[] = [];
-// Names flashed up by the wheel while it spins — flavour only, unrelated to
-// the squad that is actually landed on.
-const SPIN_CLUBS = [
-  'Arsenal','Chelsea','Liverpool','Man City','Man Utd','Tottenham',
-  'Leicester','Newcastle','Blackburn','Aston Villa','Everton','Leeds',
-];
+const NO_POOL: SpunSquad[] = [];
 const FAST_FRAMES = 8;
 const FAST_INTERVAL = 65;
 const SLOW_INTERVALS = [120, 180, 260, 360, 480];
@@ -47,6 +47,16 @@ export default function DraftPage() {
   const setup     = useStoredJson<Setup>('38-0-setup');
   const picks     = useStoredJson<SquadPick[]>('38-0-draft') ?? NO_PICKS;
   const formation = useMemo(() => (setup ? getFormation(setup.formation) : null), [setup]);
+
+  // What this run can draft from: the era, Prime mode and any challenge
+  // filter, applied once. Everything below spins and places from this.
+  const pool = useMemo(() => (setup ? draftPool({
+    yearStart:    setup.yearStart,
+    yearEnd:      setup.yearEnd,
+    playerRating: setup.playerRating === 'prime' ? 'prime' : 'career',
+    filter:       setup.filter ?? null,
+  }) : NO_POOL), [setup]);
+  const feasible = useMemo(() => (formation ? feasibility(pool, formation) : null), [pool, formation]);
 
   // Counting rerolls used rather than remaining keeps this independent of when
   // setup finishes loading.
@@ -104,20 +114,17 @@ export default function DraftPage() {
    * which lets the caller report it without burning a reroll.
    */
   function findSquad(excludeDrafted: boolean): SpunSquad | null {
-    if (!setup || !formation) return null;
-    const takenPlayers = new Set(picks.map(p => p.playerId));
-    const filledSlots  = new Set(picks.map(p => p.slotIndex));
-    const openSlots    = formation.slots.filter((_, i) => !filledSlots.has(i));
+    if (!formation || !feasible) return null;
     const draftedFrom  = new Set(
       picks.filter(p => p.clubId != null && p.seasonId != null)
         .map(p => `${p.clubId}-${p.seasonId}`),
     );
 
-    const candidates = listDraftableSquads(setup.yearStart, setup.yearEnd).filter(squad => {
+    // A squad is worth landing on only if one of its players has a placement
+    // that still leaves the XI completable; see feasibility() in draftPool.ts.
+    const candidates = pool.filter(squad => {
       if (excludeDrafted && draftedFrom.has(`${squad.clubId}-${squad.seasonId}`)) return false;
-      return squad.players.some(p =>
-        !takenPlayers.has(p.playerId) &&
-        openSlots.some(slot => canFillSlot(p.positions, slot.position)));
+      return squad.players.some(p => formation.slots.some((_, i) => feasible.canPlace(picks, p, i)));
     });
 
     if (candidates.length === 0) return null;
@@ -128,16 +135,25 @@ export default function DraftPage() {
     let frame = 0;
     setSpinPhase('spinning');
 
+    // The wheel flicks through squads this run could actually land on, so a
+    // One Club draft shows that club's seasons going past rather than a list
+    // of clubs it cannot draw.
+    function flick() {
+      const squad = pool[Math.floor(Math.random() * pool.length)] ?? result;
+      setSpinDisplay(squad.clubName);
+      setSpinSeason(squad.seasonLabel);
+    }
+
     function tick() {
       if (frame < FAST_FRAMES) {
-        setSpinDisplay(SPIN_CLUBS[frame % SPIN_CLUBS.length]);
+        flick();
         spinTimer.current = setTimeout(tick, FAST_INTERVAL);
         frame++;
         return;
       }
       const slowIndex = frame - FAST_FRAMES;
       if (slowIndex < SLOW_INTERVALS.length) {
-        setSpinDisplay(SPIN_CLUBS[Math.floor(Math.random() * SPIN_CLUBS.length)]);
+        flick();
         spinTimer.current = setTimeout(tick, SLOW_INTERVALS[slowIndex]);
         frame++;
         return;
@@ -192,9 +208,9 @@ export default function DraftPage() {
   }
 
   function placePlayer(slotIndex: number) {
-    if (!selectedPlayer || !spinResult || !formation) return;
+    if (!selectedPlayer || !spinResult || !formation || !feasible) return;
+    if (!feasible.canPlace(picks, selectedPlayer, slotIndex)) return;
     const slot = formation.slots[slotIndex];
-    if (!canFillSlot(selectedPlayer.positions, slot.position)) return;
 
     const pick: SquadPick = {
       slotIndex,
@@ -236,13 +252,11 @@ export default function DraftPage() {
   // The slots the selected player could fill, so the pitch shows the targets
   // rather than leaving the position buttons as the only discoverable route.
   const eligibleSlots = useMemo(() => {
-    if (!selectedPlayer || !formation) return undefined;
-    const filled = new Set(picks.map(p => p.slotIndex));
+    if (!selectedPlayer || !formation || !feasible) return undefined;
     return formation.slots
-      .map((slot, i) => ({ slot, i }))
-      .filter(({ slot, i }) => !filled.has(i) && canFillSlot(selectedPlayer.positions, slot.position))
-      .map(({ i }) => i);
-  }, [selectedPlayer, formation, picks]);
+      .map((_, i) => i)
+      .filter(i => feasible.canPlace(picks, selectedPlayer, i));
+  }, [selectedPlayer, formation, feasible, picks]);
 
   function handleSlotClick(slotIndex: number) {
     const filledSlots = new Set(picks.map(p => p.slotIndex));
@@ -256,7 +270,7 @@ export default function DraftPage() {
     }
   }
 
-  if (!setup || !formation) {
+  if (!setup || !formation || !feasible) {
     return <div className="min-h-screen bg-ground flex items-center justify-center text-fg">Loading…</div>;
   }
 
@@ -266,6 +280,9 @@ export default function DraftPage() {
   const overall = computeOverall(picks);
   const showRatings = setup.showRatings && setup.difficulty !== 'hard';
   const isSpinning = spinPhase !== 'idle';
+  const challengeLabel =
+    describeFilter(setup.filter ?? null, id => getClub(id)?.name ?? null) ??
+    (setup.challenge && setup.challenge !== 'none' ? CHALLENGES.find(c => c.id === setup.challenge)?.label ?? null : null);
 
   return (
     <main className="min-h-screen bg-ground text-fg flex flex-col md:flex-row md:items-start">
@@ -289,6 +306,9 @@ export default function DraftPage() {
         </div>
         <div className="text-xs font-bold tracking-widest text-muted uppercase mb-1">Formation</div>
         <div className="text-xl font-black mb-3">{setup.formation}</div>
+        {challengeLabel && (
+          <div className="-mt-2 mb-3 text-xs font-bold text-accent text-center">{challengeLabel}</div>
+        )}
         <div className="text-xs text-muted mb-3 flex items-center gap-2">
           <span>Rerolls:</span>
           {Array.from({ length: rerollsTotal }).map((_, i) => (
@@ -370,7 +390,7 @@ export default function DraftPage() {
               <div className="absolute inset-y-0 left-0 w-12 bg-gradient-to-r from-card to-transparent z-10 pointer-events-none" />
               <div className="absolute inset-y-0 right-0 w-12 bg-gradient-to-l from-card to-transparent z-10 pointer-events-none" />
 
-              <div key={spinDisplay} className="flex flex-col items-center leading-tight">
+              <div key={`${spinDisplay} ${spinSeason}`} className="flex flex-col items-center leading-tight">
                 <div
                   className="text-2xl font-black transition-all duration-150"
                   style={{
@@ -381,8 +401,8 @@ export default function DraftPage() {
                 >
                   {spinDisplay}
                 </div>
-                {spinPhase === 'reveal' && spinSeason && (
-                  <div className="text-sm font-bold text-accent/70 mt-0.5">
+                {spinSeason && (
+                  <div className={`text-sm font-bold mt-0.5 ${spinPhase === 'reveal' ? 'text-accent/70' : 'text-muted'}`}>
                     {spinSeason}
                   </div>
                 )}
@@ -406,6 +426,7 @@ export default function DraftPage() {
             onCancelSelection={() => setSelectedPlayer(null)}
             onPlacePlayer={placePlayer}
             onReroll={rerollsLeft > 0 ? () => spin(true) : undefined}
+            feasible={feasible}
             rerollsLeft={rerollsLeft}
             showRatings={showRatings}
             positionFilter={positionFirstSlot?.position}
@@ -420,7 +441,7 @@ export default function DraftPage() {
 
 function SpinPanel({
   result, formation, picks, selectedPlayer,
-  onSelectPlayer, onCancelSelection, onPlacePlayer, onReroll, rerollsLeft, showRatings, positionFilter,
+  onSelectPlayer, onCancelSelection, onPlacePlayer, onReroll, feasible, rerollsLeft, showRatings, positionFilter,
 }: {
   result: SpunSquad;
   formation: Formation;
@@ -430,6 +451,7 @@ function SpinPanel({
   onCancelSelection: () => void;
   onPlacePlayer: (slotIdx: number) => void;
   onReroll?: () => void;
+  feasible: Feasibility;
   rerollsLeft: number;
   showRatings: boolean;
   positionFilter?: Position;
@@ -438,11 +460,17 @@ function SpinPanel({
   const pickedPlayerIds = new Set(picks.map(p => p.playerId));
   const players = result.players.filter(p => !pickedPlayerIds.has(p.playerId));
 
-  function slotStatus(i: number, slot: { position: Position }): 'available' | 'filled' | 'unavailable' {
+  function slotStatus(i: number): 'available' | 'filled' | 'unavailable' {
     if (filledSlots.has(i)) return 'filled';
     if (!selectedPlayer) return 'unavailable';
-    return canFillSlot(selectedPlayer.positions, slot.position) ? 'available' : 'unavailable';
+    return feasible.canPlace(picks, selectedPlayer, i) ? 'available' : 'unavailable';
   }
+
+  // A slot the player could play but is not offered, because nobody left in
+  // the pool could fill some other open slot afterwards. Rare outside a thin
+  // challenge pool; said out loud when it happens, so it does not look broken.
+  const heldBack = selectedPlayer !== null && formation.slots.some((slot, i) =>
+    !filledSlots.has(i) && canFillSlot(selectedPlayer.positions, slot.position) && slotStatus(i) !== 'available');
 
   return (
     <div className="w-full max-w-xl">
@@ -486,7 +514,7 @@ function SpinPanel({
             Where they can play
           </div>
           <div className="flex flex-wrap gap-2">
-            {formation.slots.map((slot, i) => slotStatus(i, slot) === 'available' ? (
+            {formation.slots.map((slot, i) => slotStatus(i) === 'available' ? (
               <button key={i} type="button" onClick={() => onPlacePlayer(i)}
                 className="px-3 py-2.5 rounded-lg bg-[#00c896] text-black text-xs font-bold hover:bg-[#00b385] transition-colors touch-manipulation">
                 {slot.label} ({slot.position})
@@ -496,6 +524,11 @@ function SpinPanel({
           <div className="text-[11px] text-muted mt-3">
             Tap a position above, or one of the highlighted spots on the pitch.
           </div>
+          {heldBack && (
+            <div className="text-[11px] text-muted mt-1">
+              Some positions they could play are held back: filling them would leave a slot no one left in the pool can fill.
+            </div>
+          )}
         </div>
       )}
 
@@ -504,7 +537,7 @@ function SpinPanel({
         {players.map(player => {
           const pp: Position[] = player.positions;
           const isSelected = selectedPlayer?.playerId === player.playerId;
-          const canFillAny = formation.slots.some((slot, i) => !filledSlots.has(i) && canFillSlot(pp, slot.position));
+          const canFillAny = formation.slots.some((_, i) => feasible.canPlace(picks, player, i));
           const matchesFilter = !positionFilter || canFillSlot(pp, positionFilter);
 
           return (
