@@ -739,40 +739,45 @@ function LeagueTable({ table }: { table: TeamStanding[] }) {
       </button>
       {show && (
         <div className="px-4 pb-4">
-          <div className="flex items-center gap-2 px-2 pb-1 text-[9px] text-subtle uppercase tracking-widest border-b border-line">
-            <span className="w-5 text-center">#</span>
+          {/*
+            Below sm there is not room for ten number columns and a club name:
+            the name column was squeezed to nothing at 360px. P (always 38 in a
+            final table) and GF/GA (GD carries them) are the ones a phone drops.
+          */}
+          <div className="flex items-center gap-1.5 sm:gap-2 px-2 pb-1 text-[9px] text-subtle uppercase tracking-widest border-b border-line">
+            <span className="shrink-0 w-5 text-center">#</span>
             <span className="flex-1 min-w-0">Club</span>
-            <span className="w-5 text-center">P</span>
-            <span className="w-5 text-center">W</span>
-            <span className="w-5 text-center">D</span>
-            <span className="w-5 text-center">L</span>
-            <span className="w-7 text-center">GF</span>
-            <span className="w-7 text-center">GA</span>
-            <span className="w-7 text-center">GD</span>
-            <span className="w-7 text-right">Pts</span>
-            <span className="w-8 text-center text-accent/70 hidden sm:block">OVR</span>
-            <span className="w-8 text-center text-orange-400/70 hidden md:block">ATT</span>
-            <span className="w-8 text-center text-purple-400/70 hidden md:block">MID</span>
-            <span className="w-8 text-center text-blue-400/70 hidden md:block">DEF</span>
+            <span className="shrink-0 w-5 text-center hidden sm:block">P</span>
+            <span className="shrink-0 w-5 text-center">W</span>
+            <span className="shrink-0 w-5 text-center">D</span>
+            <span className="shrink-0 w-5 text-center">L</span>
+            <span className="shrink-0 w-7 text-center hidden sm:block">GF</span>
+            <span className="shrink-0 w-7 text-center hidden sm:block">GA</span>
+            <span className="shrink-0 w-7 text-center">GD</span>
+            <span className="shrink-0 w-7 text-right">Pts</span>
+            <span className="shrink-0 w-8 text-center text-accent/70 hidden sm:block">OVR</span>
+            <span className="shrink-0 w-8 text-center text-orange-400/70 hidden md:block">ATT</span>
+            <span className="shrink-0 w-8 text-center text-purple-400/70 hidden md:block">MID</span>
+            <span className="shrink-0 w-8 text-center text-blue-400/70 hidden md:block">DEF</span>
           </div>
           {table.map(row => (
-            <div key={row.name} className={`flex items-center gap-2 px-2 py-1.5 text-xs rounded ${row.isUser ? 'bg-[#00c896]/10' : ''}`}>
-              <span className="w-5 text-center font-black" style={{ color: posColor(row.position) ?? 'var(--t-muted)' }}>{row.position}</span>
+            <div key={row.name} className={`flex items-center gap-1.5 sm:gap-2 px-2 py-1.5 text-xs rounded ${row.isUser ? 'bg-[#00c896]/10' : ''}`}>
+              <span className="shrink-0 w-5 text-center font-black" style={{ color: posColor(row.position) ?? 'var(--t-muted)' }}>{row.position}</span>
               <span className={`flex-1 min-w-0 font-bold truncate ${row.isUser ? 'text-accent' : 'text-fg-soft'}`}>{row.name}</span>
-              <span className="w-5 text-center text-subtle">{row.played}</span>
-              <span className="w-5 text-center text-muted">{row.won}</span>
-              <span className="w-5 text-center text-subtle">{row.drawn}</span>
-              <span className="w-5 text-center text-subtle">{row.lost}</span>
-              <span className="w-7 text-center text-muted">{row.goalsFor}</span>
-              <span className="w-7 text-center text-subtle">{row.goalsAgainst}</span>
-              <span className={`w-7 text-center ${row.gd > 0 ? 'text-accent' : row.gd < 0 ? 'text-red-400' : 'text-muted'}`}>
+              <span className="shrink-0 w-5 text-center text-subtle hidden sm:block">{row.played}</span>
+              <span className="shrink-0 w-5 text-center text-muted">{row.won}</span>
+              <span className="shrink-0 w-5 text-center text-subtle">{row.drawn}</span>
+              <span className="shrink-0 w-5 text-center text-subtle">{row.lost}</span>
+              <span className="shrink-0 w-7 text-center text-muted hidden sm:block">{row.goalsFor}</span>
+              <span className="shrink-0 w-7 text-center text-subtle hidden sm:block">{row.goalsAgainst}</span>
+              <span className={`shrink-0 w-7 text-center ${row.gd > 0 ? 'text-accent' : row.gd < 0 ? 'text-red-400' : 'text-muted'}`}>
                 {row.gd > 0 ? '+' : ''}{row.gd}
               </span>
-              <span className="w-7 text-right font-black text-fg">{row.points}</span>
-              <span className="w-8 text-center font-bold text-accent hidden sm:block">{row.ovr}</span>
-              <span className="w-8 text-center text-orange-400 hidden md:block">{row.att}</span>
-              <span className="w-8 text-center text-purple-400 hidden md:block">{row.mid}</span>
-              <span className="w-8 text-center text-blue-400 hidden md:block">{row.def}</span>
+              <span className="shrink-0 w-7 text-right font-black text-fg">{row.points}</span>
+              <span className="shrink-0 w-8 text-center font-bold text-accent hidden sm:block">{row.ovr}</span>
+              <span className="shrink-0 w-8 text-center text-orange-400 hidden md:block">{row.att}</span>
+              <span className="shrink-0 w-8 text-center text-purple-400 hidden md:block">{row.mid}</span>
+              <span className="shrink-0 w-8 text-center text-blue-400 hidden md:block">{row.def}</span>
             </div>
           ))}
           <div className="flex gap-3 mt-3 flex-wrap">
