@@ -139,7 +139,7 @@ See [pre-season.md](pre-season.md).
 | `38-0-draft` | draft page | draft |
 | `38-0-squad` | draft page, classic page | squad, results |
 | `38-0-plan` | squad page | squad, results |
-| `38-0-seen-squads` | draft page | results ("What Could Have Been") |
+| `38-0-seen-squads` | draft page | results ("What Could Have Been"); `{ clubId, seasonId }` references only, see `src/lib/seenSquads.ts` |
 
 Those keys are read through `src/lib/clientStorage.ts`, which wraps them in
 `useSyncExternalStore` so a write anywhere re-renders every reader and server

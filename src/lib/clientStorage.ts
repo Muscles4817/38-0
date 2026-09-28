@@ -24,9 +24,24 @@ function subscribe(onStoreChange: () => void): () => void {
   };
 }
 
-export function writeStored(key: string, value: unknown): void {
-  localStorage.setItem(key, JSON.stringify(value));
+/**
+ * Saves a value, and reports whether it was saved.
+ *
+ * setItem throws when the origin's quota is full (QuotaExceededError) or
+ * storage is unavailable, as in some private modes. Letting that escape took
+ * the action that made the write down with it: a full quota once left the Spin
+ * button doing nothing. A failed save is logged and otherwise ignored, so the
+ * game keeps working for the rest of the session even if it cannot remember it.
+ */
+export function writeStored(key: string, value: unknown): boolean {
+  try {
+    localStorage.setItem(key, JSON.stringify(value));
+  } catch (error) {
+    console.warn(`Could not save ${key} to localStorage`, error);
+    return false;
+  }
   emit();
+  return true;
 }
 
 export function clearStored(...keys: string[]): void {

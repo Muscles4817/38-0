@@ -6,6 +6,7 @@ import Link from 'next/link';
 import { getFormation, canFillSlot, Formation } from '@/lib/formations';
 import { describeCompetition, getTeamStrengths, runSeasonSimulation, type DataPlayer } from '@/lib/gameData';
 import { useStoredJson, clearStored } from '@/lib/clientStorage';
+import { parseSeenSquads, resolveSeenSquads, SEEN_SQUADS_KEY, type SeenSquad } from '@/lib/seenSquads';
 import { getTacticEffect } from '@/lib/gameData';
 import type { StoredPlan } from '@/app/squad/page';
 import {
@@ -19,13 +20,6 @@ import BackLink from '@/components/BackLink';
 import { ratingColor } from '@/components/ratingColor';
 
 // ── What Could Have Been ─────────────────────────────────────────────────────
-
-/** A squad the draft offered, as recorded by the draft page. */
-interface SeenSquad {
-  clubName: string;
-  seasonLabel: string;
-  players: DataPlayer[];
-}
 
 type SeenPlayer = DataPlayer & { clubName: string; seasonLabel: string };
 
@@ -82,11 +76,11 @@ function computeBestXI(formation: Formation, seenSquads: SeenSquad[]): SquadPick
 
 function WhatCouldHaveBeen({ formation, actualPicks }: { formation: Formation; actualPicks: SquadPick[] }) {
   const [show, setShow] = useState(false);
-  const seenSquads = useStoredJson<SeenSquad[]>('38-0-seen-squads');
-  const bestXI = useMemo(
-    () => (seenSquads?.length ? computeBestXI(formation, seenSquads) : []),
-    [formation, seenSquads],
-  );
+  const stored = useStoredJson<unknown>(SEEN_SQUADS_KEY);
+  const bestXI = useMemo(() => {
+    const seenSquads = resolveSeenSquads(parseSeenSquads(stored));
+    return seenSquads.length ? computeBestXI(formation, seenSquads) : [];
+  }, [formation, stored]);
   if (!bestXI.length) return null;
   const bestOverall = computeOverall(bestXI);
   const actualOverall = computeOverall(actualPicks);
@@ -276,7 +270,7 @@ export default function ResultsPage() {
           <button
             type="button"
             onClick={() => {
-              clearStored('38-0-draft', '38-0-squad', '38-0-seen-squads', '38-0-plan');
+              clearStored('38-0-draft', '38-0-squad', SEEN_SQUADS_KEY, '38-0-plan');
               router.push('/');
             }}
             className="text-subtle text-xs hover:text-fg transition-colors px-4 py-3 touch-manipulation"
