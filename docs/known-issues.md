@@ -91,7 +91,40 @@ a constant to re-fit: `strength` also decides which clubs make way when a season
 had more than twenty, and it is the number the pre-season screen shows, so
 changing it moves three things at once and wants measuring on its own.
 
-## 4. Smaller things
+## 4. Twelve forwards still carry two compounding scoring roles
+
+`docs/roles.md` says a forward carries at most one big scoring role, because the
+multipliers compound and the engine's square-root damping does not absorb two of
+them. `checkRatingEntry` enforces it for anything the rating pipeline produces,
+and the rating files are clean. These twelve predate the pipeline: they live in
+club-seasons authored before it existed, so nothing has ever re-derived them.
+
+Ranked by what they actually do to a forward's goal multiplier:
+
+| combination | goal multiplier | who |
+| --- | ---: | --- |
+| `Poacher`+`CompleteForward`+`PenaltyTaker` | **4.00x** | Higuaín, Napoli 2015/16 |
+| `Poacher`+`InsideForward` | **3.96x** | Rémy, Chelsea 2014/15; Origi, Liverpool 2019/20 |
+| `Poacher`+`TargetMan` | 2.86x | Mario Gómez, Bayern 2011/12 and 2012/13 |
+| `Poacher`+`DeepLyingForward` | 2.20x | Raúl, Real Madrid 2002/03 and 2004/05 |
+| `CompleteForward`+`PressingForward`+`TargetMan` | 2.03x | Lewandowski, Dortmund 2011/12 and 2012/13 |
+| `CompleteForward`+`TargetMan` | 1.69x | Ibrahimović, Internazionale 2006/07 and Barcelona 2009/10 |
+| `TargetMan`+`DeepLyingForward` | 1.30x | Kanouté, Sevilla 2009/10 |
+
+For scale, the `AerialThreat` case the docs call out by name is 3.5x, so the top
+two are worse than the one that produced Ibrahimović's 66 goals in 97.
+
+The bottom three are harmless in practice — `DeepLyingForward` is 1.0x on goals,
+so Raúl's pair is no more than `Poacher` alone — and the list is kept whole
+because the rule is about the shape of the claim, not only its size.
+
+Four of them (Rémy, Origi, both Lewandowski rows) exist **only in the database**:
+their club-seasons have no squad file, so there is nothing to edit in git and no
+re-import can reach them. Fixing those means the editor, or collecting the
+season properly. The rest have files and are a judgement call about which single
+role is right, which is why they are recorded rather than silently rewritten.
+
+## 5. Smaller things
 
 - **Four club-seasons ship with a single player.** 2017/18 Liverpool holds only
   Adam Lallana, and AC Milan 1994/95, 2002/03 and 2004/05 hold one man each
@@ -136,6 +169,17 @@ Do not re-report these:
   matched `Player` exactly and rejected the file, with every data row underneath
   it intact. Header cells are normalised before matching now, and the parser has
   a test — it had none at all before.
+
+- **The database drifted from the squad files, silently.** After the
+  2005/06-2009/10 import, six Arsenal 2008/09 players and Anelka's 2009/10 row
+  still carried roles their squad files did not, and Tim Cahill's 2004/05 row
+  still carried the `AerialThreat` that had been corrected everywhere else. A
+  second `import-squads.mjs` run — the same command, unchanged files — fixed all
+  of them, so a single pass had left some club-seasons stale. The files are the
+  reviewable source of truth and the import is meant to be idempotent, so the
+  check worth having is the one that was missing: compare every authored squad
+  file against the database before exporting. Doing that now reports 8,948 rows
+  compared, zero rating mismatches and zero role mismatches.
 
 - **`AerialThreat` was on two forwards.** It is a 3.5x goal multiplier and
   `docs/roles.md` is explicit that a forward strong in the air gets `TargetMan`
