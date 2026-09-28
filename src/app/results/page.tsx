@@ -631,7 +631,10 @@ function FinalSummary({ result, picks, odds, onResim }: {
             {[...picks].sort((a, b) => b.slotIndex - a.slotIndex).map((p, i) => {
               const stat = result.playerStats.find(s => s.playerId === p.playerId);
               const rtg  = stat?.avgMatchRating ?? 0;
-              const rtgColor = rtg >= 8.0 ? 'text-accent' : rtg >= 7.0 ? 'text-sky' : rtg >= 6.5 ? 'text-fg' : 'text-muted';
+              // Bands from the match engine's measured spread of season
+              // averages (440 player-seasons across 40 real XIs): about the
+              // top 5%, the top quarter, above the median, and the rest.
+              const rtgColor = rtg >= 6.5 ? 'text-accent' : rtg >= 6.2 ? 'text-sky' : rtg >= 6.0 ? 'text-fg' : 'text-muted';
               const isDefender = p.position === 'GK' || ['CB','LB','RB','LWB','RWB'].includes(p.position);
               return (
                 <div key={i} className="flex items-center gap-2 sm:gap-3">
@@ -663,9 +666,9 @@ function FinalSummary({ result, picks, odds, onResim }: {
               <Award
                 icon="🏅" title="Player of the Season"
                 name={result.awards.leaguePlayerOfSeason.name}
-                stat={`${result.awards.leaguePlayerOfSeason.goals}G · ${result.awards.leaguePlayerOfSeason.assists}A · ${result.awards.leaguePlayerOfSeason.isUser ? 'Your XI ★' : result.awards.leaguePlayerOfSeason.club}`}
+                stat={`${result.awards.leaguePlayerOfSeason.rating.toFixed(2)} avg · ${result.awards.leaguePlayerOfSeason.goals}G · ${result.awards.leaguePlayerOfSeason.assists}A · ${result.awards.leaguePlayerOfSeason.isUser ? 'Your XI ★' : result.awards.leaguePlayerOfSeason.club}`}
                 yours={result.awards.leaguePlayerOfSeason.isUser ? undefined
-                  : `${result.awards.playerOfSeason.name} — ${result.awards.playerOfSeason.goals}G · ${result.awards.playerOfSeason.assists}A`}
+                  : `${result.awards.playerOfSeason.name} — ${result.awards.playerOfSeason.rating.toFixed(2)} avg · ${result.awards.playerOfSeason.goals}G · ${result.awards.playerOfSeason.assists}A`}
               />
               {result.topScorers?.[0] && (
                 <Award

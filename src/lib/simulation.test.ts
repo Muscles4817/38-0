@@ -5,7 +5,6 @@ import {
   computeOverall,
   preSeasonOdds,
   simulateSeason,
-  zoneWeight,
   type OpponentSquad,
   type SquadPick,
   type SimulationResult,
@@ -197,7 +196,8 @@ describe('simulateSeason — player attribution', () => {
     for (const player of result.playerStats) {
       expect(player.matchRatings).toHaveLength(38);
       for (const rating of player.matchRatings) {
-        expect(rating).toBeGreaterThanOrEqual(4);
+        // The match engine's scale: a disastrous afternoon can go below 4.
+        expect(rating).toBeGreaterThanOrEqual(1);
         expect(rating).toBeLessThanOrEqual(10);
       }
     }
@@ -276,23 +276,6 @@ describe('computeOverall', () => {
 
   it('returns zero for an empty squad', () => {
     expect(computeOverall([])).toBe(0);
-  });
-});
-
-describe('zoneWeight', () => {
-  it('splits every position between attack and defence', () => {
-    const positions: Position[] = [
-      'GK', 'CB', 'LB', 'RB', 'LWB', 'RWB', 'CDM', 'CM', 'CAM', 'LM', 'RM', 'LW', 'RW', 'CF', 'ST',
-    ];
-    for (const position of positions) {
-      const { att, def } = zoneWeight(position);
-      expect(att + def).toBeCloseTo(1, 5);
-    }
-  });
-
-  it('weights a striker to attack and a keeper to defence', () => {
-    expect(zoneWeight('ST').att).toBe(1);
-    expect(zoneWeight('GK').def).toBe(1);
   });
 });
 

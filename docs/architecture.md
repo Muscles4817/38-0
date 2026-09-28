@@ -70,9 +70,9 @@ the target architecture, arrived at early.
 - **`src/lib/formations.ts`, `simulation.ts` and `matchEngine.ts` import
   nothing outside `src/lib`.** Not React, not Next, not Node built-ins, not the
   DOM. They are the part that survives a move to React Native unchanged. Keep
-  them that way. `simulation.ts` reads the playstyle definitions out of
-  `matchEngine.ts` so there is one place a style is defined; that is the only
-  edge between them.
+  them that way. `simulation.ts` plays every fixture of a season with
+  `matchEngine.ts`'s `simulateMatch` and adds up what happened; the engine
+  imports nothing from `simulation.ts`.
 - **`src/lib/gameData.ts` imports only the JSON snapshot and the game logic.**
   Same reasoning; it is the data API a mobile client would also use.
 - **Nothing outside `src/app/api/**`, `src/lib/db.ts` and `scripts/` may import

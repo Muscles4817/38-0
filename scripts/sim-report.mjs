@@ -114,7 +114,7 @@ if (TACTIC === 'all') {
 
 function reportSeason(results, style) {
   const effect = getTacticEffect(picks, style);
-  console.log(`\nTactic: ${effect.label} (fit ${Math.round(effect.fit * 100)}%, att ${sign(effect.att)} def ${sign(effect.def)} mid ${sign(effect.mid)}, tempo ×${effect.tempo.toFixed(2)})`);
+  console.log(`\nTactic: ${effect.label} (fit ${Math.round(effect.fit * 100)}%, line ${effect.line}, build-up ${effect.buildUp}, tempo ×${effect.tempo.toFixed(2)})`);
 
   // Team
   const pts = results.map(r => r.points);
@@ -183,13 +183,13 @@ function reportSeason(results, style) {
 
 function reportTactics() {
   console.log(`\nSame ${RUNS} seeds for every style, so differences are the tactic and not luck.\n`);
-  console.log(`${pad('style', 16)} fit   att   def   mid  tempo │   pts   (sd)  finish   GF    GA   titles`);
+  console.log(`${pad('style', 16)} fit  line build tempo │   pts   (sd)  finish   GF    GA   titles`);
   console.log('─'.repeat(92));
   for (const style of Object.keys(PLAYSTYLES)) {
     const e = getTacticEffect(picks, style);
     const r = play(style);
     const pts = r.map(x => x.points);
-    console.log(`${pad(e.label, 16)} ${pct(e.fit).padStart(4)} ${sign(e.att).padStart(5)} ${sign(e.def).padStart(5)} ${sign(e.mid).padStart(5)} ${('×' + e.tempo.toFixed(2)).padStart(6)} │` +
+    console.log(`${pad(e.label, 16)} ${pct(e.fit).padStart(4)} ${e.line.toFixed(2).padStart(5)} ${e.buildUp.toFixed(2).padStart(5)} ${('×' + e.tempo.toFixed(2)).padStart(5)} │` +
       ` ${f1(mean(pts)).padStart(5)} ${('(' + f1(sd(pts)) + ')').padStart(6)} ${f1(mean(r.map(x => x.finalPosition))).padStart(6)}` +
       ` ${f1(mean(r.map(x => x.goalsFor))).padStart(5)} ${f1(mean(r.map(x => x.goalsAgainst))).padStart(5)} ${pct(r.filter(x => x.finalPosition === 1).length / RUNS).padStart(7)}`);
   }
@@ -220,6 +220,5 @@ function sd(xs) { const m = mean(xs); return Math.sqrt(mean(xs.map(x => (x - m) 
 function f1(x) { return x.toFixed(1); }
 function f2(x) { return x.toFixed(2); }
 function pct(x) { return `${Math.round(x * 100)}%`; }
-function sign(x) { return (x > 0 ? '+' : '') + x.toFixed(1); }
 function pad(s, n) { return String(s).slice(0, n).padEnd(n); }
 function fail(message) { console.error(message); process.exit(1); }

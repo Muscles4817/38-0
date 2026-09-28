@@ -1,5 +1,8 @@
 import { type Position, effectiveRating } from './formations';
-import { PLAYSTYLES, fitForStyle, type MatchPlayer, type PlaystyleName } from './matchEngine';
+import {
+  DEFAULT_COHESION, PLAYSTYLES, fitForStyle, inferStyle, simulateMatch,
+  type MatchPlayer, type PlaystyleName, type RoleMultipliers, type TeamSetup, type Zone,
+} from './matchEngine';
 
 // ── Player roles (weight modifiers) ──────────────────────────────────────────
 // Roles tweak per-player goal/assist probability during attribution.
@@ -135,6 +138,13 @@ export interface PlayerStats {
   goals: number;
   assists: number;
   cleanSheets: number;
+  shots: number;
+  shotsOnTarget: number;
+  chancesCreated: number;
+  saves: number;
+  yellowCards: number;
+  redCards: number;
+  /** One per match, from the match engine. */
   matchRatings: number[];
   avgMatchRating: number;
 }
@@ -194,8 +204,10 @@ export interface SimulationResult {
     goldenBoot: { name: string; goals: number };
     playmaker: { name: string; assists: number };
     goldenGlove: { name: string; cleanSheets: number };
-    playerOfSeason: { name: string; goals: number; assists: number };
-    leaguePlayerOfSeason: { name: string; club: string; goals: number; assists: number; isUser: boolean };
+    /** Best average match rating in the XI. */
+    playerOfSeason: { name: string; goals: number; assists: number; rating: number };
+    /** Best average match rating in the league. */
+    leaguePlayerOfSeason: { name: string; club: string; goals: number; assists: number; isUser: boolean; rating: number };
   };
   longestWinStreak: number;
   biggestWin: string;
@@ -212,6 +224,7 @@ export interface OpponentPlayer {
   id: string;
   name: string;
   role: 'gk' | 'def' | 'mid' | 'att';
+  /** The slot he fills in this eleven. */
   position: Position;
   rating: number;
   roles?: PlayerRole[];
@@ -221,6 +234,12 @@ export interface OpponentSquad {
   clubName: string;
   players: OpponentPlayer[];
   strength: number;
+  /** How the club-season set up, where the data records it. Otherwise inferred from the eleven. */
+  formation?: string;
+  style?: PlaystyleName;
+  focus?: Record<Zone, number>;
+  /** How well drilled the side was, 0-100. Defaults to the engine's ordinary side. */
+  cohesion?: number;
 }
 
 // ── Constants (fallback when DB squads are unavailable) ───────────────────────
@@ -241,30 +260,21 @@ const SURNAMES = [
 ];
 const INITIALS = ['A','B','C','D','E','F','G','H','I','J','K','L','M','N','O','P','R','S','T','W'];
 
-// Sensible concrete position for each coarse role bucket (used in fictional fallback squads)
-const ROLE_DEFAULT_POS: Record<'gk' | 'def' | 'mid' | 'att', Position> = {
-  gk: 'GK', def: 'CB', mid: 'CM', att: 'ST',
-};
-
 // ── RNG helpers ───────────────────────────────────────────────────────────────
 
+// mulberry32, the generator the engine's calibration tests already use. The
+// linear congruential generator it replaces had a period of 233,280, and a
+// season played through the match engine draws a few hundred numbers per match
+// across 380 matches — about one full period. The season would have started
+// repeating itself.
 function rng(seed: number): () => number {
-  let s = seed;
-  return () => { s = (s * 9301 + 49297) % 233280; return s / 233280; };
-}
-
-function weightedRandom(rand: () => number, weights: number[]): number {
-  const total = weights.reduce((a, b) => a + b, 0);
-  let r = rand() * total;
-  for (let i = 0; i < weights.length; i++) { r -= weights[i]; if (r <= 0) return i; }
-  return weights.length - 1;
-}
-
-function poissonSample(rand: () => number, lambda: number): number {
-  const L = Math.exp(-lambda);
-  let k = 0, p = 1;
-  do { k++; p *= rand(); } while (p > L);
-  return Math.max(0, k - 1);
+  let a = seed >>> 0;
+  return () => {
+    a = (a + 0x6d2b79f5) >>> 0;
+    let t = Math.imul(a ^ (a >>> 15), 1 | a);
+    t = (t + Math.imul(t ^ (t >>> 7), 61 | t)) ^ t;
+    return ((t ^ (t >>> 14)) >>> 0) / 4294967296;
+  };
 }
 
 function genName(rand: () => number): string {
@@ -330,33 +340,13 @@ function sortedTable(standings: Map<string, MutableStanding>): TeamStanding[] {
     .map((s, i) => ({ ...s, position: i + 1 }));
 }
 
-// ── Fixture simulation ────────────────────────────────────────────────────────
+// ── Line strengths ────────────────────────────────────────────────────────────
+//
+// Attack, midfield and defence as the league table and the pre-season screen
+// show them. They are a summary for the player to read, not an input: the match
+// engine reads the eleven itself, zone by zone.
 
-// Midfield dominance acts as an opportunity multiplier on both teams' expected goals.
-// Winning the midfield battle by 10 points gives ~20% more chances; losing gives ~20% fewer.
-function simulateScore(
-  rand: () => number,
-  homeAtt: number, homeDef: number,
-  awayAtt: number, awayDef: number,
-  homeMid: number, awayMid: number,
-  // How fast the game is played, from the tactics of whichever side chose them.
-  // It moves both teams together on purpose — see the tactics section.
-  tempo = 1,
-) {
-  const midDiff = (homeMid - awayMid) / 10;
-  const homeMult = Math.max(0.7, Math.min(1.35, 1.0 + midDiff * 0.2));
-  const awayMult = Math.max(0.7, Math.min(1.35, 1.0 - midDiff * 0.2));
-  const homeDiff = (homeAtt + 3 - awayDef) / 10;
-  const awayDiff = (awayAtt - homeDef) / 10;
-  const lh = Math.max(0.3, (1.3 + homeDiff * 0.38) * homeMult * tempo);
-  const la = Math.max(0.2, (1.0 + awayDiff * 0.30) * awayMult * tempo);
-  return { homeGoals: poissonSample(rand, lh), awayGoals: poissonSample(rand, la), lh, la };
-}
-
-// ── Goal / assist weights ─────────────────────────────────────────────────────
-
-// Positions that feed into attack and defence ratings respectively.
-// CM sits in both buckets — it's a genuinely balanced role.
+// CM sits in both attack and defence — it's a genuinely balanced role.
 function isAttPosition(pos: Position): boolean {
   return ['ST','CF','LW','RW','LM','RM','CAM','CM'].includes(pos);
 }
@@ -367,37 +357,14 @@ function isMidPosition(pos: Position): boolean {
   return ['CM','CDM','CAM','LM','RM'].includes(pos);
 }
 
-export function zoneWeight(pos: Position): { att: number; def: number } {
-  const w: Partial<Record<Position, { att: number; def: number }>> = {
-    GK:  { att: 0.00, def: 1.00 },
-    CB:  { att: 0.10, def: 0.90 },
-    LB:  { att: 0.20, def: 0.80 },
-    RB:  { att: 0.20, def: 0.80 },
-    LWB: { att: 0.30, def: 0.70 },
-    RWB: { att: 0.30, def: 0.70 },
-    CDM: { att: 0.30, def: 0.70 },
-    CM:  { att: 0.50, def: 0.50 },
-    LM:  { att: 0.60, def: 0.40 },
-    RM:  { att: 0.60, def: 0.40 },
-    CAM: { att: 0.70, def: 0.30 },
-    LW:  { att: 0.85, def: 0.15 },
-    RW:  { att: 0.85, def: 0.15 },
-    CF:  { att: 0.90, def: 0.10 },
-    ST:  { att: 1.00, def: 0.00 },
-  };
-  return w[pos] ?? { att: 0.50, def: 0.50 };
-}
-
 // How sharply a rating compounds into effectiveness. Each 5-point band is worth
-// about 17% more than the one below, so 85→90 matters more than 75→80. This
-// stops a mediocre striker matching an elite one just by holding a
-// high-multiplier role such as Poacher.
+// about 17% more than the one below, so 85→90 matters more than 75→80. The
+// match engine uses the same constant for the same reason.
 //
 // ratingScale and scaledAvgRating are inverses and MUST share this constant.
 // They previously did not — 0.032 out, 0.055 back — which silently dragged
-// every squad 58% of the way toward 80 and left the league closer to a coin
-// toss than to a table. See simulation.test.ts for the round trip that now
-// guards it.
+// every squad 58% of the way toward 80. See simulation.test.ts for the round
+// trip that now guards it.
 const RATING_CURVE = 0.032;
 
 // Maps a rating onto the curve.
@@ -419,121 +386,96 @@ function scaledAvgRating(players: { rating: number }[]): number {
 // Exported for the round-trip test; not part of the simulation's public API.
 export const __ratingCurve = { RATING_CURVE, ratingScale, scaledAvgRating };
 
-function posGoalWeight(pos: Position): number {
-  const w: Partial<Record<Position, number>> = {
-    ST: 20, CF: 16, CAM: 12, LW: 10, RW: 10, LM: 6, RM: 6,
-    CM: 4, CDM: 2, CB: 1, LB: 1, RB: 1, LWB: 1, RWB: 1, GK: 0,
+function lineStrengths(players: { position: Position; rating: number }[]): { att: number; mid: number; def: number } {
+  return {
+    att: Math.round(scaledAvgRating(players.filter(p => isAttPosition(p.position)))),
+    mid: Math.round(scaledAvgRating(players.filter(p => isMidPosition(p.position)))),
+    def: Math.round(scaledAvgRating(players.filter(p => isDefPosition(p.position)))),
   };
-  return w[pos] ?? 1;
 }
 
-function posAssistWeight(pos: Position): number {
-  const w: Partial<Record<Position, number>> = {
-    CAM: 25, LM: 18, RM: 18, LW: 16, RW: 16, CM: 12,
-    ST: 8, CF: 8, CDM: 5, LB: 4, RB: 4, CB: 1, GK: 0,
+// ── Roles, as the match engine reads them ─────────────────────────────────────
+
+/**
+ * The goal, assist and quality tables for the engine: the tuned values from the
+ * database where given, the defaults in this file otherwise.
+ */
+function toRoleMultipliers(roleConfig?: RoleConfig): RoleMultipliers {
+  return {
+    goalMult:   { ...ROLE_GOAL_MULT,   ...(roleConfig?.goalMult   ?? {}) },
+    assistMult: { ...ROLE_ASSIST_MULT, ...(roleConfig?.assistMult ?? {}) },
+    qualities:  roleConfig?.qualities,
   };
-  return w[pos] ?? 2;
 }
 
-
-function applyRoleMults(base: number, mults: number[]): number {
-  const suppressors = mults.filter(m => m < 1);
-  const boosters    = mults.filter(m => m > 1);
-  const suppressed  = suppressors.reduce((a, b) => a * b, 1);
-  const boosted     = boosters.length > 0 ? Math.max(...boosters) : 1;
-  return base * suppressed * boosted;
-}
-
-
-// Sums role team-strength contributions across a set of players.
-// Each active role adds (contribution × player_rating/80) to the relevant bucket.
-// Position-locking uses the same validPos map as goal/assist weights.
-function roleStrBonus(
-  players: { position: Position; roles?: PlayerRole[]; rating: number }[],
-  contrib: Partial<Record<PlayerRole, { att: number; mid: number; def: number }>>,
+/**
+ * A player's roles that apply in the slot he is filling. An inside forward
+ * played at left-back is not an inside forward there; roles with no entry in
+ * the table apply anywhere.
+ */
+function activeRoles(
+  roles: PlayerRole[] | undefined,
+  position: Position,
   validPos: Partial<Record<PlayerRole, Position[]>>,
-): { att: number; mid: number; def: number } {
-  let att = 0, mid = 0, def = 0;
-  for (const p of players) {
-    for (const r of p.roles ?? []) {
-      const vp = validPos[r];
-      if (vp && !vp.includes(p.position)) continue;
-      const c = contrib[r];
-      if (!c) continue;
-      const scale = p.rating / 80;
-      att += c.att * scale;
-      mid += c.mid * scale;
-      def += c.def * scale;
-    }
-  }
-  return { att, mid, def };
+): PlayerRole[] {
+  return (roles ?? []).filter(r => {
+    const valid = validPos[r];
+    return !valid || valid.includes(position);
+  });
 }
 
-// ── Tactics ───────────────────────────────────────────────────────────────────
-//
-// A style is three decisions — how high the line sits, how patiently the ball
-// is moved, and how fast the game is played. The styles themselves live in
-// matchEngine.ts and are described in docs/playstyles.md; what is decided here
-// is only what those three axes are worth across 38 games of this model.
-//
-// Two rules stop a style being a free bonus:
-//
-//   1. **The cost is paid in full; the benefit is collected in proportion to
-//      fit.** Tiki-taka without technicians buys the low tempo and none of the
-//      control. This is the rule that makes drafting *for* a style meaningful.
-//   2. **Tempo scales both sides' chances**, so there is no right answer to it:
-//      signal grows with the number of chances in a match and noise with its
-//      square root, which is exactly why a weaker side slows a game down and a
-//      stronger one speeds it up.
-//
-// Balanced sits at the origin of all three axes, so choosing it reproduces the
-// untactical season this model played before tactics existed.
-
-/** Rating points of attacking pressure the highest line is worth. */
-const LINE_ATT  = 6;
-/** Rating points of defensive exposure that same line concedes. */
-const LINE_DEF  = 6;
-/** Rating points of midfield control the most patient build-up is worth. */
-const BUILD_MID = 6;
-/** Rating points of attacking directness that patience gives up. */
-const BUILD_ATT = 5;
-/** How much of a style's tempo reaches the number of chances in a match. */
-const TEMPO_WEIGHT = 0.75;
-
-/** What choosing a style does to a specific eleven. */
-export interface TacticEffect {
-  style: PlaystyleName;
-  label: string;
-  /** 0-1: how well this eleven can execute the style it has been given. */
-  fit: number;
-  /** The style's own axes, unscaled: deep at 0 and high at 1. */
-  line: number;
-  /** Long ball at 0, short and patient at 1. */
-  buildUp: number;
-  /** Rating points added to the side's attack, defence and midfield. */
-  att: number;
-  def: number;
-  mid: number;
-  /** Multiplier on the chances both sides get in this side's matches. */
-  tempo: number;
+function validPositionsFor(roleConfig?: RoleConfig): Partial<Record<PlayerRole, Position[]>> {
+  return { ...ROLE_VALID_POSITIONS, ...(roleConfig?.validPositions ?? {}) };
 }
 
-function toMatchPlayer(pick: SquadPick): MatchPlayer {
+function toMatchPlayer(pick: SquadPick, validPos: Partial<Record<PlayerRole, Position[]>>): MatchPlayer {
   return {
     playerId:  pick.playerId,
     name:      pick.playerName,
     position:  pick.position,
     rating:    ratingInSlot(pick),
-    roles:     pick.roles,
+    roles:     activeRoles(pick.roles, pick.position, validPos),
     positions: pick.positions,
   };
 }
 
+// ── Tactics ───────────────────────────────────────────────────────────────────
+//
+// A style is played by the match engine, not converted into a bonus. Its line,
+// build-up and tempo decide who has the ball, how chances arise and how many a
+// match produces, and four interaction rules decide how it meets the
+// opponent's style: a press against a side playing out, a deep block against a
+// patient one, runners against a high line, recovery pace covering the space.
+// See docs/playstyles.md. Nobody writes down that a counter-attacking side
+// punishes a possession side; it falls out of those rules.
+//
+// What the pre-season screen needs is therefore a description of the style and
+// how well this eleven can play it, which is what this returns.
+
+/** A style, described for the eleven that would play it. */
+export interface TacticEffect {
+  style: PlaystyleName;
+  label: string;
+  /**
+   * 0-1: how well this eleven can execute the style. The engine scales what a
+   * style's demands buy — its press, its runners in behind — by this.
+   */
+  fit: number;
+  /** Deep at 0, high at 1. */
+  line: number;
+  /** Long ball at 0, short and patient at 1. */
+  buildUp: number;
+  /** Chances a match produces, relative to an ordinary game. Shared by both sides. */
+  tempo: number;
+  /** How strongly the side pulls possession its way. 1 is neutral. */
+  possessionBias: number;
+}
+
 /**
- * What a style is worth to this eleven, in the units the season model uses.
+ * The chosen style, and this eleven's fit for it.
  *
  * Exported because the pre-season screen shows it: a player choosing a tactic
- * is shown the same numbers the simulation will use, rather than a label.
+ * is shown the same fit the season will play.
  */
 export function tacticEffect(
   picks: SquadPick[],
@@ -541,36 +483,19 @@ export function tacticEffect(
   roleConfig?: RoleConfig,
 ): TacticEffect {
   const chosen = PLAYSTYLES[style] ?? PLAYSTYLES.balanced;
-  const fit = fitForStyle(picks.map(toMatchPlayer), chosen.name, {
-    goalMult:   roleConfig?.goalMult   ?? {},
-    assistMult: roleConfig?.assistMult ?? {},
-    qualities:  roleConfig?.qualities,
-  });
-
-  // Rule 1, in one line: what a style costs you happens whoever is playing;
-  // what it buys you happens only as far as they can play it.
-  //
-  // Negative zero is a real value in JavaScript and would reach the screen as
-  // "-0", so an axis that comes out at nothing is normalised to positive zero.
-  const earned = (points: number) => {
-    const value = points > 0 ? points * fit : points;
-    return value === 0 ? 0 : value;
-  };
-  const line  = chosen.line    - 0.5;
-  const build = chosen.buildUp - 0.5;
-
+  const validPos = validPositionsFor(roleConfig);
+  const fit = fitForStyle(picks.map(p => toMatchPlayer(p, validPos)), chosen.name, toRoleMultipliers(roleConfig));
   return {
-    style: chosen.name,
-    label: chosen.label,
+    style:          chosen.name,
+    label:          chosen.label,
     fit,
-    line:    chosen.line,
-    buildUp: chosen.buildUp,
-    att:   earned(LINE_ATT  *  line) + earned(BUILD_ATT * -build),
-    def:   earned(LINE_DEF  * -line),
-    mid:   earned(BUILD_MID *  build),
-    tempo: 1 + TEMPO_WEIGHT * (chosen.tempo - 1),
+    line:           chosen.line,
+    buildUp:        chosen.buildUp,
+    tempo:          chosen.tempo,
+    possessionBias: chosen.possessionBias,
   };
 }
+
 
 // ── Main export ───────────────────────────────────────────────────────────────
 
@@ -623,22 +548,23 @@ export function computeOverall(picks: SquadPick[]): number {
 // over them fixes it, and is why this is a weighted sum over `SEASON_NODES`
 // rather than one comparison.
 //
-// Measured against 90,000 simulated team-seasons across the 2025/26, 2003/04
-// and 1992/93 fields, at squad ratings from 62 to 98: expected points within
-// about 1 of measured across the whole range, projected finish within 0.7 of
-// where the XI actually finishes, and no probability more than 12 points out.
-// See docs/simulation.md for the table.
+// Re-fitted when the season moved onto the match engine, on 900 seasons
+// (18,000 team-seasons) across the 2025/26, 2003/04 and 1992/93 fields at squad
+// ratings from 62 to 98: the curve is within 1.7 points of the XI's measured
+// mean and 2.6 of an opponent's. The engine is flatter than the model it
+// replaced — a rating edge buys about 60% as many points — which is why the
+// steepness fell from 0.113. See docs/simulation.md.
 
 /** 38 wins. The ceiling the points curve saturates against. */
 const MAX_POINTS = 114;
 /** How sharply points rise with a rating edge over the field. */
-const POINTS_STEEPNESS = 0.113;
+const POINTS_STEEPNESS = 0.066;
 /** The rating edge at which a side is worth half the maximum points. */
-const POINTS_MIDPOINT = 1.56;
+const POINTS_MIDPOINT = 2.68;
 /** How far the player's own season lands either side of its expectation. */
-const SEASON_SD = 7.6;
+const SEASON_SD = 7.4;
 /** The same for an opponent's season, which is not shared across comparisons. */
-const OPPONENT_SD = 7.5;
+const OPPONENT_SD = 8.1;
 /** Quadrature nodes for integrating over the player's own season. */
 const SEASON_NODES = 41;
 
@@ -734,245 +660,171 @@ export function preSeasonOdds(overall: number, fieldOveralls: readonly number[] 
   };
 }
 
+/**
+ * Plays a 38-game season: the XI and nineteen opponents, a double round robin,
+ * every fixture played out by the match engine.
+ *
+ * Nothing here decides a score or a scorer. The engine plays each match as a
+ * sequence of possessions and reports what happened in it — goals, assists,
+ * shots, saves, cards and a rating for every player — and this adds those up.
+ * If the goal charts or the awards come out wrong, the engine is what gets
+ * fixed; see docs/simulation.md.
+ */
 export function simulateSeason(
   picks: SquadPick[],
   opponentSquads: OpponentSquad[] = [],
   seed?: number,
   roleConfig?: RoleConfig,
-  /** The style the player chose before kick-off. Balanced changes nothing. */
+  /** The style the player chose before kick-off. */
   tactic: PlaystyleName = 'balanced',
 ): SimulationResult {
   const rand = rng(seed ?? Date.now() % 999983);
   const USER = 'Your XI';
+  const roles = toRoleMultipliers(roleConfig);
+  const validPos = validPositionsFor(roleConfig);
+  const opponents = opponentSquads.length > 0 ? opponentSquads : fictionalOpponents(rand);
 
-  const effectiveGoalMult:    Partial<Record<string, number>>                              = { ...ROLE_GOAL_MULT,       ...(roleConfig?.goalMult      ?? {}) };
-  const effectiveAssistMult:  Partial<Record<string, number>>                              = { ...ROLE_ASSIST_MULT,     ...(roleConfig?.assistMult    ?? {}) };
-  const effectiveValidPos:    Partial<Record<string, Position[]>>                          = { ...ROLE_VALID_POSITIONS,  ...(roleConfig?.validPositions ?? {}) };
-  const effectiveTeamContrib: Partial<Record<string, { att: number; mid: number; def: number }>> = roleConfig?.teamContrib ?? {};
-
-  const gw = (pos: Position, roles: PlayerRole[] = [], rating = 80) => {
-    const active = roles.filter(r => { const v = effectiveValidPos[r]; return !v || v.includes(pos); });
-    return applyRoleMults(posGoalWeight(pos), active.map(r => effectiveGoalMult[r] ?? 1)) * ratingScale(rating);
-  };
-  const aw = (pos: Position, roles: PlayerRole[] = [], rating = 80) => {
-    const active = roles.filter(r => { const v = effectiveValidPos[r]; return !v || v.includes(pos); });
-    return applyRoleMults(posAssistWeight(pos), active.map(r => effectiveAssistMult[r] ?? 1)) * ratingScale(rating);
-  };
-
-  const useRealSquads = opponentSquads.length > 0;
-
-  // ── 20 teams: user + 19 opponents ──────────────────────────────────────────
-  const oppNames = useRealSquads ? opponentSquads.map(s => s.clubName) : PL_OPPONENTS;
-  const teams = [USER, ...oppNames];
-  const n     = teams.length;
-
-  // ── Attack / defence ratings per team ──────────────────────────────────────
-  // Each team has separate att and def strengths so that shape matters:
-  // a high-press side with weak defenders scores lots but leaks too.
-  const attStr = new Map<string, number>();
-  const defStr = new Map<string, number>();
-  const midStr = new Map<string, number>();
-
-  const userBonus = roleStrBonus(picks, effectiveTeamContrib, effectiveValidPos);
-  // The chosen style moves the same three numbers the players do, so a tactic
-  // is worth a few rating points either way rather than a separate system.
-  const plan = tacticEffect(picks, tactic, roleConfig);
-  // Out-of-position players contribute at their reduced rating.
-  const inSlot = picks.map(p => ({ ...p, rating: ratingInSlot(p) }));
-  attStr.set(USER, scaledAvgRating(inSlot.filter(p => isAttPosition(p.position))) + userBonus.att + plan.att);
-  defStr.set(USER, scaledAvgRating(inSlot.filter(p => isDefPosition(p.position))) + userBonus.def + plan.def);
-  midStr.set(USER, scaledAvgRating(inSlot.filter(p => isMidPosition(p.position))) + userBonus.mid + plan.mid);
-
-  // ── Squad representation for player attribution ─────────────────────────────
-  interface FPLayer { id: string; name: string; team: string; role: string; position: Position; roles: PlayerRole[]; rating: number }
-  const teamSquads = new Map<string, FPLayer[]>();
-
-  if (useRealSquads) {
-    for (const sq of opponentSquads) {
-      const oppBonus = roleStrBonus(sq.players, effectiveTeamContrib, effectiveValidPos);
-      attStr.set(sq.clubName, scaledAvgRating(sq.players.filter(p => isAttPosition(p.position))) + oppBonus.att);
-      defStr.set(sq.clubName, scaledAvgRating(sq.players.filter(p => isDefPosition(p.position))) + oppBonus.def);
-      midStr.set(sq.clubName, scaledAvgRating(sq.players.filter(p => isMidPosition(p.position))) + oppBonus.mid);
-      teamSquads.set(sq.clubName, sq.players.map(p => ({
-        id: `${sq.clubName}-${p.id}`, name: p.name, team: sq.clubName,
-        role: p.role, position: p.position, roles: p.roles ?? [], rating: p.rating,
-      })));
-    }
-  } else {
-    const ROLES: ('gk' | 'def' | 'mid' | 'att')[] = ['gk', 'def', 'def', 'mid', 'mid', 'att', 'att'];
-    for (const opp of PL_OPPONENTS) {
-      const teamRating = 62 + rand() * 28;
-      attStr.set(opp, teamRating);
-      defStr.set(opp, teamRating);
-      midStr.set(opp, teamRating);
-      teamSquads.set(opp, ROLES.map((role, i) => ({
-        id: `${opp}-${i}`, name: genName(rand), team: opp,
-        role, position: ROLE_DEFAULT_POS[role], roles: [], rating: Math.round(teamRating),
-      })));
-    }
+  // ── The twenty sides, as the match engine sees them ─────────────────────────
+  //
+  // Every player gets an id unique to this season. The same man can turn up in
+  // the XI and in an opponent — drafted out of the season being played — and
+  // the engine keys a match's stats by id, so his two selves must not collide.
+  const players = new Map<number, SeasonPlayer>();
+  let nextId = 1;
+  function enter(team: string, isUser: boolean, name: string, position: Position, sourceId: number): number {
+    const id = nextId++;
+    players.set(id, {
+      id, sourceId, name, team, isUser, position,
+      goals: 0, assists: 0, cleanSheets: 0, shots: 0, shotsOnTarget: 0, chancesCreated: 0,
+      saves: 0, yellowCards: 0, redCards: 0, ratings: [],
+    });
+    return id;
   }
 
-  // ── Stats tracking ──────────────────────────────────────────────────────────
-  const uStats = new Map<number, PlayerStats>();
-  for (const p of picks) {
-    uStats.set(p.playerId, { playerId: p.playerId, playerName: p.playerName, position: p.position, rating: p.rating, goals: 0, assists: 0, cleanSheets: 0, matchRatings: [], avgMatchRating: 0 });
-  }
-
-  const fStats = new Map<string, { name: string; team: string; role: string; goals: number; assists: number; cleanSheets: number }>();
-  for (const [, squad] of teamSquads) {
-    for (const p of squad) fStats.set(p.id, { name: p.name, team: p.team, role: p.role, goals: 0, assists: 0, cleanSheets: 0 });
-  }
-
-  // ── Per-player weights (position × role multipliers) ───────────────────────
-  const uGoalW   = picks.map(p => gw(p.position, p.roles, p.rating));
-  const uAssistW = picks.map(p => aw(p.position, p.roles, p.rating));
-
-  function pickUserScorer() { return picks[weightedRandom(rand, uGoalW)]; }
-  function pickUserAssister(excludeId?: number) {
-    const w = uAssistW.map((wt, i) => picks[i].playerId === excludeId ? 0 : wt);
-    return picks[weightedRandom(rand, w)];
-  }
-
-  function pickFictionalScorer(squad: FPLayer[]) {
-    return squad[weightedRandom(rand, squad.map(p => gw(p.position, p.roles, p.rating)))];
-  }
-  function pickFictionalAssister(squad: FPLayer[], excludeId: string) {
-    return squad[weightedRandom(rand, squad.map(p => p.id === excludeId ? 0 : aw(p.position, p.roles, p.rating)))];
+  const userPlayers: MatchPlayer[] = picks.map(pick => ({
+    ...toMatchPlayer(pick, validPos),
+    playerId: enter(USER, true, pick.playerName, pick.position, pick.playerId),
+  }));
+  const sides: { name: string; setup: TeamSetup }[] = [{
+    name: USER,
+    setup: {
+      name: USER,
+      players: userPlayers,
+      formation: '',
+      style: PLAYSTYLES[tactic] ? tactic : 'balanced',
+      // Where the attack goes follows from the shape of the eleven: wingers
+      // mean the width gets used.
+      focus: inferStyle(userPlayers).focus,
+      // A drafted XI has never played together, and nothing yet says how well
+      // drilled it is. The engine's default is an ordinary side.
+      cohesion: DEFAULT_COHESION,
+    },
+  }];
+  for (const squad of opponents) {
+    const eleven: MatchPlayer[] = squad.players.map((p, i) => ({
+      playerId: enter(squad.clubName, false, p.name, p.position, i),
+      name: p.name,
+      position: p.position,
+      rating: p.rating,
+      roles: activeRoles(p.roles, p.position, validPos),
+    }));
+    const inferred = inferStyle(eleven);
+    sides.push({
+      name: squad.clubName,
+      setup: {
+        name: squad.clubName,
+        players: eleven,
+        formation: squad.formation ?? '',
+        style: squad.style && PLAYSTYLES[squad.style] ? squad.style : inferred.style,
+        focus: squad.focus ?? inferred.focus,
+        cohesion: squad.cohesion ?? DEFAULT_COHESION,
+      },
+    });
   }
 
   // ── Standings ───────────────────────────────────────────────────────────────
   const standings = new Map<string, MutableStanding>();
-  for (const t of teams) {
-    const isUser = t === USER;
-    const ovr = isUser ? computeOverall(picks) : Math.round(opponentSquads.find(s => s.clubName === t)?.strength ?? 75);
-    const att = Math.round(attStr.get(t) ?? 70);
-    const def = Math.round(defStr.get(t) ?? 70);
-    const mid = Math.round(midStr.get(t) ?? 70);
-    standings.set(t, initStanding(t, isUser, ovr, att, def, mid));
+  for (const side of sides) {
+    const isUser = side.name === USER;
+    const lines = lineStrengths(side.setup.players);
+    const ovr = isUser
+      ? computeOverall(picks)
+      : Math.round(opponents.find(s => s.clubName === side.name)?.strength ?? 75);
+    standings.set(side.name, initStanding(side.name, isUser, ovr, lines.att, lines.def, lines.mid));
   }
 
-  // ── Schedule ────────────────────────────────────────────────────────────────
-  // 38 rounds of 10 fixtures for the twenty-team league the game is named
-  // after; the caller decides how many opponents it hands over.
-  const schedule = buildSchedule(n);
-
-  // ── Simulate ────────────────────────────────────────────────────────────────
+  // ── The season ──────────────────────────────────────────────────────────────
+  const schedule = buildSchedule(sides.length);
   const gameweeks: Gameweek[] = [];
 
   for (let r = 0; r < schedule.length; r++) {
     const fixtures: FixtureResult[] = [];
 
     for (const [hi, ai] of schedule[r]) {
-      const homeTeam = teams[hi];
-      const awayTeam = teams[ai];
-      const userInvolved = homeTeam === USER || awayTeam === USER;
-      const { homeGoals, awayGoals, lh, la } = simulateScore(
-        rand,
-        attStr.get(homeTeam)!, defStr.get(homeTeam)!,
-        attStr.get(awayTeam)!, defStr.get(awayTeam)!,
-        midStr.get(homeTeam)!, midStr.get(awayTeam)!,
-        // Only your own matches are played at your tempo. The other nineteen
-        // clubs play each other at the rate the model already produced.
-        userInvolved ? plan.tempo : 1,
-      );
+      const home = sides[hi];
+      const away = sides[ai];
+      const match = simulateMatch(home.setup, away.setup, rand, roles);
+      const homeGoals = match.home.goals;
+      const awayGoals = match.away.goals;
 
-      const scorers: { name: string; minute: number }[] = [];
-      const usedMins = new Set<number>();
-      const pgGoals   = new Map<number, number>();
-      const pgAssists = new Map<number, number>();
-
-      for (const [teamName, teamGoals, isHome] of [
-        [homeTeam, homeGoals, true],
-        [awayTeam, awayGoals, false],
-      ] as [string, number, boolean][]) {
-        for (let g = 0; g < teamGoals; g++) {
-          if (teamName === USER) {
-            const scorer   = pickUserScorer();
-            const assister = rand() < 0.75 ? pickUserAssister(scorer.playerId) : null;
-            let min: number;
-            do { min = 1 + Math.floor(rand() * 90); } while (usedMins.has(min));
-            usedMins.add(min);
-            uStats.get(scorer.playerId)!.goals++;
-            pgGoals.set(scorer.playerId, (pgGoals.get(scorer.playerId) ?? 0) + 1);
-            if (assister) {
-              uStats.get(assister.playerId)!.assists++;
-              pgAssists.set(assister.playerId, (pgAssists.get(assister.playerId) ?? 0) + 1);
-            }
-            scorers.push({ name: scorer.playerName.split(' ').pop()!, minute: min });
-          } else {
-            const squad    = teamSquads.get(teamName)!;
-            const scorer   = pickFictionalScorer(squad);
-            const assister = rand() < 0.75 ? pickFictionalAssister(squad, scorer.id) : null;
-            fStats.get(scorer.id)!.goals++;
-            if (assister) fStats.get(assister.id)!.assists++;
-          }
-          void isHome;
+      for (const team of [match.home, match.away]) {
+        for (const s of team.players) {
+          const p = players.get(s.playerId)!;
+          p.goals          += s.goals;
+          p.assists        += s.assists;
+          p.shots          += s.shots;
+          p.shotsOnTarget  += s.shotsOnTarget;
+          p.chancesCreated += s.chancesCreated;
+          p.saves          += s.saves;
+          if (s.yellow) p.yellowCards++;
+          if (s.red) p.redCards++;
+          // A clean sheet is the keeper's and the back line's, as the awards
+          // and the squad table count it.
+          if (s.cleanSheet && CLEAN_SHEET_POSITIONS.includes(p.position)) p.cleanSheets++;
+          p.ratings.push(s.rating);
         }
       }
 
-      // Clean sheets
-      if (homeGoals === 0) {
-        if (awayTeam === USER) {
-          const gk  = picks.find(p => p.position === 'GK');
-          const def = picks.filter(p => ['CB','LB','RB','LWB','RWB'].includes(p.position));
-          if (gk) uStats.get(gk.playerId)!.cleanSheets++;
-          for (const d of def) uStats.get(d.playerId)!.cleanSheets++;
-        } else {
-          const squad = teamSquads.get(awayTeam)!;
-          const gk = squad.find(p => p.role === 'gk');
-          if (gk) fStats.get(gk.id)!.cleanSheets++;
-        }
-      }
-      if (awayGoals === 0) {
-        if (homeTeam === USER) {
-          const gk  = picks.find(p => p.position === 'GK');
-          const def = picks.filter(p => ['CB','LB','RB','LWB','RWB'].includes(p.position));
-          if (gk) uStats.get(gk.playerId)!.cleanSheets++;
-          for (const d of def) uStats.get(d.playerId)!.cleanSheets++;
-        } else {
-          const squad = teamSquads.get(homeTeam)!;
-          const gk = squad.find(p => p.role === 'gk');
-          if (gk) fStats.get(gk.id)!.cleanSheets++;
-        }
-      }
+      applyResult(standings.get(home.name)!, homeGoals, awayGoals);
+      applyResult(standings.get(away.name)!, awayGoals, homeGoals);
 
-      applyResult(standings.get(homeTeam)!, homeGoals, awayGoals);
-      applyResult(standings.get(awayTeam)!, awayGoals, homeGoals);
-
-      if (userInvolved) {
-        const uIsHome = homeTeam === USER;
-        const userGF  = uIsHome ? homeGoals : awayGoals;
-        const oppGF   = uIsHome ? awayGoals : homeGoals;
-        const expUser = uIsHome ? lh : la;
-        const expOpp  = uIsHome ? la : lh;
-        const attZone = userGF - expUser;
-        const defZone = expOpp - oppGF;
-        const resultMod = userGF > oppGF ? 1.5 : userGF === oppGF ? 0 : -1.0;
-        for (const p of picks) {
-          const g  = pgGoals.get(p.playerId) ?? 0;
-          const a  = pgAssists.get(p.playerId) ?? 0;
-          const zw = zoneWeight(p.position);
-          const zoneMod = (attZone * zw.att + defZone * zw.def) * 0.5;
-          const raw = 6.5 + resultMod + g + a * 0.7 + zoneMod;
-          uStats.get(p.playerId)!.matchRatings.push(
-            parseFloat(Math.max(4.0, Math.min(10.0, raw)).toFixed(1))
-          );
-        }
-        scorers.sort((a, b) => a.minute - b.minute);
-      }
-      fixtures.push({ home: homeTeam, away: awayTeam, homeGoals, awayGoals, userInvolved, scorers: userInvolved ? scorers : [] });
+      const userInvolved = home.name === USER || away.name === USER;
+      const scorers = userInvolved
+        ? match.events
+          .filter(e => e.type === 'goal' && e.team === USER)
+          .map(e => ({ name: e.playerName.split(' ').pop()!, minute: e.minute }))
+        : [];
+      fixtures.push({ home: home.name, away: away.name, homeGoals, awayGoals, userInvolved, scorers });
     }
 
     gameweeks.push({ week: r + 1, fixtures, tableSnapshot: sortedTable(standings) });
   }
 
-  // ── Season-average match ratings ────────────────────────────────────────────
-  for (const stats of uStats.values()) {
-    const r = stats.matchRatings;
-    stats.avgMatchRating = r.length
-      ? parseFloat((r.reduce((a, b) => a + b, 0) / r.length).toFixed(1))
-      : 6.5;
-  }
+  // ── The XI's season ─────────────────────────────────────────────────────────
+  const average = (xs: number[]) => xs.length ? xs.reduce((a, b) => a + b, 0) / xs.length : 0;
+  const seasonOf = [...players.values()].map(p => ({ ...p, avgRating: average(p.ratings) }));
+  const userSeason = seasonOf.filter(p => p.isUser);
+
+  const statsArr: PlayerStats[] = picks.map((pick, i) => {
+    const s = userSeason[i];
+    return {
+      playerId:       pick.playerId,
+      playerName:     pick.playerName,
+      position:       pick.position,
+      rating:         pick.rating,
+      goals:          s.goals,
+      assists:        s.assists,
+      cleanSheets:    s.cleanSheets,
+      shots:          s.shots,
+      shotsOnTarget:  s.shotsOnTarget,
+      chancesCreated: s.chancesCreated,
+      saves:          s.saves,
+      yellowCards:    s.yellowCards,
+      redCards:       s.redCards,
+      matchRatings:   s.ratings,
+      avgMatchRating: s.ratings.length ? parseFloat(s.avgRating.toFixed(2)) : 6,
+    };
+  });
 
   // ── Final standings ─────────────────────────────────────────────────────────
   const finalTable = sortedTable(standings);
@@ -996,42 +848,27 @@ export function simulateSeason(
     if (gf + ga > highestTotal) { highestTotal = gf + ga; highestScoringStr = `${gf}-${ga} vs ${opp}`; }
   }
 
-  // ── Awards (user squad) ─────────────────────────────────────────────────────
-  const statsArr = [...uStats.values()];
-  const topScorer  = statsArr.reduce((a, b) => a.goals > b.goals ? a : b);
-  const topAssist  = statsArr.reduce((a, b) => a.assists > b.assists ? a : b);
-  const topGKs     = statsArr.filter(s => s.position === 'GK');
-  const topGK      = topGKs.length ? topGKs.reduce((a, b) => a.cleanSheets > b.cleanSheets ? a : b) : statsArr[0];
-  const pots       = statsArr.reduce((a, b) => (a.goals + a.assists * 0.7) > (b.goals + b.assists * 0.7) ? a : b);
-
-  // ── League Player of the Season ────────────────────────────────────────────
-  const allOutfield = [
-    ...statsArr.filter(s => s.position !== 'GK').map(s => ({
-      name: s.playerName, club: USER, goals: s.goals, assists: s.assists, isUser: true,
-    })),
-    ...[...fStats.values()].filter(s => s.role !== 'gk').map(s => ({
-      name: s.name, club: s.team, goals: s.goals, assists: s.assists, isUser: false,
-    })),
-  ];
-  const leaguePots = allOutfield.length > 0
-    ? allOutfield.reduce((a, b) => (a.goals + a.assists * 0.7) >= (b.goals + b.assists * 0.7) ? a : b)
-    : { name: '—', club: '—', goals: 0, assists: 0, isUser: false };
+  // ── Awards ──────────────────────────────────────────────────────────────────
+  //
+  // Player of the Season goes to the best average match rating: the engine's
+  // rating of what each player did, match by match. Goals and assists count
+  // toward it, as do shots on target, chances created, saves, clean sheets,
+  // the result and the goals conceded — which is what gives a defender any
+  // chance at all. It is exactly as good as those ratings are.
+  const topScorer = statsArr.reduce((a, b) => a.goals > b.goals ? a : b);
+  const topAssist = statsArr.reduce((a, b) => a.assists > b.assists ? a : b);
+  const topGKs    = statsArr.filter(s => s.position === 'GK');
+  const topGK     = topGKs.length ? topGKs.reduce((a, b) => a.cleanSheets > b.cleanSheets ? a : b) : statsArr[0];
+  const pots      = statsArr.reduce((a, b) => b.avgMatchRating > a.avgMatchRating ? b : a);
+  const leaguePots = seasonOf.reduce((a, b) => b.avgRating > a.avgRating ? b : a);
 
   // ── League leaderboards ─────────────────────────────────────────────────────
-  const topScorers: LeagueEntry[] = [
-    ...statsArr.filter(s => s.goals > 0).map(s => ({ playerName: s.playerName, clubName: USER, value: s.goals, isUser: true })),
-    ...[...fStats.values()].filter(s => s.goals > 0).map(s => ({ playerName: s.name, clubName: s.team, value: s.goals, isUser: false })),
-  ].sort((a, b) => b.value - a.value).slice(0, 20);
-
-  const topAssisters: LeagueEntry[] = [
-    ...statsArr.filter(s => s.assists > 0).map(s => ({ playerName: s.playerName, clubName: USER, value: s.assists, isUser: true })),
-    ...[...fStats.values()].filter(s => s.assists > 0).map(s => ({ playerName: s.name, clubName: s.team, value: s.assists, isUser: false })),
-  ].sort((a, b) => b.value - a.value).slice(0, 20);
-
-  const topKeepers: LeagueEntry[] = [
-    ...statsArr.filter(s => s.position === 'GK' && s.cleanSheets > 0).map(s => ({ playerName: s.playerName, clubName: USER, value: s.cleanSheets, isUser: true })),
-    ...[...fStats.values()].filter(s => s.role === 'gk' && s.cleanSheets > 0).map(s => ({ playerName: s.name, clubName: s.team, value: s.cleanSheets, isUser: false })),
-  ].sort((a, b) => b.value - a.value).slice(0, 20);
+  const board = (value: (p: typeof seasonOf[number]) => number, only?: (p: typeof seasonOf[number]) => boolean) =>
+    seasonOf
+      .filter(p => (only ? only(p) : true) && value(p) > 0)
+      .map(p => ({ playerName: p.name, clubName: p.team, value: value(p), isUser: p.isUser }))
+      .sort((a, b) => b.value - a.value)
+      .slice(0, 20);
 
   return {
     gameweeks,
@@ -1048,17 +885,63 @@ export function simulateSeason(
       goldenBoot:     { name: topScorer.playerName, goals: topScorer.goals },
       playmaker:      { name: topAssist.playerName, assists: topAssist.assists },
       goldenGlove:    { name: topGK?.playerName ?? '—', cleanSheets: topGK?.cleanSheets ?? 0 },
-      playerOfSeason: { name: pots.playerName, goals: pots.goals, assists: pots.assists },
-      leaguePlayerOfSeason: { name: leaguePots.name, club: leaguePots.club, goals: leaguePots.goals, assists: leaguePots.assists, isUser: leaguePots.isUser },
+      playerOfSeason: { name: pots.playerName, goals: pots.goals, assists: pots.assists, rating: pots.avgMatchRating },
+      leaguePlayerOfSeason: {
+        name: leaguePots.name, club: leaguePots.team, goals: leaguePots.goals, assists: leaguePots.assists,
+        isUser: leaguePots.isUser, rating: parseFloat(leaguePots.avgRating.toFixed(2)),
+      },
     },
     longestWinStreak: maxStreak,
     biggestWin:       biggestWinStr,
     highestScoring:   highestScoringStr,
     narrative:        buildNarrative(finalPosition, userRow.points, userRow.won, userRow.drawn, userRow.lost),
-    topScorers,
-    topAssisters,
-    topKeepers,
+    topScorers:       board(p => p.goals),
+    topAssisters:     board(p => p.assists),
+    topKeepers:       board(p => p.cleanSheets, p => p.position === 'GK'),
   };
+}
+
+/** Everything a player did across the season. */
+interface SeasonPlayer {
+  id: number;
+  /** The player's id in the snapshot, or his index in an opponent's eleven. */
+  sourceId: number;
+  name: string;
+  team: string;
+  isUser: boolean;
+  position: Position;
+  goals: number;
+  assists: number;
+  cleanSheets: number;
+  shots: number;
+  shotsOnTarget: number;
+  chancesCreated: number;
+  saves: number;
+  yellowCards: number;
+  redCards: number;
+  ratings: number[];
+}
+
+const CLEAN_SHEET_POSITIONS: Position[] = ['GK', 'CB', 'LB', 'RB', 'LWB', 'RWB'];
+
+/** A made-up league, for a caller with no opponent squads to hand over. */
+function fictionalOpponents(rand: () => number): OpponentSquad[] {
+  const shape: Position[] = ['GK', 'RB', 'CB', 'CB', 'LB', 'RM', 'CM', 'CM', 'LM', 'ST', 'ST'];
+  return PL_OPPONENTS.map(clubName => {
+    const rating = Math.round(62 + rand() * 28);
+    return {
+      clubName,
+      strength: rating,
+      players: shape.map((position, i) => ({
+        id: String(i),
+        name: genName(rand),
+        role: position === 'GK' ? 'gk' : ['RB', 'CB', 'LB'].includes(position) ? 'def' : position === 'ST' ? 'att' : 'mid',
+        position,
+        rating,
+        roles: [],
+      })),
+    };
+  });
 }
 
 // ── Helpers ───────────────────────────────────────────────────────────────────

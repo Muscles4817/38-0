@@ -115,18 +115,16 @@ That triangle falls out of rules 2 and 3; nobody writes it down.
 
 ## Where the styles are used today
 
-Two engines read this taxonomy, and they read different parts of it.
+`matchEngine.ts` plays every match of a season, possession by possession, and
+uses all of this taxonomy — `chanceMix`, `aggression`, the four interaction
+rules. `simulation.ts` hands it the player's style for the XI and each club's
+recorded or inferred style, and reads nothing from a style itself except to
+describe it on the pre-season screen.
 
-`matchEngine.ts` plays a match out possession by possession and uses all of it —
-`chanceMix`, `aggression`, the four interaction rules. It is not yet what a
-season is built from.
-
-`simulation.ts`, which is, reads only the three axes: `line`, `buildUp` and
-`tempo`, plus `needs` through `fitForStyle`. That is the layer the player's
-tactic reaches today, and its measured effect is recorded in
-[pre-season.md](pre-season.md): about 1.3–2.4 points per ten games between the
-best and worst style for a given squad, with the best style differing by squad.
-The 9.1-point ladder below is what that replaced.
+Its measured effect is in [pre-season.md](pre-season.md): for Liverpool 2019/20,
+67.5 to 74.6 points between the worst and best style, with the best style
+differing by squad and by field. The 9.1-point ladder below is what the
+taxonomy replaced.
 
 ## What must be true when it is finished
 

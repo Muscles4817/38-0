@@ -9,7 +9,7 @@
 // never run in a deployed build.
 
 import rawData from '@/data/game-data.json';
-import { type Position } from './formations';
+import { getFormation, type Position } from './formations';
 import { bestFormation } from './lineupFit';
 import {
   simulateSeason,
@@ -335,12 +335,14 @@ function positionGroup(positions: Position[]): OpponentPlayer['role'] {
   return 'att';
 }
 
-function toOpponentPlayer(player: DataPlayer, index: number): OpponentPlayer {
+function toOpponentPlayer(player: DataPlayer, index: number, slot?: Position): OpponentPlayer {
   return {
     id: String(index),
     name: player.name,
     role: positionGroup(player.positions),
-    position: player.positions[0] ?? 'CM',
+    // The slot he fills in the stored lineup. The match engine plays him
+    // there: a left-back picked at centre-back defends the middle.
+    position: slot ?? player.positions[0] ?? 'CM',
     rating: player.rating,
     roles: player.roles,
   };
@@ -356,11 +358,32 @@ export function getOpponentSquads(
   seasonId?: number,
   league: string = SIMULATED_LEAGUE,
 ): OpponentSquad[] {
-  return trimToLeague(assembleField(seasonId, league).map(({ clubName, eleven }) => ({
-    clubName,
-    players: eleven.map(toOpponentPlayer),
-    strength: averageRating(eleven),
-  })));
+  return trimToLeague(assembleField(seasonId, league).map(({ clubId, seasonId: sid, clubName, eleven, slots, formation }) => {
+    // How the club-season set up, where someone has recorded it. The match
+    // engine infers a style and focus from the eleven otherwise.
+    const traits = getTraits(clubId, sid);
+    const style = traits?.playstyle && traits.playstyle in PLAYSTYLES ? traits.playstyle as PlaystyleName : undefined;
+    return {
+      clubName,
+      players: eleven.map((p, i) => toOpponentPlayer(p, i, slots?.[i])),
+      strength: averageRating(eleven),
+      formation,
+      style,
+      focus: traits?.focus,
+      cohesion: traits?.cohesion,
+    };
+  }));
+}
+
+/** One club's eleven, and where each of them plays when the lineup says. */
+interface FieldSide {
+  clubId: number;
+  seasonId: number;
+  clubName: string;
+  eleven: DataPlayer[];
+  /** The slot each of `eleven` fills, from the stored lineup. Absent for a `bestXI` fallback. */
+  slots?: Position[];
+  formation?: string;
 }
 
 /**
@@ -377,10 +400,10 @@ export function getOpponentSquads(
 function assembleField(
   seasonId: number | undefined,
   league: string,
-): { clubName: string; eleven: DataPlayer[] }[] {
+): FieldSide[] {
   const season = seasonId != null ? seasonById.get(seasonId) ?? null : simulatedSeason;
   if (!season) return [];
-  const field: { clubName: string; eleven: DataPlayer[] }[] = [];
+  const field: FieldSide[] = [];
 
   for (const squad of gameData.squads) {
     if (squad.seasonId !== season.id) continue;
@@ -394,17 +417,23 @@ function assembleField(
     const lineup = lineupByKey.get(key(squad.clubId, squad.seasonId));
     const byId = new Map(rated.map(p => [p.playerId, p]));
 
-    let eleven: DataPlayer[];
+    const base = { clubId: club.id, seasonId: season.id, clubName: club.name };
     if (lineup && lineup.slots.length === 11) {
+      const shape = getFormation(lineup.formation);
       const fromSlots = lineup.slots
-        .map(slot => byId.get(slot.playerId))
-        .filter((p): p is DataPlayer => p != null);
-      eleven = fromSlots.length === 11 ? fromSlots : bestXI(rated);
-    } else {
-      eleven = bestXI(rated);
+        .map(slot => ({ player: byId.get(slot.playerId), position: shape.slots[slot.slotIndex]?.position }))
+        .filter((s): s is { player: DataPlayer; position: Position } => s.player != null && s.position != null);
+      if (fromSlots.length === 11) {
+        field.push({
+          ...base,
+          eleven: fromSlots.map(s => s.player),
+          slots: fromSlots.map(s => s.position),
+          formation: lineup.formation,
+        });
+        continue;
+      }
     }
-
-    field.push({ clubName: club.name, eleven });
+    field.push({ ...base, eleven: bestXI(rated) });
   }
   return field;
 }

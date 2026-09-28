@@ -3,139 +3,72 @@
 Recorded so they are not rediscovered. Ordered by value, highest first. Numbers
 here were measured; the method is in [simulation.md](simulation.md).
 
-## 0. Who scores, who creates, who is rated, and what tactics do
+## 0. What the match engine still gets wrong
 
-Measured with `npm run sim:report` (see [simulation.md](simulation.md#measuring-a-change)),
-Liverpool 2019/20 in the 2025/26 field and Liverpool 2008/09 in its own
-2008/09 field, 40–60 seasons each. Real 2019/20 Liverpool figures are from the
-public record (there is no FBref export for that season in `data/raw`); real
-2008/09 and 2025/26 figures are from the exports.
+The season has been played by `matchEngine.ts` since the change recorded in
+[simulation.md](simulation.md#moving-the-season-onto-the-engine), which fixed
+the goal and assist charts (see *Fixed* below). Measured since with
+`npm run sim:report`: Liverpool 2019/20 in the 2025/26 field and Liverpool
+2008/09 in its own, 40 seasons each.
 
-**The season does not use `matchEngine.ts`.** `simulateSeason` still draws a
-scoreline from two Poisson rates and then holds a separate weighted lottery for
-the scorer and the assister. The possession engine, which already damps role
-multipliers for exactly the problem below (`ROLE_SELECTION_POWER`), only lends
-the season its playstyle definitions and `fitForStyle`.
+### Match ratings favour forwards, so every award goes to one
 
-### Player of the Season is goals + 0.7 × assists
+Player of the Season is now the best average match rating, and the ratings are
+built from what a player did. But a defender's only inputs are the goals his
+side concedes and clean sheets; the engine has no event for the chance he
+stopped, because defending is a team-level zone quality with no named defender.
+So the league award went to a forward in every season measured, centre-backs
+average 5.73 against a striker's 6.43 across 440 player-seasons, and Van Dijk
+(94) rates 6.36 to Salah's 6.66. Half of all season averages fall between 5.8
+and 6.2: the scale is compressed as well as skewed.
 
-Both awards in `simulateSeason` are `argmax(goals + 0.7 × assists)`, so a
-defender or holding midfielder cannot win either: the league award went to a
-forward in 100% of 80 seasons. Match ratings are
-`6.5 + result + goals + 0.7 × assists + zone`, where the zone term is the
-team's goals for/against against expectation, identical for every player in a
-line. A player's own quality never enters it: Van Dijk (94) averaged 7.29,
-Matip (85) 7.23, Wijnaldum (85, 5.6 goals) 7.43, and the whole XI sat within
-7.2–7.6.
+### Centre-backs score too often, full-backs create too little
 
-### Goals are concentrated on one striker per side
-
-A scorer's weight is `posGoalWeight × role multiplier × ratingScale`, all
-multiplied, with no damping. ST is 20 against 10 for a winger, and `Poacher` is
-2.2, so a lone striker takes about half his side's goals.
-
-| | sim | real |
+| | engine | real |
 | --- | ---: | ---: |
-| Golden Boot, 2025/26 field | 38.5 on average, 50 at most | 27 (Haaland) |
-| Golden Boot, 2008/09 field | 37.8 on average | 19 (Anelka) |
-| Record (36) equalled or broken | 60–68% of seasons | once, in 2022/23 |
-| Top-20 scorers' goals by forwards, 2025/26 | 92% | 64% |
-| Torres's share of Liverpool 2008/09 goals | 50% (31.8) | 18% (14 of 77) |
-| Liverpool 2019/20: Salah / Mané / Firmino | 16.6 / 17.2 / 17.2 | 19 / 18 / 9 |
+| Van Dijk goals, 2019/20 | 12.2 | 5 |
+| Alexander-Arnold / Robertson assists | 4.9 / 5.9 | 13 / 12 |
+| Carragher goals, 2008/09 | 4.7 | 0 |
+| Top-20 assisters' assists by defenders, 2008/09 | 1% | 19% |
 
-Firmino gets a striker's share because the ST slot weight (20) outweighs his
-`FalseNine`/creator profile; Salah and Mané get less than they did because a
-winger's base weight is half a striker's.
+Set pieces go to centre-backs, which is right in kind and too much in degree,
+and the assister for a cross is picked by attacking weight, where a full-back
+counts for little.
 
-### Assists: the right total, concentrated on one creator
+### The top of the table is flat
 
-76% of goals carry an assist, against a real ~74%, so the total is right. The
-distribution is not: `posAssistWeight` gives a CAM 25 against a full-back's 4,
-then multiplies by up to 2.8 for a role.
+Liverpool 2019/20 averages 73.6 points and 68 goals; the real side took 99 and
+scored 85. A flat 90-rated XI averages 67 points against the 2025/26 field. The
+engine's quality constants (`EDGE_TO_CHANCES`, `FINISHING_EXPONENT`,
+`KEEPING_EXPONENT`) are deliberately gentle, per its own comments; the
+pre-season curve re-fitted to it is 60% as steep as the Poisson model's.
 
-| | sim | real |
-| --- | ---: | ---: |
-| Top assists, 2025/26 field | 30.9 on average, 43 at most | 21 (Bruno Fernandes) |
-| Record (20) equalled or broken | 100% of seasons (2025/26), 83% (2008/09) | twice ever |
-| Ødegaard leads the league | 38 of 40 seasons | — |
-| Alexander-Arnold / Robertson, 2019/20 | 7.8 / 8.0 | 13 / 12 |
-| Riera (LM, 79), 2008/09 | 14.4 | 3 |
+### Counter-attack may be too strong
 
-### Tactics are invisible, and the fit does not discriminate
+In 2025/26 the five clubs that most outperform their rating all play
+Counter-attack (Aston Villa by 6.5 points), and Ollie Watkins wins the Golden
+Boot more often than Haaland (17 to 6 in 40 seasons). A flat 74-rated XI in
+1992/93 takes 55.7 points countering and 51.1 playing Balanced. It may be the
+matchup working as designed — counter punishes a high line — or it may be too
+strong; it wants measuring on its own. It is also why the pre-season odds carry
+a second recorded exception in their calibration test: they cannot see styles.
 
-Three separate problems:
+### Tactics: fit is absolute, and one quality is missing
 
-1. **Fixed: the pre-season screen showed 0% fit for every style but
-   Balanced.** Fit is read from the players' roles, and the XI saved by the
-   draft and by Classic mode carries none; `runSeasonSimulation` added them
-   before simulating, but `getTacticOptions` did not. Both now go through
-   `withSeasonRoles` in `gameData.ts`, and `gameData.test.ts` covers it.
-2. **Fit is absolute, so elite sides fit almost everything.** Barcelona
-   2009/10 is 100% for Tiki-taka and also for Route one and Park the bus. It is
-   not general saturation: across all 423 stored XIs only about 7% reach 100%
-   for any one style. A side with many highly rated, heavily traited players
-   clears a sparse demand (Park the bus asks only for `aerial`) without being
-   built for it. Measuring "fully meets" against real sides, the 90th
-   percentile of each quality instead of the fixed 0.45, barely changes this.
-   Fit would have to describe a side's profile rather than its total.
-   Separately, **`recovery` is 0 for 90% of stored XIs** (at most 0.59), and
-   Counter-attack, Catenaccio and Low block all demand it, so almost nothing
-   can fit them. That is the trait data, which lives in the authoring
-   database.
-3. **The effect is small next to a season's noise.** For Liverpool 2019/20 all
-   fourteen styles span 70.5 to 76.5 points against a season-to-season spread
-   of 7–9. Most of what a style does comes from tempo (Park the bus 47 GF,
-   Gegenpress 80), not from the ±2 rating points it moves.
+**Fit is absolute, so elite sides fit almost everything.** Barcelona 2009/10 is
+100% for Tiki-taka and also for Route one and Park the bus. It is not general
+saturation: across all 423 stored XIs only about 7% reach 100% for any one
+style. A side with many highly rated, heavily traited players clears a sparse
+demand (Park the bus asks only for `aerial`) without being built for it.
+Measuring "fully meets" against real sides, the 90th percentile of each quality
+instead of the fixed 0.45, barely changes this. Fit would have to describe a
+side's profile rather than its total.
 
-### And the top of the table is flat
+**`recovery` is 0 for 90% of stored XIs** (at most 0.59), and Counter-attack,
+Catenaccio and Low block all demand it, so almost nothing can fit them. That is
+the trait data, which lives in the authoring database.
 
-Liverpool 2019/20 averages 75 points and 64 goals in the 2025/26 field; the
-real side took 99 and scored 85. That is issue 1 below, seen from the top.
-
-## 1. The scoring coefficients are too gentle
-
-`simulateScore` in `src/lib/simulation.ts` converts a 10-point strength edge
-into only +0.38 expected goals, so the table is still flatter than a real
-league: champions average 75.6 points against a real ~88, and the bottom club
-29.0 against a real ~22.
-
-Raising `0.38 → 0.62` and `0.30 → 0.52` gives a 81.5-point champion and four
-distinct title winners across 30 seasons. That is tuning, not a defect, and
-wants measuring against the resulting tables rather than applying blind.
-
-Do not chase the last few points by inflating goal difference: real leagues are
-spread partly by injuries, form and mid-season upheaval that this model does not
-represent at all.
-
-### The scoring rate is a separate knob, and it is the base constants
-
-Measured over 40 seeded seasons with a drafted 1992/93 XI in the league, before
-and after the rating curve fix:
-
-|                      | before | after | real PL |
-| -------------------- | -----: | ----: | ------: |
-| champion's points    |   79.8 |  82.8 |     ~88 |
-| bottom club's points |   38.6 |  32.4 |     ~22 |
-| spread               |   41.2 |  50.4 |     ~66 |
-| goals per game       |   2.48 |  2.51 |    ~2.80 |
-
-The curve fix opened the table by nine points and left the scoring rate where it
-was. That is not a shortcoming of the fix — the two are controlled by different
-terms, and it is worth being explicit about which:
-
-    homeLambda = (1.3 + (homeAtt + 3 - awayDef)/10 * 0.38) * midfieldMultiplier
-    awayLambda = (1.0 + (awayAtt - homeDef)/10      * 0.30) * midfieldMultiplier
-
-Set both sides equal and the formula still yields 1.41 + 1.00 = **2.41 goals**.
-So the constants `1.3` and `1.0` supply almost the whole scoring rate, and every
-rating in the database only redistributes what is left. `0.38`/`0.30` control
-the *spread*; `1.3`/`1.0` control the *mean*.
-
-Raising the coefficients alone therefore widens the table without moving 2.51
-toward 2.80 — it would make good teams beat bad ones by more while the league
-still scores too little. Both wants changing, and measuring together.
-
-## 2. The draft pool is still lopsided
+## 1. The draft pool is still lopsided
 
 307 draftable club-seasons across five leagues, but 2025/26 is still the
 densest single season and the English seasons dominate: PL 288, Serie A 7,
@@ -149,7 +82,7 @@ possible answers.
 This is the real ceiling on replay value. Every other improvement is bounded by
 it.
 
-## 3. A club's strength is a flat mean; the engine reads three lines
+## 2. A club's strength is a flat mean; the engine reads it on a curve, by zone
 
 `getOpponentSquads` gives every club a `strength` that is the arithmetic mean of
 its XI's ratings. The match engine does not read a team that way: it takes
@@ -180,7 +113,7 @@ a constant to re-fit: `strength` also decides which clubs make way when a season
 had more than twenty, and it is the number the pre-season screen shows, so
 changing it moves three things at once and wants measuring on its own.
 
-## 4. Smaller things
+## 3. Smaller things
 
 - **Four club-seasons ship with a single player.** 2017/18 Liverpool holds only
   Adam Lallana, and AC Milan 1994/95, 2002/03 and 2004/05 hold one man each
@@ -192,10 +125,6 @@ changing it moves three things at once and wants measuring on its own.
 - **Line ratings disagree with the simulation.** `LineRatings.tsx` counts LW/RW
   as midfield; `simulation.ts` counts them as attack. The bars do not describe
   the numbers being simulated.
-- **The RNG is weak.** A linear congruential generator with modulus 233,280.
-  Fine for a game, not fine for calibration work.
-- **Match ratings are compressed.** A sample season had every defender on 6.8
-  and the whole XI within 6.8–7.3, on a nominal 4.0–10.0 scale.
 - **The draft pool includes the season you play in.** It has always included
   2025/26, so a drafted player could be his own opponent; now that the season
   is chosen on the pre-season screen, any of the fourteen playable seasons can
@@ -209,6 +138,21 @@ changing it moves three things at once and wants measuring on its own.
 
 Do not re-report these:
 
+- **The season was a scoreline and a lottery, not a match.** `simulateSeason`
+  drew two Poisson goal counts and then a weighted draw for scorer and
+  assister, with position × role × rating multiplied and nothing damping it.
+  The Golden Boot averaged 38.5 and the goal record fell in 68% of seasons; the
+  assist record fell in every one, Ødegaard leading 38 seasons of 40; Torres
+  took half of Liverpool 2008/09's goals; Player of the Season was
+  goals + 0.7 × assists. The season now plays every fixture through
+  `matchEngine.ts`: Golden Boot 24.9, top assister 14.8, neither record broken
+  in 80 seasons. See [simulation.md](simulation.md#moving-the-season-onto-the-engine).
+- **The RNG repeated within a season.** A linear congruential generator with a
+  period of 233,280, about what a season through the engine draws. Now
+  mulberry32.
+- **The pre-season screen showed 0% fit for every style but Balanced.** The
+  saved XI carries no roles and the tactic screen did not look them up; the
+  season did. Both go through `withSeasonRoles` now.
 - **Every squad file in a season was stamped with a Premier League source
   URL.** `build-squad-files.mjs` built one URL from the season and applied it to
   every club it wrote. That was invisible for as long as a season directory held

@@ -1,97 +1,79 @@
 # The simulation
 
-`src/lib/simulation.ts` turns eleven players into a 38-game season. It is pure:
-same inputs and seed, same season. It imports nothing but a type.
+`simulateSeason` in `src/lib/simulation.ts` turns eleven players into a 38-game
+season. Every fixture is played out by `simulateMatch` in
+`src/lib/matchEngine.ts`, possession by possession, and the season adds up what
+happened. It is pure: same inputs and seed, same season.
 
 ## The pipeline
 
 ```
 picks (11 SquadPick)                 opponents (19 OpponentSquad)
-        │                                     │
-        ├──────── team strength ──────────────┤   attack / midfield / defence,
-        │                                     │   from scaledAvgRating + role
-        ▼                                     ▼   contributions
+        │                            eleven in its lineup slots, recorded
+        │                            style / focus / cohesion where known
+        ▼                                     ▼
+   TeamSetup: players in their slots, roles active in that slot, a style,
+   a focus (inferred from the shape where not recorded), a cohesion
+                              │
+                              ▼
               buildSchedule(20) → 38 rounds × 10 fixtures
                               │
                               ▼
-              simulateScore(): two Poisson draws per fixture
+              simulateMatch(): 200 possessions per fixture
+                              │
+          goals, assists, shots, saves, cards and a rating for every player
                               │
                    ┌──────────┴──────────┐
                    ▼                     ▼
-            standings, table      goal / assist attribution
-                                  (position weight × role
-                                   multipliers × rating scale)
-                                         │
-                                         ▼
-                              player stats, awards, leaderboards
+            standings, table      season totals, leaderboards, awards
 ```
+
+Nothing in `simulation.ts` decides a score or a scorer any more. Until the
+change recorded below, a season drew a scoreline from two Poisson rates and
+then held a separate weighted lottery for the scorer and the assister, so the
+scoreline and the scorers were unrelated and the lottery's weights had to carry
+everything. The engine had been written to replace that and never been wired
+in; it was.
+
+## A match
+
+The engine is documented in the file itself. In short: possession goes to the
+side that controls midfield; each possession attacks down a flank or the
+middle and may become a chance of a type (through ball, cross, header, long
+shot, set piece, penalty); the shooter is picked for that kind of chance, with
+role multipliers damped (`ROLE_SELECTION_POWER`) so a Poacher does not take half
+his side's shots; and the chance is finished against a keeper for an xG. The
+four interaction rules — press, congestion, space in behind, recovery — are
+where the styles meet. `matchEngine.calibration.test.ts` asserts the rates
+(shots, conversion, cards, assisted share) against the Premier League.
+
+Match ratings are built from what the player did in the match — goals, assists,
+shots on target, chances created, saves, cards, the result and the goals
+conceded, weighted by how defensive his position is — not from his rating.
 
 ## The plan
 
-`simulateSeason` takes two things the player decides after the draft: the
-opponents it is handed (nineteen clubs from whichever season was chosen) and a
-playstyle. The style moves the same three team-strength numbers the players do,
-and scales the chances the player's own matches produce. `balanced` is the
-origin of all three axes and changes nothing, so every measurement in this
-document still describes a balanced season.
+The player's style is the engine's style for the XI: it is played, not
+converted into a bonus. The opponents play their recorded style where the data
+has one and an inferred one otherwise. `tacticEffect` only describes a style
+for the pre-season screen, with the eleven's fit for it. See
+[pre-season.md](pre-season.md).
 
-The rules, the constants and the measured effect are in
-[pre-season.md](pre-season.md). What matters here is the shape of the seam:
-tactics are a handful of rating points and a tempo multiplier, not a second
-engine.
+The XI plays at the engine's default cohesion, because nothing yet says how well
+drilled a drafted side is.
 
-## Team strength
+## Awards
 
-Each team gets three numbers — attack, midfield, defence — from the players
-whose positions fall in that zone (`isAttPosition`, `isMidPosition`,
-`isDefPosition`; `CM` counts as both attack and defence).
-
-Ratings are averaged in curve space by `scaledAvgRating`, so one elite player
-lifts a side more than one poor player drags it down. It and `ratingScale` are
-inverses sharing one `RATING_CURVE` constant — they must, or squads get pulled
-toward 80 and the league loses its shape. Roles then add a flat contribution on
-top via `roleStrBonus`.
-
-## Match result
-
-`simulateScore` builds two Poisson rates:
-
-- Attack minus opposing defence sets the base rate; the home side gets `+3`.
-- Midfield difference multiplies both rates, clamped to 0.7–1.35, so winning the
-  midfield creates chances for both sides rather than only for you.
-
-Measured over 20 seasons against the real 2025/26 squads: 2.48 goals per game,
-48% home wins, 25% draws, 26% away wins. Real Premier League figures are roughly
-2.8 and 45/25/30.
-
-## Attribution
-
-Who scores is a weighted random draw over the XI. A player's weight is
-
-```
-posGoalWeight(position) × role multipliers × ratingScale(rating)
-```
-
-Role multipliers stack by a deliberate rule in `applyRoleMults`: **suppressors
-(<1) multiply together, boosters (>1) compete and the highest wins.** Two
-scoring roles therefore do not compound absurdly, while a genuinely low-scoring
-combination (Anchor × Deep-Lying Playmaker) still stacks down. Keep that rule if
-you add roles.
-
-A role only applies if the player's slot position is in its `validPositions`.
-Roles with an empty list apply anywhere.
-
-An assist is drawn 75% of the time, from the same XI excluding the scorer.
-
-Match ratings start at 6.5 and move with the result, goals, assists, and how the
-player's zone performed against its expected goals.
+Player of the Season, for the XI and for the league, is the best average match
+rating. Golden Boot, top assister and Golden Glove are counts. The awards are
+exactly as good as the ratings: see the open issue in
+[known-issues.md](known-issues.md).
 
 ## Randomness
 
-`rng(seed)` is a linear congruential generator with modulus 233,280. It is
-adequate for a game and makes seasons reproducible, but it is a weak generator:
-short period, poor low-order bits. Anything statistical — calibration work,
-Monte Carlo over many seasons — should replace it first.
+`rng(seed)` is mulberry32. The linear congruential generator it replaced had a
+period of 233,280, and a season through the engine draws about that many
+numbers, so seasons would have begun to repeat themselves.
 
 When no seed is passed, `Date.now() % 999983` is used.
 
@@ -99,13 +81,44 @@ When no seed is passed, `Date.now() % 999983` is used.
 
 | What | Where |
 | --- | --- |
-| Goal / assist weight by position | `posGoalWeight`, `posAssistWeight` |
-| How much rating matters | `RATING_CURVE` — shared by `ratingScale` and `scaledAvgRating`, which are inverses |
-| Attack/defence split by position | `zoneWeight` |
-| Home advantage, score spread | `simulateScore` |
-| Role multipliers | **the database** (`role_config`), not the defaults in code |
-| Pre-season projection | `POINTS_STEEPNESS`, `POINTS_MIDPOINT`, `SEASON_SD`, `OPPONENT_SD` — measured, not chosen; see below |
-| What a style is worth | `LINE_ATT`, `LINE_DEF`, `BUILD_MID`, `BUILD_ATT`, `TEMPO_WEIGHT` — see [pre-season.md](pre-season.md) |
+| Shots, conversion, home advantage | `BASE_SHOT_RATE`, `CHANCE_QUALITY`, `HOME_*` in `matchEngine.ts` |
+| How far quality carries | `EDGE_TO_CHANCES`, `FINISHING_EXPONENT`, `KEEPING_EXPONENT` |
+| Who gets on the end of a chance | `ATTACK_WEIGHT`, `ROLE_CHANCE_AFFINITY`, `ROLE_SELECTION_POWER`, `RATING_SELECTION_POWER` |
+| Set pieces | `SET_PIECE_*`, `AERIAL_*` |
+| Match ratings | the `finish` step at the end of `simulateMatch` |
+| Role multipliers and qualities | **the database** (`role_config`), not the defaults in code |
+| Styles and their interactions | `PLAYSTYLES`, `PRESS_EFFECT`, `CONGESTION_EFFECT`, `SPACE_EFFECT`, `FIT_REFERENCE` |
+| Pre-season projection | `POINTS_STEEPNESS`, `POINTS_MIDPOINT`, `SEASON_SD`, `OPPONENT_SD` in `simulation.ts` — measured, not chosen; see below |
+
+## Moving the season onto the engine
+
+Measured with `npm run sim:report`, same XI, same field, before and after.
+Liverpool 2019/20 in the 2025/26 field, 40 seasons; real figures are from the
+public record.
+
+| | lottery | engine | real |
+| --- | ---: | ---: | ---: |
+| Golden Boot, average | 38.5 | 24.9 | 27 |
+| Goal record (36) equalled or broken | 68% | 0% | — |
+| Top assister, average | 30.9 | 14.8 | 21 |
+| Assist record (20) equalled or broken | 100% | 0% | — |
+| Salah / Mané / Firmino goals | 16.6 / 17.2 / 17.2 | 13.3 / 12.9 / 11.1 | 19 / 18 / 9 |
+| Firmino assists | 4.1 | 10.2 | 8 |
+| Liverpool points | 75.0 | 73.6 | 99 |
+
+Liverpool 2008/09 in its own field: Golden Boot 22.1 (real 19), top assister
+14.9, Torres 18.9 goals against a lottery 31.8 and a real 14.
+
+The styles, for Liverpool 2019/20: 67.5 (park the bus) to 74.6 (total football)
+points and 18% to 60% title odds, against 70.5–76.5 points under the lottery,
+where most of the difference came from tempo.
+
+A season takes about 0.07 seconds.
+
+What the engine still gets wrong is recorded in
+[known-issues.md](known-issues.md): centre-backs score too often from set
+pieces, full-backs create too little, the best-rated player is always a
+forward, and the top of the table is still flat.
 
 ## Calibration
 
@@ -133,9 +146,11 @@ Still flatter than the real thing, where champions average about 88 points and
 the bottom club about 22. That remaining gap is the scoring coefficients, not
 the curve — see below.
 
-### 1. The scoring coefficients are too gentle (open)
+### 1. The scoring coefficients were too gentle (superseded)
 
-`simulateScore` turns a 10-point strength advantage into only +0.38 expected
+This and the curve fix above describe the Poisson model the season used
+before it moved onto the match engine; kept for the history. `simulateScore`
+turned a 10-point strength advantage into only +0.38 expected
 goals. Raising `0.38 → 0.62` and `0.30 → 0.52` moves the champion to 81.5 points
 and concentrates titles among four clubs across 30 seasons.
 
@@ -194,6 +209,38 @@ changed what the field is made of. `OPPONENT_SD` was 8.6 and the simulation now
 puts it at 7.5 — measured directly as the spread of each opponent's points over
 120 seasons, 7.4 to 7.6 across three fields — so it is 7.5. Expected points stay
 within 2.2 and projected finish within 0.9 across all nine cases.
+
+### Re-fitted for the match engine
+
+The constants above were fitted to the Poisson model. Re-measured on 900
+seasons through the engine (flat-rated XIs from 62 to 98 in the 2025/26, 2003/04
+and 1992/93 fields, 18,000 team-seasons):
+
+| | Poisson model | engine |
+| --- | ---: | ---: |
+| `POINTS_STEEPNESS` | 0.113 | 0.066 |
+| `POINTS_MIDPOINT` | 1.56 | 2.68 |
+| `SEASON_SD` | 7.6 | 7.4 |
+| `OPPONENT_SD` | 7.5 | 8.1 |
+| curve error, XI / opponent | — | 1.7 / 2.6 pts |
+
+The engine is flatter: a rating edge buys about 60% of the points it did.
+`OPPONENT_SD` is the season-to-season spread (7.9) combined with the error in
+judging a club by its rating at all (1.9, pooled across the three fields),
+because the model is genuinely that unsure of a club's level.
+
+Two things changed in the calibration test rather than the model:
+
+- **It plays 120 seasons per case, not 60.** A season's finish varies more under
+  the engine — 5.4 places for a mid-table XI in 1992/93 — so a 60-season mean
+  carried ±0.7 places and the 1.5-place bound was two standard errors. It failed
+  on an unlucky draw: 13.1th on its seeds, 11.3th over 200, 11th projected.
+- **A second recorded exception, the style the odds cannot see.** In 2025/26
+  the clubs that most outperform their rating all play Counter-attack (Aston
+  Villa by 6.5 points), so the model underrates the top of that field and is
+  too sure of a strong XI's finish there: 3.6th for a 90-rated XI projected 2nd,
+  top four 44% for an 86 projected 60%. Cohesion explains none of it (r = 0.04
+  against the club error). Recorded in [known-issues.md](known-issues.md).
 
 ### The one place the projection is genuinely out
 
