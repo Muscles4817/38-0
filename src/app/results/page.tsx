@@ -6,6 +6,8 @@ import Link from 'next/link';
 import { getFormation, canFillSlot, Formation } from '@/lib/formations';
 import { describeCompetition, getTeamStrengths, runSeasonSimulation, type DataPlayer } from '@/lib/gameData';
 import { useStoredJson, clearStored } from '@/lib/clientStorage';
+import { parseSeenSquads, resolveSeenSquads, SEEN_SQUADS_KEY, type SeenSquad } from '@/lib/seenSquads';
+import { applyRules, type DraftFilter, type PoolRules } from '@/lib/draftPool';
 import { getTacticEffect } from '@/lib/gameData';
 import type { StoredPlan } from '@/app/squad/page';
 import {
@@ -19,13 +21,6 @@ import BackLink from '@/components/BackLink';
 import { ratingColor } from '@/components/ratingColor';
 
 // ── What Could Have Been ─────────────────────────────────────────────────────
-
-/** A squad the draft offered, as recorded by the draft page. */
-interface SeenSquad {
-  clubName: string;
-  seasonLabel: string;
-  players: DataPlayer[];
-}
 
 type SeenPlayer = DataPlayer & { clubName: string; seasonLabel: string };
 
@@ -80,13 +75,22 @@ function computeBestXI(formation: Formation, seenSquads: SeenSquad[]): SquadPick
   return result;
 }
 
-function WhatCouldHaveBeen({ formation, actualPicks }: { formation: Formation; actualPicks: SquadPick[] }) {
+function WhatCouldHaveBeen({ formation, actualPicks, rules }: {
+  formation: Formation;
+  actualPicks: SquadPick[];
+  rules: Pick<PoolRules, 'playerRating' | 'filter'>;
+}) {
   const [show, setShow] = useState(false);
-  const seenSquads = useStoredJson<SeenSquad[]>('38-0-seen-squads');
-  const bestXI = useMemo(
-    () => (seenSquads?.length ? computeBestXI(formation, seenSquads) : []),
-    [formation, seenSquads],
-  );
+  const stored = useStoredJson<unknown>(SEEN_SQUADS_KEY);
+  const bestXI = useMemo(() => {
+    // The same rules the draft applied, so the best XI is built from players
+    // this run could have picked, at the ratings it offered them at: no
+    // German in a France-only run, and Prime ratings in Prime mode.
+    const seenSquads = resolveSeenSquads(parseSeenSquads(stored))
+      .map(squad => ({ ...squad, players: applyRules(squad.players, rules) }))
+      .filter(squad => squad.players.length > 0);
+    return seenSquads.length ? computeBestXI(formation, seenSquads) : [];
+  }, [formation, stored, rules]);
   if (!bestXI.length) return null;
   const bestOverall = computeOverall(bestXI);
   const actualOverall = computeOverall(actualPicks);
@@ -94,18 +98,18 @@ function WhatCouldHaveBeen({ formation, actualPicks }: { formation: Formation; a
   const sortedBest = [...bestXI].sort((a, b) => b.slotIndex - a.slotIndex);
   const actualMap = new Map(actualPicks.map(p => [p.slotIndex, p]));
   return (
-    <div className="bg-[#111] rounded-2xl p-6">
+    <div className="bg-card rounded-2xl p-6">
       <button onClick={() => setShow(s => !s)} className="w-full flex items-center justify-between">
         <div className="text-left">
-          <div className="text-xs text-[#888] uppercase tracking-widest font-bold mb-1">What Could Have Been</div>
-          <div className="text-sm text-[#888]">
+          <div className="text-xs text-muted uppercase tracking-widest font-bold mb-1">What Could Have Been</div>
+          <div className="text-sm text-muted">
             Best possible XI from your spins —{' '}
-            <span className={diff > 0 ? 'text-amber-400' : 'text-[#00c896]'}>Overall {bestOverall}</span>
+            <span className={diff > 0 ? 'text-amber-400' : 'text-accent'}>Overall {bestOverall}</span>
             {diff > 0 && <span className="text-amber-400 ml-1">(+{diff} vs yours)</span>}
-            {diff === 0 && <span className="text-[#00c896] ml-1">(you nailed it)</span>}
+            {diff === 0 && <span className="text-accent ml-1">(you nailed it)</span>}
           </div>
         </div>
-        <span className="text-[#666] ml-4">{show ? '▲' : '▼'}</span>
+        <span className="text-subtle ml-4">{show ? '▲' : '▼'}</span>
       </button>
       {show && (
         <div className="mt-4 space-y-1.5">
@@ -116,15 +120,15 @@ function WhatCouldHaveBeen({ formation, actualPicks }: { formation: Formation; a
             return (
               <div key={i} className={`flex items-center gap-3 py-1 rounded-lg px-2 ${isPicked ? 'bg-[#00c89611]' : ''}`}>
                 <PositionBadge pos={p.position} size="xs" />
-                <span className={`font-bold text-sm flex-1 ${isPicked ? 'text-[#00c896]' : ''}`}>{p.playerName}</span>
-                <span className="text-[#666] text-xs">{p.clubName.slice(0, 3).toUpperCase()} {p.seasonLabel}</span>
-                <span className="text-[#00c896] font-black text-sm w-6 text-right">{p.rating}</span>
+                <span className={`font-bold text-sm flex-1 ${isPicked ? 'text-accent' : ''}`}>{p.playerName}</span>
+                <span className="text-subtle text-xs">{p.clubName.slice(0, 3).toUpperCase()} {p.seasonLabel}</span>
+                <span className="text-accent font-black text-sm w-6 text-right">{p.rating}</span>
                 {!isPicked && rDiff > 0 && <span className="text-amber-400 text-[10px] w-8 text-right">+{rDiff}</span>}
-                {isPicked && <span className="text-[#00c896] text-[10px] w-8 text-right">✓</span>}
+                {isPicked && <span className="text-accent text-[10px] w-8 text-right">✓</span>}
               </div>
             );
           })}
-          <p className="text-[#666] text-[10px] mt-3 text-center">✓ = player you actually picked · numbers show rating advantage missed</p>
+          <p className="text-subtle text-[10px] mt-3 text-center">✓ = player you actually picked · numbers show rating advantage missed</p>
         </div>
       )}
     </div>
@@ -139,9 +143,18 @@ export default function ResultsPage() {
   // The drafted XI, the setup that produced it and the plan chosen before
   // kick-off are all handed over in localStorage.
   const picks     = useStoredJson<SquadPick[]>('38-0-squad') ?? NO_PICKS;
-  const setup     = useStoredJson<{ formation: string; draftMode?: string }>('38-0-setup');
+  const setup     = useStoredJson<{
+    formation: string;
+    draftMode?: string;
+    playerRating?: 'career' | 'prime';
+    filter?: DraftFilter | null;
+  }>('38-0-setup');
   const plan      = useStoredJson<StoredPlan>('38-0-plan');
   const formation = useMemo(() => getFormation(setup?.formation ?? '4-4-2'), [setup]);
+  const poolRules = useMemo(() => ({
+    playerRating: setup?.playerRating === 'prime' ? 'prime' as const : 'career' as const,
+    filter:       setup?.filter ?? null,
+  }), [setup]);
 
   const [simResult, setSimResult] = useState<SimulationResult | null>(null);
   const [showFinal, setShowFinal] = useState(false);
@@ -192,7 +205,7 @@ export default function ResultsPage() {
   }
 
   if (!picks.length) {
-    return <div className="min-h-screen bg-[#0a0a0a] flex items-center justify-center text-white">Loading…</div>;
+    return <div className="min-h-screen bg-ground flex items-center justify-center text-fg">Loading…</div>;
   }
 
   const overall = computeOverall(picks);
@@ -206,7 +219,7 @@ export default function ResultsPage() {
   const liveSim = simResult !== null && !showFinal;
 
   return (
-    <main className="min-h-screen bg-[#0a0a0a] text-white">
+    <main className="min-h-screen bg-ground text-fg">
       {/*
         Source order is the order: the thing that is changing comes first at
         every width. This page used to reverse itself at `lg:`, which put a
@@ -222,9 +235,9 @@ export default function ResultsPage() {
 
         {/* The season is running: nothing to show yet but what it is running. */}
         {!simResult && (
-          <div className="bg-[#111] rounded-2xl p-6 text-center">
-            <div className="text-sm font-black text-[#00c896] animate-pulse">Playing the season…</div>
-            <div className="text-[#666] text-xs mt-1">38 games against the {opponent?.seasonLabel ?? 'current'} field</div>
+          <div className="bg-card rounded-2xl p-6 text-center">
+            <div className="text-sm font-black text-accent animate-pulse">Playing the season…</div>
+            <div className="text-subtle text-xs mt-1">38 games against the {opponent?.seasonLabel ?? 'current'} field</div>
           </div>
         )}
 
@@ -239,23 +252,23 @@ export default function ResultsPage() {
         )}
 
         {/* The plan this season is being played under. */}
-        <div className="bg-[#111] rounded-2xl px-5 py-4 flex items-center gap-4 flex-wrap">
+        <div className="bg-card rounded-2xl px-5 py-4 flex items-center gap-4 flex-wrap">
           <div className="min-w-0">
-            <div className="text-[10px] text-[#666] uppercase tracking-widest font-bold mb-1">Playing</div>
+            <div className="text-[10px] text-subtle uppercase tracking-widest font-bold mb-1">Playing</div>
             <div className="font-black text-sm truncate">
               {opponent ? `${opponent.leagueName} ${opponent.seasonLabel}` : 'Premier League'}
             </div>
           </div>
           <div className="min-w-0">
-            <div className="text-[10px] text-[#666] uppercase tracking-widest font-bold mb-1">Tactic</div>
+            <div className="text-[10px] text-subtle uppercase tracking-widest font-bold mb-1">Tactic</div>
             <div className="font-black text-sm truncate">
               {tactic?.label ?? 'Balanced'}
-              {tactic && <span className="text-[#888] font-bold ml-2">fit {Math.round(tactic.fit * 100)}%</span>}
+              {tactic && <span className="text-muted font-bold ml-2">fit {Math.round(tactic.fit * 100)}%</span>}
             </div>
           </div>
           <Link
             href="/squad"
-            className="ml-auto shrink-0 px-3 py-2.5 rounded-lg border border-[#2a2a2a] text-[#888] text-xs font-bold hover:border-[#444] hover:text-white transition-colors touch-manipulation"
+            className="ml-auto shrink-0 px-3 py-2.5 rounded-lg border border-line-strong text-muted text-xs font-bold hover:border-line-hover hover:text-fg transition-colors touch-manipulation"
           >
             Change
           </Link>
@@ -270,16 +283,16 @@ export default function ResultsPage() {
         <SquadPanel formation={formation} picks={picks} overall={overall} />
 
         {/* What Could Have Been */}
-        <WhatCouldHaveBeen formation={formation} actualPicks={picks} />
+        <WhatCouldHaveBeen formation={formation} actualPicks={picks} rules={poolRules} />
 
         <div className="text-center pb-8">
           <button
             type="button"
             onClick={() => {
-              clearStored('38-0-draft', '38-0-squad', '38-0-seen-squads', '38-0-plan');
+              clearStored('38-0-draft', '38-0-squad', SEEN_SQUADS_KEY, '38-0-plan');
               router.push('/');
             }}
-            className="text-[#666] text-xs hover:text-white transition-colors px-4 py-3 touch-manipulation"
+            className="text-subtle text-xs hover:text-fg transition-colors px-4 py-3 touch-manipulation"
           >
             ↩ Start a new run
           </button>
@@ -298,11 +311,11 @@ function SquadPanel({ formation, picks, overall }: {
 }) {
   const sorted = [...picks].sort((a, b) => b.slotIndex - a.slotIndex);
   return (
-    <details className="group bg-[#111] rounded-2xl">
+    <details className="group bg-card rounded-2xl">
       <summary className="cursor-pointer list-none px-5 py-4 flex items-center gap-3 touch-manipulation">
-        <span className="text-[#666] transition-transform group-open:rotate-90">▶</span>
-        <span className="text-[10px] text-[#666] uppercase tracking-widest font-bold">Your XI</span>
-        <span className="text-sm text-[#888]">{formation.name}</span>
+        <span className="text-subtle transition-transform group-open:rotate-90">▶</span>
+        <span className="text-[10px] text-subtle uppercase tracking-widest font-bold">Your XI</span>
+        <span className="text-sm text-muted">{formation.name}</span>
         <span className="ml-auto font-black text-xl leading-none" style={{ color: ratingColor(overall) }}>
           {overall}
         </span>
@@ -321,8 +334,8 @@ function SquadPanel({ formation, picks, overall }: {
               <div key={p.slotIndex} className="flex items-center gap-3 py-1.5">
                 <PositionBadge pos={p.position} size="xs" />
                 <span className="font-bold text-sm flex-1 min-w-0 truncate">{p.playerName}</span>
-                <span className="text-[#666] text-xs shrink-0">{p.clubName.slice(0, 3).toUpperCase()} {p.seasonLabel}</span>
-                <span className="text-[#00c896] font-black text-sm w-6 text-right shrink-0">{p.rating}</span>
+                <span className="text-subtle text-xs shrink-0">{p.clubName.slice(0, 3).toUpperCase()} {p.seasonLabel}</span>
+                <span className="text-accent font-black text-sm w-6 text-right shrink-0">{p.rating}</span>
               </div>
             ))}
           </div>
@@ -369,36 +382,38 @@ function LiveSimulation({
   const opponent      = userFixture ? (isHome ? userFixture.away : userFixture.home) : '';
   const result        = userGoals > oppGoals ? 'W' : userGoals === oppGoals ? 'D' : 'L';
   const rCol          = result === 'W' ? '#00c896' : result === 'D' ? '#f59e0b' : '#ef4444';
+  // The same hue, darkened on a light ground so the score stays legible.
+  const rText         = result === 'W' ? 'var(--c-accent)' : result === 'D' ? 'var(--c-yellow)' : 'var(--c-red)';
   const seasonDone    = gw >= lastGw;
 
   return (
     <div className="space-y-4">
       {/* GW header bar */}
-      <div className="bg-[#111] rounded-2xl p-4">
+      <div className="bg-card rounded-2xl p-4">
         <div className="flex items-center justify-between mb-3">
           <div className="flex items-center gap-3">
-            <span className="text-[#888] text-[10px] uppercase tracking-widest font-bold">Gameweek</span>
+            <span className="text-muted text-[10px] uppercase tracking-widest font-bold">Gameweek</span>
             <span className="text-3xl font-black leading-none">{gw}</span>
-            <span className="text-[#888] text-sm">/ {lastGw}</span>
+            <span className="text-muted text-sm">/ {lastGw}</span>
           </div>
           <div className="flex items-center gap-2">
             {!seasonDone ? (
               <>
                 <button
                   onClick={() => setPlaying(p => !p)}
-                  className="px-3 py-2.5 rounded-lg text-xs font-bold bg-[#1a1a1a] text-[#888] hover:text-white transition-colors touch-manipulation"
+                  className="px-3 py-2.5 rounded-lg text-xs font-bold bg-raised text-muted hover:text-fg transition-colors touch-manipulation"
                 >
                   {playing ? '⏸ Pause' : '▶ Play'}
                 </button>
                 <button
                   onClick={() => setSpeed(s => s === 'normal' ? 'fast' : 'normal')}
-                  className={`px-3 py-2.5 rounded-lg text-xs font-bold transition-colors touch-manipulation ${speed === 'fast' ? 'bg-[#00c896] text-black' : 'bg-[#1a1a1a] text-[#888] hover:text-white'}`}
+                  className={`px-3 py-2.5 rounded-lg text-xs font-bold transition-colors touch-manipulation ${speed === 'fast' ? 'bg-[#00c896] text-black' : 'bg-raised text-muted hover:text-fg'}`}
                 >
                   {speed === 'fast' ? '3×' : '1×'}
                 </button>
                 <button
                   onClick={() => { setGw(lastGw); setPlaying(false); }}
-                  className="px-3 py-2.5 rounded-lg text-xs font-bold bg-[#1a1a1a] text-[#888] hover:text-white transition-colors touch-manipulation"
+                  className="px-3 py-2.5 rounded-lg text-xs font-bold bg-raised text-muted hover:text-fg transition-colors touch-manipulation"
                 >
                   Skip ⏭
                 </button>
@@ -413,7 +428,7 @@ function LiveSimulation({
             )}
           </div>
         </div>
-        <div className="w-full bg-[#1a1a1a] rounded-full h-1.5">
+        <div className="w-full bg-raised rounded-full h-1.5">
           <div className="h-1.5 rounded-full transition-all duration-500" style={{ width: `${(gw / lastGw) * 100}%`, background: '#00c896' }} />
         </div>
       </div>
@@ -429,20 +444,20 @@ function LiveSimulation({
 
           {/* User's match – re-mounts each GW for the snap-in feel */}
           {userFixture && (
-            <div key={gw} className="bg-[#111] rounded-2xl p-5 border" style={{ borderColor: `${rCol}50` }}>
+            <div key={gw} className="bg-card rounded-2xl p-5 border" style={{ borderColor: `${rCol}50` }}>
               <div className="flex items-center gap-3 mb-3">
                 <span className="text-xs font-black px-2 py-0.5 rounded" style={{ background: rCol, color: result === 'L' ? 'white' : 'black' }}>
                   {result}
                 </span>
-                <span className="text-sm text-[#777]">{isHome ? 'Home' : 'Away'} · {opponent}</span>
+                <span className="text-sm text-muted-2">{isHome ? 'Home' : 'Away'} · {opponent}</span>
               </div>
               <div className="flex items-center justify-center gap-4 py-2">
-                <span className="text-5xl font-black" style={{ color: rCol }}>{userGoals}</span>
-                <span className="text-2xl text-[#666] font-black">–</span>
-                <span className={`text-5xl font-black ${result === 'L' ? 'text-white' : 'text-[#888]'}`}>{oppGoals}</span>
+                <span className="text-5xl font-black" style={{ color: rText }}>{userGoals}</span>
+                <span className="text-2xl text-subtle font-black">–</span>
+                <span className={`text-5xl font-black ${result === 'L' ? 'text-fg' : 'text-muted'}`}>{oppGoals}</span>
               </div>
               {userFixture.scorers.length > 0 && (
-                <div className="text-[11px] text-[#888] text-center mt-1">
+                <div className="text-[11px] text-muted text-center mt-1">
                   {userFixture.scorers.map(s => `${s.name} ${s.minute}′`).join(' · ')}
                 </div>
               )}
@@ -450,14 +465,14 @@ function LiveSimulation({
           )}
 
           {/* Other fixtures */}
-          <div className="bg-[#111] rounded-2xl p-4">
-            <div className="text-[9px] text-[#666] uppercase tracking-widest font-bold mb-3">Other Results</div>
+          <div className="bg-card rounded-2xl p-4">
+            <div className="text-[9px] text-subtle uppercase tracking-widest font-bold mb-3">Other Results</div>
             <div className="space-y-1.5">
               {otherFixtures.map((f, i) => (
                 <div key={i} className="flex items-center gap-2 text-[11px]">
-                  <span className="flex-1 text-right text-[#777] truncate">{f.home}</span>
-                  <span className="font-black text-white w-10 text-center shrink-0">{f.homeGoals}–{f.awayGoals}</span>
-                  <span className="flex-1 text-[#777] truncate">{f.away}</span>
+                  <span className="flex-1 text-right text-muted-2 truncate">{f.home}</span>
+                  <span className="font-black text-fg w-10 text-center shrink-0">{f.homeGoals}–{f.awayGoals}</span>
+                  <span className="flex-1 text-muted-2 truncate">{f.away}</span>
                 </div>
               ))}
             </div>
@@ -465,12 +480,12 @@ function LiveSimulation({
 
           {/* Season complete: outcome banner (mobile / if no right panel) */}
           {seasonDone && (
-            <div className="bg-[#111] rounded-2xl p-5 text-center md:hidden">
+            <div className="bg-card rounded-2xl p-5 text-center md:hidden">
               <div className="text-3xl mb-2">{simResult.finalPosition === 1 ? '🏆' : simResult.finalPosition <= 4 ? '🔵' : simResult.finalPosition >= 18 ? '🔴' : '📊'}</div>
               <div className="font-black text-lg mb-1">
                 {simResult.finalPosition === 1 ? 'CHAMPIONS!' : `${ordinal(simResult.finalPosition)} Place`}
               </div>
-              <div className="text-[#888] text-xs mb-4">{simResult.narrative}</div>
+              <div className="text-muted text-xs mb-4">{simResult.narrative}</div>
               <button onClick={onDone} className="w-full py-3 rounded-xl font-black bg-[#00c896] text-black hover:bg-[#00b385] transition-colors">
                 Full Season Report →
               </button>
@@ -479,41 +494,41 @@ function LiveSimulation({
         </div>
 
         {/* Right: live table */}
-        <div className="bg-[#111] rounded-2xl p-4 flex flex-col">
+        <div className="bg-card rounded-2xl p-4 flex flex-col">
           <div className="flex items-center justify-between mb-3">
-            <div className="text-[9px] text-[#666] uppercase tracking-widest font-bold">Table</div>
-            <div className="text-[9px] text-[#666] uppercase tracking-widest">Pts</div>
+            <div className="text-[9px] text-subtle uppercase tracking-widest font-bold">Table</div>
+            <div className="text-[9px] text-subtle uppercase tracking-widest">Pts</div>
           </div>
           <div className="flex-1 space-y-0.5">
             {table.map(row => {
-              const dotCol = row.position === 1 ? '#fbbf24' : row.position <= 4 ? '#3b82f6' : row.position <= 6 ? '#8b5cf6' : row.position >= 18 ? '#ef4444' : '#2a2a2a';
+              const dotCol = row.position === 1 ? '#fbbf24' : row.position <= 4 ? '#3b82f6' : row.position <= 6 ? '#8b5cf6' : row.position >= 18 ? '#ef4444' : 'var(--t-line-strong)';
               return (
                 <div key={row.name} className={`flex items-center gap-1.5 px-1 py-1 rounded text-[11px] ${row.isUser ? 'bg-[#00c896]/10' : ''}`}>
                   <div className="w-1.5 h-1.5 rounded-full shrink-0" style={{ background: dotCol }} />
-                  <span className="text-[#888] w-4 text-right shrink-0 font-bold">{row.position}</span>
-                  <span className={`flex-1 truncate ${row.isUser ? 'text-[#00c896] font-black' : 'text-[#888]'}`}>{row.name}</span>
-                  <span className="text-[#888] w-4 text-center shrink-0">{row.played}</span>
-                  <span className={`font-black w-6 text-right shrink-0 ${row.isUser ? 'text-[#00c896]' : 'text-white'}`}>{row.points}</span>
+                  <span className="text-muted w-4 text-right shrink-0 font-bold">{row.position}</span>
+                  <span className={`flex-1 truncate ${row.isUser ? 'text-accent font-black' : 'text-muted'}`}>{row.name}</span>
+                  <span className="text-muted w-4 text-center shrink-0">{row.played}</span>
+                  <span className={`font-black w-6 text-right shrink-0 ${row.isUser ? 'text-accent' : 'text-fg'}`}>{row.points}</span>
                 </div>
               );
             })}
           </div>
-          <div className="flex gap-3 mt-3 flex-wrap border-t border-[#1a1a1a] pt-2">
+          <div className="flex gap-3 mt-3 flex-wrap border-t border-line pt-2">
             {[['#fbbf24','1st'],['#3b82f6','UCL'],['#8b5cf6','UEL'],['#ef4444','REL']].map(([c,l]) => (
               <div key={l} className="flex items-center gap-1">
                 <div className="w-1.5 h-1.5 rounded-full" style={{ background: c }} />
-                <span className="text-[9px] text-[#888]">{l}</span>
+                <span className="text-[9px] text-muted">{l}</span>
               </div>
             ))}
           </div>
 
           {/* Season done — desktop outcome card inline */}
           {seasonDone && (
-            <div className="hidden md:block mt-4 pt-4 border-t border-[#1a1a1a] text-center">
-              <div className="font-black text-base mb-1" style={{ color: simResult.finalPosition === 1 ? '#00c896' : simResult.finalPosition <= 4 ? '#3b82f6' : simResult.finalPosition >= 18 ? '#ef4444' : '#ccc' }}>
+            <div className="hidden md:block mt-4 pt-4 border-t border-line text-center">
+              <div className="font-black text-base mb-1" style={{ color: simResult.finalPosition === 1 ? 'var(--c-accent)' : simResult.finalPosition <= 4 ? 'var(--c-blue)' : simResult.finalPosition >= 18 ? 'var(--c-red)' : 'var(--t-fg-soft)' }}>
                 {simResult.finalPosition === 1 ? '🏆 CHAMPIONS!' : `${ordinal(simResult.finalPosition)} Place`}
               </div>
-              <div className="text-[10px] text-[#888] mb-3">{simResult.points} pts · {simResult.wins}W {simResult.draws}D {simResult.losses}L</div>
+              <div className="text-[10px] text-muted mb-3">{simResult.points} pts · {simResult.wins}W {simResult.draws}D {simResult.losses}L</div>
               <button onClick={onDone} className="w-full py-2.5 rounded-xl text-sm font-black bg-[#00c896] text-black hover:bg-[#00b385] transition-colors">
                 Full Report →
               </button>
@@ -536,12 +551,12 @@ function FinalSummary({ result, picks, odds, onResim }: {
   const perf =
     result.finalPosition < odds.projectedPosition ? 'OVERPERFORMED' :
     result.finalPosition > odds.projectedPosition ? 'UNDERPERFORMED' : 'AS EXPECTED';
-  const perfColor = perf === 'OVERPERFORMED' ? 'text-[#00c896] border-[#00c896]' : perf === 'UNDERPERFORMED' ? 'text-red-400 border-red-400' : 'text-amber-400 border-amber-400';
+  const perfColor = perf === 'OVERPERFORMED' ? 'text-accent border-[#00c896]' : perf === 'UNDERPERFORMED' ? 'text-red-400 border-red-400' : 'text-amber-400 border-amber-400';
   const resultBg =
     result.finalPosition === 1 ? 'from-[#00c896]/20 to-transparent' :
     result.finalPosition <= 4  ? 'from-blue-900/20 to-transparent' :
     result.finalPosition >= 18 ? 'from-red-900/20 to-transparent' :
-    'from-[#1a1a1a] to-transparent';
+    'from-raised to-transparent';
   const outcomeLabel =
     result.finalPosition === 1 ? '🏆 CHAMPIONS' :
     result.finalPosition <= 4  ? '✅ CHAMPIONS LEAGUE' :
@@ -556,24 +571,24 @@ function FinalSummary({ result, picks, odds, onResim }: {
         exists for, and it used to be a 2xl heading 350px down a 4,600px page
         between a squad list and a grey button.
       */}
-      <div className={`bg-gradient-to-b ${resultBg} bg-[#111] rounded-2xl p-6 sm:p-8 text-center`}>
+      <div className={`bg-gradient-to-b ${resultBg} bg-card rounded-2xl p-6 sm:p-8 text-center`}>
         <div className="text-5xl sm:text-6xl mb-3">{result.finalPosition === 1 ? '🏆' : '📋'}</div>
         <div className="font-black text-3xl sm:text-5xl tracking-tight mb-2">{outcomeLabel}</div>
-        <div className="text-[#888] text-sm sm:text-base max-w-2xl mx-auto mb-6">{result.narrative}</div>
+        <div className="text-muted text-sm sm:text-base max-w-2xl mx-auto mb-6">{result.narrative}</div>
 
         <div className="grid grid-cols-2 gap-3 max-w-2xl mx-auto sm:grid-cols-4">
           <HeroStat label="Finished"  value={ordinal(result.finalPosition)} />
           <HeroStat label="Points"    value={String(result.points)} accent />
           <HeroStat label="Record"    value={`${result.wins}-${result.draws}-${result.losses}`} />
-          <div className="bg-[#1a1a1a] rounded-xl p-3 flex flex-col items-center justify-center gap-1">
+          <div className="bg-raised rounded-xl p-3 flex flex-col items-center justify-center gap-1">
             <div className={`text-[10px] font-black border rounded px-2 py-1 ${perfColor}`}>{perf}</div>
-            <div className="text-[10px] text-[#666] uppercase tracking-widest">vs {ordinal(odds.projectedPosition)}</div>
+            <div className="text-[10px] text-subtle uppercase tracking-widest">vs {ordinal(odds.projectedPosition)}</div>
           </div>
         </div>
 
         <button
           onClick={onResim}
-          className="mt-6 px-6 py-3 rounded-xl font-black text-sm bg-[#1a1a1a] text-[#888] hover:bg-[#222] hover:text-white transition-colors border border-[#2a2a2a] touch-manipulation"
+          className="mt-6 px-6 py-3 rounded-xl font-black text-sm bg-raised text-muted hover:bg-raised-max hover:text-fg transition-colors border border-line-strong touch-manipulation"
         >
           ↺ Play it again
         </button>
@@ -589,9 +604,9 @@ function FinalSummary({ result, picks, odds, onResim }: {
           [result.goalsFor, 'Goals For'],
           [result.goalsAgainst, 'Against'],
         ] as [number, string][]).map(([v, l]) => (
-          <div key={l} className="bg-[#111] rounded-xl p-4 text-center">
+          <div key={l} className="bg-card rounded-xl p-4 text-center">
             <div className="text-2xl font-black">{v}</div>
-            <div className="text-[10px] text-[#666] uppercase tracking-widest">{l}</div>
+            <div className="text-[10px] text-subtle uppercase tracking-widest">{l}</div>
           </div>
         ))}
       </div>
@@ -603,29 +618,29 @@ function FinalSummary({ result, picks, odds, onResim }: {
       <div className="grid gap-6 min-w-0 lg:grid-cols-2 lg:items-start [&>*]:min-w-0">
 
         {/* Your XI stats */}
-        <div className="bg-[#111] rounded-2xl p-4 sm:p-6 min-w-0">
+        <div className="bg-card rounded-2xl p-4 sm:p-6 min-w-0">
           <div className="flex items-center gap-2 sm:gap-3 mb-3">
-            <div className="text-xs text-[#888] uppercase tracking-widest font-bold flex-1 min-w-0">Your XI</div>
-            <span className="text-[10px] text-[#666] w-4 text-center">G</span>
-            <span className="text-[10px] text-[#666] w-4 text-center">A</span>
-            <span className="text-[10px] text-[#666] w-4 text-center">CS</span>
-            <span className="text-[10px] text-[#666] w-6 text-right">OVR</span>
-            <span className="text-[10px] text-[#666] w-7 text-right">RTG</span>
+            <div className="text-xs text-muted uppercase tracking-widest font-bold flex-1 min-w-0">Your XI</div>
+            <span className="text-[10px] text-subtle w-4 text-center">G</span>
+            <span className="text-[10px] text-subtle w-4 text-center">A</span>
+            <span className="text-[10px] text-subtle w-4 text-center">CS</span>
+            <span className="text-[10px] text-subtle w-6 text-right">OVR</span>
+            <span className="text-[10px] text-subtle w-7 text-right">RTG</span>
           </div>
           <div className="space-y-2">
             {[...picks].sort((a, b) => b.slotIndex - a.slotIndex).map((p, i) => {
               const stat = result.playerStats.find(s => s.playerId === p.playerId);
               const rtg  = stat?.avgMatchRating ?? 0;
-              const rtgColor = rtg >= 8.0 ? 'text-[#00c896]' : rtg >= 7.0 ? 'text-[#60a5fa]' : rtg >= 6.5 ? 'text-white' : 'text-[#888]';
+              const rtgColor = rtg >= 8.0 ? 'text-accent' : rtg >= 7.0 ? 'text-sky' : rtg >= 6.5 ? 'text-fg' : 'text-muted';
               const isDefender = p.position === 'GK' || ['CB','LB','RB','LWB','RWB'].includes(p.position);
               return (
                 <div key={i} className="flex items-center gap-2 sm:gap-3">
                   <PositionBadge pos={p.position} size="xs" />
                   <span className="font-bold text-sm flex-1 min-w-0 truncate">{p.playerName}</span>
-                  <span className="text-[#666] text-xs shrink-0 hidden sm:inline">{p.clubName.slice(0, 3).toUpperCase()}</span>
-                  <span className="text-[#888] text-xs font-bold w-4 text-center">{stat?.goals ?? 0}</span>
-                  <span className="text-[#888] text-xs font-bold w-4 text-center">{stat?.assists ?? 0}</span>
-                  <span className="text-[#888] text-xs font-bold w-4 text-center">{isDefender ? (stat?.cleanSheets ?? 0) : '-'}</span>
+                  <span className="text-subtle text-xs shrink-0 hidden sm:inline">{p.clubName.slice(0, 3).toUpperCase()}</span>
+                  <span className="text-muted text-xs font-bold w-4 text-center">{stat?.goals ?? 0}</span>
+                  <span className="text-muted text-xs font-bold w-4 text-center">{stat?.assists ?? 0}</span>
+                  <span className="text-muted text-xs font-bold w-4 text-center">{isDefender ? (stat?.cleanSheets ?? 0) : '-'}</span>
                   <span className="font-black text-sm w-6 text-right" style={{ color: ratingColor(p.rating) }}>{p.rating}</span>
                   <span className={`font-black text-xs w-7 text-right ${rtgColor}`}>{rtg > 0 ? rtg.toFixed(1) : '-'}</span>
                 </div>
@@ -642,8 +657,8 @@ function FinalSummary({ result, picks, odds, onResim }: {
             names the league winner, and adds your own best only when they are
             not the same player.
           */}
-          <div className="bg-[#111] rounded-2xl p-6">
-            <div className="text-xs text-[#888] uppercase tracking-widest mb-4 font-bold">Awards</div>
+          <div className="bg-card rounded-2xl p-6">
+            <div className="text-xs text-muted uppercase tracking-widest mb-4 font-bold">Awards</div>
             <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
               <Award
                 icon="🏅" title="Player of the Season"
@@ -684,13 +699,13 @@ function FinalSummary({ result, picks, odds, onResim }: {
 
           {/* Extra records */}
           <div className="grid grid-cols-2 gap-3">
-            <div className="bg-[#111] rounded-xl p-4">
-              <div className="text-xs text-[#888] mb-1">Longest Win Streak</div>
+            <div className="bg-card rounded-xl p-4">
+              <div className="text-xs text-muted mb-1">Longest Win Streak</div>
               <div className="text-2xl font-black">{result.longestWinStreak}</div>
             </div>
-            <div className="bg-[#111] rounded-xl p-4">
-              <div className="text-xs text-[#888] mb-1">Biggest Win</div>
-              <div className="text-sm font-black text-[#00c896]">{result.biggestWin}</div>
+            <div className="bg-card rounded-xl p-4">
+              <div className="text-xs text-muted mb-1">Biggest Win</div>
+              <div className="text-sm font-black text-accent">{result.biggestWin}</div>
             </div>
           </div>
         </div>
@@ -715,9 +730,9 @@ function FinalSummary({ result, picks, odds, onResim }: {
 
 function HeroStat({ label, value, accent }: { label: string; value: string; accent?: boolean }) {
   return (
-    <div className="bg-[#1a1a1a] rounded-xl p-3 text-center">
-      <div className={`text-2xl font-black ${accent ? 'text-[#00c896]' : ''}`}>{value}</div>
-      <div className="text-[10px] text-[#666] uppercase tracking-widest">{label}</div>
+    <div className="bg-raised rounded-xl p-3 text-center">
+      <div className={`text-2xl font-black ${accent ? 'text-accent' : ''}`}>{value}</div>
+      <div className="text-[10px] text-subtle uppercase tracking-widest">{label}</div>
     </div>
   );
 }
@@ -727,57 +742,62 @@ function HeroStat({ label, value, accent }: { label: string; value: string; acce
 function LeagueTable({ table }: { table: TeamStanding[] }) {
   const [show, setShow] = useState(true); // open by default in final summary
   const posColor = (pos: number) =>
-    pos === 1 ? '#fbbf24' : pos <= 4 ? '#3b82f6' : pos <= 6 ? '#8b5cf6' : pos >= 18 ? '#ef4444' : undefined;
+    pos === 1 ? 'var(--c-amber)' : pos <= 4 ? 'var(--c-blue)' : pos <= 6 ? 'var(--c-violet)' : pos >= 18 ? 'var(--c-red)' : undefined;
 
   return (
-    <div className="bg-[#111] rounded-2xl overflow-hidden">
-      <button onClick={() => setShow(s => !s)} className="w-full flex items-center justify-between px-6 py-4 hover:bg-[#151515] transition-colors">
-        <div className="text-xs text-[#888] uppercase tracking-widest font-bold">Final League Table</div>
-        <span className="text-[#666] text-xs">{show ? '▲' : '▼'}</span>
+    <div className="bg-card rounded-2xl overflow-hidden">
+      <button onClick={() => setShow(s => !s)} className="w-full flex items-center justify-between px-6 py-4 hover:bg-card-hi transition-colors">
+        <div className="text-xs text-muted uppercase tracking-widest font-bold">Final League Table</div>
+        <span className="text-subtle text-xs">{show ? '▲' : '▼'}</span>
       </button>
       {show && (
         <div className="px-4 pb-4">
-          <div className="flex items-center gap-2 px-2 pb-1 text-[9px] text-[#666] uppercase tracking-widest border-b border-[#1a1a1a]">
-            <span className="w-5 text-center">#</span>
+          {/*
+            Below sm there is not room for ten number columns and a club name:
+            the name column was squeezed to nothing at 360px. P (always 38 in a
+            final table) and GF/GA (GD carries them) are the ones a phone drops.
+          */}
+          <div className="flex items-center gap-1.5 sm:gap-2 px-2 pb-1 text-[9px] text-subtle uppercase tracking-widest border-b border-line">
+            <span className="shrink-0 w-5 text-center">#</span>
             <span className="flex-1 min-w-0">Club</span>
-            <span className="w-5 text-center">P</span>
-            <span className="w-5 text-center">W</span>
-            <span className="w-5 text-center">D</span>
-            <span className="w-5 text-center">L</span>
-            <span className="w-7 text-center">GF</span>
-            <span className="w-7 text-center">GA</span>
-            <span className="w-7 text-center">GD</span>
-            <span className="w-7 text-right">Pts</span>
-            <span className="w-8 text-center text-[#00c896]/70 hidden sm:block">OVR</span>
-            <span className="w-8 text-center text-orange-400/70 hidden md:block">ATT</span>
-            <span className="w-8 text-center text-purple-400/70 hidden md:block">MID</span>
-            <span className="w-8 text-center text-blue-400/70 hidden md:block">DEF</span>
+            <span className="shrink-0 w-5 text-center hidden sm:block">P</span>
+            <span className="shrink-0 w-5 text-center">W</span>
+            <span className="shrink-0 w-5 text-center">D</span>
+            <span className="shrink-0 w-5 text-center">L</span>
+            <span className="shrink-0 w-7 text-center hidden sm:block">GF</span>
+            <span className="shrink-0 w-7 text-center hidden sm:block">GA</span>
+            <span className="shrink-0 w-7 text-center">GD</span>
+            <span className="shrink-0 w-7 text-right">Pts</span>
+            <span className="shrink-0 w-8 text-center text-accent/70 hidden sm:block">OVR</span>
+            <span className="shrink-0 w-8 text-center text-orange-400/70 hidden md:block">ATT</span>
+            <span className="shrink-0 w-8 text-center text-purple-400/70 hidden md:block">MID</span>
+            <span className="shrink-0 w-8 text-center text-blue-400/70 hidden md:block">DEF</span>
           </div>
           {table.map(row => (
-            <div key={row.name} className={`flex items-center gap-2 px-2 py-1.5 text-xs rounded ${row.isUser ? 'bg-[#00c896]/10' : ''}`}>
-              <span className="w-5 text-center font-black" style={{ color: posColor(row.position) ?? '#888' }}>{row.position}</span>
-              <span className={`flex-1 min-w-0 font-bold truncate ${row.isUser ? 'text-[#00c896]' : 'text-[#ccc]'}`}>{row.name}</span>
-              <span className="w-5 text-center text-[#666]">{row.played}</span>
-              <span className="w-5 text-center text-[#888]">{row.won}</span>
-              <span className="w-5 text-center text-[#666]">{row.drawn}</span>
-              <span className="w-5 text-center text-[#666]">{row.lost}</span>
-              <span className="w-7 text-center text-[#888]">{row.goalsFor}</span>
-              <span className="w-7 text-center text-[#666]">{row.goalsAgainst}</span>
-              <span className={`w-7 text-center ${row.gd > 0 ? 'text-[#00c896]' : row.gd < 0 ? 'text-red-400' : 'text-[#888]'}`}>
+            <div key={row.name} className={`flex items-center gap-1.5 sm:gap-2 px-2 py-1.5 text-xs rounded ${row.isUser ? 'bg-[#00c896]/10' : ''}`}>
+              <span className="shrink-0 w-5 text-center font-black" style={{ color: posColor(row.position) ?? 'var(--t-muted)' }}>{row.position}</span>
+              <span className={`flex-1 min-w-0 font-bold truncate ${row.isUser ? 'text-accent' : 'text-fg-soft'}`}>{row.name}</span>
+              <span className="shrink-0 w-5 text-center text-subtle hidden sm:block">{row.played}</span>
+              <span className="shrink-0 w-5 text-center text-muted">{row.won}</span>
+              <span className="shrink-0 w-5 text-center text-subtle">{row.drawn}</span>
+              <span className="shrink-0 w-5 text-center text-subtle">{row.lost}</span>
+              <span className="shrink-0 w-7 text-center text-muted hidden sm:block">{row.goalsFor}</span>
+              <span className="shrink-0 w-7 text-center text-subtle hidden sm:block">{row.goalsAgainst}</span>
+              <span className={`shrink-0 w-7 text-center ${row.gd > 0 ? 'text-accent' : row.gd < 0 ? 'text-red-400' : 'text-muted'}`}>
                 {row.gd > 0 ? '+' : ''}{row.gd}
               </span>
-              <span className="w-7 text-right font-black text-white">{row.points}</span>
-              <span className="w-8 text-center font-bold text-[#00c896] hidden sm:block">{row.ovr}</span>
-              <span className="w-8 text-center text-orange-400 hidden md:block">{row.att}</span>
-              <span className="w-8 text-center text-purple-400 hidden md:block">{row.mid}</span>
-              <span className="w-8 text-center text-blue-400 hidden md:block">{row.def}</span>
+              <span className="shrink-0 w-7 text-right font-black text-fg">{row.points}</span>
+              <span className="shrink-0 w-8 text-center font-bold text-accent hidden sm:block">{row.ovr}</span>
+              <span className="shrink-0 w-8 text-center text-orange-400 hidden md:block">{row.att}</span>
+              <span className="shrink-0 w-8 text-center text-purple-400 hidden md:block">{row.mid}</span>
+              <span className="shrink-0 w-8 text-center text-blue-400 hidden md:block">{row.def}</span>
             </div>
           ))}
           <div className="flex gap-3 mt-3 flex-wrap">
             {[['#fbbf24','Champions'],['#3b82f6','Top 4 (UCL)'],['#8b5cf6','6th (UEL)'],['#ef4444','Relegation']].map(([c,l]) => (
               <div key={l} className="flex items-center gap-1.5">
                 <div className="w-2 h-2 rounded-full" style={{ background: c }} />
-                <span className="text-[9px] text-[#666]">{l}</span>
+                <span className="text-[9px] text-subtle">{l}</span>
               </div>
             ))}
           </div>
@@ -808,12 +828,12 @@ function LeagueLeaderboards({ scorers, assisters, keepers }: { scorers: LeagueEn
   const data = { scorers, assisters, keepers };
 
   return (
-    <div className="bg-[#111] rounded-2xl p-6">
-      <div className="text-xs text-[#888] uppercase tracking-widest font-bold mb-4">League Leaderboards</div>
+    <div className="bg-card rounded-2xl p-6">
+      <div className="text-xs text-muted uppercase tracking-widest font-bold mb-4">League Leaderboards</div>
       <div className="flex gap-2 mb-4 flex-wrap lg:hidden">
         {BOARDS.map(b => (
           <button key={b.key} type="button" onClick={() => setTab(b.key)}
-            className={`px-3 py-2.5 rounded-lg text-xs font-bold transition-colors touch-manipulation ${tab === b.key ? 'bg-[#00c896] text-black' : 'bg-[#1a1a1a] text-[#888] hover:text-white'}`}>
+            className={`px-3 py-2.5 rounded-lg text-xs font-bold transition-colors touch-manipulation ${tab === b.key ? 'bg-[#00c896] text-black' : 'bg-raised text-muted hover:text-fg'}`}>
             {b.tab}
           </button>
         ))}
@@ -821,8 +841,8 @@ function LeagueLeaderboards({ scorers, assisters, keepers }: { scorers: LeagueEn
       <div className="lg:grid lg:grid-cols-3 lg:gap-6">
         {BOARDS.map(b => (
           <div key={b.key} className={`${tab === b.key ? 'block' : 'hidden'} lg:block`}>
-            <div className="hidden lg:block text-[10px] text-[#888] uppercase tracking-widest font-bold mb-2">{b.title}</div>
-            <div className="flex items-center gap-3 px-2 pb-1.5 text-[9px] text-[#666] uppercase tracking-widest border-b border-[#1a1a1a]">
+            <div className="hidden lg:block text-[10px] text-muted uppercase tracking-widest font-bold mb-2">{b.title}</div>
+            <div className="flex items-center gap-3 px-2 pb-1.5 text-[9px] text-subtle uppercase tracking-widest border-b border-line">
               <span className="w-5 text-center">#</span>
               <span className="flex-1">Player</span>
               <span className="w-24 text-right text-[10px] lg:hidden xl:block">Club</span>
@@ -831,10 +851,10 @@ function LeagueLeaderboards({ scorers, assisters, keepers }: { scorers: LeagueEn
             <div className="space-y-0.5 mt-1">
               {data[b.key].slice(0, 20).map((e, i) => (
                 <div key={i} className={`flex items-center gap-3 px-2 py-1.5 rounded text-xs ${e.isUser ? 'bg-[#00c896]/10' : ''}`}>
-                  <span className="w-5 text-center text-[#666] font-bold">{i + 1}</span>
-                  <span className={`flex-1 min-w-0 truncate font-bold ${e.isUser ? 'text-[#00c896]' : 'text-[#ccc]'}`}>{e.playerName}</span>
-                  <span className={`w-24 text-right text-[10px] truncate lg:hidden xl:block ${e.isUser ? 'text-[#00c896]/60' : 'text-[#666]'}`}>{e.clubName}</span>
-                  <span className={`w-8 text-right font-black ${e.isUser ? 'text-[#00c896]' : 'text-white'}`}>{e.value}</span>
+                  <span className="w-5 text-center text-subtle font-bold">{i + 1}</span>
+                  <span className={`flex-1 min-w-0 truncate font-bold ${e.isUser ? 'text-accent' : 'text-fg-soft'}`}>{e.playerName}</span>
+                  <span className={`w-24 text-right text-[10px] truncate lg:hidden xl:block ${e.isUser ? 'text-accent/60' : 'text-subtle'}`}>{e.clubName}</span>
+                  <span className={`w-8 text-right font-black ${e.isUser ? 'text-accent' : 'text-fg'}`}>{e.value}</span>
                 </div>
               ))}
             </div>
@@ -853,12 +873,12 @@ function Award({ icon, title, name, stat, yours }: {
   yours?: string;
 }) {
   return (
-    <div className="bg-[#1a1a1a] rounded-xl p-3">
-      <div className="text-xs text-[#888] mb-1">{icon} {title}</div>
+    <div className="bg-raised rounded-xl p-3">
+      <div className="text-xs text-muted mb-1">{icon} {title}</div>
       <div className="font-black text-sm">{name}</div>
-      <div className="text-[#00c896] text-xs">{stat}</div>
+      <div className="text-accent text-xs">{stat}</div>
       {yours && (
-        <div className="text-[#666] text-[11px] mt-1.5 pt-1.5 border-t border-[#222] truncate">
+        <div className="text-subtle text-[11px] mt-1.5 pt-1.5 border-t border-line-hi truncate">
           Yours: {yours}
         </div>
       )}

@@ -21,8 +21,8 @@ export default function OptionCard({
   label, description, selected, onClick, className = '',
 }: OptionCardProps) {
   const borderStyle = selected
-    ? 'border-[#00c896] text-[#00c896] bg-[#00c896]/5'
-    : 'border-[#2a2a2a] text-white hover:border-[#444]';
+    ? 'border-[#00c896] text-accent bg-[#00c896]/5'
+    : 'border-line-strong text-fg hover:border-line-hover';
 
   return (
     <button
@@ -31,13 +31,13 @@ export default function OptionCard({
       aria-pressed={selected}
       className={`
         rounded-lg border-2 px-3 py-3 text-left transition-colors
-        bg-[#111] cursor-pointer touch-manipulation
+        bg-card cursor-pointer touch-manipulation
         ${borderStyle} ${className}
       `}
     >
       <div className="font-bold text-sm">{label}</div>
       {description && (
-        <div className={`text-xs mt-0.5 ${selected ? 'opacity-80' : 'text-[#888]'}`}>
+        <div className={`text-xs mt-0.5 ${selected ? 'opacity-80' : 'text-muted'}`}>
           {description}
         </div>
       )}

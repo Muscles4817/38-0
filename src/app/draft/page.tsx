@@ -4,8 +4,11 @@ import { useState, useEffect, useMemo, useRef } from 'react';
 import { useRouter } from 'next/navigation';
 import { getFormation, canFillSlot, Formation, Position } from '@/lib/formations';
 import { SquadPick, computeOverall } from '@/lib/simulation';
-import { listDraftableSquads, type DataPlayer, type SpunSquad } from '@/lib/gameData';
+import { getClub, type DataPlayer, type SpunSquad } from '@/lib/gameData';
+import { draftPool, feasibility, type DraftFilter, type Feasibility } from '@/lib/draftPool';
+import { CHALLENGES, describeFilter, type ChallengeId } from '@/lib/challenges';
 import { useStoredJson, readStored, writeStored } from '@/lib/clientStorage';
+import { parseSeenSquads, SEEN_SQUADS_KEY, withSeenSquad } from '@/lib/seenSquads';
 import PitchView from '@/components/PitchView';
 import PositionBadge from '@/components/PositionBadge';
 import LineRatings from '@/components/LineRatings';
@@ -20,14 +23,9 @@ interface Setup {
   playerRating: 'career' | 'prime';
   yearStart: number;
   yearEnd: number;
-}
-
-// Stored so "what could have been" on the results page can read every player
-// the draft offered, not just the ones taken.
-interface StoredSquad {
-  clubName: string;
-  seasonLabel: string;
-  players: DataPlayer[];
+  /** Absent in a setup saved before challenge modes existed. */
+  challenge?: ChallengeId;
+  filter?: DraftFilter | null;
 }
 
 type SpinPhase = 'idle' | 'spinning' | 'reveal';
@@ -36,12 +34,7 @@ const REROLLS_BY_DIFFICULTY = { easy: 3, normal: 1, hard: 0 };
 // Stable empty array so an unstarted draft does not hand out a new reference
 // on every render.
 const NO_PICKS: SquadPick[] = [];
-// Names flashed up by the wheel while it spins — flavour only, unrelated to
-// the squad that is actually landed on.
-const SPIN_CLUBS = [
-  'Arsenal','Chelsea','Liverpool','Man City','Man Utd','Tottenham',
-  'Leicester','Newcastle','Blackburn','Aston Villa','Everton','Leeds',
-];
+const NO_POOL: SpunSquad[] = [];
 const FAST_FRAMES = 8;
 const FAST_INTERVAL = 65;
 const SLOW_INTERVALS = [120, 180, 260, 360, 480];
@@ -54,6 +47,16 @@ export default function DraftPage() {
   const setup     = useStoredJson<Setup>('38-0-setup');
   const picks     = useStoredJson<SquadPick[]>('38-0-draft') ?? NO_PICKS;
   const formation = useMemo(() => (setup ? getFormation(setup.formation) : null), [setup]);
+
+  // What this run can draft from: the era, Prime mode and any challenge
+  // filter, applied once. Everything below spins and places from this.
+  const pool = useMemo(() => (setup ? draftPool({
+    yearStart:    setup.yearStart,
+    yearEnd:      setup.yearEnd,
+    playerRating: setup.playerRating === 'prime' ? 'prime' : 'career',
+    filter:       setup.filter ?? null,
+  }) : NO_POOL), [setup]);
+  const feasible = useMemo(() => (formation ? feasibility(pool, formation) : null), [pool, formation]);
 
   // Counting rerolls used rather than remaining keeps this independent of when
   // setup finishes loading.
@@ -83,6 +86,16 @@ export default function DraftPage() {
     if (localStorage.getItem('38-0-setup') === null) router.push('/');
   }, [router]);
 
+  // A browser that drafted before seen-squads stored references can still be
+  // holding megabytes of full squad copies, enough to fill the quota. Rewriting
+  // the key keeps this run's references and drops the rest. See seenSquads.ts.
+  useEffect(() => {
+    const stored = readStored<unknown>(SEEN_SQUADS_KEY);
+    if (stored === null) return;
+    const refs = parseSeenSquads(stored);
+    if (!Array.isArray(stored) || refs.length !== stored.length) writeStored(SEEN_SQUADS_KEY, refs);
+  }, []);
+
   // Clean up timers on unmount
   useEffect(() => () => {
     if (spinTimer.current) clearTimeout(spinTimer.current);
@@ -101,20 +114,17 @@ export default function DraftPage() {
    * which lets the caller report it without burning a reroll.
    */
   function findSquad(excludeDrafted: boolean): SpunSquad | null {
-    if (!setup || !formation) return null;
-    const takenPlayers = new Set(picks.map(p => p.playerId));
-    const filledSlots  = new Set(picks.map(p => p.slotIndex));
-    const openSlots    = formation.slots.filter((_, i) => !filledSlots.has(i));
+    if (!formation || !feasible) return null;
     const draftedFrom  = new Set(
       picks.filter(p => p.clubId != null && p.seasonId != null)
         .map(p => `${p.clubId}-${p.seasonId}`),
     );
 
-    const candidates = listDraftableSquads(setup.yearStart, setup.yearEnd).filter(squad => {
+    // A squad is worth landing on only if one of its players has a placement
+    // that still leaves the XI completable; see feasibility() in draftPool.ts.
+    const candidates = pool.filter(squad => {
       if (excludeDrafted && draftedFrom.has(`${squad.clubId}-${squad.seasonId}`)) return false;
-      return squad.players.some(p =>
-        !takenPlayers.has(p.playerId) &&
-        openSlots.some(slot => canFillSlot(p.positions, slot.position)));
+      return squad.players.some(p => formation.slots.some((_, i) => feasible.canPlace(picks, p, i)));
     });
 
     if (candidates.length === 0) return null;
@@ -125,16 +135,25 @@ export default function DraftPage() {
     let frame = 0;
     setSpinPhase('spinning');
 
+    // The wheel flicks through squads this run could actually land on, so a
+    // One Club draft shows that club's seasons going past rather than a list
+    // of clubs it cannot draw.
+    function flick() {
+      const squad = pool[Math.floor(Math.random() * pool.length)] ?? result;
+      setSpinDisplay(squad.clubName);
+      setSpinSeason(squad.seasonLabel);
+    }
+
     function tick() {
       if (frame < FAST_FRAMES) {
-        setSpinDisplay(SPIN_CLUBS[frame % SPIN_CLUBS.length]);
+        flick();
         spinTimer.current = setTimeout(tick, FAST_INTERVAL);
         frame++;
         return;
       }
       const slowIndex = frame - FAST_FRAMES;
       if (slowIndex < SLOW_INTERVALS.length) {
-        setSpinDisplay(SPIN_CLUBS[Math.floor(Math.random() * SPIN_CLUBS.length)]);
+        flick();
         spinTimer.current = setTimeout(tick, SLOW_INTERVALS[slowIndex]);
         frame++;
         return;
@@ -172,12 +191,12 @@ export default function DraftPage() {
     setSpinResult(null);
     setSelectedPlayer(null);
 
-    // Record the squad for "what could have been", whether or not it is used.
-    const stored = readStored<StoredSquad[]>('38-0-seen-squads') ?? [];
-    stored.push({ clubName: found.clubName, seasonLabel: found.seasonLabel, players: found.players });
-    writeStored('38-0-seen-squads', stored);
-
     runSpinAnimation(found);
+
+    // Record the squad for "what could have been", whether or not it is used.
+    // After the animation has started: history is a nice-to-have, the spin is not.
+    const seen = parseSeenSquads(readStored<unknown>(SEEN_SQUADS_KEY));
+    writeStored(SEEN_SQUADS_KEY, withSeenSquad(seen, found));
   }
 
   function selectPlayer(player: DataPlayer) {
@@ -189,9 +208,9 @@ export default function DraftPage() {
   }
 
   function placePlayer(slotIndex: number) {
-    if (!selectedPlayer || !spinResult || !formation) return;
+    if (!selectedPlayer || !spinResult || !formation || !feasible) return;
+    if (!feasible.canPlace(picks, selectedPlayer, slotIndex)) return;
     const slot = formation.slots[slotIndex];
-    if (!canFillSlot(selectedPlayer.positions, slot.position)) return;
 
     const pick: SquadPick = {
       slotIndex,
@@ -233,13 +252,11 @@ export default function DraftPage() {
   // The slots the selected player could fill, so the pitch shows the targets
   // rather than leaving the position buttons as the only discoverable route.
   const eligibleSlots = useMemo(() => {
-    if (!selectedPlayer || !formation) return undefined;
-    const filled = new Set(picks.map(p => p.slotIndex));
+    if (!selectedPlayer || !formation || !feasible) return undefined;
     return formation.slots
-      .map((slot, i) => ({ slot, i }))
-      .filter(({ slot, i }) => !filled.has(i) && canFillSlot(selectedPlayer.positions, slot.position))
-      .map(({ i }) => i);
-  }, [selectedPlayer, formation, picks]);
+      .map((_, i) => i)
+      .filter(i => feasible.canPlace(picks, selectedPlayer, i));
+  }, [selectedPlayer, formation, feasible, picks]);
 
   function handleSlotClick(slotIndex: number) {
     const filledSlots = new Set(picks.map(p => p.slotIndex));
@@ -253,8 +270,8 @@ export default function DraftPage() {
     }
   }
 
-  if (!setup || !formation) {
-    return <div className="min-h-screen bg-[#0a0a0a] flex items-center justify-center text-white">Loading…</div>;
+  if (!setup || !formation || !feasible) {
+    return <div className="min-h-screen bg-ground flex items-center justify-center text-fg">Loading…</div>;
   }
 
   const filledSlots = new Set(picks.map(p => p.slotIndex));
@@ -263,9 +280,12 @@ export default function DraftPage() {
   const overall = computeOverall(picks);
   const showRatings = setup.showRatings && setup.difficulty !== 'hard';
   const isSpinning = spinPhase !== 'idle';
+  const challengeLabel =
+    describeFilter(setup.filter ?? null, id => getClub(id)?.name ?? null) ??
+    (setup.challenge && setup.challenge !== 'none' ? CHALLENGES.find(c => c.id === setup.challenge)?.label ?? null : null);
 
   return (
-    <main className="min-h-screen bg-[#0a0a0a] text-white flex flex-col md:flex-row md:items-start">
+    <main className="min-h-screen bg-ground text-fg flex flex-col md:flex-row md:items-start">
       {/*
         Left rail — pitch and recap.
         The split starts at 768px, not 1024px: on an iPad in portrait this was
@@ -279,17 +299,20 @@ export default function DraftPage() {
         for the pick just made — left the viewport.
       */}
       <aside className="md:w-[300px] lg:w-[320px] flex-shrink-0 flex flex-col items-center py-6 px-4
-                        border-b md:border-b-0 md:border-r border-[#1a1a1a]
+                        border-b md:border-b-0 md:border-r border-line
                         md:sticky md:top-0 md:max-h-screen md:overflow-y-auto">
         <div className="w-full mb-2">
           <BackLink href="/" label="Setup" />
         </div>
-        <div className="text-xs font-bold tracking-widest text-[#888] uppercase mb-1">Formation</div>
+        <div className="text-xs font-bold tracking-widest text-muted uppercase mb-1">Formation</div>
         <div className="text-xl font-black mb-3">{setup.formation}</div>
-        <div className="text-xs text-[#888] mb-3 flex items-center gap-2">
+        {challengeLabel && (
+          <div className="-mt-2 mb-3 text-xs font-bold text-accent text-center">{challengeLabel}</div>
+        )}
+        <div className="text-xs text-muted mb-3 flex items-center gap-2">
           <span>Rerolls:</span>
           {Array.from({ length: rerollsTotal }).map((_, i) => (
-            <span key={i} className={`inline-block w-2 h-2 rounded-full ${i < rerollsLeft ? 'bg-amber-400' : 'bg-[#333]'}`} />
+            <span key={i} className={`inline-block w-2 h-2 rounded-full ${i < rerollsLeft ? 'bg-amber-400' : 'bg-track'}`} />
           ))}
           <span className="ml-1">{picks.length}/11</span>
         </div>
@@ -311,9 +334,9 @@ export default function DraftPage() {
 
         <div className="mt-4 w-full px-1 space-y-1">
           <div className="flex items-center justify-between mb-2">
-            <span className="text-[10px] text-[#888] uppercase tracking-widest font-bold">Line Ratings</span>
+            <span className="text-[10px] text-muted uppercase tracking-widest font-bold">Line Ratings</span>
             {picks.length > 0 && (
-              <span className="text-[10px] text-[#888]">Overall <span className="text-white font-bold">{overall}</span></span>
+              <span className="text-[10px] text-muted">Overall <span className="text-fg font-bold">{overall}</span></span>
             )}
           </div>
           <LineRatings formation={formation} picks={picks} />
@@ -330,12 +353,12 @@ export default function DraftPage() {
         {/* Idle — show spin button */}
         {!spinResult && !isSpinning && (
           <div className="flex flex-col items-center gap-6 mt-8">
-            <div className="text-[#888] text-sm uppercase tracking-widest font-bold">Spin for a Squad</div>
-            <div className="text-3xl font-black text-[#666]">
+            <div className="text-muted text-sm uppercase tracking-widest font-bold">Spin for a Squad</div>
+            <div className="text-3xl font-black text-subtle">
               {openSlots.length} position{openSlots.length !== 1 ? 's' : ''} left to fill
             </div>
             {setup.draftMode === 'position-first' && (
-              <div className="text-[#888] text-sm">Click a slot on the pitch to begin</div>
+              <div className="text-muted text-sm">Click a slot on the pitch to begin</div>
             )}
             {setup.draftMode === 'squad-first' && (
               <button
@@ -345,7 +368,7 @@ export default function DraftPage() {
                 🎰 Spin the Wheel
               </button>
             )}
-            <div className="text-[#888] text-xs">or tap anywhere to spin</div>
+            <div className="text-muted text-xs">or tap anywhere to spin</div>
             {spinNotice && (
               <div className="max-w-sm text-center rounded-xl border border-amber-500/40 bg-amber-500/10 px-4 py-3 text-amber-300 text-sm">
                 {spinNotice}
@@ -357,29 +380,29 @@ export default function DraftPage() {
         {/* Spin animation */}
         {isSpinning && (
           <div className="flex flex-col items-center gap-6 mt-16 select-none">
-            <div className="text-[#888] text-xs uppercase tracking-widest font-bold">
+            <div className="text-muted text-xs uppercase tracking-widest font-bold">
               {spinPhase === 'reveal' ? 'Squad Landed' : 'Spinning…'}
             </div>
 
             {/* Slot window */}
-            <div className="relative w-72 h-20 overflow-hidden rounded-2xl bg-[#111] border border-[#2a2a2a] flex items-center justify-center">
+            <div className="relative w-72 h-20 overflow-hidden rounded-2xl bg-card border border-line-strong flex items-center justify-center">
               {/* Side fade overlays */}
-              <div className="absolute inset-y-0 left-0 w-12 bg-gradient-to-r from-[#111] to-transparent z-10 pointer-events-none" />
-              <div className="absolute inset-y-0 right-0 w-12 bg-gradient-to-l from-[#111] to-transparent z-10 pointer-events-none" />
+              <div className="absolute inset-y-0 left-0 w-12 bg-gradient-to-r from-card to-transparent z-10 pointer-events-none" />
+              <div className="absolute inset-y-0 right-0 w-12 bg-gradient-to-l from-card to-transparent z-10 pointer-events-none" />
 
-              <div key={spinDisplay} className="flex flex-col items-center leading-tight">
+              <div key={`${spinDisplay} ${spinSeason}`} className="flex flex-col items-center leading-tight">
                 <div
                   className="text-2xl font-black transition-all duration-150"
                   style={{
-                    color: spinPhase === 'reveal' ? '#00c896' : '#fff',
+                    color: spinPhase === 'reveal' ? 'var(--c-accent)' : 'var(--t-fg)',
                     transform: spinPhase === 'reveal' ? 'scale(1.1)' : 'scale(1)',
                     textShadow: spinFlash ? '0 0 20px #00c896, 0 0 40px #00c896' : undefined,
                   }}
                 >
                   {spinDisplay}
                 </div>
-                {spinPhase === 'reveal' && spinSeason && (
-                  <div className="text-sm font-bold text-[#00c896]/70 mt-0.5">
+                {spinSeason && (
+                  <div className={`text-sm font-bold mt-0.5 ${spinPhase === 'reveal' ? 'text-accent/70' : 'text-muted'}`}>
                     {spinSeason}
                   </div>
                 )}
@@ -387,7 +410,7 @@ export default function DraftPage() {
             </div>
 
             {spinPhase === 'reveal' && (
-              <div className="text-[#00c896] text-sm font-bold animate-pulse">Opening the squad…</div>
+              <div className="text-accent text-sm font-bold animate-pulse">Opening the squad…</div>
             )}
           </div>
         )}
@@ -403,6 +426,7 @@ export default function DraftPage() {
             onCancelSelection={() => setSelectedPlayer(null)}
             onPlacePlayer={placePlayer}
             onReroll={rerollsLeft > 0 ? () => spin(true) : undefined}
+            feasible={feasible}
             rerollsLeft={rerollsLeft}
             showRatings={showRatings}
             positionFilter={positionFirstSlot?.position}
@@ -417,7 +441,7 @@ export default function DraftPage() {
 
 function SpinPanel({
   result, formation, picks, selectedPlayer,
-  onSelectPlayer, onCancelSelection, onPlacePlayer, onReroll, rerollsLeft, showRatings, positionFilter,
+  onSelectPlayer, onCancelSelection, onPlacePlayer, onReroll, feasible, rerollsLeft, showRatings, positionFilter,
 }: {
   result: SpunSquad;
   formation: Formation;
@@ -427,6 +451,7 @@ function SpinPanel({
   onCancelSelection: () => void;
   onPlacePlayer: (slotIdx: number) => void;
   onReroll?: () => void;
+  feasible: Feasibility;
   rerollsLeft: number;
   showRatings: boolean;
   positionFilter?: Position;
@@ -435,28 +460,34 @@ function SpinPanel({
   const pickedPlayerIds = new Set(picks.map(p => p.playerId));
   const players = result.players.filter(p => !pickedPlayerIds.has(p.playerId));
 
-  function slotStatus(i: number, slot: { position: Position }): 'available' | 'filled' | 'unavailable' {
+  function slotStatus(i: number): 'available' | 'filled' | 'unavailable' {
     if (filledSlots.has(i)) return 'filled';
     if (!selectedPlayer) return 'unavailable';
-    return canFillSlot(selectedPlayer.positions, slot.position) ? 'available' : 'unavailable';
+    return feasible.canPlace(picks, selectedPlayer, i) ? 'available' : 'unavailable';
   }
+
+  // A slot the player could play but is not offered, because nobody left in
+  // the pool could fill some other open slot afterwards. Rare outside a thin
+  // challenge pool; said out loud when it happens, so it does not look broken.
+  const heldBack = selectedPlayer !== null && formation.slots.some((slot, i) =>
+    !filledSlots.has(i) && canFillSlot(selectedPlayer.positions, slot.position) && slotStatus(i) !== 'available');
 
   return (
     <div className="w-full max-w-xl">
       {/* Header */}
       <div className="flex items-start justify-between gap-3 mb-4">
         <div className="min-w-0">
-          <div className="text-xs text-[#888] uppercase tracking-widest mb-1">Squad Spun</div>
+          <div className="text-xs text-muted uppercase tracking-widest mb-1">Squad Spun</div>
           <div className="flex items-center gap-2 flex-wrap">
             <span className="inline-block w-3 h-3 rounded-full shrink-0" style={{ background: result.color }} />
             <span className="font-black text-lg">{result.clubName}</span>
-            <span className="text-[#00c896] font-bold">{result.seasonLabel}</span>
+            <span className="text-accent font-bold">{result.seasonLabel}</span>
           </div>
-          <div className="text-xs text-[#888] mt-1">Pick any player, then choose which open position to slot them into.</div>
+          <div className="text-xs text-muted mt-1">Pick any player, then choose which open position to slot them into.</div>
         </div>
         {onReroll && (
           <button type="button" onClick={onReroll}
-            className="shrink-0 whitespace-nowrap flex items-center gap-1 px-3 py-2.5 rounded-lg border border-[#00c896] text-[#00c896] text-xs font-bold hover:bg-[#00c89622] transition-colors touch-manipulation">
+            className="shrink-0 whitespace-nowrap flex items-center gap-1 px-3 py-2.5 rounded-lg border border-[#00c896] text-accent text-xs font-bold hover:bg-[#00c89622] transition-colors touch-manipulation">
             🔄 Reroll ({rerollsLeft})
           </button>
         )}
@@ -468,31 +499,36 @@ function SpinPanel({
         phone and the destination buttons would otherwise be off-screen above.
       */}
       {selectedPlayer && (
-        <div className="sticky top-2 z-20 bg-[#111] border border-[#00c896] rounded-xl p-4 mb-4 shadow-lg shadow-black/60">
+        <div className="sticky top-2 z-20 bg-card border border-[#00c896] rounded-xl p-4 mb-4 shadow-lg shadow-black/60">
           <div className="flex items-center justify-between gap-2 mb-3">
-            <div className="font-bold text-[#00c896] truncate">Place {selectedPlayer.name.split(' ').pop()}</div>
+            <div className="font-bold text-accent truncate">Place {selectedPlayer.name.split(' ').pop()}</div>
             <button
               type="button"
               onClick={onCancelSelection}
-              className="shrink-0 text-[#888] text-xs hover:text-white px-3 py-2 -mr-2 touch-manipulation"
+              className="shrink-0 text-muted text-xs hover:text-fg px-3 py-2 -mr-2 touch-manipulation"
             >
               Cancel
             </button>
           </div>
-          <div className="text-[10px] text-[#888] uppercase tracking-widest mb-2">
+          <div className="text-[10px] text-muted uppercase tracking-widest mb-2">
             Where they can play
           </div>
           <div className="flex flex-wrap gap-2">
-            {formation.slots.map((slot, i) => slotStatus(i, slot) === 'available' ? (
+            {formation.slots.map((slot, i) => slotStatus(i) === 'available' ? (
               <button key={i} type="button" onClick={() => onPlacePlayer(i)}
                 className="px-3 py-2.5 rounded-lg bg-[#00c896] text-black text-xs font-bold hover:bg-[#00b385] transition-colors touch-manipulation">
                 {slot.label} ({slot.position})
               </button>
             ) : null)}
           </div>
-          <div className="text-[11px] text-[#888] mt-3">
+          <div className="text-[11px] text-muted mt-3">
             Tap a position above, or one of the highlighted spots on the pitch.
           </div>
+          {heldBack && (
+            <div className="text-[11px] text-muted mt-1">
+              Some positions they could play are held back: filling them would leave a slot no one left in the pool can fill.
+            </div>
+          )}
         </div>
       )}
 
@@ -501,7 +537,7 @@ function SpinPanel({
         {players.map(player => {
           const pp: Position[] = player.positions;
           const isSelected = selectedPlayer?.playerId === player.playerId;
-          const canFillAny = formation.slots.some((slot, i) => !filledSlots.has(i) && canFillSlot(pp, slot.position));
+          const canFillAny = formation.slots.some((_, i) => feasible.canPlace(picks, player, i));
           const matchesFilter = !positionFilter || canFillSlot(pp, positionFilter);
 
           return (
@@ -512,28 +548,28 @@ function SpinPanel({
               className={`
                 w-full flex items-center gap-3 px-4 py-3 rounded-xl border transition-colors text-left
                 ${!canFillAny
-                  ? 'border-[#1a1a1a] bg-[#0a0a0a] opacity-30 cursor-not-allowed'
+                  ? 'border-line bg-ground opacity-30 cursor-not-allowed'
                   : isSelected
                     ? 'border-[#00c896] bg-[#00c89611]'
                     : matchesFilter
-                      ? 'border-[#2a2a2a] bg-[#111] hover:border-[#444]'
-                      : 'border-[#1a1a1a] bg-[#0d0d0d] opacity-50'
+                      ? 'border-line-strong bg-card hover:border-line-hover'
+                      : 'border-line bg-inset opacity-50'
                 }
               `}
             >
-              <div className="w-9 h-9 rounded-lg bg-[#222] flex items-center justify-center text-sm font-bold text-[#00c896] flex-shrink-0">
+              <div className="w-9 h-9 rounded-lg bg-raised-max flex items-center justify-center text-sm font-bold text-accent flex-shrink-0">
                 ?
               </div>
               <div className="flex-1 min-w-0">
                 <div className="font-bold text-sm truncate">{player.name}</div>
-                <div className="text-[#888] text-xs">{player.nationality}</div>
+                <div className="text-muted text-xs">{player.nationality}</div>
               </div>
               <div className="flex gap-1 flex-wrap justify-end">
                 {pp.map(pos => <PositionBadge key={pos} pos={pos} size="xs" />)}
               </div>
               {showRatings
-                ? <div className="text-[#00c896] font-black text-sm ml-2 w-6 text-right">{player.rating}</div>
-                : <div className="text-[#666] font-black text-sm ml-2 w-6 text-right">?</div>
+                ? <div className="text-accent font-black text-sm ml-2 w-6 text-right">{player.rating}</div>
+                : <div className="text-subtle font-black text-sm ml-2 w-6 text-right">?</div>
               }
             </button>
           );
