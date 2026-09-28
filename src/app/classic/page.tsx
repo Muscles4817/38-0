@@ -218,16 +218,16 @@ export default function ClassicPage() {
   const listOpen = !selected || browsing;
 
   return (
-    <main className="min-h-screen bg-[#0a0a0a] text-white flex flex-col items-center py-6 px-4">
+    <main className="min-h-screen bg-ground text-fg flex flex-col items-center py-6 px-4">
       <div className={`w-full ${listOpen ? 'max-w-6xl' : 'max-w-2xl'}`}>
         <BackLink href="/" label="Setup" />
       </div>
       <h1 className="text-5xl sm:text-6xl font-black mb-2 mt-4 tracking-tight">
-        <span className="text-white">38</span>
-        <span className="text-[#00c896]">-0</span>
+        <span className="text-fg">38</span>
+        <span className="text-accent">-0</span>
       </h1>
-      <p className="text-[#888] text-sm mb-2">Classic Mode</p>
-      <p className="text-[#888] text-xs mb-8 text-center">
+      <p className="text-muted text-sm mb-2">Classic Mode</p>
+      <p className="text-muted text-xs mb-8 text-center">
         Pick a legendary side and see how they&apos;d do in the 2025/26 Premier League
       </p>
 
@@ -249,14 +249,14 @@ export default function ClassicPage() {
             >
               <span className="w-2.5 h-2.5 rounded-full shrink-0" style={{ background: selected.color }} />
               <span className="flex-1 min-w-0">
-                <span className="block font-bold text-sm text-white truncate">
-                  {selected.clubName} <span className="text-[#888] font-normal">{selected.seasonLabel}</span>
+                <span className="block font-bold text-sm text-fg truncate">
+                  {selected.clubName} <span className="text-muted font-normal">{selected.seasonLabel}</span>
                 </span>
                 <span className="block text-xs font-bold" style={{ color: ratingColor(selected.overallRating) }}>
                   OVR {selected.overallRating}
                 </span>
               </span>
-              <span className="text-[10px] font-bold uppercase tracking-widest text-[#00c896] shrink-0">
+              <span className="text-[10px] font-bold uppercase tracking-widest text-accent shrink-0">
                 Change
               </span>
             </button>
@@ -268,7 +268,7 @@ export default function ClassicPage() {
             has to scroll back to the top to reach, which is what made this
             screen thirteen screens of unsorted cards.
           */}
-          <div className="sticky top-0 z-20 -mx-4 px-4 py-3 bg-[#0a0a0a]/95 backdrop-blur-sm space-y-2">
+          <div className="sticky top-0 z-20 -mx-4 px-4 py-3 bg-ground/95 backdrop-blur-sm space-y-2">
             <div className="flex items-center gap-2">
               <input
                 type="search"
@@ -276,8 +276,8 @@ export default function ClassicPage() {
                 onChange={e => setSearch(e.target.value)}
                 placeholder="Search club or season"
                 aria-label="Search club or season"
-                className="flex-1 min-w-0 bg-[#0d0d0d] border border-[#1a1a1a] rounded-lg px-3 py-2.5 text-sm
-                           placeholder:text-[#666] focus:border-[#00c896] focus:outline-none"
+                className="flex-1 min-w-0 bg-inset border border-line rounded-lg px-3 py-2.5 text-sm
+                           placeholder:text-subtle focus:border-[#00c896] focus:outline-none"
               />
               <button
                 type="button"
@@ -287,7 +287,7 @@ export default function ClassicPage() {
                             transition-colors touch-manipulation border ${
                   iconsOnly
                     ? 'bg-[#c9b84e] text-black border-[#c9b84e]'
-                    : 'text-[#888] border-[#1a1a1a] hover:text-white'
+                    : 'text-muted border-line hover:text-fg'
                 }`}
               >
                 {'★'} Icons
@@ -310,7 +310,7 @@ export default function ClassicPage() {
                     type="button"
                     onClick={() => setSortBy(opt)}
                     className={`px-3 py-2.5 rounded text-[10px] font-bold uppercase tracking-widest transition-colors touch-manipulation ${
-                      sortBy === opt ? 'bg-[#00c896] text-black' : 'text-[#888] hover:text-white'
+                      sortBy === opt ? 'bg-[#00c896] text-black' : 'text-muted hover:text-fg'
                     }`}
                   >
                     {opt === 'ovr' ? 'OVR' : opt === 'year' ? 'Year' : 'Name'}
@@ -319,14 +319,14 @@ export default function ClassicPage() {
               </div>
             </div>
 
-            <div className="text-[10px] font-bold tracking-widest text-[#888] uppercase">
+            <div className="text-[10px] font-bold tracking-widest text-muted uppercase">
               {sortedTeams.length} side{sortedTeams.length === 1 ? '' : 's'}
             </div>
           </div>
 
           {grouped && iconicTeams.length > 0 && (
             <section className="mb-6">
-              <div className="text-[10px] font-bold tracking-widest text-[#c9b84e] uppercase mb-2">
+              <div className="text-[10px] font-bold tracking-widest text-gold uppercase mb-2">
                 ★ Sides people name
               </div>
               <TeamGrid teams={iconicTeams} selected={selected} onSelect={selectTeam} />
@@ -344,11 +344,11 @@ export default function ClassicPage() {
               */
               <details className="group">
                 <summary className="cursor-pointer list-none flex items-center gap-2 py-3 text-[10px]
-                                    font-bold tracking-widest text-[#888] uppercase hover:text-white
+                                    font-bold tracking-widest text-muted uppercase hover:text-fg
                                     transition-colors touch-manipulation">
-                  <span className="text-[#666] transition-transform group-open:rotate-90">▶</span>
+                  <span className="text-subtle transition-transform group-open:rotate-90">▶</span>
                   Every other side ({otherTeams.length})
-                  <span className="font-normal normal-case tracking-normal text-[#666]">
+                  <span className="font-normal normal-case tracking-normal text-subtle">
                     — or search for one above
                   </span>
                 </summary>
@@ -364,7 +364,7 @@ export default function ClassicPage() {
           )}
 
           {sortedTeams.length === 0 && (
-            <p className="text-[#888] text-sm py-6 text-center">
+            <p className="text-muted text-sm py-6 text-center">
               {iconsOnly
                 ? 'No sides are marked as icons yet. Star them in the editor.'
                 : 'Nothing matches that search.'}
@@ -385,7 +385,7 @@ export default function ClassicPage() {
                   <OptionCard key={f} label={f} selected={formation === f} onClick={() => changeFormation(f)} />
                 ))}
               </div>
-              <p className="text-[#888] text-[11px] text-center mt-1">{FORMATIONS[formation]?.description}</p>
+              <p className="text-muted text-[11px] text-center mt-1">{FORMATIONS[formation]?.description}</p>
             </section>
 
             {/* Pitch + player list */}
@@ -402,12 +402,12 @@ export default function ClassicPage() {
               <div className="flex-1 space-y-1 min-w-0">
                 {/* Header row */}
                 <div className="flex items-center justify-between mb-2">
-                  <div className="text-[10px] font-bold tracking-widest text-[#888] uppercase">
+                  <div className="text-[10px] font-bold tracking-widest text-muted uppercase">
                     XI — {selected.clubName} {selected.seasonLabel}
                   </div>
                   <button
                     onClick={resetToAuto}
-                    className="text-[10px] text-[#888] hover:text-[#00c896] transition-colors font-bold uppercase tracking-wider"
+                    className="text-[10px] text-muted hover:text-accent transition-colors font-bold uppercase tracking-wider"
                   >
                     Auto-fill
                   </button>
@@ -423,34 +423,34 @@ export default function ClassicPage() {
                       onClick={() => handleSlotClick(i)}
                       className="w-full flex items-center justify-between gap-2 py-1.5 px-2 rounded-lg text-left transition-colors"
                       style={{
-                        background: isEditing ? '#1a1a1a' : '#111',
+                        background: isEditing ? 'var(--t-raised)' : 'var(--t-card)',
                         outline: isEditing ? '1px solid #00c896' : undefined,
                       }}
                     >
-                      <span className="text-[10px] font-bold w-10 shrink-0 text-left" style={{ color: '#888' }}>
+                      <span className="text-[10px] font-bold w-10 shrink-0 text-left" style={{ color: 'var(--t-muted)' }}>
                         {slot.position}
                       </span>
                       {pick ? (
                         <>
-                          <span className="text-sm text-white truncate flex-1 text-left">{pick.playerName}</span>
+                          <span className="text-sm text-fg truncate flex-1 text-left">{pick.playerName}</span>
                           <span className="text-xs font-bold tabular-nums shrink-0" style={{ color: ratingColor(pick.rating) }}>
                             {pick.rating}
                           </span>
                         </>
                       ) : (
-                        <span className="text-sm text-[#666] flex-1 text-left italic">— empty —</span>
+                        <span className="text-sm text-subtle flex-1 text-left italic">— empty —</span>
                       )}
-                      <span className="text-[10px] text-[#888] shrink-0">{isEditing ? '▲' : '▼'}</span>
+                      <span className="text-[10px] text-muted shrink-0">{isEditing ? '▲' : '▼'}</span>
                     </button>
                   );
                 })}
 
                 {picks.length < 11 && (
-                  <p className="text-amber-500 text-xs mt-2">
+                  <p className="text-(--c-yellow) text-xs mt-2">
                     {picks.length}/11 slots filled — squad may not cover every position.
                   </p>
                 )}
-                <div className="text-[#888] text-xs mt-2 text-right">
+                <div className="text-muted text-xs mt-2 text-right">
                   OVR <span className="font-bold" style={{ color: ratingColor(overall) }}>{overall}</span>
                 </div>
               </div>
@@ -458,12 +458,12 @@ export default function ClassicPage() {
 
             {/* Swap panel */}
             {editSlot != null && (
-              <div className="bg-[#111] rounded-xl border border-[#1a1a1a] p-4 space-y-3">
+              <div className="bg-card rounded-xl border border-line p-4 space-y-3">
                 <div className="flex items-center justify-between">
-                  <div className="text-xs font-bold text-[#888]">
-                    Slot {editSlot + 1} — <span className="text-white">{editingSlotPos}</span>
+                  <div className="text-xs font-bold text-muted">
+                    Slot {editSlot + 1} — <span className="text-fg">{editingSlotPos}</span>
                     {currentInSlot && (
-                      <span className="text-[#888] ml-2">currently {currentInSlot.playerName}</span>
+                      <span className="text-muted ml-2">currently {currentInSlot.playerName}</span>
                     )}
                   </div>
                   <div className="flex gap-3">
@@ -477,7 +477,7 @@ export default function ClassicPage() {
                     )}
                     <button
                       onClick={() => setEditSlot(null)}
-                      className="text-xs text-[#888] hover:text-white transition-colors"
+                      className="text-xs text-muted hover:text-fg transition-colors"
                     >
                       Close
                     </button>
@@ -496,17 +496,17 @@ export default function ClassicPage() {
                         disabled={inOtherSlot}
                         className={`w-full flex items-center gap-2 px-3 py-2 rounded-lg text-left transition-colors
                           ${isCurrent  ? 'bg-[#00c896]/10 cursor-default' : ''}
-                          ${inOtherSlot ? 'opacity-30 cursor-not-allowed' : !isCurrent ? 'hover:bg-[#1a1a1a]' : ''}`}
+                          ${inOtherSlot ? 'opacity-30 cursor-not-allowed' : !isCurrent ? 'hover:bg-raised' : ''}`}
                       >
                         <span className="flex-1 text-sm truncate">{e.name}</span>
                         {!posMatch && (
-                          <span className="text-[9px] text-amber-500 shrink-0">out of pos</span>
+                          <span className="text-[9px] text-(--c-yellow) shrink-0">out of pos</span>
                         )}
                         {inOtherSlot && (
-                          <span className="text-[9px] text-[#888] shrink-0">in XI</span>
+                          <span className="text-[9px] text-muted shrink-0">in XI</span>
                         )}
                         {isCurrent && (
-                          <span className="text-[9px] text-[#00c896] shrink-0">current</span>
+                          <span className="text-[9px] text-accent shrink-0">current</span>
                         )}
                         <span className="text-xs font-bold tabular-nums shrink-0" style={{ color: ratingColor(e.rating) }}>
                           {e.rating}
@@ -545,7 +545,7 @@ function Chip({ label, selected, onClick }: { label: string; selected: boolean; 
       className={`px-3 py-2.5 rounded-lg text-[10px] font-bold uppercase tracking-widest transition-colors touch-manipulation border ${
         selected
           ? 'bg-[#00c896] text-black border-[#00c896]'
-          : 'text-[#888] border-[#1a1a1a] hover:text-white'
+          : 'text-muted border-line hover:text-fg'
       }`}
     >
       {label}
@@ -574,20 +574,20 @@ function TeamGrid({ teams, selected, onSelect }: {
             key={`${team.clubId}-${team.seasonId}`}
             type="button"
             onClick={() => onSelect(team)}
-            className="relative rounded-xl border text-left px-4 py-3 transition-all hover:border-[#333]"
+            className="relative rounded-xl border text-left px-4 py-3 transition-all hover:border-line-max"
             style={{
-              borderColor: isSelected ? team.color : '#1a1a1a',
-              background:  isSelected ? `${team.color}18` : '#0d0d0d',
+              borderColor: isSelected ? team.color : 'var(--t-line)',
+              background:  isSelected ? `${team.color}18` : 'var(--t-inset)',
               boxShadow:   isSelected ? `0 0 0 1px ${team.color}44` : undefined,
             }}
           >
             {team.iconic && (
-              <span className="absolute top-2 right-2 text-[#c9b84e] text-xs leading-none"
+              <span className="absolute top-2 right-2 text-gold text-xs leading-none"
                     title="Iconic side">{'★'}</span>
             )}
             <div className="w-2 h-2 rounded-full mb-2" style={{ background: team.color }} />
-            <div className="font-bold text-sm text-white leading-tight">{team.clubName}</div>
-            <div className="text-[#888] text-xs mt-0.5">{team.seasonLabel}</div>
+            <div className="font-bold text-sm text-fg leading-tight">{team.clubName}</div>
+            <div className="text-muted text-xs mt-0.5">{team.seasonLabel}</div>
             <div className="text-xs font-bold mt-1" style={{ color: ratingColor(team.overallRating) }}>
               OVR {team.overallRating}
             </div>
@@ -600,7 +600,7 @@ function TeamGrid({ teams, selected, onSelect }: {
 
 function Label({ children }: { children: React.ReactNode }) {
   return (
-    <div className="text-[10px] font-bold tracking-widest text-[#888] uppercase mb-2">
+    <div className="text-[10px] font-bold tracking-widest text-muted uppercase mb-2">
       {children}
     </div>
   );

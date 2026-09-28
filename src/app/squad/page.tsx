@@ -87,19 +87,19 @@ export default function SquadPage() {
   }
 
   if (!picks.length) {
-    return <div className="min-h-screen bg-[#0a0a0a] flex items-center justify-center text-white">Loading…</div>;
+    return <div className="min-h-screen bg-ground flex items-center justify-center text-fg">Loading…</div>;
   }
 
   const cameFromClassic = setup?.draftMode === 'classic';
 
   return (
-    <main className="min-h-screen bg-[#0a0a0a] text-white">
+    <main className="min-h-screen bg-ground text-fg">
       <div className="max-w-6xl mx-auto py-6 px-4 space-y-8">
 
         <div>
           <BackLink href={cameFromClassic ? '/classic' : '/draft'} label={cameFromClassic ? 'Classic' : 'Draft'} />
           <h1 className="text-3xl font-black tracking-tight mt-2">Team Talk</h1>
-          <p className="text-[#888] text-sm mt-1">
+          <p className="text-muted text-sm mt-1">
             Your XI is picked. Decide how they play and whose league they are walking into.
           </p>
         </div>
@@ -118,7 +118,7 @@ export default function SquadPage() {
             <div className="flex items-end gap-4">
               <div>
                 <Label>Your XI</Label>
-                <div className="text-sm text-[#888]">{formation.name}</div>
+                <div className="text-sm text-muted">{formation.name}</div>
               </div>
               <div className="ml-auto text-right">
                 <Label>Overall</Label>
@@ -132,7 +132,7 @@ export default function SquadPage() {
                 <div key={p.slotIndex} className="flex items-center gap-3 py-1.5">
                   <PositionBadge pos={p.position} size="xs" />
                   <span className="font-bold text-sm flex-1 min-w-0 truncate">{p.playerName}</span>
-                  <span className="text-[#888] text-xs shrink-0">{p.clubName.slice(0, 3).toUpperCase()} {p.seasonLabel}</span>
+                  <span className="text-muted text-xs shrink-0">{p.clubName.slice(0, 3).toUpperCase()} {p.seasonLabel}</span>
                   <span className="font-black text-sm w-6 text-right shrink-0" style={{ color: ratingColor(p.rating) }}>{p.rating}</span>
                 </div>
               ))}
@@ -152,7 +152,7 @@ export default function SquadPage() {
         {/* ── Tactic ─────────────────────────────────────────────────────── */}
         <section>
           <Label>Tactic</Label>
-          <p className="text-[#888] text-[11px] mb-3">
+          <p className="text-muted text-[11px] mb-3">
             A style costs you the same whoever is playing it; what it wins back depends on whether
             your XI can carry it out. Fit is how much of the benefit these eleven collect.
           </p>
@@ -178,7 +178,7 @@ export default function SquadPage() {
         {/* ── Opponents ──────────────────────────────────────────────────── */}
         <section>
           <Label>Season</Label>
-          <p className="text-[#888] text-[11px] mb-3">
+          <p className="text-muted text-[11px] mb-3">
             The league your XI is dropped into for all 38 games.
           </p>
           <div className="grid gap-4 lg:grid-cols-[1fr_320px] lg:items-start">
@@ -199,21 +199,21 @@ export default function SquadPage() {
         </section>
 
         {/* ── Odds ───────────────────────────────────────────────────────── */}
-        <section className="bg-[#111] rounded-2xl p-6 space-y-4">
+        <section className="bg-card rounded-2xl p-6 space-y-4">
           <div>
             <Label>Pre-Season Odds</Label>
-            <div className="text-xs text-[#888]">
+            <div className="text-xs text-muted">
               Measured from this XI against {opponent ? `the ${opponent.seasonLabel} field` : 'the field'}
             </div>
           </div>
           <div className="grid grid-cols-2 gap-4">
             <div>
-              <div className="text-xs text-[#888]">Projected Finish</div>
+              <div className="text-xs text-muted">Projected Finish</div>
               <div className="text-3xl font-black">{ordinal(odds.projectedPosition)}</div>
             </div>
             <div>
-              <div className="text-xs text-[#888]">Expected Points</div>
-              <div className="text-3xl font-black text-[#00c896]">{odds.expectedPoints}</div>
+              <div className="text-xs text-muted">Expected Points</div>
+              <div className="text-3xl font-black text-accent">{odds.expectedPoints}</div>
             </div>
           </div>
           {/*
@@ -237,7 +237,7 @@ export default function SquadPage() {
           should not be a scroll away from either. That was never a phone-only
           argument — it used to be released at 640px.
         */}
-        <div className="sticky bottom-0 z-30 py-3 bg-[#0a0a0a]/95 backdrop-blur-sm
+        <div className="sticky bottom-0 z-30 py-3 bg-ground/95 backdrop-blur-sm
                         lg:bg-transparent lg:backdrop-blur-none lg:pb-6">
           <button
             type="button"
@@ -266,13 +266,13 @@ function TacticCard({ tactic, selected, onClick }: {
     <button
       type="button"
       onClick={onClick}
-      className={`rounded-lg border-2 px-3 py-3 text-left transition-colors bg-[#111] touch-manipulation
-        ${selected ? 'border-[#00c896] text-[#00c896]' : 'border-[#2a2a2a] text-white hover:border-[#444]'}`}
+      className={`rounded-lg border-2 px-3 py-3 text-left transition-colors bg-card touch-manipulation
+        ${selected ? 'border-[#00c896] text-accent' : 'border-line-strong text-fg hover:border-line-hover'}`}
     >
       <div className="font-bold text-sm truncate">{tactic.label}</div>
-      <div className="text-[10px] text-[#888] mt-0.5">{shapeOf(tactic)}</div>
+      <div className="text-[10px] text-muted mt-0.5">{shapeOf(tactic)}</div>
       <div className="flex items-center gap-2 mt-2">
-        <div className="flex-1 h-1 rounded-full bg-[#1f1f1f] overflow-hidden">
+        <div className="flex-1 h-1 rounded-full bg-raised-hi overflow-hidden">
           <div className="h-1 rounded-full" style={{ width: `${pct}%`, background: fitColor(tactic.fit) }} />
         </div>
         <span className="text-[10px] font-bold shrink-0" style={{ color: fitColor(tactic.fit) }}>{pct}%</span>
@@ -291,10 +291,10 @@ function TacticCard({ tactic, selected, onClick }: {
 function TacticSummary({ tactic }: { tactic: TacticEffect }) {
   const tempoPct = Math.round((tactic.tempo - 1) * 100);
   return (
-    <div className="mt-3 rounded-xl border border-[#1a1a1a] bg-[#0d0d0d] px-4 py-3">
+    <div className="mt-3 rounded-xl border border-line bg-inset px-4 py-3">
       <div className="flex items-baseline gap-2 flex-wrap">
-        <span className="font-black text-sm text-[#00c896]">{tactic.label}</span>
-        <span className="text-[11px] text-[#888]">fit {Math.round(tactic.fit * 100)}%</span>
+        <span className="font-black text-sm text-accent">{tactic.label}</span>
+        <span className="text-[11px] text-muted">fit {Math.round(tactic.fit * 100)}%</span>
       </div>
       {/* Two columns, always: this panel is 320px wide in the rail, and four
           columns of a label and a number ran into each other there. */}
@@ -304,7 +304,7 @@ function TacticSummary({ tactic }: { tactic: TacticEffect }) {
         <Delta label="Defence"  value={tactic.def} />
         <Delta label="Chances"  value={tempoPct} suffix="%" />
       </div>
-      <p className="text-[#888] text-[11px] mt-2">
+      <p className="text-muted text-[11px] mt-2">
         {tempoPct === 0
           ? 'Your matches are played at the league\'s usual rate.'
           : tempoPct > 0
@@ -317,10 +317,10 @@ function TacticSummary({ tactic }: { tactic: TacticEffect }) {
 
 function Delta({ label, value, suffix = '' }: { label: string; value: number; suffix?: string }) {
   const rounded = suffix === '%' ? Math.round(value) : Math.round(value * 10) / 10;
-  const color = rounded > 0 ? '#00c896' : rounded < 0 ? '#ef4444' : '#888';
+  const color = rounded > 0 ? 'var(--c-accent)' : rounded < 0 ? 'var(--c-red)' : 'var(--t-muted)';
   return (
     <div className="flex items-baseline gap-1.5">
-      <span className="text-[10px] text-[#888] uppercase tracking-widest">{label}</span>
+      <span className="text-[10px] text-muted uppercase tracking-widest">{label}</span>
       <span className="text-sm font-black" style={{ color }}>
         {rounded > 0 ? '+' : ''}{rounded}{suffix}
       </span>
@@ -342,7 +342,7 @@ function shapeOf(tactic: TacticEffect): string {
 }
 
 function fitColor(fit: number): string {
-  return fit >= 0.66 ? '#00c896' : fit >= 0.33 ? '#f59e0b' : '#ef4444';
+  return fit >= 0.66 ? 'var(--c-accent)' : fit >= 0.33 ? 'var(--c-yellow)' : 'var(--c-red)';
 }
 
 // ── Season ───────────────────────────────────────────────────────────────────
@@ -367,7 +367,7 @@ function CompetitionPicker({ competitions, seasonId, onChoose }: {
         <div key={league}>
           <div className="flex items-baseline gap-2 mb-2">
             <span className="font-bold text-sm">{league}</span>
-            <span className="text-[#888] text-[11px]">{seasons.length} seasons</span>
+            <span className="text-muted text-[11px]">{seasons.length} seasons</span>
           </div>
           <div className="grid grid-cols-3 gap-2 sm:grid-cols-4">
             {seasons.map(season => (
@@ -375,19 +375,19 @@ function CompetitionPicker({ competitions, seasonId, onChoose }: {
                 key={season.seasonId}
                 type="button"
                 onClick={() => onChoose(season)}
-                className={`rounded-lg border-2 px-2 py-2.5 transition-colors bg-[#111] touch-manipulation
+                className={`rounded-lg border-2 px-2 py-2.5 transition-colors bg-card touch-manipulation
                   ${season.seasonId === seasonId
-                    ? 'border-[#00c896] text-[#00c896]'
-                    : 'border-[#2a2a2a] text-white hover:border-[#444]'}`}
+                    ? 'border-[#00c896] text-accent'
+                    : 'border-line-strong text-fg hover:border-line-hover'}`}
               >
                 <div className="font-bold text-sm">{season.seasonLabel}</div>
-                <div className="text-[10px] text-[#888]">avg {season.averageRating}</div>
+                <div className="text-[10px] text-muted">avg {season.averageRating}</div>
               </button>
             ))}
           </div>
         </div>
       ))}
-      <p className="text-[#888] text-[11px]">
+      <p className="text-muted text-[11px]">
         Only leagues the snapshot can field a full season for are listed. Serie A, La Liga and the
         Bundesliga are in the draft pool but have a handful of clubs each, so there is no season to
         play in them yet.
@@ -401,11 +401,11 @@ function CompetitionSummary({ competition, draftedFrom }: {
   draftedFrom: boolean;
 }) {
   return (
-    <div className="mt-3 rounded-xl border border-[#1a1a1a] bg-[#0d0d0d] px-4 py-3">
-      <div className="font-black text-sm text-[#00c896]">
+    <div className="mt-3 rounded-xl border border-line bg-inset px-4 py-3">
+      <div className="font-black text-sm text-accent">
         {competition.leagueName} {competition.seasonLabel}
       </div>
-      <div className="text-[11px] text-[#888] mt-1">
+      <div className="text-[11px] text-muted mt-1">
         {competition.opponentCount} opponents · average XI {competition.averageRating} · 38 games
       </div>
       {draftedFrom && (
@@ -415,7 +415,7 @@ function CompetitionSummary({ competition, draftedFrom }: {
         </p>
       )}
       {competition.displaced.length > 0 && (
-        <p className="text-[#888] text-[11px] mt-2">
+        <p className="text-muted text-[11px] mt-2">
           That season had {competition.clubCount} clubs. The league here is twenty, so{' '}
           {competition.displaced.length === 1 ? 'the weakest side makes' : `the ${competition.displaced.length} weakest sides make`}{' '}
           way for you: {competition.displaced.join(', ')}.
@@ -428,7 +428,7 @@ function CompetitionSummary({ competition, draftedFrom }: {
 // ── Bits ─────────────────────────────────────────────────────────────────────
 
 function Label({ children }: { children: React.ReactNode }) {
-  return <div className="text-[10px] font-bold tracking-widest text-[#888] uppercase mb-2">{children}</div>;
+  return <div className="text-[10px] font-bold tracking-widest text-muted uppercase mb-2">{children}</div>;
 }
 
 // Moved here with the odds themselves, from the results page.
@@ -437,11 +437,11 @@ function OddsBar({ label, pct, color, opacity = 1 }: {
 }) {
   return (
     <div className="flex items-center gap-3">
-      <div className="text-xs text-[#888] w-28 flex-shrink-0">{label}</div>
-      <div className="flex-1 bg-[#1a1a1a] rounded-full h-1.5">
+      <div className="text-xs text-muted w-28 flex-shrink-0">{label}</div>
+      <div className="flex-1 bg-raised rounded-full h-1.5">
         <div className="h-1.5 rounded-full" style={{ width: `${Math.min(100, pct)}%`, background: color, opacity }} />
       </div>
-      <div className="text-xs text-[#888] w-10 text-right">{pct.toFixed(1)}%</div>
+      <div className="text-xs text-muted w-10 text-right">{pct.toFixed(1)}%</div>
     </div>
   );
 }
