@@ -1,51 +1,81 @@
 {
   "batch": 32,
-  "of": 119,
+  "of": 122,
   "instructions": "See docs/positions-lookup.md. Fill in \"positions\" for each player, most natural first, using only values from \"allowed\". The first must come from \"primaryMustBeOneOf\". Set confidence to high, medium or low.",
   "players": [
     {
-      "fbrefId": "e40d028b",
-      "name": "Gianluigi Buffon",
-      "nation": "ITA",
-      "fbrefPosition": "GK",
+      "fbrefId": "15e9c7e6",
+      "name": "Nani",
+      "nation": "POR",
+      "fbrefPosition": "FWMF",
       "allowed": [
-        "GK"
+        "LW",
+        "RW",
+        "ST",
+        "CF",
+        "CDM",
+        "CM",
+        "CAM",
+        "LM",
+        "RM"
       ],
       "primaryMustBeOneOf": [
-        "GK"
+        "LW",
+        "RW",
+        "ST",
+        "CF"
       ],
-      "choices": 1,
-      "totalMinutes": 6016,
+      "choices": 9,
+      "totalMinutes": 6366,
       "seasons": [
         {
-          "season": "2013/14",
-          "club": "Juventus",
-          "minutes": 2866,
-          "starts": 33,
-          "goals": 0,
-          "assists": 0,
-          "fbrefPosition": "GK"
+          "season": "2007/08",
+          "club": "Manchester United",
+          "minutes": 1573,
+          "starts": 16,
+          "goals": 3,
+          "assists": 9,
+          "fbrefPosition": "FWMF"
         },
         {
-          "season": "2015/16",
-          "club": "Juventus",
-          "minutes": 3150,
-          "starts": 35,
-          "goals": 0,
-          "assists": 0,
-          "fbrefPosition": "GK"
+          "season": "2008/09",
+          "club": "Manchester United",
+          "minutes": 550,
+          "starts": 7,
+          "goals": 1,
+          "assists": 2,
+          "fbrefPosition": "FWMF"
+        },
+        {
+          "season": "2009/10",
+          "club": "Manchester United",
+          "minutes": 1584,
+          "starts": 19,
+          "goals": 4,
+          "assists": 6,
+          "fbrefPosition": "FWMF"
+        },
+        {
+          "season": "2010/11",
+          "club": "Manchester United",
+          "minutes": 2659,
+          "starts": 31,
+          "goals": 9,
+          "assists": 14,
+          "fbrefPosition": "FWMF"
         }
       ],
       "positions": [
-        "GK"
+        "RW",
+        "LW"
       ],
       "confidence": "high",
       "note": null
     },
     {
-      "fbrefId": "724e2a7d",
-      "name": "David Lee",
-      "nation": "ENG",
+      "fbrefId": "6d28f149",
+      "name": "Gaël Givet",
+      "nation": "FRA",
       "fbrefPosition": "DF",
       "allowed": [
         "LB",
@@ -62,39 +92,30 @@
         "RWB"
       ],
       "choices": 5,
-      "totalMinutes": 6006,
+      "totalMinutes": 6350,
       "seasons": [
         {
-          "season": "1992/93",
-          "club": "Chelsea",
-          "minutes": 2144,
-          "starts": 23,
-          "goals": 2,
-          "assists": 0,
-          "fbrefPosition": "DF"
-        },
-        {
-          "season": "1993/94",
-          "club": "Chelsea",
-          "minutes": 364,
-          "starts": 3,
-          "goals": 1,
-          "assists": 0,
-          "fbrefPosition": "DF"
-        },
-        {
-          "season": "1994/95",
-          "club": "Chelsea",
-          "minutes": 864,
-          "starts": 9,
+          "season": "2008/09",
+          "club": "Blackburn Rovers",
+          "minutes": 1110,
+          "starts": 14,
           "goals": 0,
-          "assists": 1,
+          "assists": 0,
           "fbrefPosition": "DF"
         },
         {
-          "season": "1995/96",
-          "club": "Chelsea",
-          "minutes": 2634,
+          "season": "2009/10",
+          "club": "Blackburn Rovers",
+          "minutes": 2795,
+          "starts": 33,
+          "goals": 2,
+          "assists": 2,
+          "fbrefPosition": "DF"
+        },
+        {
+          "season": "2010/11",
+          "club": "Blackburn Rovers",
+          "minutes": 2445,
           "starts": 29,
           "goals": 1,
           "assists": 0,
@@ -102,96 +123,16 @@
         }
       ],
       "positions": [
-        "CB"
-      ],
-      "confidence": "medium",
-      "note": "Central defender who also played defensive midfield and wing-back."
-    },
-    {
-      "fbrefId": "53c30561",
-      "name": "Gordon Watson",
-      "nation": "ENG",
-      "fbrefPosition": "FW",
-      "allowed": [
-        "LW",
-        "RW",
-        "ST",
-        "CF"
-      ],
-      "primaryMustBeOneOf": [
-        "LW",
-        "RW",
-        "ST",
-        "CF"
-      ],
-      "choices": 4,
-      "totalMinutes": 5998,
-      "seasons": [
-        {
-          "season": "1992/93",
-          "club": "Sheffield Wednesday",
-          "minutes": 474,
-          "starts": 4,
-          "goals": 1,
-          "assists": 1,
-          "fbrefPosition": "FW"
-        },
-        {
-          "season": "1993/94",
-          "club": "Sheffield Wednesday",
-          "minutes": 1513,
-          "starts": 15,
-          "goals": 12,
-          "assists": 2,
-          "fbrefPosition": "FW"
-        },
-        {
-          "season": "1994/95",
-          "club": "Southampton",
-          "minutes": 1067,
-          "starts": 12,
-          "goals": 3,
-          "assists": 1,
-          "fbrefPosition": "FW"
-        },
-        {
-          "season": "1994/95",
-          "club": "Sheffield Wednesday",
-          "minutes": 714,
-          "starts": 5,
-          "goals": 2,
-          "assists": 0,
-          "fbrefPosition": "FW"
-        },
-        {
-          "season": "1995/96",
-          "club": "Southampton",
-          "minutes": 1588,
-          "starts": 18,
-          "goals": 3,
-          "assists": 3,
-          "fbrefPosition": "FW"
-        },
-        {
-          "season": "1996/97",
-          "club": "Southampton",
-          "minutes": 642,
-          "starts": 7,
-          "goals": 2,
-          "assists": 1,
-          "fbrefPosition": "FW"
-        }
-      ],
-      "positions": [
-        "ST"
+        "CB",
+        "LB"
       ],
       "confidence": "high",
       "note": null
     },
     {
-      "fbrefId": "35003e24",
-      "name": "Steve Froggatt",
-      "nation": "ENG",
+      "fbrefId": "9838d388",
+      "name": "Fabrice Fernandes",
+      "nation": "FRA",
       "fbrefPosition": "MF",
       "allowed": [
         "CDM",
@@ -208,209 +149,54 @@
         "RM"
       ],
       "choices": 5,
-      "totalMinutes": 5981,
+      "totalMinutes": 6346,
       "seasons": [
-        {
-          "season": "1992/93",
-          "club": "Aston Villa",
-          "minutes": 1307,
-          "starts": 16,
-          "goals": 1,
-          "assists": 5,
-          "fbrefPosition": "MF"
-        },
-        {
-          "season": "1993/94",
-          "club": "Aston Villa",
-          "minutes": 734,
-          "starts": 8,
-          "goals": 1,
-          "assists": 0,
-          "fbrefPosition": "MF"
-        },
-        {
-          "season": "1998/99",
-          "club": "Coventry City",
-          "minutes": 2070,
-          "starts": 23,
-          "goals": 1,
-          "assists": 6,
-          "fbrefPosition": "MF"
-        },
-        {
-          "season": "1999/00",
-          "club": "Coventry City",
-          "minutes": 1870,
-          "starts": 21,
-          "goals": 1,
-          "assists": 2,
-          "fbrefPosition": "MF"
-        }
-      ],
-      "positions": [
-        "LM"
-      ],
-      "confidence": "high",
-      "note": "Aston Villa left winger, used as an orthodox wide-left midfielder."
-    },
-    {
-      "fbrefId": "db5c50dd",
-      "name": "Gary Doherty",
-      "nation": "IRL",
-      "fbrefPosition": "DFFW",
-      "allowed": [
-        "LB",
-        "CB",
-        "RB",
-        "LWB",
-        "RWB",
-        "LW",
-        "RW",
-        "ST",
-        "CF"
-      ],
-      "primaryMustBeOneOf": [
-        "LB",
-        "CB",
-        "RB",
-        "LWB",
-        "RWB"
-      ],
-      "choices": 9,
-      "totalMinutes": 5974,
-      "seasons": [
-        {
-          "season": "2000/01",
-          "club": "Tottenham Hotspur",
-          "minutes": 1679,
-          "starts": 18,
-          "goals": 3,
-          "assists": 1,
-          "fbrefPosition": "DFFW"
-        },
         {
           "season": "2001/02",
-          "club": "Tottenham Hotspur",
-          "minutes": 362,
-          "starts": 4,
-          "goals": 0,
-          "assists": 0,
-          "fbrefPosition": "DFFW"
-        },
-        {
-          "season": "2002/03",
-          "club": "Tottenham Hotspur",
-          "minutes": 983,
-          "starts": 7,
-          "goals": 1,
-          "assists": 0,
-          "fbrefPosition": "DFFW"
-        },
-        {
-          "season": "2003/04",
-          "club": "Tottenham Hotspur",
-          "minutes": 1451,
-          "starts": 16,
-          "goals": 0,
-          "assists": 0,
-          "fbrefPosition": "DFFW"
-        },
-        {
-          "season": "2004/05",
-          "club": "Norwich City",
-          "minutes": 1499,
-          "starts": 17,
-          "goals": 2,
-          "assists": 0,
-          "fbrefPosition": "DFFW"
-        }
-      ],
-      "positions": [
-        "CB",
-        "ST"
-      ],
-      "confidence": "high",
-      "note": "Centre-back used as an emergency striker at Spurs, which is where the FW half of the label comes from."
-    },
-    {
-      "fbrefId": "e3c6ba7b",
-      "name": "Jason Koumas",
-      "nation": "WAL",
-      "fbrefPosition": "MF",
-      "allowed": [
-        "CDM",
-        "CM",
-        "CAM",
-        "LM",
-        "RM"
-      ],
-      "primaryMustBeOneOf": [
-        "CDM",
-        "CM",
-        "CAM",
-        "LM",
-        "RM"
-      ],
-      "choices": 5,
-      "totalMinutes": 5970,
-      "seasons": [
-        {
-          "season": "2002/03",
-          "club": "West Bromwich Albion",
-          "minutes": 2356,
-          "starts": 27,
-          "goals": 4,
-          "assists": 5,
-          "fbrefPosition": "MF"
-        },
-        {
-          "season": "2004/05",
-          "club": "West Bromwich Albion",
-          "minutes": 531,
-          "starts": 5,
-          "goals": 0,
-          "assists": 1,
-          "fbrefPosition": "MF"
-        },
-        {
-          "season": "2007/08",
-          "club": "Wigan Athletic",
-          "minutes": 1986,
-          "starts": 21,
-          "goals": 1,
-          "assists": 4,
-          "fbrefPosition": "MF"
-        },
-        {
-          "season": "2008/09",
-          "club": "Wigan Athletic",
-          "minutes": 679,
-          "starts": 5,
-          "goals": 0,
-          "assists": 1,
-          "fbrefPosition": "MF"
-        },
-        {
-          "season": "2009/10",
-          "club": "Wigan Athletic",
-          "minutes": 418,
+          "club": "Southampton",
+          "minutes": 536,
           "starts": 6,
           "goals": 1,
           "assists": 0,
           "fbrefPosition": "MF"
+        },
+        {
+          "season": "2002/03",
+          "club": "Southampton",
+          "minutes": 2956,
+          "starts": 35,
+          "goals": 3,
+          "assists": 3,
+          "fbrefPosition": "MF"
+        },
+        {
+          "season": "2003/04",
+          "club": "Southampton",
+          "minutes": 1743,
+          "starts": 21,
+          "goals": 1,
+          "assists": 2,
+          "fbrefPosition": "MF"
+        },
+        {
+          "season": "2004/05",
+          "club": "Southampton",
+          "minutes": 1111,
+          "starts": 14,
+          "goals": 0,
+          "assists": 4,
+          "fbrefPosition": "MF"
         }
       ],
       "positions": [
-        "CAM",
-        "CM",
-        "LM"
+        "RM"
       ],
-      "confidence": "medium",
-      "note": "Left-footed creator for West Brom, playing behind the strikers and drifting left."
+      "confidence": "high",
+      "note": null
     },
     {
-      "fbrefId": "bdf7b97d",
-      "name": "Fernando Torres",
+      "fbrefId": "2b81295d",
+      "name": "Raúl",
       "nation": "ESP",
       "fbrefPosition": "FW",
       "allowed": [
@@ -426,33 +212,476 @@
         "CF"
       ],
       "choices": 4,
-      "totalMinutes": 5965,
+      "totalMinutes": 6324,
       "seasons": [
         {
-          "season": "2007/08",
-          "club": "Liverpool",
-          "minutes": 2533,
-          "starts": 29,
-          "goals": 24,
-          "assists": 4,
+          "season": "2002/03",
+          "club": "Real Madrid",
+          "minutes": 2686,
+          "starts": 30,
+          "goals": 16,
+          "assists": 10,
           "fbrefPosition": "FW"
         },
         {
-          "season": "2008/09",
-          "club": "Liverpool",
-          "minutes": 1728,
-          "starts": 20,
-          "goals": 14,
-          "assists": 3,
+          "season": "2004/05",
+          "club": "Real Madrid",
+          "minutes": 2577,
+          "starts": 31,
+          "goals": 9,
+          "assists": 6,
           "fbrefPosition": "FW"
         },
         {
           "season": "2009/10",
-          "club": "Liverpool",
-          "minutes": 1704,
-          "starts": 20,
-          "goals": 18,
+          "club": "Real Madrid",
+          "minutes": 1061,
+          "starts": 8,
+          "goals": 5,
+          "assists": 1,
+          "fbrefPosition": "FW"
+        }
+      ],
+      "positions": [
+        "CF",
+        "ST",
+        "LW"
+      ],
+      "confidence": "high",
+      "note": "A second striker who dropped off the front man and drifted left, rather than a pure number nine."
+    },
+    {
+      "fbrefId": "af24b12a",
+      "name": "Michael Oakes",
+      "nation": "ENG",
+      "fbrefPosition": "GK",
+      "allowed": [
+        "GK"
+      ],
+      "primaryMustBeOneOf": [
+        "GK"
+      ],
+      "choices": 1,
+      "totalMinutes": 6315,
+      "seasons": [
+        {
+          "season": "1996/97",
+          "club": "Aston Villa",
+          "minutes": 1668,
+          "starts": 18,
+          "goals": 0,
+          "assists": 0,
+          "fbrefPosition": "GK"
+        },
+        {
+          "season": "1997/98",
+          "club": "Aston Villa",
+          "minutes": 720,
+          "starts": 8,
+          "goals": 0,
+          "assists": 0,
+          "fbrefPosition": "GK"
+        },
+        {
+          "season": "1998/99",
+          "club": "Aston Villa",
+          "minutes": 2037,
+          "starts": 23,
+          "goals": 0,
+          "assists": 0,
+          "fbrefPosition": "GK"
+        },
+        {
+          "season": "2003/04",
+          "club": "Wolverhampton Wanderers",
+          "minutes": 1890,
+          "starts": 21,
+          "goals": 0,
+          "assists": 0,
+          "fbrefPosition": "GK"
+        }
+      ],
+      "positions": [
+        "GK"
+      ],
+      "confidence": "high",
+      "note": null
+    },
+    {
+      "fbrefId": "eded06bf",
+      "name": "David Platt",
+      "nation": "ENG",
+      "fbrefPosition": "MF",
+      "allowed": [
+        "CDM",
+        "CM",
+        "CAM",
+        "LM",
+        "RM"
+      ],
+      "primaryMustBeOneOf": [
+        "CDM",
+        "CM",
+        "CAM",
+        "LM",
+        "RM"
+      ],
+      "choices": 5,
+      "totalMinutes": 6294,
+      "seasons": [
+        {
+          "season": "1995/96",
+          "club": "Arsenal",
+          "minutes": 2488,
+          "starts": 27,
+          "goals": 6,
           "assists": 3,
+          "fbrefPosition": "MF"
+        },
+        {
+          "season": "1996/97",
+          "club": "Arsenal",
+          "minutes": 2346,
+          "starts": 27,
+          "goals": 4,
+          "assists": 1,
+          "fbrefPosition": "MF"
+        },
+        {
+          "season": "1997/98",
+          "club": "Arsenal",
+          "minutes": 1460,
+          "starts": 11,
+          "goals": 3,
+          "assists": 3,
+          "fbrefPosition": "MF"
+        }
+      ],
+      "positions": [
+        "CM",
+        "CAM"
+      ],
+      "confidence": "high",
+      "note": "Goalscoring central midfielder arriving late in the box."
+    },
+    {
+      "fbrefId": "897b32c0",
+      "name": "Anders Limpar",
+      "nation": "SWE",
+      "fbrefPosition": "MF",
+      "allowed": [
+        "CDM",
+        "CM",
+        "CAM",
+        "LM",
+        "RM"
+      ],
+      "primaryMustBeOneOf": [
+        "CDM",
+        "CM",
+        "CAM",
+        "LM",
+        "RM"
+      ],
+      "choices": 5,
+      "totalMinutes": 6277,
+      "seasons": [
+        {
+          "season": "1992/93",
+          "club": "Arsenal",
+          "minutes": 1165,
+          "starts": 12,
+          "goals": 2,
+          "assists": 2,
+          "fbrefPosition": "MF"
+        },
+        {
+          "season": "1993/94",
+          "club": "Everton",
+          "minutes": 803,
+          "starts": 9,
+          "goals": 0,
+          "assists": 1,
+          "fbrefPosition": "MF"
+        },
+        {
+          "season": "1993/94",
+          "club": "Arsenal",
+          "minutes": 750,
+          "starts": 9,
+          "goals": 0,
+          "assists": 2,
+          "fbrefPosition": "MF"
+        },
+        {
+          "season": "1994/95",
+          "club": "Everton",
+          "minutes": 1726,
+          "starts": 19,
+          "goals": 2,
+          "assists": 5,
+          "fbrefPosition": "MF"
+        },
+        {
+          "season": "1995/96",
+          "club": "Everton",
+          "minutes": 1833,
+          "starts": 22,
+          "goals": 3,
+          "assists": 5,
+          "fbrefPosition": "MF"
+        }
+      ],
+      "positions": [
+        "LM",
+        "RM"
+      ],
+      "confidence": "high",
+      "note": null
+    },
+    {
+      "fbrefId": "2f07dee0",
+      "name": "Denílson",
+      "nation": "BRA",
+      "fbrefPosition": "MF",
+      "allowed": [
+        "CDM",
+        "CM",
+        "CAM",
+        "LM",
+        "RM"
+      ],
+      "primaryMustBeOneOf": [
+        "CDM",
+        "CM",
+        "CAM",
+        "LM",
+        "RM"
+      ],
+      "choices": 5,
+      "totalMinutes": 6273,
+      "seasons": [
+        {
+          "season": "2006/07",
+          "club": "Arsenal",
+          "minutes": 383,
+          "starts": 4,
+          "goals": 0,
+          "assists": 1,
+          "fbrefPosition": "MF"
+        },
+        {
+          "season": "2007/08",
+          "club": "Arsenal",
+          "minutes": 550,
+          "starts": 4,
+          "goals": 0,
+          "assists": 1,
+          "fbrefPosition": "MF"
+        },
+        {
+          "season": "2008/09",
+          "club": "Arsenal",
+          "minutes": 3144,
+          "starts": 36,
+          "goals": 3,
+          "assists": 7,
+          "fbrefPosition": "MF"
+        },
+        {
+          "season": "2009/10",
+          "club": "Arsenal",
+          "minutes": 1567,
+          "starts": 19,
+          "goals": 4,
+          "assists": 1,
+          "fbrefPosition": "MF"
+        },
+        {
+          "season": "2010/11",
+          "club": "Arsenal",
+          "minutes": 629,
+          "starts": 6,
+          "goals": 0,
+          "assists": 0,
+          "fbrefPosition": "MF"
+        }
+      ],
+      "positions": [
+        "CM",
+        "CDM"
+      ],
+      "confidence": "high",
+      "note": "One of the two deeper midfielders in Arsenal 4-2-3-1, keeping the ball rather than attacking the box."
+    },
+    {
+      "fbrefId": "a4321738",
+      "name": "John Filan",
+      "nation": "AUS",
+      "fbrefPosition": "GK",
+      "allowed": [
+        "GK"
+      ],
+      "primaryMustBeOneOf": [
+        "GK"
+      ],
+      "choices": 1,
+      "totalMinutes": 6273,
+      "seasons": [
+        {
+          "season": "1995/96",
+          "club": "Coventry City",
+          "minutes": 1170,
+          "starts": 13,
+          "goals": 0,
+          "assists": 0,
+          "fbrefPosition": "GK"
+        },
+        {
+          "season": "1997/98",
+          "club": "Blackburn Rovers",
+          "minutes": 603,
+          "starts": 7,
+          "goals": 0,
+          "assists": 0,
+          "fbrefPosition": "GK"
+        },
+        {
+          "season": "1998/99",
+          "club": "Blackburn Rovers",
+          "minutes": 2295,
+          "starts": 26,
+          "goals": 0,
+          "assists": 0,
+          "fbrefPosition": "GK"
+        },
+        {
+          "season": "2005/06",
+          "club": "Wigan Athletic",
+          "minutes": 1305,
+          "starts": 15,
+          "goals": 0,
+          "assists": 0,
+          "fbrefPosition": "GK"
+        },
+        {
+          "season": "2006/07",
+          "club": "Wigan Athletic",
+          "minutes": 900,
+          "starts": 10,
+          "goals": 0,
+          "assists": 0,
+          "fbrefPosition": "GK"
+        }
+      ],
+      "positions": [
+        "GK"
+      ],
+      "confidence": "high",
+      "note": null
+    },
+    {
+      "fbrefId": "1222ab35",
+      "name": "Carlos Cuéllar",
+      "nation": "ESP",
+      "fbrefPosition": "DF",
+      "allowed": [
+        "LB",
+        "CB",
+        "RB",
+        "LWB",
+        "RWB"
+      ],
+      "primaryMustBeOneOf": [
+        "LB",
+        "CB",
+        "RB",
+        "LWB",
+        "RWB"
+      ],
+      "choices": 5,
+      "totalMinutes": 6266,
+      "seasons": [
+        {
+          "season": "2008/09",
+          "club": "Aston Villa",
+          "minutes": 2133,
+          "starts": 24,
+          "goals": 0,
+          "assists": 0,
+          "fbrefPosition": "DF"
+        },
+        {
+          "season": "2009/10",
+          "club": "Aston Villa",
+          "minutes": 3239,
+          "starts": 36,
+          "goals": 2,
+          "assists": 1,
+          "fbrefPosition": "DF"
+        },
+        {
+          "season": "2010/11",
+          "club": "Aston Villa",
+          "minutes": 894,
+          "starts": 10,
+          "goals": 0,
+          "assists": 0,
+          "fbrefPosition": "DF"
+        }
+      ],
+      "positions": [
+        "CB",
+        "RB"
+      ],
+      "confidence": "high",
+      "note": "Signed as a centre-back by Villa; used at right-back when needed."
+    },
+    {
+      "fbrefId": "e9430452",
+      "name": "John Fashanu",
+      "nation": "ENG",
+      "fbrefPosition": "FW",
+      "allowed": [
+        "LW",
+        "RW",
+        "ST",
+        "CF"
+      ],
+      "primaryMustBeOneOf": [
+        "LW",
+        "RW",
+        "ST",
+        "CF"
+      ],
+      "choices": 4,
+      "totalMinutes": 6260,
+      "seasons": [
+        {
+          "season": "1992/93",
+          "club": "Wimbledon",
+          "minutes": 2384,
+          "starts": 27,
+          "goals": 6,
+          "assists": 2,
+          "fbrefPosition": "FW"
+        },
+        {
+          "season": "1993/94",
+          "club": "Wimbledon",
+          "minutes": 2979,
+          "starts": 35,
+          "goals": 11,
+          "assists": 4,
+          "fbrefPosition": "FW"
+        },
+        {
+          "season": "1994/95",
+          "club": "Aston Villa",
+          "minutes": 897,
+          "starts": 11,
+          "goals": 3,
+          "assists": 0,
           "fbrefPosition": "FW"
         }
       ],
@@ -463,139 +692,9 @@
       "note": null
     },
     {
-      "fbrefId": "c8479463",
-      "name": "Andy Clarke",
-      "nation": "ENG",
-      "fbrefPosition": "FW",
-      "allowed": [
-        "LW",
-        "RW",
-        "ST",
-        "CF"
-      ],
-      "primaryMustBeOneOf": [
-        "LW",
-        "RW",
-        "ST",
-        "CF"
-      ],
-      "choices": 4,
-      "totalMinutes": 5943,
-      "seasons": [
-        {
-          "season": "1992/93",
-          "club": "Wimbledon",
-          "minutes": 2088,
-          "starts": 23,
-          "goals": 5,
-          "assists": 2,
-          "fbrefPosition": "FW"
-        },
-        {
-          "season": "1993/94",
-          "club": "Wimbledon",
-          "minutes": 995,
-          "starts": 9,
-          "goals": 2,
-          "assists": 1,
-          "fbrefPosition": "FW"
-        },
-        {
-          "season": "1994/95",
-          "club": "Wimbledon",
-          "minutes": 1151,
-          "starts": 8,
-          "goals": 1,
-          "assists": 1,
-          "fbrefPosition": "FW"
-        },
-        {
-          "season": "1995/96",
-          "club": "Wimbledon",
-          "minutes": 952,
-          "starts": 9,
-          "goals": 2,
-          "assists": 2,
-          "fbrefPosition": "FW"
-        },
-        {
-          "season": "1996/97",
-          "club": "Wimbledon",
-          "minutes": 396,
-          "starts": 4,
-          "goals": 1,
-          "assists": 0,
-          "fbrefPosition": "FW"
-        },
-        {
-          "season": "1997/98",
-          "club": "Wimbledon",
-          "minutes": 361,
-          "starts": 1,
-          "goals": 0,
-          "assists": 0,
-          "fbrefPosition": "FW"
-        }
-      ],
-      "positions": [
-        "ST",
-        "CF"
-      ],
-      "confidence": "medium",
-      "note": "Pacy forward, sometimes used wide."
-    },
-    {
-      "fbrefId": "ad98628b",
-      "name": "Wim Jonk",
-      "nation": "NED",
-      "fbrefPosition": "MF",
-      "allowed": [
-        "CDM",
-        "CM",
-        "CAM",
-        "LM",
-        "RM"
-      ],
-      "primaryMustBeOneOf": [
-        "CDM",
-        "CM",
-        "CAM",
-        "LM",
-        "RM"
-      ],
-      "choices": 5,
-      "totalMinutes": 5923,
-      "seasons": [
-        {
-          "season": "1998/99",
-          "club": "Sheffield Wednesday",
-          "minutes": 3339,
-          "starts": 38,
-          "goals": 2,
-          "assists": 5,
-          "fbrefPosition": "MF"
-        },
-        {
-          "season": "1999/00",
-          "club": "Sheffield Wednesday",
-          "minutes": 2584,
-          "starts": 29,
-          "goals": 3,
-          "assists": 8,
-          "fbrefPosition": "MF"
-        }
-      ],
-      "positions": [
-        "CM",
-        "CDM"
-      ],
-      "confidence": "medium",
-      "note": "Deep-lying passer at Sheffield Wednesday rather than a number ten."
-    },
-    {
-      "fbrefId": "66f7c69b",
-      "name": "Darren Moore",
-      "nation": "JAM",
+      "fbrefId": "3a12ed68",
+      "name": "Sébastien Schemmel",
+      "nation": "FRA",
       "fbrefPosition": "DF",
       "allowed": [
         "LB",
@@ -612,31 +711,180 @@
         "RWB"
       ],
       "choices": 5,
-      "totalMinutes": 5910,
+      "totalMinutes": 6260,
       "seasons": [
         {
-          "season": "2002/03",
-          "club": "West Bromwich Albion",
-          "minutes": 2458,
-          "starts": 29,
-          "goals": 2,
-          "assists": 1,
-          "fbrefPosition": "DF"
-        },
-        {
-          "season": "2004/05",
-          "club": "West Bromwich Albion",
-          "minutes": 986,
+          "season": "2000/01",
+          "club": "West Ham United",
+          "minutes": 808,
           "starts": 10,
           "goals": 0,
           "assists": 0,
           "fbrefPosition": "DF"
         },
         {
+          "season": "2001/02",
+          "club": "West Ham United",
+          "minutes": 3059,
+          "starts": 35,
+          "goals": 1,
+          "assists": 6,
+          "fbrefPosition": "DF"
+        },
+        {
+          "season": "2002/03",
+          "club": "West Ham United",
+          "minutes": 1358,
+          "starts": 15,
+          "goals": 0,
+          "assists": 2,
+          "fbrefPosition": "DF"
+        },
+        {
+          "season": "2003/04",
+          "club": "Portsmouth",
+          "minutes": 1035,
+          "starts": 12,
+          "goals": 0,
+          "assists": 1,
+          "fbrefPosition": "DF"
+        }
+      ],
+      "positions": [
+        "RB"
+      ],
+      "confidence": "high",
+      "note": null
+    },
+    {
+      "fbrefId": "b8673e18",
+      "name": "Johan Djourou",
+      "nation": "SUI",
+      "fbrefPosition": "DF",
+      "allowed": [
+        "LB",
+        "CB",
+        "RB",
+        "LWB",
+        "RWB"
+      ],
+      "primaryMustBeOneOf": [
+        "LB",
+        "CB",
+        "RB",
+        "LWB",
+        "RWB"
+      ],
+      "choices": 5,
+      "totalMinutes": 6257,
+      "seasons": [
+        {
+          "season": "2005/06",
+          "club": "Arsenal",
+          "minutes": 563,
+          "starts": 6,
+          "goals": 0,
+          "assists": 0,
+          "fbrefPosition": "DF"
+        },
+        {
+          "season": "2006/07",
+          "club": "Arsenal",
+          "minutes": 1541,
+          "starts": 18,
+          "goals": 0,
+          "assists": 0,
+          "fbrefPosition": "DF"
+        },
+        {
           "season": "2007/08",
-          "club": "Derby County",
-          "minutes": 2466,
-          "starts": 29,
+          "club": "Birmingham City",
+          "minutes": 1155,
+          "starts": 13,
+          "goals": 0,
+          "assists": 0,
+          "fbrefPosition": "DF"
+        },
+        {
+          "season": "2008/09",
+          "club": "Arsenal",
+          "minutes": 1204,
+          "starts": 13,
+          "goals": 0,
+          "assists": 0,
+          "fbrefPosition": "DF"
+        },
+        {
+          "season": "2010/11",
+          "club": "Arsenal",
+          "minutes": 1794,
+          "starts": 20,
+          "goals": 1,
+          "assists": 0,
+          "fbrefPosition": "DF"
+        }
+      ],
+      "positions": [
+        "CB",
+        "RB"
+      ],
+      "confidence": "high",
+      "note": null
+    },
+    {
+      "fbrefId": "abe6b945",
+      "name": "Nigel Pearson",
+      "nation": "ENG",
+      "fbrefPosition": "DF",
+      "allowed": [
+        "LB",
+        "CB",
+        "RB",
+        "LWB",
+        "RWB"
+      ],
+      "primaryMustBeOneOf": [
+        "LB",
+        "CB",
+        "RB",
+        "LWB",
+        "RWB"
+      ],
+      "choices": 5,
+      "totalMinutes": 6245,
+      "seasons": [
+        {
+          "season": "1992/93",
+          "club": "Sheffield Wednesday",
+          "minutes": 1223,
+          "starts": 13,
+          "goals": 1,
+          "assists": 0,
+          "fbrefPosition": "DF"
+        },
+        {
+          "season": "1993/94",
+          "club": "Sheffield Wednesday",
+          "minutes": 405,
+          "starts": 5,
+          "goals": 0,
+          "assists": 0,
+          "fbrefPosition": "DF"
+        },
+        {
+          "season": "1995/96",
+          "club": "Middlesbrough",
+          "minutes": 3138,
+          "starts": 36,
+          "goals": 0,
+          "assists": 1,
+          "fbrefPosition": "DF"
+        },
+        {
+          "season": "1996/97",
+          "club": "Middlesbrough",
+          "minutes": 1479,
+          "starts": 17,
           "goals": 0,
           "assists": 0,
           "fbrefPosition": "DF"
@@ -649,8 +897,178 @@
       "note": null
     },
     {
-      "fbrefId": "40094615",
-      "name": "Dalian Atkinson",
+      "fbrefId": "1a3d94b5",
+      "name": "Stephen Jordan",
+      "nation": "ENG",
+      "fbrefPosition": "DF",
+      "allowed": [
+        "LB",
+        "CB",
+        "RB",
+        "LWB",
+        "RWB"
+      ],
+      "primaryMustBeOneOf": [
+        "LB",
+        "CB",
+        "RB",
+        "LWB",
+        "RWB"
+      ],
+      "choices": 5,
+      "totalMinutes": 6244,
+      "seasons": [
+        {
+          "season": "2004/05",
+          "club": "Manchester City",
+          "minutes": 1620,
+          "starts": 19,
+          "goals": 0,
+          "assists": 0,
+          "fbrefPosition": "DF"
+        },
+        {
+          "season": "2005/06",
+          "club": "Manchester City",
+          "minutes": 1560,
+          "starts": 18,
+          "goals": 0,
+          "assists": 0,
+          "fbrefPosition": "DF"
+        },
+        {
+          "season": "2006/07",
+          "club": "Manchester City",
+          "minutes": 1041,
+          "starts": 12,
+          "goals": 0,
+          "assists": 0,
+          "fbrefPosition": "DF"
+        },
+        {
+          "season": "2009/10",
+          "club": "Burnley",
+          "minutes": 2023,
+          "starts": 23,
+          "goals": 0,
+          "assists": 1,
+          "fbrefPosition": "DF"
+        }
+      ],
+      "positions": [
+        "LB"
+      ],
+      "confidence": "high",
+      "note": null
+    },
+    {
+      "fbrefId": "e935fea0",
+      "name": "Stuart McCall",
+      "nation": "SCO",
+      "fbrefPosition": "MF",
+      "allowed": [
+        "CDM",
+        "CM",
+        "CAM",
+        "LM",
+        "RM"
+      ],
+      "primaryMustBeOneOf": [
+        "CDM",
+        "CM",
+        "CAM",
+        "LM",
+        "RM"
+      ],
+      "choices": 5,
+      "totalMinutes": 6239,
+      "seasons": [
+        {
+          "season": "1999/00",
+          "club": "Bradford City",
+          "minutes": 2997,
+          "starts": 33,
+          "goals": 1,
+          "assists": 2,
+          "fbrefPosition": "MF"
+        },
+        {
+          "season": "2000/01",
+          "club": "Bradford City",
+          "minutes": 3242,
+          "starts": 36,
+          "goals": 1,
+          "assists": 0,
+          "fbrefPosition": "MF"
+        }
+      ],
+      "positions": [
+        "CM",
+        "CDM"
+      ],
+      "confidence": "high",
+      "note": null
+    },
+    {
+      "fbrefId": "d6eae203",
+      "name": "Jamie Pollock",
+      "nation": "ENG",
+      "fbrefPosition": "MF",
+      "allowed": [
+        "CDM",
+        "CM",
+        "CAM",
+        "LM",
+        "RM"
+      ],
+      "primaryMustBeOneOf": [
+        "CDM",
+        "CM",
+        "CAM",
+        "LM",
+        "RM"
+      ],
+      "choices": 5,
+      "totalMinutes": 6237,
+      "seasons": [
+        {
+          "season": "1992/93",
+          "club": "Middlesbrough",
+          "minutes": 1464,
+          "starts": 17,
+          "goals": 1,
+          "assists": 1,
+          "fbrefPosition": "MF"
+        },
+        {
+          "season": "1995/96",
+          "club": "Middlesbrough",
+          "minutes": 2635,
+          "starts": 31,
+          "goals": 1,
+          "assists": 2,
+          "fbrefPosition": "MF"
+        },
+        {
+          "season": "1997/98",
+          "club": "Bolton Wanderers",
+          "minutes": 2138,
+          "starts": 25,
+          "goals": 1,
+          "assists": 1,
+          "fbrefPosition": "MF"
+        }
+      ],
+      "positions": [
+        "CM",
+        "CDM"
+      ],
+      "confidence": "medium",
+      "note": null
+    },
+    {
+      "fbrefId": "86707c0d",
+      "name": "Paul Kitson",
       "nation": "ENG",
       "fbrefPosition": "FW",
       "allowed": [
@@ -666,33 +1084,60 @@
         "CF"
       ],
       "choices": 4,
-      "totalMinutes": 5901,
+      "totalMinutes": 6224,
       "seasons": [
         {
-          "season": "1992/93",
-          "club": "Aston Villa",
-          "minutes": 2413,
-          "starts": 28,
-          "goals": 11,
-          "assists": 4,
-          "fbrefPosition": "FW"
-        },
-        {
-          "season": "1993/94",
-          "club": "Aston Villa",
-          "minutes": 2541,
-          "starts": 29,
-          "goals": 8,
-          "assists": 5,
-          "fbrefPosition": "FW"
-        },
-        {
           "season": "1994/95",
-          "club": "Aston Villa",
-          "minutes": 947,
-          "starts": 11,
+          "club": "Newcastle United",
+          "minutes": 2012,
+          "starts": 24,
+          "goals": 8,
+          "assists": 2,
+          "fbrefPosition": "FW"
+        },
+        {
+          "season": "1996/97",
+          "club": "West Ham United",
+          "minutes": 1234,
+          "starts": 14,
+          "goals": 8,
+          "assists": 2,
+          "fbrefPosition": "FW"
+        },
+        {
+          "season": "1997/98",
+          "club": "West Ham United",
+          "minutes": 1055,
+          "starts": 12,
+          "goals": 4,
+          "assists": 0,
+          "fbrefPosition": "FW"
+        },
+        {
+          "season": "1998/99",
+          "club": "West Ham United",
+          "minutes": 1199,
+          "starts": 13,
           "goals": 3,
           "assists": 2,
+          "fbrefPosition": "FW"
+        },
+        {
+          "season": "1999/00",
+          "club": "West Ham United",
+          "minutes": 427,
+          "starts": 4,
+          "goals": 0,
+          "assists": 0,
+          "fbrefPosition": "FW"
+        },
+        {
+          "season": "2001/02",
+          "club": "West Ham United",
+          "minutes": 297,
+          "starts": 3,
+          "goals": 3,
+          "assists": 0,
           "fbrefPosition": "FW"
         }
       ],
@@ -704,9 +1149,157 @@
       "note": null
     },
     {
-      "fbrefId": "5748f64c",
-      "name": "Robert Molenaar",
-      "nation": "NED",
+      "fbrefId": "71e8454e",
+      "name": "Diomansy Kamara",
+      "nation": "SEN",
+      "fbrefPosition": "FW",
+      "allowed": [
+        "LW",
+        "RW",
+        "ST",
+        "CF"
+      ],
+      "primaryMustBeOneOf": [
+        "LW",
+        "RW",
+        "ST",
+        "CF"
+      ],
+      "choices": 4,
+      "totalMinutes": 6199,
+      "seasons": [
+        {
+          "season": "2004/05",
+          "club": "Portsmouth",
+          "minutes": 1372,
+          "starts": 15,
+          "goals": 4,
+          "assists": 0,
+          "fbrefPosition": "FW"
+        },
+        {
+          "season": "2005/06",
+          "club": "West Bromwich Albion",
+          "minutes": 1789,
+          "starts": 21,
+          "goals": 1,
+          "assists": 2,
+          "fbrefPosition": "FW"
+        },
+        {
+          "season": "2007/08",
+          "club": "Fulham",
+          "minutes": 1612,
+          "starts": 17,
+          "goals": 5,
+          "assists": 1,
+          "fbrefPosition": "FW"
+        },
+        {
+          "season": "2008/09",
+          "club": "Fulham",
+          "minutes": 437,
+          "starts": 3,
+          "goals": 4,
+          "assists": 0,
+          "fbrefPosition": "FW"
+        },
+        {
+          "season": "2009/10",
+          "club": "Fulham",
+          "minutes": 454,
+          "starts": 5,
+          "goals": 1,
+          "assists": 0,
+          "fbrefPosition": "FW"
+        },
+        {
+          "season": "2010/11",
+          "club": "Fulham",
+          "minutes": 535,
+          "starts": 7,
+          "goals": 2,
+          "assists": 0,
+          "fbrefPosition": "FW"
+        }
+      ],
+      "positions": [
+        "ST",
+        "CF"
+      ],
+      "confidence": "medium",
+      "note": null
+    },
+    {
+      "fbrefId": "6148af60",
+      "name": "Chris Woods",
+      "nation": "ENG",
+      "fbrefPosition": "GK",
+      "allowed": [
+        "GK"
+      ],
+      "primaryMustBeOneOf": [
+        "GK"
+      ],
+      "choices": 1,
+      "totalMinutes": 6183,
+      "seasons": [
+        {
+          "season": "1992/93",
+          "club": "Sheffield Wednesday",
+          "minutes": 3510,
+          "starts": 39,
+          "goals": 0,
+          "assists": 1,
+          "fbrefPosition": "GK"
+        },
+        {
+          "season": "1993/94",
+          "club": "Sheffield Wednesday",
+          "minutes": 900,
+          "starts": 10,
+          "goals": 0,
+          "assists": 0,
+          "fbrefPosition": "GK"
+        },
+        {
+          "season": "1994/95",
+          "club": "Sheffield Wednesday",
+          "minutes": 768,
+          "starts": 8,
+          "goals": 0,
+          "assists": 0,
+          "fbrefPosition": "GK"
+        },
+        {
+          "season": "1995/96",
+          "club": "Sheffield Wednesday",
+          "minutes": 720,
+          "starts": 8,
+          "goals": 0,
+          "assists": 0,
+          "fbrefPosition": "GK"
+        },
+        {
+          "season": "1996/97",
+          "club": "Southampton",
+          "minutes": 285,
+          "starts": 4,
+          "goals": 0,
+          "assists": 0,
+          "fbrefPosition": "GK"
+        }
+      ],
+      "positions": [
+        "GK"
+      ],
+      "confidence": "high",
+      "note": null
+    },
+    {
+      "fbrefId": "85f8571a",
+      "name": "Branislav Ivanović",
+      "nation": "SRB",
       "fbrefPosition": "DF",
       "allowed": [
         "LB",
@@ -723,253 +1316,46 @@
         "RWB"
       ],
       "choices": 5,
-      "totalMinutes": 5899,
+      "totalMinutes": 6182,
       "seasons": [
         {
-          "season": "1996/97",
-          "club": "Leeds United",
-          "minutes": 1080,
-          "starts": 12,
+          "season": "2008/09",
+          "club": "Chelsea",
+          "minutes": 1101,
+          "starts": 11,
+          "goals": 0,
+          "assists": 1,
+          "fbrefPosition": "DF"
+        },
+        {
+          "season": "2009/10",
+          "club": "Chelsea",
+          "minutes": 2254,
+          "starts": 25,
           "goals": 1,
-          "assists": 0,
+          "assists": 5,
           "fbrefPosition": "DF"
         },
         {
-          "season": "1997/98",
-          "club": "Leeds United",
-          "minutes": 1557,
-          "starts": 18,
-          "goals": 2,
-          "assists": 2,
-          "fbrefPosition": "DF"
-        },
-        {
-          "season": "1998/99",
-          "club": "Leeds United",
-          "minutes": 1469,
-          "starts": 17,
-          "goals": 2,
-          "assists": 0,
-          "fbrefPosition": "DF"
-        },
-        {
-          "season": "2000/01",
-          "club": "Bradford City",
-          "minutes": 1793,
-          "starts": 21,
-          "goals": 1,
-          "assists": 0,
+          "season": "2010/11",
+          "club": "Chelsea",
+          "minutes": 2827,
+          "starts": 32,
+          "goals": 4,
+          "assists": 4,
           "fbrefPosition": "DF"
         }
       ],
       "positions": [
+        "RB",
         "CB"
       ],
       "confidence": "high",
       "note": null
     },
     {
-      "fbrefId": "006d419b",
-      "name": "Alexey Smertin",
-      "nation": "RUS",
-      "fbrefPosition": "MF",
-      "allowed": [
-        "CDM",
-        "CM",
-        "CAM",
-        "LM",
-        "RM"
-      ],
-      "primaryMustBeOneOf": [
-        "CDM",
-        "CM",
-        "CAM",
-        "LM",
-        "RM"
-      ],
-      "choices": 5,
-      "totalMinutes": 5893,
-      "seasons": [
-        {
-          "season": "2003/04",
-          "club": "Portsmouth",
-          "minutes": 2066,
-          "starts": 23,
-          "goals": 0,
-          "assists": 0,
-          "fbrefPosition": "MF"
-        },
-        {
-          "season": "2004/05",
-          "club": "Chelsea",
-          "minutes": 778,
-          "starts": 11,
-          "goals": 0,
-          "assists": 0,
-          "fbrefPosition": "MF"
-        },
-        {
-          "season": "2005/06",
-          "club": "Charlton Athletic",
-          "minutes": 1527,
-          "starts": 18,
-          "goals": 0,
-          "assists": 0,
-          "fbrefPosition": "MF"
-        },
-        {
-          "season": "2006/07",
-          "club": "Fulham",
-          "minutes": 533,
-          "starts": 6,
-          "goals": 0,
-          "assists": 1,
-          "fbrefPosition": "MF"
-        },
-        {
-          "season": "2007/08",
-          "club": "Fulham",
-          "minutes": 989,
-          "starts": 11,
-          "goals": 2,
-          "assists": 1,
-          "fbrefPosition": "MF"
-        }
-      ],
-      "positions": [
-        "CDM",
-        "CM"
-      ],
-      "confidence": "high",
-      "note": null
-    },
-    {
-      "fbrefId": "6b8b954a",
-      "name": "Petter Rudi",
-      "nation": "NOR",
-      "fbrefPosition": "MF",
-      "allowed": [
-        "CDM",
-        "CM",
-        "CAM",
-        "LM",
-        "RM"
-      ],
-      "primaryMustBeOneOf": [
-        "CDM",
-        "CM",
-        "CAM",
-        "LM",
-        "RM"
-      ],
-      "choices": 5,
-      "totalMinutes": 5890,
-      "seasons": [
-        {
-          "season": "1997/98",
-          "club": "Sheffield Wednesday",
-          "minutes": 1635,
-          "starts": 19,
-          "goals": 0,
-          "assists": 1,
-          "fbrefPosition": "MF"
-        },
-        {
-          "season": "1998/99",
-          "club": "Sheffield Wednesday",
-          "minutes": 2829,
-          "starts": 33,
-          "goals": 5,
-          "assists": 1,
-          "fbrefPosition": "MF"
-        },
-        {
-          "season": "1999/00",
-          "club": "Sheffield Wednesday",
-          "minutes": 1426,
-          "starts": 18,
-          "goals": 2,
-          "assists": 0,
-          "fbrefPosition": "MF"
-        }
-      ],
-      "positions": [
-        "LM",
-        "RM",
-        "CAM"
-      ],
-      "confidence": "low",
-      "note": "Wide attacking midfielder for Sheffield Wednesday; the flank is the uncertain part, the advanced role is not."
-    },
-    {
-      "fbrefId": "c281ba3e",
-      "name": "Nils-Eric Johansson",
-      "nation": "SWE",
-      "fbrefPosition": "DF",
-      "allowed": [
-        "LB",
-        "CB",
-        "RB",
-        "LWB",
-        "RWB"
-      ],
-      "primaryMustBeOneOf": [
-        "LB",
-        "CB",
-        "RB",
-        "LWB",
-        "RWB"
-      ],
-      "choices": 5,
-      "totalMinutes": 5876,
-      "seasons": [
-        {
-          "season": "2001/02",
-          "club": "Blackburn Rovers",
-          "minutes": 1365,
-          "starts": 14,
-          "goals": 0,
-          "assists": 0,
-          "fbrefPosition": "DF"
-        },
-        {
-          "season": "2002/03",
-          "club": "Blackburn Rovers",
-          "minutes": 2037,
-          "starts": 20,
-          "goals": 0,
-          "assists": 0,
-          "fbrefPosition": "DF"
-        },
-        {
-          "season": "2003/04",
-          "club": "Blackburn Rovers",
-          "minutes": 763,
-          "starts": 7,
-          "goals": 0,
-          "assists": 0,
-          "fbrefPosition": "DF"
-        },
-        {
-          "season": "2004/05",
-          "club": "Blackburn Rovers",
-          "minutes": 1711,
-          "starts": 18,
-          "goals": 0,
-          "assists": 0,
-          "fbrefPosition": "DF"
-        }
-      ],
-      "positions": [
-        "CB",
-        "LB"
-      ],
-      "confidence": "medium",
-      "note": null
-    },
-    {
-      "fbrefId": "63d53f6e",
-      "name": "Steve Morgan",
+      "fbrefId": "1ba9184d",
+      "name": "Danny Granville",
       "nation": "ENG",
       "fbrefPosition": "DF",
       "allowed": [
@@ -987,37 +1373,65 @@
         "RWB"
       ],
       "choices": 5,
-      "totalMinutes": 5863,
+      "totalMinutes": 6165,
       "seasons": [
         {
-          "season": "1993/94",
-          "club": "Coventry City",
-          "minutes": 3476,
-          "starts": 39,
-          "goals": 2,
+          "season": "1996/97",
+          "club": "Chelsea",
+          "minutes": 321,
+          "starts": 3,
+          "goals": 0,
           "assists": 1,
           "fbrefPosition": "DF"
         },
         {
-          "season": "1994/95",
-          "club": "Coventry City",
-          "minutes": 2387,
-          "starts": 26,
+          "season": "1997/98",
+          "club": "Chelsea",
+          "minutes": 851,
+          "starts": 9,
+          "goals": 0,
+          "assists": 0,
+          "fbrefPosition": "DF"
+        },
+        {
+          "season": "1998/99",
+          "club": "Leeds United",
+          "minutes": 570,
+          "starts": 7,
+          "goals": 0,
+          "assists": 0,
+          "fbrefPosition": "DF"
+        },
+        {
+          "season": "2000/01",
+          "club": "Manchester City",
+          "minutes": 1309,
+          "starts": 16,
           "goals": 0,
           "assists": 1,
+          "fbrefPosition": "DF"
+        },
+        {
+          "season": "2004/05",
+          "club": "Crystal Palace",
+          "minutes": 3114,
+          "starts": 35,
+          "goals": 3,
+          "assists": 0,
           "fbrefPosition": "DF"
         }
       ],
       "positions": [
-        "CB"
+        "LB",
+        "LWB"
       ],
-      "confidence": "medium",
-      "note": "Coventry centre-back signed from Plymouth."
+      "confidence": "high",
+      "note": null
     },
     {
-      "fbrefId": "b57b7582",
-      "name": "Justin Hoyte",
-      "nation": "TRI",
+      "fbrefId": "1c4eb067",
+      "name": "Abel Xavier",
+      "nation": "POR",
       "fbrefPosition": "DF",
       "allowed": [
         "LB",
@@ -1034,121 +1448,83 @@
         "RWB"
       ],
       "choices": 5,
-      "totalMinutes": 5860,
+      "totalMinutes": 6158,
       "seasons": [
         {
-          "season": "2004/05",
-          "club": "Arsenal",
-          "minutes": 371,
+          "season": "1999/00",
+          "club": "Everton",
+          "minutes": 1652,
+          "starts": 18,
+          "goals": 0,
+          "assists": 0,
+          "fbrefPosition": "DF"
+        },
+        {
+          "season": "2000/01",
+          "club": "Everton",
+          "minutes": 870,
+          "starts": 10,
+          "goals": 0,
+          "assists": 0,
+          "fbrefPosition": "DF"
+        },
+        {
+          "season": "2001/02",
+          "club": "Everton",
+          "minutes": 902,
+          "starts": 11,
+          "goals": 0,
+          "assists": 0,
+          "fbrefPosition": "DF"
+        },
+        {
+          "season": "2001/02",
+          "club": "Liverpool",
+          "minutes": 756,
+          "starts": 9,
+          "goals": 1,
+          "assists": 2,
+          "fbrefPosition": "DF"
+        },
+        {
+          "season": "2002/03",
+          "club": "Liverpool",
+          "minutes": 360,
+          "starts": 4,
+          "goals": 0,
+          "assists": 1,
+          "fbrefPosition": "DF"
+        },
+        {
+          "season": "2005/06",
+          "club": "Middlesbrough",
+          "minutes": 360,
           "starts": 4,
           "goals": 0,
           "assists": 0,
           "fbrefPosition": "DF"
         },
         {
-          "season": "2005/06",
-          "club": "Sunderland",
-          "minutes": 2375,
-          "starts": 27,
-          "goals": 1,
-          "assists": 0,
-          "fbrefPosition": "DF"
-        },
-        {
           "season": "2006/07",
-          "club": "Arsenal",
-          "minutes": 1506,
-          "starts": 18,
+          "club": "Middlesbrough",
+          "minutes": 1258,
+          "starts": 14,
           "goals": 1,
           "assists": 0,
-          "fbrefPosition": "DF"
-        },
-        {
-          "season": "2008/09",
-          "club": "Middlesbrough",
-          "minutes": 1608,
-          "starts": 17,
-          "goals": 0,
-          "assists": 1,
           "fbrefPosition": "DF"
         }
       ],
       "positions": [
         "RB",
-        "LB"
+        "CB",
+        "RWB"
       ],
       "confidence": "high",
-      "note": "Right-back by trade, but Arsenal used him on either flank in 2004/05."
+      "note": null
     },
     {
-      "fbrefId": "ed083afd",
-      "name": "Steve Sidwell",
-      "nation": "ENG",
-      "fbrefPosition": "MF",
-      "allowed": [
-        "CDM",
-        "CM",
-        "CAM",
-        "LM",
-        "RM"
-      ],
-      "primaryMustBeOneOf": [
-        "CDM",
-        "CM",
-        "CAM",
-        "LM",
-        "RM"
-      ],
-      "choices": 5,
-      "totalMinutes": 5852,
-      "seasons": [
-        {
-          "season": "2006/07",
-          "club": "Reading",
-          "minutes": 3093,
-          "starts": 35,
-          "goals": 4,
-          "assists": 6,
-          "fbrefPosition": "MF"
-        },
-        {
-          "season": "2007/08",
-          "club": "Chelsea",
-          "minutes": 518,
-          "starts": 7,
-          "goals": 0,
-          "assists": 1,
-          "fbrefPosition": "MF"
-        },
-        {
-          "season": "2008/09",
-          "club": "Aston Villa",
-          "minutes": 1014,
-          "starts": 11,
-          "goals": 3,
-          "assists": 0,
-          "fbrefPosition": "MF"
-        },
-        {
-          "season": "2009/10",
-          "club": "Aston Villa",
-          "minutes": 1227,
-          "starts": 12,
-          "goals": 0,
-          "assists": 1,
-          "fbrefPosition": "MF"
-        }
-      ],
-      "positions": [
-        "CM",
-        "CDM"
-      ],
-      "confidence": "high",
-      "note": "A box-to-box central midfielder — Reading's engine in 2006/07, then squad midfield cover."
-    },
-    {
-      "fbrefId": "e4c3d857",
-      "name": "Mark Atkins",
+      "fbrefId": "0a548b42",
+      "name": "Gavin Johnson",
       "nation": "ENG",
       "fbrefPosition": "DFMF",
       "allowed": [
@@ -1171,55 +1547,54 @@
         "RWB"
       ],
       "choices": 10,
-      "totalMinutes": 5834,
+      "totalMinutes": 6155,
       "seasons": [
         {
           "season": "1992/93",
-          "club": "Blackburn Rovers",
-          "minutes": 2332,
-          "starts": 24,
+          "club": "Ipswich Town",
+          "minutes": 3487,
+          "starts": 39,
           "goals": 5,
           "assists": 3,
           "fbrefPosition": "DFMF"
         },
         {
           "season": "1993/94",
-          "club": "Blackburn Rovers",
-          "minutes": 928,
-          "starts": 8,
+          "club": "Ipswich Town",
+          "minutes": 1354,
+          "starts": 16,
           "goals": 1,
-          "assists": 1,
+          "assists": 2,
           "fbrefPosition": "DFMF"
         },
         {
           "season": "1994/95",
-          "club": "Blackburn Rovers",
-          "minutes": 2574,
-          "starts": 30,
-          "goals": 6,
-          "assists": 1,
+          "club": "Ipswich Town",
+          "minutes": 1314,
+          "starts": 14,
+          "goals": 0,
+          "assists": 0,
           "fbrefPosition": "DFMF"
         }
       ],
       "positions": [
-        "CM",
-        "CDM",
-        "RB"
+        "LB",
+        "LM"
       ],
-      "confidence": "high",
-      "note": "FBref's DF-first label overstates the full-back role: Atkins was principally a central midfielder for Blackburn, scoring 5 league goals in 1992/93, though he had started his career at right-back and still covered there.",
-      "labelDisputed": true
+      "confidence": "medium",
+      "note": "Left-sided: full-back and left midfield."
     },
     {
-      "fbrefId": "04f2da3e",
-      "name": "Craig Hignett",
-      "nation": "ENG",
-      "fbrefPosition": "FWMF",
+      "fbrefId": "78b3399f",
+      "name": "Fabricio Coloccini",
+      "nation": "ARG",
+      "fbrefPosition": "DFMF",
       "allowed": [
-        "LW",
-        "RW",
-        "ST",
-        "CF",
+        "LB",
+        "CB",
+        "RB",
+        "LWB",
+        "RWB",
         "CDM",
         "CM",
         "CAM",
@@ -1227,324 +1602,36 @@
         "RM"
       ],
       "primaryMustBeOneOf": [
-        "LW",
-        "RW",
-        "ST",
-        "CF"
+        "LB",
+        "CB",
+        "RB",
+        "LWB",
+        "RWB"
       ],
-      "choices": 9,
-      "totalMinutes": 5827,
-      "seasons": [
-        {
-          "season": "1992/93",
-          "club": "Middlesbrough",
-          "minutes": 1581,
-          "starts": 18,
-          "goals": 4,
-          "assists": 2,
-          "fbrefPosition": "FWMF"
-        },
-        {
-          "season": "1995/96",
-          "club": "Middlesbrough",
-          "minutes": 1629,
-          "starts": 18,
-          "goals": 5,
-          "assists": 1,
-          "fbrefPosition": "FWMF"
-        },
-        {
-          "season": "1996/97",
-          "club": "Middlesbrough",
-          "minutes": 1627,
-          "starts": 19,
-          "goals": 4,
-          "assists": 3,
-          "fbrefPosition": "FWMF"
-        },
-        {
-          "season": "2001/02",
-          "club": "Blackburn Rovers",
-          "minutes": 702,
-          "starts": 4,
-          "goals": 4,
-          "assists": 3,
-          "fbrefPosition": "FWMF"
-        },
-        {
-          "season": "2003/04",
-          "club": "Leicester City",
-          "minutes": 288,
-          "starts": 3,
-          "goals": 1,
-          "assists": 0,
-          "fbrefPosition": "FWMF"
-        }
-      ],
-      "positions": [
-        "CF",
-        "CAM"
-      ],
-      "confidence": "medium",
-      "note": "Second striker / attacking midfielder."
-    },
-    {
-      "fbrefId": "74da02b4",
-      "name": "Szilárd Németh",
-      "nation": "SVK",
-      "fbrefPosition": "FW",
-      "allowed": [
-        "LW",
-        "RW",
-        "ST",
-        "CF"
-      ],
-      "primaryMustBeOneOf": [
-        "LW",
-        "RW",
-        "ST",
-        "CF"
-      ],
-      "choices": 4,
-      "totalMinutes": 5805,
-      "seasons": [
-        {
-          "season": "2001/02",
-          "club": "Middlesbrough",
-          "minutes": 1008,
-          "starts": 11,
-          "goals": 3,
-          "assists": 1,
-          "fbrefPosition": "FW"
-        },
-        {
-          "season": "2002/03",
-          "club": "Middlesbrough",
-          "minutes": 1477,
-          "starts": 15,
-          "goals": 7,
-          "assists": 1,
-          "fbrefPosition": "FW"
-        },
-        {
-          "season": "2003/04",
-          "club": "Middlesbrough",
-          "minutes": 1617,
-          "starts": 17,
-          "goals": 9,
-          "assists": 2,
-          "fbrefPosition": "FW"
-        },
-        {
-          "season": "2004/05",
-          "club": "Middlesbrough",
-          "minutes": 1703,
-          "starts": 18,
-          "goals": 4,
-          "assists": 3,
-          "fbrefPosition": "FW"
-        }
-      ],
-      "positions": [
-        "ST"
-      ],
-      "confidence": "high",
-      "note": null
-    },
-    {
-      "fbrefId": "a8ef11f7",
-      "name": "Mick Harford",
-      "nation": "ENG",
-      "fbrefPosition": "FW",
-      "allowed": [
-        "LW",
-        "RW",
-        "ST",
-        "CF"
-      ],
-      "primaryMustBeOneOf": [
-        "LW",
-        "RW",
-        "ST",
-        "CF"
-      ],
-      "choices": 4,
-      "totalMinutes": 5797,
-      "seasons": [
-        {
-          "season": "1992/93",
-          "club": "Chelsea",
-          "minutes": 2397,
-          "starts": 27,
-          "goals": 9,
-          "assists": 2,
-          "fbrefPosition": "FW"
-        },
-        {
-          "season": "1994/95",
-          "club": "Wimbledon",
-          "minutes": 1719,
-          "starts": 17,
-          "goals": 6,
-          "assists": 5,
-          "fbrefPosition": "FW"
-        },
-        {
-          "season": "1995/96",
-          "club": "Wimbledon",
-          "minutes": 1263,
-          "starts": 17,
-          "goals": 2,
-          "assists": 1,
-          "fbrefPosition": "FW"
-        },
-        {
-          "season": "1996/97",
-          "club": "Wimbledon",
-          "minutes": 418,
-          "starts": 3,
-          "goals": 1,
-          "assists": 1,
-          "fbrefPosition": "FW"
-        }
-      ],
-      "positions": [
-        "ST",
-        "CF"
-      ],
-      "confidence": "high",
-      "note": "Target man."
-    },
-    {
-      "fbrefId": "2415cbc7",
-      "name": "Keith Branagan",
-      "nation": "IRL",
-      "fbrefPosition": "GK",
-      "allowed": [
-        "GK"
-      ],
-      "primaryMustBeOneOf": [
-        "GK"
-      ],
-      "choices": 1,
-      "totalMinutes": 5790,
-      "seasons": [
-        {
-          "season": "1995/96",
-          "club": "Bolton Wanderers",
-          "minutes": 2790,
-          "starts": 31,
-          "goals": 0,
-          "assists": 0,
-          "fbrefPosition": "GK"
-        },
-        {
-          "season": "1997/98",
-          "club": "Bolton Wanderers",
-          "minutes": 3000,
-          "starts": 34,
-          "goals": 0,
-          "assists": 0,
-          "fbrefPosition": "GK"
-        }
-      ],
-      "positions": [
-        "GK"
-      ],
-      "confidence": "high",
-      "note": null
-    },
-    {
-      "fbrefId": "d596e193",
-      "name": "Heurelho Gomes",
-      "nation": "BRA",
-      "fbrefPosition": "GK",
-      "allowed": [
-        "GK"
-      ],
-      "primaryMustBeOneOf": [
-        "GK"
-      ],
-      "choices": 1,
-      "totalMinutes": 5775,
+      "choices": 10,
+      "totalMinutes": 6140,
       "seasons": [
         {
           "season": "2008/09",
-          "club": "Tottenham Hotspur",
-          "minutes": 3060,
+          "club": "Newcastle United",
+          "minutes": 3059,
           "starts": 34,
           "goals": 0,
           "assists": 0,
-          "fbrefPosition": "GK"
+          "fbrefPosition": "DFMF"
         },
         {
-          "season": "2009/10",
-          "club": "Tottenham Hotspur",
-          "minutes": 2715,
-          "starts": 31,
-          "goals": 0,
+          "season": "2010/11",
+          "club": "Newcastle United",
+          "minutes": 3081,
+          "starts": 35,
+          "goals": 2,
           "assists": 0,
-          "fbrefPosition": "GK"
+          "fbrefPosition": "DFMF"
         }
       ],
       "positions": [
-        "GK"
-      ],
-      "confidence": "high",
-      "note": null
-    },
-    {
-      "fbrefId": "e70c5725",
-      "name": "Albert Ferrer",
-      "nation": "ESP",
-      "fbrefPosition": "DF",
-      "allowed": [
-        "LB",
-        "CB",
-        "RB",
-        "LWB",
-        "RWB"
-      ],
-      "primaryMustBeOneOf": [
-        "LB",
-        "CB",
-        "RB",
-        "LWB",
-        "RWB"
-      ],
-      "choices": 5,
-      "totalMinutes": 5773,
-      "seasons": [
-        {
-          "season": "1998/99",
-          "club": "Chelsea",
-          "minutes": 2679,
-          "starts": 30,
-          "goals": 0,
-          "assists": 2,
-          "fbrefPosition": "DF"
-        },
-        {
-          "season": "1999/00",
-          "club": "Chelsea",
-          "minutes": 2097,
-          "starts": 24,
-          "goals": 0,
-          "assists": 3,
-          "fbrefPosition": "DF"
-        },
-        {
-          "season": "2000/01",
-          "club": "Chelsea",
-          "minutes": 997,
-          "starts": 12,
-          "goals": 0,
-          "assists": 0,
-          "fbrefPosition": "DF"
-        }
-      ],
-      "positions": [
-        "RB"
+        "CB"
       ],
       "confidence": "high",
       "note": null
