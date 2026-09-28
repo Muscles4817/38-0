@@ -142,6 +142,13 @@ export interface PlayerStats {
   shotsOnTarget: number;
   chancesCreated: number;
   saves: number;
+  tackles: number;
+  interceptions: number;
+  clearances: number;
+  blocks: number;
+  aerialsWon: number;
+  /** Goals conceded where he was the defender beaten. */
+  beaten: number;
   yellowCards: number;
   redCards: number;
   /** One per match, from the match engine. */
@@ -696,7 +703,8 @@ export function simulateSeason(
     players.set(id, {
       id, sourceId, name, team, isUser, position,
       goals: 0, assists: 0, cleanSheets: 0, shots: 0, shotsOnTarget: 0, chancesCreated: 0,
-      saves: 0, yellowCards: 0, redCards: 0, ratings: [],
+      saves: 0, tackles: 0, interceptions: 0, clearances: 0, blocks: 0, aerialsWon: 0, beaten: 0,
+      yellowCards: 0, redCards: 0, ratings: [],
     });
     return id;
   }
@@ -776,6 +784,12 @@ export function simulateSeason(
           p.shotsOnTarget  += s.shotsOnTarget;
           p.chancesCreated += s.chancesCreated;
           p.saves          += s.saves;
+          p.tackles        += s.tackles;
+          p.interceptions  += s.interceptions;
+          p.clearances     += s.clearances;
+          p.blocks         += s.blocks;
+          p.aerialsWon     += s.aerialsWon;
+          p.beaten         += s.beaten;
           if (s.yellow) p.yellowCards++;
           if (s.red) p.redCards++;
           // A clean sheet is the keeper's and the back line's, as the awards
@@ -819,6 +833,12 @@ export function simulateSeason(
       shotsOnTarget:  s.shotsOnTarget,
       chancesCreated: s.chancesCreated,
       saves:          s.saves,
+      tackles:        s.tackles,
+      interceptions:  s.interceptions,
+      clearances:     s.clearances,
+      blocks:         s.blocks,
+      aerialsWon:     s.aerialsWon,
+      beaten:         s.beaten,
       yellowCards:    s.yellowCards,
       redCards:       s.redCards,
       matchRatings:   s.ratings,
@@ -917,6 +937,12 @@ interface SeasonPlayer {
   shotsOnTarget: number;
   chancesCreated: number;
   saves: number;
+  tackles: number;
+  interceptions: number;
+  clearances: number;
+  blocks: number;
+  aerialsWon: number;
+  beaten: number;
   yellowCards: number;
   redCards: number;
   ratings: number[];

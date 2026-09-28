@@ -180,6 +180,35 @@ const ratingScale = (rating: number) => Math.exp(RATING_CURVE * (rating - 80));
 // and who is well placed to take it. The base figures are open-play averages —
 // a header from a cross is a worse chance than a through ball.
 
+// ── Defending, credited ──────────────────────────────────────────────────────
+//
+// Whether an attack becomes a chance is decided by the two sides' qualities in
+// the zone, not by any one defender, and that stays true: nothing below changes
+// how often a side creates, shoots or scores. What it adds is WHO gets the
+// credit when an attack breaks down, a shot is blocked or a header is won, and
+// who was beaten when a goal went in. Without it, every defender in a side
+// shared the same goals-conceded number every match, and a 94-rated
+// centre-back rated exactly as his 85-rated partner.
+//
+// Reference, Premier League, per team per match: tackles ~16, interceptions
+// ~10, clearances ~18, blocked shots ~3.5. Aerial duels won is ~15 over the
+// whole pitch; only the ones in the defending box are modelled, about a third.
+//
+// The draws come from a stream of their own, seeded once per match, so that
+// crediting a tackle never shifts what happens in the next possession.
+
+/** Chance that an attack which comes to nothing ends in a defender's action. */
+const DEFENSIVE_ACTION_RATE = 0.5;
+/** How a defensive action divides: a tackle, an interception, or a clearance. */
+const TACKLE_SHARE = 0.36;
+const INTERCEPTION_SHARE = 0.23;
+/** Chance that a shot which misses the target was blocked by a defender. */
+const BLOCK_RATE = 0.43;
+/** Chance that a header that comes to nothing was won by a defender. */
+const AERIAL_WON_RATE = 0.8;
+/** How far a trait tilts who makes a defensive action, as the aerial contest does. */
+const DEFENSIVE_QUALITY_WEIGHT = 0.2;
+
 export type ChanceType =
   | 'throughBall' | 'cross' | 'aerial' | 'longShot' | 'individual'
   | 'setPiece' | 'penalty';
@@ -418,6 +447,13 @@ export interface MatchPlayerStats {
   yellow: boolean;
   red: boolean;
   saves: number;
+  tackles: number;
+  interceptions: number;
+  clearances: number;
+  blocks: number;
+  aerialsWon: number;
+  /** Goals conceded where he was the defender beaten. */
+  beaten: number;
   cleanSheet: boolean;
   rating: number;
 }
@@ -852,6 +888,73 @@ function pickFouler(
   return pickWeighted(rand, team.players, weights);
 }
 
+type DefensiveAct = 'tackle' | 'interception' | 'clearance' | 'block' | 'aerial' | 'beaten';
+
+/**
+ * Who in the defending side makes a defensive action, or was beaten.
+ *
+ * Built like pickShooter, from the other side of the ball: how much of the job
+ * the position does, whether he is in the zone under attack, how good he is
+ * (damped the same way), and the trait that bears on that kind of action.
+ * The one inversion is being beaten, where the weaker defender is the likelier.
+ */
+function defenderWeights(
+  team: TeamModel,
+  zone: Zone,
+  act: DefensiveAct,
+  sent: ReadonlySet<number>,
+  roles: RoleMultipliers,
+): { candidates: MatchPlayer[]; weights: number[] } {
+  const candidates = team.players.filter(p => p.position !== 'GK' && !sent.has(p.playerId));
+  const weights = candidates.map(p => {
+    const pz = positionZone(p.position);
+    const inZone = pz === zone ? 1.35 : pz === 'C' || zone === 'C' ? 1 : 0.4;
+    const defend = DEFEND_WEIGHT[p.position] ?? 0.3;
+    const skill = Math.pow(ratingScale(p.rating), RATING_SELECTION_POWER);
+    switch (act) {
+      case 'tackle':
+      case 'interception':
+        // Midfielders make as many of these as defenders do.
+        return (defend + (MIDFIELD_WEIGHT[p.position] ?? 0.3)) / 2 * inZone * skill
+          * Math.exp(DEFENSIVE_QUALITY_WEIGHT * quality(p, 'recovery', roles));
+      case 'clearance':
+        return defend * defend * inZone * skill
+          * Math.exp(DEFENSIVE_QUALITY_WEIGHT * quality(p, 'aerial', roles));
+      case 'block':
+        return defend * inZone * skill;
+      case 'aerial':
+        // Height, but in his own box: a striker is tall at both ends and is
+        // only part of the defending at one of them.
+        return (AERIAL_WEIGHT[p.position] ?? 0.4) * Math.sqrt(defend) * inZone * skill
+          * Math.exp(AERIAL_FROM_QUALITY * quality(p, 'aerial', roles));
+      case 'beaten':
+        return defend * inZone / skill;
+    }
+  });
+  return { candidates, weights };
+}
+
+/**
+ * Defender weights, kept for as long as a side's eleven and the role tables do
+ * not change — a whole season, since the same setup plays all 38 matches. A
+ * day's form scales the side's zone qualities, not its players' ratings, so it
+ * does not touch these. Only an eleven with nobody sent off is cached; after a
+ * red card the weights are worked out afresh.
+ */
+const DEFENDER_CACHE = new WeakMap<MatchPlayer[], WeakMap<RoleMultipliers, Map<string, { candidates: MatchPlayer[]; weights: number[] }>>>();
+const NOBODY_SENT: ReadonlySet<number> = new Set();
+
+/** A second, independent stream, so crediting defenders never shifts the match. */
+function creditStream(seed: number): () => number {
+  let a = seed >>> 0;
+  return () => {
+    a = (a + 0x6d2b79f5) >>> 0;
+    let t = Math.imul(a ^ (a >>> 15), 1 | a);
+    t = (t + Math.imul(t ^ (t >>> 7), 61 | t)) ^ t;
+    return ((t ^ (t >>> 14)) >>> 0) / 4294967296;
+  };
+}
+
 // ── The match ────────────────────────────────────────────────────────────────
 
 function blankStats(p: MatchPlayer): MatchPlayerStats {
@@ -868,6 +971,12 @@ function blankStats(p: MatchPlayer): MatchPlayerStats {
     yellow: false,
     red: false,
     saves: 0,
+    tackles: 0,
+    interceptions: 0,
+    clearances: 0,
+    blocks: 0,
+    aerialsWon: 0,
+    beaten: 0,
     cleanSheet: false,
     rating: 6,
   };
@@ -891,6 +1000,37 @@ export function simulateMatch(
   const stats = new Map<number, MatchPlayerStats>();
   for (const p of [...home.players, ...away.players]) stats.set(p.playerId, blankStats(p));
   const sent = new Set<number>();
+  const credit = creditStream(Math.floor(rand() * 4294967296));
+  // Who could make a given action depends only on the eleven, the zone and who
+  // is still on the pitch. Rebuilding the weights for each of a hundred actions
+  // a match took the season from 73 to 150 ms; see DEFENDER_CACHE.
+  const creditTo = (team: TeamModel, zone: Zone, act: DefensiveAct): void => {
+    const offField = team.players.some(p => sent.has(p.playerId));
+    let pool: { candidates: MatchPlayer[]; weights: number[] } | undefined;
+    if (offField) {
+      pool = defenderWeights(team, zone, act, sent, roles);
+    } else {
+      let byRoles = DEFENDER_CACHE.get(team.players);
+      if (!byRoles) { byRoles = new WeakMap(); DEFENDER_CACHE.set(team.players, byRoles); }
+      let byAct = byRoles.get(roles);
+      if (!byAct) { byAct = new Map(); byRoles.set(roles, byAct); }
+      const cacheKey = zone + act;
+      pool = byAct.get(cacheKey);
+      if (!pool) {
+        pool = defenderWeights(team, zone, act, NOBODY_SENT, roles);
+        byAct.set(cacheKey, pool);
+      }
+    }
+    const d = pickWeighted(credit, pool.candidates, pool.weights);
+    if (!d) return;
+    const ds = stats.get(d.playerId)!;
+    if (act === 'tackle') ds.tackles++;
+    else if (act === 'interception') ds.interceptions++;
+    else if (act === 'clearance') ds.clearances++;
+    else if (act === 'block') ds.blocks++;
+    else if (act === 'aerial') ds.aerialsWon++;
+    else ds.beaten++;
+  };
 
   const events: MatchEvent[] = [];
   const acc = {
@@ -1035,7 +1175,16 @@ export function simulateMatch(
           side.onTarget++;
         }
 
-        if (onTarget && rand() < xg / onTargetRate) {
+        const scored = onTarget && rand() < xg / onTargetRate;
+        const aerialChance = type === 'cross' || type === 'aerial' || type === 'setPiece';
+        if (!scored) {
+          if (!onTarget && credit() < BLOCK_RATE) creditTo(def, defZone, 'block');
+          if (aerialChance && credit() < AERIAL_WON_RATE) creditTo(def, defZone, 'aerial');
+        } else if (type !== 'penalty') {
+          creditTo(def, defZone, 'beaten');
+        }
+
+        if (scored) {
           shooterStats.goals++;
           side.goals++;
           // Most goals are assisted; a solo effort or a penalty is not.
@@ -1062,6 +1211,11 @@ export function simulateMatch(
           stats.get(keeper.playerId)!.saves++;
         }
       }
+    } else if (credit() < DEFENSIVE_ACTION_RATE) {
+      // The attack came to nothing, and a defender was the reason.
+      const roll = credit();
+      creditTo(def, defZone,
+        roll < TACKLE_SHARE ? 'tackle' : roll < TACKLE_SHARE + INTERCEPTION_SHARE ? 'interception' : 'clearance');
     }
 
     // Fouls. The side without the ball concedes them.
@@ -1108,8 +1262,12 @@ export function simulateMatch(
       let r = 6.0;
       r += s.goals * 1.05 + s.assists * 0.65;
       r += s.shotsOnTarget * 0.08 + s.chancesCreated * 0.05;
+      // What he did without the ball. Being beaten for a goal carries most of
+      // the blame a defender used to share equally with his whole back line.
+      r += (s.tackles + s.interceptions) * 0.07 + s.clearances * 0.03
+        + s.blocks * 0.1 + s.aerialsWon * 0.05 - s.beaten * 0.3;
       r += (own - against) * 0.12;
-      r -= against * 0.22 * defensive;
+      r -= against * 0.12 * defensive;
       if (against === 0) r += 0.45 * defensive;
       if (p.position === 'GK') r += s.saves * 0.11;
       if (s.yellow) r -= 0.3;

@@ -47,9 +47,42 @@ four interaction rules — press, congestion, space in behind, recovery — are
 where the styles meet. `matchEngine.calibration.test.ts` asserts the rates
 (shots, conversion, cards, assisted share) against the Premier League.
 
-Match ratings are built from what the player did in the match — goals, assists,
-shots on target, chances created, saves, cards, the result and the goals
-conceded, weighted by how defensive his position is — not from his rating.
+Match ratings are built from what the player did in the match, not from his
+rating: goals, assists, shots on target, chances created, saves, cards, the
+result, the goals conceded weighted by how defensive his position is, and his
+defensive actions.
+
+### Defending, credited
+
+Whether an attack becomes a chance is decided by the two sides' qualities in
+the zone, not by any one defender. Defensive events do not change that. They
+decide who gets the credit when something that already happens happens:
+
+| Event | When | Who, weighted by |
+| --- | --- | --- |
+| tackle / interception / clearance | half the attacks that come to nothing (36% / 23% / 41%) | defending position, zone, rating, `recovery` (tackles) or `aerial` (clearances) |
+| block | 43% of shots that miss the target | defending position, zone, rating |
+| header won | 80% of headed chances that do not score | height × how defensive the position is, rating, `aerial` |
+| beaten | every goal but a penalty | defending position, zone, and the *weaker* defender |
+
+Rating is damped as it is for a shooter (`RATING_SELECTION_POWER`). The draws
+come from a stream of their own, seeded once per match, so crediting a tackle
+never shifts what happens next. Per team per match that gives 15.8 tackles,
+10.0 interceptions, 18.0 clearances and 3.6 blocks, against a real 16, 10, 18
+and 3.5; `matchEngine.calibration.test.ts` asserts them.
+
+In the rating a tackle or interception is +0.07, a clearance +0.03, a block
++0.1, a header won +0.05, and being beaten for a goal −0.3. The share of the
+goals conceded that every defender carries was cut from 0.22 to 0.12, because
+most of that blame now has a name.
+
+Measured over 60 real XIs: a centre-back averages 6.28 and a striker 6.44
+(5.73 and 6.40 before), and of two centre-backs in one XI the better-rated is
+the better-rated in the season 70% of the time (they were indistinguishable
+before). Van Dijk rates 7.01 to Matip's 6.50 — his `AerialThreat` wins him
+far more headers and clearances — and is Liverpool 2019/20's Player of the
+Season in 85% of seasons. Across the 2008/09 league the award goes most often
+to Nemanja Vidić, who won it in reality.
 
 ## The plan
 
