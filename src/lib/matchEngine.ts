@@ -371,8 +371,18 @@ export const PLAYSTYLES: Record<PlaystyleName, Playstyle> = {
 
 // ── How far a style's demands carry ──────────────────────────────────────────
 
-/** How much a press cuts an exposed side's chances. */
-const PRESS_EFFECT = 2.2;
+/**
+ * How much a press cuts the chances of a side playing out against it, when the
+ * pressers are wholly better than the passers and the press is high and whole.
+ */
+const PRESS_EFFECT = 1.0;
+
+/**
+ * How much of a gap in ability decides a contest on the ball: at this gap the
+ * better side wins it about three times in four. Half a trait point, or five
+ * rating points across the players involved.
+ */
+const CONTEST_SCALE = 0.5;
 
 /** How much a deep block cuts a patient side's chances. */
 const CONGESTION_EFFECT = 0.45;
@@ -382,6 +392,52 @@ const SPACE_EFFECT = 1.1;
 
 /** A team quality of this size counts as fully meeting a style's demand. */
 const FIT_REFERENCE = 0.45;
+
+// ── On the ball, by phase ────────────────────────────────────────────────────
+//
+// Who has to be good on the ball depends on where the opponent contests it. A
+// press is met by whoever is building from the back — the keeper, the centre-
+// backs, the full-backs, the holding midfielder — and a deep block by whoever
+// has to unpick it in the final third. So these three contests read the
+// players in those positions, not an average over all eleven: averaged over
+// the whole side, one ball-playing centre-back was a tenth of the number and
+// counted the same as a ball-playing striker, and swapping one in or out made
+// no measurable difference against a press.
+//
+// Each player's ability is his trait plus a baseline from his rating, so a
+// 90-rated centre-back is decent on the ball without a trait saying so. Most
+// players carry no trait at all (71% of centre-backs), and a quality that only
+// traits supply is zero for most sides: the median stored XI had no pressing
+// ability whatever, so most presses pressed nobody.
+
+/** An ordinary player in the data: the mean rating of everyone in a stored XI (76.8). */
+const ABILITY_REFERENCE_RATING = 77;
+/** Ten rating points above ordinary are worth one point of a trait. */
+const RATING_TO_ABILITY = 0.1;
+
+/** Who is on the ball when a side builds from the back. */
+const BUILD_UP_WEIGHT: Record<Position, number> = {
+  GK: 0.5, CB: 1.0, LB: 0.8, RB: 0.8, LWB: 0.7, RWB: 0.7, CDM: 1.0, CM: 0.6,
+  CAM: 0.2, LM: 0.3, RM: 0.3, LW: 0.1, RW: 0.1, CF: 0.1, ST: 0.05,
+};
+
+/** Who leads a press. */
+const PRESS_WEIGHT: Record<Position, number> = {
+  ST: 1.0, CF: 1.0, LW: 0.9, RW: 0.9, CAM: 0.8, LM: 0.7, RM: 0.7, CM: 0.7,
+  CDM: 0.5, LWB: 0.4, RWB: 0.4, LB: 0.3, RB: 0.3, CB: 0.15, GK: 0.0,
+};
+
+/** Who holds a deep block together. */
+const BLOCK_WEIGHT: Record<Position, number> = {
+  CB: 1.0, CDM: 1.0, LB: 0.8, RB: 0.8, LWB: 0.7, RWB: 0.7, CM: 0.6, GK: 0.3,
+  LM: 0.3, RM: 0.3, CAM: 0.15, LW: 0.1, RW: 0.1, CF: 0.05, ST: 0.05,
+};
+
+/** Who has to unpick a deep block. */
+const CREATE_WEIGHT: Record<Position, number> = {
+  CAM: 1.0, CF: 0.9, LW: 0.9, RW: 0.9, LM: 0.8, RM: 0.8, CM: 0.7, ST: 0.6,
+  CDM: 0.3, LWB: 0.4, RWB: 0.4, LB: 0.3, RB: 0.3, CB: 0.1, GK: 0.0,
+};
 
 // ── Inputs ───────────────────────────────────────────────────────────────────
 
@@ -530,6 +586,8 @@ interface TeamModel {
    */
   pressResistance: number;
   pressIntensity: number;
+  /** Ability of the defenders holding a deep block. */
+  blocking: number;
   runningThreat: number;
   creation: number;
   versatility: number;
@@ -598,6 +656,31 @@ function teamQuality(players: MatchPlayer[], name: string, roles: RoleMultiplier
 }
 
 /**
+ * A side's ability in one phase: its players' trait plus rating baseline,
+ * weighted by how much of that phase each position does.
+ *
+ * Zero for an ordinary side, which is what nearly every side was when this
+ * came from traits alone, so matches between ordinary sides play as they did.
+ * Negative for a side worse than ordinary on the ball in that phase.
+ */
+export function phaseAbility(
+  players: MatchPlayer[],
+  weight: Record<Position, number>,
+  name: string,
+  roles: RoleMultipliers,
+): number {
+  let total = 0;
+  let mass = 0;
+  for (const p of players) {
+    const w = weight[p.position] ?? 0.2;
+    if (w <= 0) continue;
+    total += w * (quality(p, name, roles) + RATING_TO_ABILITY * (p.rating - ABILITY_REFERENCE_RATING));
+    mass += w;
+  }
+  return mass === 0 ? 0 : total / mass;
+}
+
+/**
  * How well an eleven can execute the style it has been given, 0 to 1.
  *
  * A style with no demands fits everybody, which is what makes `balanced` a safe
@@ -652,10 +735,12 @@ function buildTeam(setup: TeamSetup, roles: RoleMultipliers): TeamModel {
     },
     midfield: weightedQuality(players, MIDFIELD_WEIGHT, null),
     aerial: aerialQuality(players, roles),
-    pressResistance: teamQuality(players, 'pressResist', roles),
-    pressIntensity: teamQuality(players, 'pressing', roles),
+    pressResistance: phaseAbility(players, BUILD_UP_WEIGHT, 'pressResist', roles),
+    pressIntensity: phaseAbility(players, PRESS_WEIGHT, 'pressing', roles),
+    // No trait describes holding a deep block, so this is the rating baseline.
+    blocking: phaseAbility(players, BLOCK_WEIGHT, 'blocking', roles),
     runningThreat: teamQuality(players, 'pace', roles),
-    creation: teamQuality(players, 'creation', roles),
+    creation: phaseAbility(players, CREATE_WEIGHT, 'creation', roles),
     versatility: players.filter(p => (p.positions?.length ?? 1) > 1).length
       / Math.max(1, players.length),
     focus: {
@@ -695,29 +780,41 @@ function quality(p: MatchPlayer, name: string, roles: RoleMultipliers): number {
 /**
  * How much a press cuts the chances of a side trying to play through it.
  *
- * Going long is the answer to a press, which is why `buildUp` sets the exposure
- * and why resistance on the ball subtracts from it. A side that hits it long is
- * not pressed at all, whoever it is playing.
+ * Going long is the answer to a press, which is why `buildUp` sets the
+ * exposure: a side that hits it long is not pressed, whoever it is playing.
+ * For a side that plays out, it is a contest between its passers at the back
+ * and the other side's pressers, and `pressure` — how high and how completely
+ * the opponent presses — sets how much rides on it.
  */
 export function pressFactor(
-  buildUp: number, pressResistance: number, opponentPress: number,
+  buildUp: number, passing: number, pressing: number, pressure: number,
 ): number {
-  const exposed = Math.max(0, buildUp - pressResistance);
-  return 1 / (1 + PRESS_EFFECT * Math.max(0, opponentPress) * exposed);
+  // The press only wins if the pressers are better than the passers. Between
+  // equals it wins as often as it loses, which is where the rule used to sit
+  // for an ordinary side, and a side better on the ball than the press is not
+  // troubled by it at all.
+  const edge = Math.max(0, 2 * contest(pressing - passing) - 1);
+  return 1 / (1 + PRESS_EFFECT * Math.max(0, pressure) * buildUp * edge);
 }
 
 /**
  * How much a deep defence cuts the chances of a patient side.
  *
- * Creation is what unpicks it; without any, patience against a low block is
- * just passing in front of them.
+ * Creation is what unpicks it, measured against the defenders holding the
+ * block: better creators than blockers loosen it, worse ones are shut out
+ * more than an ordinary side would be.
  */
 export function congestionFactor(
-  buildUp: number, creation: number, opponentLine: number,
+  buildUp: number, creating: number, blocking: number, opponentLine: number,
 ): number {
   const deep = 1 - opponentLine;
-  const congested = deep * buildUp * Math.max(0, 1 - creation * 2);
+  const congested = deep * buildUp * 2 * contest(blocking - creating);
   return 1 / (1 + CONGESTION_EFFECT * congested);
+}
+
+/** The chance the side ahead by `gap` in ability wins a contest on the ball. */
+function contest(gap: number): number {
+  return 1 / (1 + Math.exp(-gap / CONTEST_SCALE));
 }
 
 /**
@@ -1094,12 +1191,12 @@ export function simulateMatch(
     // 1. Press disruption. A side that presses high hurts one trying to play
     //    out, and is beaten by one that goes long — the reason teams hoof it
     //    against a press. Resistance on the ball is what survives it.
-    const press = def.pressIntensity * def.style.line * def.fit;
-    const pressed = pressFactor(att.style.buildUp, att.pressResistance, press);
+    const pressed = pressFactor(att.style.buildUp, att.pressResistance, def.pressIntensity,
+      def.style.line * def.fit);
 
     // 2. Congestion. A deep block leaves a patient side nowhere to play, and
     //    creation is what unpicks it.
-    const congested = congestionFactor(att.style.buildUp, att.creation, def.style.line);
+    const congested = congestionFactor(att.style.buildUp, att.creation, def.blocking, def.style.line);
 
     const shotRate =
       BASE_SHOT_RATE *

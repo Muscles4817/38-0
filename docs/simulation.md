@@ -52,6 +52,49 @@ rating: goals, assists, shots on target, chances created, saves, cards, the
 result, the goals conceded weighted by how defensive his position is, and his
 defensive actions.
 
+### On the ball, by phase
+
+Two of the engine's interaction rules are contests on the ball, and who takes
+part in them depends on where the opponent contests it:
+
+| Rule | Reads, for the side in possession | Against, for the other side |
+| --- | --- | --- |
+| **the press** | build-up ability: keeper, centre-backs, full-backs, holding midfielder | pressing ability: forwards and midfielders |
+| **the deep block** | creation: attacking midfielders, wingers, forwards, central midfielders | blocking ability: centre-backs, holding midfielder, full-backs |
+
+Each player's ability is his trait (`pressResist`, `pressing`, `creation`) plus
+`0.1 × (rating − 77)`: ten rating points above an ordinary player are worth one
+point of a trait, and 77 is the mean rating of everyone in a stored XI. Most
+players carry no trait (71% of centre-backs), so without the baseline a quality
+was zero for most sides — the median stored XI had no pressing ability at all,
+and most presses pressed nobody.
+
+Both rules are **contests**: the chance the better side wins is logistic in the
+gap (`CONTEST_SCALE`). A press only bites when the pressers are better than the
+passers, scaled by how high and complete the press is and by how much the
+victim insists on playing out; a deep block congests in proportion to how much
+better its defenders are than the side's creators. Between equals both give
+what they gave an ordinary side before, which is why league goals and shots per
+match did not move (1.40 and 12.6).
+
+Before, every one of these qualities was averaged over all eleven players, so
+one ball-playing centre-back was a tenth of the number and counted the same as a
+ball-playing striker. Measured with two identical 80-rated XIs playing
+Possession against the 2025/26 field, 60 seasons each:
+
+| Opponents play | no traits at centre-back | two ball-playing centre-backs |
+| --- | ---: | ---: |
+| Gegenpress | 44.7 pts, 48.9 goals | 50.7 pts, 55.6 goals |
+| Low block | 46.2 pts, 39.0 goals | 46.6 pts, 39.3 goals |
+
+Before the change, swapping Matip's ball-playing trait in or out of Liverpool
+2019/20 moved nothing against a pressing league (74.3 and 74.4 points).
+
+It also spread the table: the champion averages 80.5 points, from 76.4, and a
+flat 90-rated XI in 2025/26 takes 73, from 67. Liverpool 2019/20's best styles
+are now High press (77.8) and Positional play (77.3), and Park the bus its worst
+(69.1).
+
 ### Defending, credited
 
 Whether an attack becomes a chance is decided by the two sides' qualities in
@@ -242,6 +285,16 @@ changed what the field is made of. `OPPONENT_SD` was 8.6 and the simulation now
 puts it at 7.5 — measured directly as the spread of each opponent's points over
 120 seasons, 7.4 to 7.6 across three fields — so it is 7.5. Expected points stay
 within 2.2 and projected finish within 0.9 across all nine cases.
+
+### Re-fitted again, for on-ball contests
+
+After the press and the deep block became contests between the players in each
+phase (see *On the ball, by phase*), a weak side lost more than the odds knew:
+a 74-rated XI in 2025/26 went down 74% of the time against 54% projected.
+Re-measured on the same 900 seasons: `POINTS_STEEPNESS` 0.066 → 0.086,
+`POINTS_MIDPOINT` 2.68 → 2.04, `SEASON_SD` 7.4 → 6.7, `OPPONENT_SD` 8.1
+unchanged (√(7.8² + 2.0²)). Curve error 1.6 points for the XI, 2.8 for an
+opponent.
 
 ### Re-fitted for the match engine
 

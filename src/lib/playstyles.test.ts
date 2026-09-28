@@ -151,41 +151,53 @@ describe('the interaction rules', () => {
   // confounded: a pressing side and a low block differ in tempo by half again,
   // and a squad stripped of its traits is weaker everywhere rather than only at
   // pressing. Measured that way the press came out backwards.
-  const PRESS = 0.4;
+  // A high, complete press, and pressers well ahead of ordinary passers.
+  const PRESSURE = 0.9;
+  const PRESSERS = 0.6;
 
   it('a press costs a side playing out, and barely touches one going long', () => {
-    const short = pressFactor(PLAYSTYLES.tikiTaka.buildUp, 0.1, PRESS);
-    const long = pressFactor(PLAYSTYLES.routeOne.buildUp, 0.1, PRESS);
+    const short = pressFactor(PLAYSTYLES.tikiTaka.buildUp, 0, PRESSERS, PRESSURE);
+    const long = pressFactor(PLAYSTYLES.routeOne.buildUp, 0, PRESSERS, PRESSURE);
     expect(short, `short build-up keeps ${short.toFixed(3)}, long ball ${long.toFixed(3)}`)
       .toBeLessThan(long);
-    expect(long, 'going long should be nearly immune').toBeGreaterThan(0.97);
+    expect(long, 'going long should be nearly immune').toBeGreaterThan(0.95);
   });
 
-  it('lets a technical side play through a press', () => {
-    const technical = pressFactor(PLAYSTYLES.tikiTaka.buildUp, 0.9, PRESS);
-    const not = pressFactor(PLAYSTYLES.tikiTaka.buildUp, 0.0, PRESS);
-    expect(technical, `${technical.toFixed(3)} with resistance, ${not.toFixed(3)} without`)
+  it('lets a side with better passers than the press play through it', () => {
+    const technical = pressFactor(PLAYSTYLES.tikiTaka.buildUp, 0.9, PRESSERS, PRESSURE);
+    const not = pressFactor(PLAYSTYLES.tikiTaka.buildUp, 0, PRESSERS, PRESSURE);
+    expect(technical, `${technical.toFixed(3)} with better passers, ${not.toFixed(3)} without`)
       .toBeGreaterThan(not);
-    // It plays through a press; it is not immune to one. Eight per cent is what
-    // a heavy press still costs a side committed to building from the back.
-    expect(technical).toBeGreaterThan(0.88);
+    expect(technical).toBe(1);
   });
 
-  it('does nothing to anybody when the opponent cannot press', () => {
-    expect(pressFactor(1, 0, 0)).toBe(1);
+  it('bites harder the better the pressers are than the passers', () => {
+    const slight = pressFactor(1, 0, 0.2, PRESSURE);
+    const heavy = pressFactor(1, 0, 1.0, PRESSURE);
+    expect(heavy).toBeLessThan(slight);
+  });
+
+  it('does nothing to anybody when the opponent does not press', () => {
+    expect(pressFactor(1, 0, 1, 0)).toBe(1);
   });
 
   it('congests a patient side against a deep block, and creation relieves it', () => {
-    const patient = congestionFactor(PLAYSTYLES.tikiTaka.buildUp, 0, PLAYSTYLES.lowBlock.line);
-    const creative = congestionFactor(PLAYSTYLES.tikiTaka.buildUp, 0.5, PLAYSTYLES.lowBlock.line);
-    const direct = congestionFactor(PLAYSTYLES.routeOne.buildUp, 0, PLAYSTYLES.lowBlock.line);
+    const patient = congestionFactor(PLAYSTYLES.tikiTaka.buildUp, 0, 0, PLAYSTYLES.lowBlock.line);
+    const creative = congestionFactor(PLAYSTYLES.tikiTaka.buildUp, 0.8, 0, PLAYSTYLES.lowBlock.line);
+    const direct = congestionFactor(PLAYSTYLES.routeOne.buildUp, 0, 0, PLAYSTYLES.lowBlock.line);
     expect(patient).toBeLessThan(1);
     expect(creative, 'creation should unpick a deep block').toBeGreaterThan(patient);
     expect(direct, 'going long is not congested').toBeGreaterThan(patient);
   });
 
+  it('shuts out a side whose creators are worse than the block', () => {
+    const even = congestionFactor(1, 0, 0, 0.2);
+    const outclassed = congestionFactor(1, 0, 0.8, 0.2);
+    expect(outclassed).toBeLessThan(even);
+  });
+
   it('does not congest anyone against a high line', () => {
-    expect(congestionFactor(1, 0, 1)).toBe(1);
+    expect(congestionFactor(1, 0, 1, 1)).toBe(1);
   });
 
   it('rewards runners against a high line and nothing against a deep one', () => {
@@ -241,9 +253,14 @@ describe('a style you cannot play does not work', () => {
   const QUICK = ['ShotStopper', 'Pacey', 'Stopper', 'Sweeper', 'Pacey', 'Pacey',
     'Workhorse', 'Anchor', 'Pacey', 'Pacey', 'Poacher'].map(x => [x]);
 
-  it('rewards tiki-taka only with the technicians for it', () => {
+  // 4,000 matches rather than the default 900. Since on-ball ability became a
+  // contest against the opponent's players in the same phase, a trait has less
+  // room over an equally rated side: technicians were worth +0.25 points a game
+  // and are worth +0.16, measured over 6,000. At 900 matches that sits within
+  // two standard errors of the margin and fails on a bad draw.
+  it('rewards tiki-taka only with the technicians for it', { timeout: 30_000 }, () => {
     const ppg = duel(team('With', 'tikiTaka', 0, TECHNICAL),
-      team('Without', 'tikiTaka', 500, NO_TAGS), 77);
+      team('Without', 'tikiTaka', 500, NO_TAGS), 77, 4000);
     expect(ppg, `${ppg.toFixed(2)} against an even ${EVEN.toFixed(2)}`).toBeGreaterThan(EVEN + 0.1);
   });
 

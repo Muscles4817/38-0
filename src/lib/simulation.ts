@@ -555,21 +555,20 @@ export function computeOverall(picks: SquadPick[]): number {
 // over them fixes it, and is why this is a weighted sum over `SEASON_NODES`
 // rather than one comparison.
 //
-// Re-fitted when the season moved onto the match engine, on 900 seasons
-// (18,000 team-seasons) across the 2025/26, 2003/04 and 1992/93 fields at squad
-// ratings from 62 to 98: the curve is within 1.7 points of the XI's measured
-// mean and 2.6 of an opponent's. The engine is flatter than the model it
-// replaced — a rating edge buys about 60% as many points — which is why the
-// steepness fell from 0.113. See docs/simulation.md.
+// Re-fitted when on-ball ability became a contest between the players in each
+// phase, on 900 seasons (18,000 team-seasons) across the 2025/26, 2003/04 and
+// 1992/93 fields at squad ratings from 62 to 98: the curve is within 1.6
+// points of the XI's measured mean and 2.8 of an opponent's. See
+// docs/simulation.md for this and the two fits before it.
 
 /** 38 wins. The ceiling the points curve saturates against. */
 const MAX_POINTS = 114;
 /** How sharply points rise with a rating edge over the field. */
-const POINTS_STEEPNESS = 0.066;
+const POINTS_STEEPNESS = 0.086;
 /** The rating edge at which a side is worth half the maximum points. */
-const POINTS_MIDPOINT = 2.68;
+const POINTS_MIDPOINT = 2.04;
 /** How far the player's own season lands either side of its expectation. */
-const SEASON_SD = 7.4;
+const SEASON_SD = 6.7;
 /** The same for an opponent's season, which is not shared across comparisons. */
 const OPPONENT_SD = 8.1;
 /** Quadrature nodes for integrating over the player's own season. */

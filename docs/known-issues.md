@@ -46,8 +46,10 @@ counts for little.
 
 ### The top of the table is flat
 
-Liverpool 2019/20 averages 73.6 points and 68 goals; the real side took 99 and
-scored 85. A flat 90-rated XI averages 67 points against the 2025/26 field. The
+Liverpool 2019/20 averages 74.8 points and 69 goals; the real side took 99 and
+scored 85. A flat 90-rated XI averages 73 points against the 2025/26 field. The
+on-ball contests (see simulation.md) moved the champion from 76.4 to 80.5
+points; it is still well short of a real ~88. The
 engine's quality constants (`EDGE_TO_CHANCES`, `FINISHING_EXPONENT`,
 `KEEPING_EXPONENT`) are deliberately gentle, per its own comments; the
 pre-season curve re-fitted to it is 60% as steep as the Poisson model's.
@@ -75,7 +77,10 @@ side's profile rather than its total.
 
 **`recovery` is 0 for 90% of stored XIs** (at most 0.59), and Counter-attack,
 Catenaccio and Low block all demand it, so almost nothing can fit them. That is
-the trait data, which lives in the authoring database.
+the trait data, which lives in the authoring database. Fit and pace are still
+read from traits alone, averaged over all eleven; the press and the deep block
+were moved to a rating baseline and phase positions, and the same treatment
+would suit them.
 
 ## 1. The draft pool is still lopsided
 

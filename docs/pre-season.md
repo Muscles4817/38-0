@@ -43,7 +43,11 @@ ordinary side.
 ### Measured
 
 For Liverpool 2019/20 in the 2025/26 field, 40 seasons each on the same seeds:
-Park the bus 67.5 points, Total football 74.6; title odds from 18% to 60%. For a
+Park the bus 69.1 points, High press 77.8; title odds from 30% to 70%. Who you
+face matters as much as how you play: against a league that presses, two
+ball-playing centre-backs are worth six points a season to an 80-rated XI, and
+against a league that sits deep they are worth nothing — see *On the ball, by
+phase* in [simulation.md](simulation.md). For a
 flat 74-rated XI in 1992/93, 20 seasons each: Catenaccio 56.6, Gegenpress 47.8,
 Balanced 51.1. The best style differs by squad and by field, and a weak side is
 better off slowing the game down — a 68-rated XI takes 36 points parking the
