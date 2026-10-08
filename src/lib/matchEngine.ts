@@ -209,6 +209,29 @@ const AERIAL_WON_RATE = 0.8;
 /** How far a trait tilts who makes a defensive action, as the aerial contest does. */
 const DEFENSIVE_QUALITY_WEIGHT = 0.2;
 
+// ── On the ball, credited ────────────────────────────────────────────────────
+//
+// The same rule for the side in possession: nothing here changes how often a
+// side creates or scores. A press is a contest between the build-up players and
+// the pressers (see pressFactor), and these say who played through it, who
+// lost the ball to it, and whose pass set up each shot.
+//
+// How often a press engages depends on both styles — how high and complete the
+// press is, how much the side insists on playing out — and who wins it on the
+// same contest the press rule uses. So against a side that sits deep a
+// centre-back barely registers here, and against a high press he is in the
+// game every few minutes, for good or ill.
+//
+// Reference, per team per match: about 9.5 key passes (shots from a pass,
+// roughly three quarters of all shots).
+
+/** Share of possessions a complete, high press engages, against a side that always plays out. */
+const PRESS_ENGAGED_RATE = 0.3;
+/** At most this share of engaged possessions is lost, against pressers far better than the passers. */
+const PRESS_LOSS_SHARE = 0.6;
+/** Chance a shot came from a team-mate's pass rather than a carry, a rebound or a set piece's second ball. */
+const KEY_PASS_RATE = 0.75;
+
 export type ChanceType =
   | 'throughBall' | 'cross' | 'aerial' | 'longShot' | 'individual'
   | 'setPiece' | 'penalty';
@@ -510,6 +533,10 @@ export interface MatchPlayerStats {
   aerialsWon: number;
   /** Goals conceded where he was the defender beaten. */
   beaten: number;
+  /** Times he played the ball through an opponent's press. */
+  pressBeaten: number;
+  /** Times he lost the ball to an opponent's press. */
+  lostToPress: number;
   cleanSheet: boolean;
   rating: number;
 }
@@ -1041,6 +1068,42 @@ function defenderWeights(
 const DEFENDER_CACHE = new WeakMap<MatchPlayer[], WeakMap<RoleMultipliers, Map<string, { candidates: MatchPlayer[]; weights: number[] }>>>();
 const NOBODY_SENT: ReadonlySet<number> = new Set();
 
+/**
+ * Who was on the ball when a press engaged: the better passer to play through
+ * it, the weaker one to lose it. Weighted by how much of the build-up his
+ * position does, his rating (damped as for a shooter), and his `pressResist`.
+ */
+function pickBuildUpPlayer(
+  rand: () => number,
+  team: TeamModel,
+  beaten: boolean,
+  sent: ReadonlySet<number>,
+  roles: RoleMultipliers,
+): MatchPlayer | null {
+  const candidates = team.players.filter(p => !sent.has(p.playerId));
+  const weights = candidates.map(p => {
+    const share = BUILD_UP_WEIGHT[p.position] ?? 0.1;
+    const ability = Math.pow(ratingScale(p.rating), RATING_SELECTION_POWER)
+      * Math.exp(DEFENSIVE_QUALITY_WEIGHT * quality(p, 'pressResist', roles));
+    return beaten ? share * ability : share / ability;
+  });
+  return pickWeighted(rand, candidates, weights);
+}
+
+/** Who won the ball back for the press: the pressers, by position, rating and `pressing`. */
+function pickPresser(
+  rand: () => number,
+  team: TeamModel,
+  sent: ReadonlySet<number>,
+  roles: RoleMultipliers,
+): MatchPlayer | null {
+  const candidates = team.players.filter(p => !sent.has(p.playerId));
+  const weights = candidates.map(p => (PRESS_WEIGHT[p.position] ?? 0.2)
+    * Math.pow(ratingScale(p.rating), RATING_SELECTION_POWER)
+    * Math.exp(DEFENSIVE_QUALITY_WEIGHT * quality(p, 'pressing', roles)));
+  return pickWeighted(rand, candidates, weights);
+}
+
 /** A second, independent stream, so crediting defenders never shifts the match. */
 function creditStream(seed: number): () => number {
   let a = seed >>> 0;
@@ -1074,6 +1137,8 @@ function blankStats(p: MatchPlayer): MatchPlayerStats {
     blocks: 0,
     aerialsWon: 0,
     beaten: 0,
+    pressBeaten: 0,
+    lostToPress: 0,
     cleanSheet: false,
     rating: 6,
   };
@@ -1101,6 +1166,21 @@ export function simulateMatch(
   // Who could make a given action depends only on the eleven, the zone and who
   // is still on the pitch. Rebuilding the weights for each of a hundred actions
   // a match took the season from 73 to 150 ms; see DEFENDER_CACHE.
+  const creditOnBall = (team: TeamModel, opponent: TeamModel, beaten: boolean): void => {
+    const onBall = pickBuildUpPlayer(credit, team, beaten, sent, roles);
+    if (onBall) {
+      const s = stats.get(onBall.playerId)!;
+      if (beaten) s.pressBeaten++;
+      else s.lostToPress++;
+    }
+    if (beaten) return;
+    const presser = pickPresser(credit, opponent, sent, roles);
+    if (presser) {
+      const s = stats.get(presser.playerId)!;
+      if (credit() < 0.55) s.tackles++;
+      else s.interceptions++;
+    }
+  };
   const creditTo = (team: TeamModel, zone: Zone, act: DefensiveAct): void => {
     const offField = team.players.some(p => sent.has(p.playerId));
     let pool: { candidates: MatchPlayer[]; weights: number[] } | undefined;
@@ -1191,8 +1271,22 @@ export function simulateMatch(
     // 1. Press disruption. A side that presses high hurts one trying to play
     //    out, and is beaten by one that goes long — the reason teams hoof it
     //    against a press. Resistance on the ball is what survives it.
+    //
+    //    How high the press goes is the style's choice, its line. Whether it
+    //    works is the contest between their pressers and these passers, which
+    //    pressIntensity already measures from rating and traits. It used to be
+    //    multiplied by the style's fit as well, which counted the same thing
+    //    twice and backwards once ability had a rating baseline: a side with
+    //    no pressing traits had no fit for Gegenpress and so pressed nobody,
+    //    while Balanced, which asks for nothing, pressed at a mid block.
     const pressed = pressFactor(att.style.buildUp, att.pressResistance, def.pressIntensity,
-      def.style.line * def.fit);
+      def.style.line);
+    // Did their press engage this possession, and if it did, could it win it?
+    // Credit only, from the credit stream: the shot rate below is unchanged.
+    const pressEngaged =
+      credit() < PRESS_ENGAGED_RATE * def.style.line * att.style.buildUp;
+    const pressWouldWin = pressEngaged
+      && credit() < PRESS_LOSS_SHARE * (1 - contest(att.pressResistance - def.pressIntensity));
 
     // 2. Congestion. A deep block leaves a patient side nowhere to play, and
     //    creation is what unpicks it.
@@ -1225,6 +1319,8 @@ export function simulateMatch(
           ? 'penalty'
           : pickChanceType(rand, att, zone);
       const shooter = pickShooter(rand, att, zone, type, roles);
+      // A possession that ended in a shot got through any press that met it.
+      if (pressEngaged) creditOnBall(att, def, true);
       if (shooter) {
         const shooterStats = stats.get(shooter.playerId)!;
         shooterStats.shots++;
@@ -1275,6 +1371,12 @@ export function simulateMatch(
         const scored = onTarget && rand() < xg / onTargetRate;
         const aerialChance = type === 'cross' || type === 'aerial' || type === 'setPiece';
         if (!scored) {
+          // The pass behind a shot that did not go in. A scored one is an
+          // assist, chosen below, and counts as a key pass there.
+          if (type !== 'penalty' && credit() < KEY_PASS_RATE) {
+            const passer = pickCreator(credit, att, zone, shooter.playerId, roles);
+            if (passer) stats.get(passer.playerId)!.chancesCreated++;
+          }
           if (!onTarget && credit() < BLOCK_RATE) creditTo(def, defZone, 'block');
           if (aerialChance && credit() < AERIAL_WON_RATE) creditTo(def, defZone, 'aerial');
         } else if (type !== 'penalty') {
@@ -1308,11 +1410,17 @@ export function simulateMatch(
           stats.get(keeper.playerId)!.saves++;
         }
       }
-    } else if (credit() < DEFENSIVE_ACTION_RATE) {
-      // The attack came to nothing, and a defender was the reason.
-      const roll = credit();
-      creditTo(def, defZone,
-        roll < TACKLE_SHARE ? 'tackle' : roll < TACKLE_SHARE + INTERCEPTION_SHARE ? 'interception' : 'clearance');
+    } else if (pressWouldWin) {
+      // Lost in the build-up, to the press: charge the passer, credit the presser.
+      creditOnBall(att, def, false);
+    } else {
+      if (pressEngaged) creditOnBall(att, def, true);
+      if (credit() < DEFENSIVE_ACTION_RATE) {
+        // The attack came to nothing further up, and a defender was the reason.
+        const roll = credit();
+        creditTo(def, defZone,
+          roll < TACKLE_SHARE ? 'tackle' : roll < TACKLE_SHARE + INTERCEPTION_SHARE ? 'interception' : 'clearance');
+      }
     }
 
     // Fouls. The side without the ball concedes them.
@@ -1363,6 +1471,8 @@ export function simulateMatch(
       // the blame a defender used to share equally with his whole back line.
       r += (s.tackles + s.interceptions) * 0.07 + s.clearances * 0.03
         + s.blocks * 0.1 + s.aerialsWon * 0.05 - s.beaten * 0.3;
+      // On the ball under a press: playing through it, and losing it.
+      r += s.pressBeaten * 0.04 - s.lostToPress * 0.15;
       r += (own - against) * 0.12;
       r -= against * 0.12 * defensive;
       if (against === 0) r += 0.45 * defensive;

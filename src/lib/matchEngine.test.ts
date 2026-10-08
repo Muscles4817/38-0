@@ -240,3 +240,56 @@ describe('defending, credited', () => {
     expect(good.beaten).toBeLessThan(poor.beaten);
   });
 });
+
+describe('on the ball under a press, credited', () => {
+  // A side that plays out, against one opponent pressing high and the same
+  // opponent sitting deep. Who is in the game, and how often, should follow.
+  const eleven = (base: number, rating: number, cbRoles: string[] = []): MatchPlayer[] => [
+    { playerId: base, name: 'GK', position: 'GK', rating },
+    { playerId: base + 1, name: 'CB1', position: 'CB', rating, roles: cbRoles },
+    { playerId: base + 2, name: 'CB2', position: 'CB', rating, roles: cbRoles },
+    { playerId: base + 3, name: 'LB', position: 'LB', rating },
+    { playerId: base + 4, name: 'RB', position: 'RB', rating },
+    { playerId: base + 5, name: 'CDM', position: 'CDM', rating },
+    { playerId: base + 6, name: 'CM1', position: 'CM', rating },
+    { playerId: base + 7, name: 'CM2', position: 'CM', rating },
+    { playerId: base + 8, name: 'LW', position: 'LW', rating },
+    { playerId: base + 9, name: 'RW', position: 'RW', rating },
+    { playerId: base + 10, name: 'ST', position: 'ST', rating },
+  ];
+  const side = (name: string, players: MatchPlayer[], style: TeamSetup['style']): TeamSetup =>
+    ({ name, players, formation: '4-3-3', style, focus: { L: 1, C: 1, R: 1 } });
+  const roles = { goalMult: {}, assistMult: {}, qualities: { Passer: { pressResist: 3 } } };
+
+  function underPress(home: TeamSetup, away: TeamSetup, matches = 200) {
+    let seed = 41;
+    const rand = () => { seed = (seed * 16807) % 2147483647; return seed / 2147483647; };
+    const t = { beaten: 0, lost: 0 };
+    for (let i = 0; i < matches; i++) {
+      const m = simulateMatch(home, away, rand, roles);
+      for (const p of m.home.players) { t.beaten += p.pressBeaten; t.lost += p.lostToPress; }
+    }
+    return { beaten: t.beaten / matches, lost: t.lost / matches };
+  }
+
+  it('puts the build-up players in the game against a high press, and barely against a deep block', () => {
+    const me = side('Me', eleven(100, 80), 'possession');
+    const vsPress = underPress(me, side('Them', eleven(200, 84), 'gegenpress'));
+    const vsBlock = underPress(me, side('Them', eleven(200, 84), 'lowBlock'));
+    expect(vsPress.beaten + vsPress.lost).toBeGreaterThan(2 * (vsBlock.beaten + vsBlock.lost));
+  });
+
+  it('lets better passers lose the ball less to the same press', () => {
+    const press = side('Them', eleven(200, 84), 'gegenpress');
+    const plain = underPress(side('Me', eleven(100, 80), 'possession'), press);
+    const passers = underPress(side('Me', eleven(100, 80, ['Passer']), 'possession'), press);
+    expect(passers.lost).toBeLessThan(plain.lost);
+  });
+
+  it('barely presses a side that goes long', () => {
+    const press = side('Them', eleven(200, 84), 'gegenpress');
+    const long = underPress(side('Me', eleven(100, 80), 'routeOne'), press);
+    const short = underPress(side('Me', eleven(100, 80), 'tikiTaka'), press);
+    expect(long.beaten + long.lost).toBeLessThan((short.beaten + short.lost) / 3);
+  });
+});

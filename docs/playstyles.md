@@ -102,11 +102,14 @@ label, and it is what makes drafting a squad *for* a style meaningful.
 
 1. **Space in behind** — chance quality rises with `runningThreat` × the
    attacker's directness × the opponent's line height.
-2. **Press disruption** — the opponent's `pressIntensity` × their line cuts your
-   chance rate, scaled by how short your build-up is and reduced by your
-   `pressResistance`. Going long immunises you.
-3. **Congestion** — a deep opponent cuts your chance rate, offset by your
-   `creation`.
+2. **Press disruption** — a contest between the opponent's pressers and your
+   build-up players (`pressIntensity` against `pressResistance`, each from the
+   players in those positions, rating plus traits). It cuts your chance rate
+   only when their pressers are better than your passers, scaled by how high
+   their line is and how short your build-up. Going long immunises you.
+3. **Congestion** — a contest between a deep opponent's defenders and your
+   creators: the better their block is than your `creation`, the more it cuts
+   your chance rate.
 4. **Aerial route** — route one and wing play resolve chance quality as an
    aerial contest, extending what set pieces already do.
 

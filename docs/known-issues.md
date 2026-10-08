@@ -44,6 +44,10 @@ Set pieces go to centre-backs, which is right in kind and too much in degree,
 and the assister for a cross is picked by attacking weight, where a full-back
 counts for little.
 
+Key passes make this visible: Alexander-Arnold and Robertson make 43 and 45 a
+season, close to the real rate, but their assists stay near 5 because the
+assister is picked by attacking weight. Firmino makes 85.
+
 ### The top of the table is flat
 
 Liverpool 2019/20 averages 74.8 points and 69 goals; the real side took 99 and

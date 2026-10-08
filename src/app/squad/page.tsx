@@ -311,7 +311,7 @@ function TacticSummary({ tactic }: { tactic: TacticEffect }) {
           : chances > 0
             ? `Its matches produce about ${chances}% more chances, for both sides. A quick game suits the better team.`
             : `Its matches produce about ${-chances}% fewer chances, for both sides. A slow game is how an underdog gets a result.`}
-        {tactic.fit < 1 && ' Fit is how much of its press and its running in behind this XI can actually deliver.'}
+        {tactic.fit < 1 && ' Fit is how much of the threat in behind this style is built on this XI can deliver. A press works or not on how good your pressers are against their passers.'}
       </p>
     </div>
   );

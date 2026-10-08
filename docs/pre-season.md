@@ -31,8 +31,10 @@ against a high line, recovery pace covering the space. Nobody writes down that a
 counter-attacking side punishes a possession side; it falls out of those rules.
 
 `fit` is `fitForStyle`, the 0–1 measure of whether the eleven has the qualities
-a style asks for. The engine scales what the style's demands buy — how hard its
-press bites, how dangerous its runners are in behind — by it.
+a style asks for. The engine scales how dangerous the style's runners are in
+behind by it. A press is not scaled by fit: how high it goes is the style's
+line, and whether it works is the contest between the pressers and the other
+side's passers — see [simulation.md](simulation.md#on-the-ball-by-phase).
 
 `tacticEffect` in `src/lib/simulation.ts` only describes a style for this
 screen: its line, build-up, tempo, possession bias and fit. Tempo is a property

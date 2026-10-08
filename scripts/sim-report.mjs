@@ -126,8 +126,8 @@ function reportSeason(results, style) {
   const potsCount = count(results.map(r => r.awards.playerOfSeason.name));
   const leaguePots = count(results.map(r => r.awards.leaguePlayerOfSeason.isUser ? r.awards.leaguePlayerOfSeason.name : null));
   const teamGoals = mean(results.map(r => r.goalsFor));
-  console.log(`\nYOUR XI            slot  ovr │  goals  share  assists  def acts beaten  match rtg │ PotS  league PotS │ real g / a`);
-  console.log('─'.repeat(113));
+  console.log(`\nYOUR XI            slot  ovr │  goals  share  assists  key p │ def acts beaten │ press won/lost │ match rtg │ PotS  league PotS │ real g / a`);
+  console.log('─'.repeat(136));
   for (const p of picks) {
     const stats = results.map(r => r.playerStats.find(s => s.playerId === p.playerId));
     const g = mean(stats.map(s => s.goals));
@@ -136,9 +136,12 @@ function reportSeason(results, style) {
     // Tackles, interceptions, clearances, blocks and defensive headers won.
     const def = mean(stats.map(s => s.tackles + s.interceptions + s.clearances + s.blocks + s.aerialsWon));
     const beaten = mean(stats.map(s => s.beaten));
+    const keyPasses = mean(stats.map(s => s.chancesCreated));
+    const pressWon = mean(stats.map(s => s.pressBeaten));
+    const pressLost = mean(stats.map(s => s.lostToPress));
     const real = realOf(p.playerName);
     const realText = !realXI ? 'no export' : real ? `${real.goals ?? '?'} / ${real.assists ?? '?'}` : 'not found';
-    console.log(`${pad(p.playerName, 18)} ${pad(p.position, 4)} ${p.rating}  │ ${f1(g).padStart(6)} ${pct(g / teamGoals).padStart(6)} ${f1(a).padStart(8)} ${f1(def).padStart(9)} ${f1(beaten).padStart(6)} ${f2(rtg).padStart(10)} │` +
+    console.log(`${pad(p.playerName, 18)} ${pad(p.position, 4)} ${p.rating}  │ ${f1(g).padStart(6)} ${pct(g / teamGoals).padStart(6)} ${f1(a).padStart(8)} ${f1(keyPasses).padStart(6)} │ ${f1(def).padStart(8)} ${f1(beaten).padStart(6)} │ ${(f1(pressWon) + ' / ' + f1(pressLost)).padStart(14)} │ ${f2(rtg).padStart(9)} │` +
       ` ${pct((potsCount.get(p.playerName) ?? 0) / RUNS).padStart(4)} ${pct((leaguePots.get(p.playerName) ?? 0) / RUNS).padStart(12)} │ ${realText}`);
   }
   const assisted = mean(results.map(r => r.playerStats.reduce((s, x) => s + x.assists, 0))) / teamGoals;

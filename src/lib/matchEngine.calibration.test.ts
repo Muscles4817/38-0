@@ -15,6 +15,7 @@
 //   fouls 10.4   yellows 1.9  reds 0.05       assisted goals 74%
 //   home 1.55 / away 1.25     clean sheets ~26%
 //   tackles ~16  interceptions ~10  clearances ~18  blocked shots ~3.5
+//   key passes ~9.5 (shots from a team-mate's pass)
 //   goals from a dead ball ~25%
 
 import { describe, it, expect } from 'vitest';
@@ -78,7 +79,7 @@ const rand = rng(20260903);
 const t = {
   n: 0, matches: 0, goals: 0, shots: 0, onTarget: 0, fouls: 0, yellows: 0, reds: 0,
   homeGoals: 0, awayGoals: 0, cleanSheets: 0, assistedGoals: 0, allGoals: 0,
-  setPieceGoals: 0, tackles: 0, interceptions: 0, clearances: 0, blocks: 0,
+  setPieceGoals: 0, tackles: 0, interceptions: 0, clearances: 0, blocks: 0, keyPasses: 0,
 };
 const scorelines = new Map<string, number>();
 for (let repeat = 0; repeat < 3; repeat++) {
@@ -94,6 +95,7 @@ for (let repeat = 0; repeat < 3; repeat++) {
         for (const p of side.players) {
           t.tackles += p.tackles; t.interceptions += p.interceptions;
           t.clearances += p.clearances; t.blocks += p.blocks;
+          t.keyPasses += p.chancesCreated;
         }
       }
       t.homeGoals += m.home.goals;
@@ -155,6 +157,11 @@ describe('and defends like football', () => {
     expect(per(t.interceptions)).toBeLessThan(12);
     expect(per(t.clearances)).toBeGreaterThan(15);
     expect(per(t.clearances)).toBeLessThan(21);
+  });
+
+  it('plays about 9.5 key passes', () => {
+    expect(per(t.keyPasses)).toBeGreaterThan(8);
+    expect(per(t.keyPasses)).toBeLessThan(11);
   });
 
   it('blocks about 3.5 shots', () => {

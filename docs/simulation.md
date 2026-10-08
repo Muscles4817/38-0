@@ -95,6 +95,37 @@ flat 90-rated XI in 2025/26 takes 73, from 67. Liverpool 2019/20's best styles
 are now High press (77.8) and Positional play (77.3), and Park the bus its worst
 (69.1).
 
+**The press is not scaled by fit.** How high it goes is the style's line, and
+whether it works is the contest. It used to be multiplied by the style's
+trait-based fit too, which counted the pressing twice and backwards once
+ability had a rating baseline: Liverpool 2025/26 has no pressing traits, so it
+had no fit for Gegenpress and pressed nobody, while playing Balanced — which
+asks for nothing and so always fits — it pressed at a mid block.
+
+### On the ball, credited
+
+Like the defensive events below, credit only: nothing changes how often a
+side creates or scores.
+
+| Event | When | Who, weighted by |
+| --- | --- | --- |
+| press beaten | a press engages a possession and loses it, or the possession ends in a shot | the build-up players: position, rating, `pressResist` |
+| lost to the press | a press engages and wins, which happens up to 60% of the time as the pressers outclass the passers | the build-up players, the weaker the likelier; the presser who won it gets a tackle or interception |
+| key pass | 75% of shots that do not score, plus every assist | the creator picked as for an assist |
+
+A press engages `0.3 × their line × your build-up` of possessions, so the build-up
+players are in the game more the higher the opponent presses and the more
+patiently their own side plays. Brighton's centre-backs playing Possession
+against Liverpool: 8.7 presses beaten and 2.0 lost a match against Gegenpress,
+5.0 and 1.2 against Balanced, 2.4 and 0.6 against a Low block. Key passes run at
+9.5 per team per match, against a real ~9.5.
+
+Ratings: +0.04 for a press beaten, −0.15 for losing the ball to one, +0.05 a key
+pass (as before, now counted for every shot rather than only for goals). For
+Liverpool 2019/20, Fabinho beats the press 76 times a season and loses the ball
+to it 0.3 times; Matip, the ball-playing centre-back, beats it 56 times to Van
+Dijk's 36. Alexander-Arnold and Robertson make 43 and 45 key passes.
+
 ### Defending, credited
 
 Whether an attack becomes a chance is decided by the two sides' qualities in
@@ -285,6 +316,13 @@ changed what the field is made of. `OPPONENT_SD` was 8.6 and the simulation now
 puts it at 7.5 — measured directly as the spread of each opponent's points over
 120 seasons, 7.4 to 7.6 across three fields — so it is 7.5. Expected points stay
 within 2.2 and projected finish within 0.9 across all nine cases.
+
+### Re-fitted a third time, when the press stopped reading fit
+
+`POINTS_STEEPNESS` 0.086 → 0.092, `POINTS_MIDPOINT` 2.04 → 1.92, `SEASON_SD`
+6.7 → 6.8. Champion 81.2 points, bottom club 29.3. The "does not flatter" case
+(an 88 in 2025/26) now carries the same recorded style-blind exception as the
+86 and 90 there: over 250 seasons it is projected a 45% title and plays 32%.
 
 ### Re-fitted again, for on-ball contests
 

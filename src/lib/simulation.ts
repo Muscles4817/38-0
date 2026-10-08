@@ -149,6 +149,9 @@ export interface PlayerStats {
   aerialsWon: number;
   /** Goals conceded where he was the defender beaten. */
   beaten: number;
+  /** Times he played through an opponent's press, and lost the ball to one. */
+  pressBeaten: number;
+  lostToPress: number;
   yellowCards: number;
   redCards: number;
   /** One per match, from the match engine. */
@@ -556,19 +559,20 @@ export function computeOverall(picks: SquadPick[]): number {
 // rather than one comparison.
 //
 // Re-fitted when on-ball ability became a contest between the players in each
-// phase, on 900 seasons (18,000 team-seasons) across the 2025/26, 2003/04 and
-// 1992/93 fields at squad ratings from 62 to 98: the curve is within 1.6
-// points of the XI's measured mean and 2.8 of an opponent's. See
+// phase and the press stopped depending on trait-based fit, on 900 seasons
+// (18,000 team-seasons) across the 2025/26, 2003/04 and 1992/93 fields at
+// squad ratings from 62 to 98: the curve is within 2.4 points of the XI's
+// measured mean and 2.7 of an opponent's. See
 // docs/simulation.md for this and the two fits before it.
 
 /** 38 wins. The ceiling the points curve saturates against. */
 const MAX_POINTS = 114;
 /** How sharply points rise with a rating edge over the field. */
-const POINTS_STEEPNESS = 0.086;
+const POINTS_STEEPNESS = 0.092;
 /** The rating edge at which a side is worth half the maximum points. */
-const POINTS_MIDPOINT = 2.04;
+const POINTS_MIDPOINT = 1.92;
 /** How far the player's own season lands either side of its expectation. */
-const SEASON_SD = 6.7;
+const SEASON_SD = 6.8;
 /** The same for an opponent's season, which is not shared across comparisons. */
 const OPPONENT_SD = 8.1;
 /** Quadrature nodes for integrating over the player's own season. */
@@ -703,6 +707,7 @@ export function simulateSeason(
       id, sourceId, name, team, isUser, position,
       goals: 0, assists: 0, cleanSheets: 0, shots: 0, shotsOnTarget: 0, chancesCreated: 0,
       saves: 0, tackles: 0, interceptions: 0, clearances: 0, blocks: 0, aerialsWon: 0, beaten: 0,
+      pressBeaten: 0, lostToPress: 0,
       yellowCards: 0, redCards: 0, ratings: [],
     });
     return id;
@@ -789,6 +794,8 @@ export function simulateSeason(
           p.blocks         += s.blocks;
           p.aerialsWon     += s.aerialsWon;
           p.beaten         += s.beaten;
+          p.pressBeaten    += s.pressBeaten;
+          p.lostToPress    += s.lostToPress;
           if (s.yellow) p.yellowCards++;
           if (s.red) p.redCards++;
           // A clean sheet is the keeper's and the back line's, as the awards
@@ -838,6 +845,8 @@ export function simulateSeason(
       blocks:         s.blocks,
       aerialsWon:     s.aerialsWon,
       beaten:         s.beaten,
+      pressBeaten:    s.pressBeaten,
+      lostToPress:    s.lostToPress,
       yellowCards:    s.yellowCards,
       redCards:       s.redCards,
       matchRatings:   s.ratings,
@@ -942,6 +951,8 @@ interface SeasonPlayer {
   blocks: number;
   aerialsWon: number;
   beaten: number;
+  pressBeaten: number;
+  lostToPress: number;
   yellowCards: number;
   redCards: number;
   ratings: number[];
