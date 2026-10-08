@@ -47,6 +47,18 @@ four interaction rules — press, congestion, space in behind, recovery — are
 where the styles meet. `matchEngine.calibration.test.ts` asserts the rates
 (shots, conversion, cards, assisted share) against the Premier League.
 
+The man who made the chance is picked for its kind too (`pickCreator`): a
+cross from the flank it came down, mostly a full-back or a wide man
+(`CROSS_WEIGHT`); a through ball from the middle (`THROUGH_WEIGHT`); a set
+piece from the side's takers, chosen by delivery (`setPiece` trait plus the
+rating baseline); a dribble or a long shot often from nobody (`ASSIST_RATE`
+by chance type, 74–77% of goals assisted overall). Penalties go to the side's
+main attackers, and to a `penalty` specialist above all. Defenders provide
+26–28% of assists across a league, against a real 21–25%; for Liverpool
+2019/20 Robertson makes 10.4 a season and Alexander-Arnold 9.6 (real 12 and
+13), and the league's top assister averages 15–16, the record (20) rarely
+reached.
+
 Match ratings are built from what the player did in the match, valued in
 goals and measured against an ordinary player in his position: see
 [Match ratings](#match-ratings).
@@ -165,17 +177,18 @@ tried first, made a centre-back's goal worth half again a striker's, and
 defenders won the league award in 70–80% of seasons. A keeper's value is
 in other units and keeps its own scale.
 
-Measured: every position averages 6.41–6.58 on the 2025/26 lineups, which
+Measured: every position averages 6.45–6.57 on the 2025/26 lineups, which
 `matchEngine.calibration.test.ts` asserts; across 60 real XIs the season
-averages run p10 6.14, p50 6.39, p95 6.73. Strikers and wingers spread
+averages run p10 6.15, p50 6.39, p95 6.73. Strikers and wingers spread
 widest (a season's goals vary most), centre-backs and full-backs least. For
-Liverpool 2019/20 Van Dijk rates 6.88, Salah 6.84, Mané 6.82 and Matip 6.52;
-the XI's award goes to Van Dijk in 40% of seasons and Salah in 33%. For
-2008/09 Gerrard rates 7.07 and wins the league award in 40% of seasons,
-which he won in reality (FWA). The league award goes to a forward in 70% of
-seasons in the 2025/26 field (25% in 2008/09), a midfielder 18% (57%) and a
-defender 13% (18%). Of two centre-backs in one XI the better-rated out-rates
-the other 60% of the time.
+Liverpool 2019/20 Van Dijk rates 6.89, Robertson 6.82, Salah 6.82,
+Alexander-Arnold 6.80, Mané 6.77 and Matip 6.49; the XI's award goes to Van
+Dijk in 38% of seasons and Salah in 28%. For 2008/09 Torres rates 6.93 and
+Gerrard 6.90. The league award goes to a forward in 63% of seasons in the
+2025/26 field (35% in 2008/09), a midfielder 25% (33%) and a defender 13%
+(33%); in 2008/09 Nemanja Vidić wins it most often, as he won the Premier
+League's own award that season. Of two centre-backs in one XI the
+better-rated out-rates the other 72% of the time.
 
 ## The plan
 
@@ -208,8 +221,9 @@ When no seed is passed, `Date.now() % 999983` is used.
 | --- | --- |
 | Shots, conversion, home advantage | `BASE_SHOT_RATE`, `CHANCE_QUALITY`, `HOME_*` in `matchEngine.ts` |
 | How far quality carries | `EDGE_TO_CHANCES`, `FINISHING_EXPONENT`, `KEEPING_EXPONENT` |
-| Who gets on the end of a chance | `ATTACK_WEIGHT`, `AERIAL_WEIGHT`, `SET_PIECE_HEADER_SHARE`, `ROLE_CHANCE_AFFINITY`, `ROLE_SELECTION_POWER`, `RATING_SELECTION_POWER` |
+| Who gets on the end of a chance | `ATTACK_WEIGHT`, `AERIAL_WEIGHT`, `SET_PIECE_HEADER_SHARE`, `PENALTY_TAKER_QUALITY_WEIGHT`, `ROLE_CHANCE_AFFINITY`, `ROLE_SELECTION_POWER`, `RATING_SELECTION_POWER` |
 | Set pieces | `SET_PIECE_*`, `AERIAL_*` |
+| Who made it | `CROSS_WEIGHT`, `THROUGH_WEIGHT`, `SET_PIECE_TAKER_WEIGHT`, `SET_PIECE_TAKER_QUALITY_WEIGHT`, `ASSIST_RATE`, role `assistMult` |
 | Match ratings | the event values (*What an event is worth*), `POSITION_MEAN`, `OUTFIELD_VALUE_SD`, and the `finish` step at the end of `simulateMatch` |
 | Role multipliers and qualities | **the database** (`role_config`), not the defaults in code |
 | Styles and their interactions | `PLAYSTYLES`, `PRESS_EFFECT`, `CONGESTION_EFFECT`, `SPACE_EFFECT`, `FIT_REFERENCE` |

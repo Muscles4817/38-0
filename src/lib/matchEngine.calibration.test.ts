@@ -89,6 +89,8 @@ const GROUP: Partial<Record<Position, string>> = {
 const ratingsByGroup = new Map<string, number[]>();
 const DEFENDERS = new Set<Position>(['CB', 'LB', 'RB', 'LWB', 'RWB']);
 let defenderGoals = 0;
+let defenderAssists = 0;
+let assists = 0;
 for (let repeat = 0; repeat < 3; repeat++) {
   for (const home of teams) {
     for (const away of teams) {
@@ -106,6 +108,8 @@ for (let repeat = 0; repeat < 3; repeat++) {
           const g = GROUP[p.position]!;
           ratingsByGroup.set(g, [...(ratingsByGroup.get(g) ?? []), p.rating]);
           if (DEFENDERS.has(p.position)) defenderGoals += p.goals;
+          if (DEFENDERS.has(p.position)) defenderAssists += p.assists;
+          assists += p.assists;
         }
       }
       t.homeGoals += m.home.goals;
@@ -249,5 +253,12 @@ describe('and rates players fairly', () => {
     const share = defenderGoals / t.goals;
     expect(share).toBeGreaterThan(0.08);
     expect(share).toBeLessThan(0.2);
+  });
+
+  it('gives defenders about a fifth of the assists', () => {
+    // FBref: 25% in 2003/04, 21% in 2025/26 — full-backs, mostly, from crosses.
+    const share = defenderAssists / assists;
+    expect(share).toBeGreaterThan(0.15);
+    expect(share).toBeLessThan(0.32);
   });
 });

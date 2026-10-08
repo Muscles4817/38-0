@@ -15,43 +15,44 @@ the goal and assist charts (see *Fixed* below). Measured since with
 
 Ratings are now valued in goals and measured against each position's ordinary
 match (see [simulation.md](simulation.md#match-ratings)), so every position
-averages about 6.5 and the league award goes mostly to forwards and attacking
-midfielders, with a defender in 13–18% of seasons. What is left:
+averages about 6.5 and the league award goes mostly to forwards and
+midfielders, with a defender in 13% of seasons in the 2025/26 field and a
+third in 2008/09. What is left:
 
-- **The scale is still narrow**: season averages p10 6.14, p50 6.39, p95 6.73.
+- **The scale is still narrow**: season averages p10 6.15, p50 6.39, p95 6.73.
   Spreading it is a presentation choice (`RATING_SPREAD`), not a fix.
-- **Two centre-backs in one XI separate less** than they did under the old
-  chosen weights (60% against 70%), because a tackle is now worth what it is:
-  little. Most of what separates real centre-backs is on the ball, and the
-  credit there (`pressResist`) has few traits to read.
+- **Two centre-backs in one XI separate only moderately**: the better-rated
+  out-rates the other 72% of the time. A tackle is worth what it is, little;
+  most of what separates real centre-backs is on the ball, and the credit
+  there (`pressResist`) has few traits to read.
 - **A goal still outweighs everything.** A striker who scores twice has a
   match no defender can match on value. That is the value of a goal, but it
-  means the award leans to forwards in a field where they score freely (70% in
+  means the award leans to forwards in a field where they score freely (63% in
   2025/26).
 
-### Full-backs create too little
+### Goals and assists by position: what is left
 
-Defenders scored a fifth of all goals until the shooter was fixed: the floor
-that let anyone take an open-play shot was larger than a centre-back's
-attacking weight, penalties went to whoever was on the pitch, and every set
-piece was a header from the delivery. Now penalties go to the main attackers,
-the floor is small, and half of set-piece chances fall as open play does.
-Defenders score 14.5% of goals in 2003/04 and 18% in 2025/26, against a real
-13% in both (FBref); `matchEngine.calibration.test.ts` asserts it.
+Defenders scored a fifth of all goals until the shooter was fixed, and
+strikers made a quarter of the assists until the creator was picked by the
+kind of chance (see [simulation.md](simulation.md#a-match)). Both
+are now asserted by `matchEngine.calibration.test.ts`.
 
 | | engine | real |
 | --- | ---: | ---: |
+| Goals by defenders, 2003/04 / 2025/26 | 14.5% / 18% | 13% / 13% |
+| Assists by defenders, 2003/04 / 2025/26 | 26% / 28% | 25% / 21% |
 | Van Dijk goals, 2019/20 | 6.8 | 5 |
-| Alexander-Arnold / Robertson assists | 5.2 / 5.7 | 13 / 12 |
+| Alexander-Arnold / Robertson assists | 9.6 / 10.4 | 13 / 12 |
+| Firmino assists | 3.7 | 8 |
 | Carragher goals, 2008/09 | 3.1 | 0 |
-| Top-20 assisters' assists by defenders, 2008/09 | 1% | 19% |
+| Top-20 assisters' assists by defenders, 2008/09 | 23% | 19% |
 
-The assister for a cross is picked by attacking weight, where a full-back
-counts for little.
-
-Key passes make this visible: Alexander-Arnold and Robertson make 43 and 45 a
-season, close to the real rate, but their assists stay near 5 because the
-assister is picked by attacking weight. Firmino makes 85.
+What is left: a striker who drops deep to create, Firmino, is weighted as a
+striker for a through ball (0.5 against a CAM's 1.0) unless his role says
+otherwise, so he makes too few. Wide midfielders in a 4-4-2 make a few too
+many (Riera 10 against a real 3), because a cross is picked by position and
+role with nothing about how good a crosser he is: reading the `setPiece`
+trait as well counted the same thing his role already says.
 
 ### The top of the table is flat
 

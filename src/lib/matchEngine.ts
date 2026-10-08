@@ -52,9 +52,6 @@ const HOME_POSSESSION = 1.07;
 const HOME_SHOT_RATE = 1.1;
 const HOME_CHANCE_QUALITY = 1.04;
 
-/** Share of goals set up by a team-mate, excluding penalties. */
-const OPEN_PLAY_ASSIST_RATE = 0.8;
-
 // How far quality carries. A better side creates more chances AND finishes them
 // better, and those compound — so these three are deliberately gentle. Set them
 // high and a strong squad wins by an amount no real league has ever seen.
@@ -299,7 +296,7 @@ function positionGroup(position: Position): PositionGroup {
  * ratings.
  */
 const POSITION_MEAN: Record<PositionGroup, number> = {
-  GK: -0.82, CB: 0.234, FB: 0.175, DM: 0.278, CM: 0.325, AM: 0.392, W: 0.479, ST: 0.585,
+  GK: -0.83, CB: 0.209, FB: 0.236, DM: 0.28, CM: 0.343, AM: 0.42, W: 0.486, ST: 0.47,
 };
 
 /**
@@ -1028,6 +1025,12 @@ function pickChanceType(rand: () => number, team: TeamModel, zone: Zone): Chance
   return pickWeighted(rand, types, weights) ?? 'individual';
 }
 
+/**
+ * How much the `penalty` trait decides who takes them. A side has one taker,
+ * so a specialist (3) takes about eleven in twelve against an equal attacker.
+ */
+const PENALTY_TAKER_QUALITY_WEIGHT = 0.8;
+
 /** Of set-piece chances, the share that are a header from the delivery. */
 const SET_PIECE_HEADER_SHARE = 0.5;
 
@@ -1066,6 +1069,7 @@ function pickShooter(
       mults.push(roles.goalMult[r] ?? 1);
       best = Math.max(best, affinity[r] ?? 1);
     }
+    if (penalty) w *= Math.exp(PENALTY_TAKER_QUALITY_WEIGHT * quality(p, 'penalty', roles));
     return w * combineRoleMults(mults, ROLE_SELECTION_POWER)
       * Math.pow(best, ROLE_SELECTION_POWER)
       * Math.pow(ratingScale(p.rating), RATING_SELECTION_POWER);
@@ -1073,18 +1077,81 @@ function pickShooter(
   return pickWeighted(rand, candidates, weights);
 }
 
+// ── Who made the chance ──────────────────────────────────────────────────────
+//
+// The pass behind a chance depends on the chance. A cross comes from the flank
+// it was attacked down, usually a full-back or a wide man; a through ball from
+// the middle; a corner or free kick from whoever takes them; a goal from a
+// dribble or a long shot often from nobody. One weighting for all of them,
+// which is what this was, handed most assists to strikers (they have the
+// highest attacking weight) and almost none to full-backs, who make more
+// crosses than anyone.
+
+/** Who delivers a cross. */
+const CROSS_WEIGHT: Record<Position, number> = {
+  LB: 0.65, RB: 0.65, LWB: 0.8, RWB: 0.8, LM: 1.0, RM: 1.0, LW: 0.85, RW: 0.85,
+  CAM: 0.3, CM: 0.3, CDM: 0.15, CF: 0.15, ST: 0.1, CB: 0.03, GK: 0,
+};
+
+/** Who plays the final pass through the middle. */
+const THROUGH_WEIGHT: Record<Position, number> = {
+  CAM: 1.0, CF: 0.85, CM: 0.8, LW: 0.6, RW: 0.6, LM: 0.5, RM: 0.5, ST: 0.5,
+  CDM: 0.45, LWB: 0.3, RWB: 0.3, LB: 0.25, RB: 0.25, CB: 0.1, GK: 0,
+};
+
+/** Who takes corners and wide free kicks, before delivery is counted. */
+const SET_PIECE_TAKER_WEIGHT: Record<Position, number> = {
+  LM: 1.0, RM: 1.0, LW: 1.0, RW: 1.0, CAM: 1.0, CM: 0.8, LB: 0.4, RB: 0.4,
+  LWB: 0.5, RWB: 0.5, CDM: 0.4, CF: 0.3, ST: 0.2, CB: 0.05, GK: 0,
+};
+
+/**
+ * How often a goal of each kind was set up by a team-mate. A cross or a through
+ * ball is a pass by definition; a goal from a dribble or a long shot is often
+ * nobody's. A set-piece goal is credited to the delivery unless it was a
+ * scramble. Together these give about the real three quarters of goals.
+ */
+const ASSIST_RATE: Record<ChanceType, number> = {
+  cross: 0.95, aerial: 0.9, throughBall: 0.95, setPiece: 0.7,
+  individual: 0.5, longShot: 0.6, penalty: 0,
+};
+
+/**
+ * Delivery decides who takes set pieces far more than it decides who plays a
+ * pass: one or two players take a side's corners, and they are its best
+ * crossers of a dead ball.
+ */
+const SET_PIECE_TAKER_QUALITY_WEIGHT = 0.4;
+
 function pickCreator(
   rand: () => number,
   team: TeamModel,
   zone: Zone,
   shooterId: number,
+  type: ChanceType,
   roles: RoleMultipliers,
 ): MatchPlayer | null {
   const candidates = team.players.filter(p => p.position !== 'GK' && p.playerId !== shooterId);
   const weights = candidates.map(p => {
-    let w = (ATTACK_WEIGHT[p.position] ?? 0.2) + 0.12;
     const pz = positionZone(p.position);
-    w *= pz === zone ? 1.5 : pz === 'C' || zone === 'C' ? 1 : 0.5;
+    let w: number;
+    if (type === 'setPiece') {
+      // Rating counts here as it does for any on-ball ability: a side with no
+      // specialist has its best players take them.
+      const delivery = quality(p, 'setPiece', roles) + RATING_TO_ABILITY * (p.rating - ABILITY_REFERENCE_RATING);
+      return (SET_PIECE_TAKER_WEIGHT[p.position] ?? 0.3) * Math.exp(SET_PIECE_TAKER_QUALITY_WEIGHT * delivery);
+    } else if (type === 'cross' || type === 'aerial') {
+      // From the flank the attack came down; the far side rarely.
+      w = CROSS_WEIGHT[p.position] ?? 0.2;
+      if (zone !== 'C') w *= pz === zone ? 2 : pz === 'C' ? 0.6 : 0.15;
+    } else {
+      w = type === 'throughBall' ? (THROUGH_WEIGHT[p.position] ?? 0.3) : (ATTACK_WEIGHT[p.position] ?? 0.2) + 0.12;
+      w *= pz === zone ? 1.5 : pz === 'C' || zone === 'C' ? 1 : 0.5;
+    }
+    // A role's assist multiplier already says who creates (a Crossing
+    // specialist 2.8, a Chance creator 2.0); reading his `creation` or
+    // `setPiece` trait as well counted the same fact twice, and one wide man
+    // with both took a third of his side's assists.
     const mults = (p.roles ?? []).map(r => roles.assistMult[r] ?? 1);
     return w * combineRoleMults(mults, ROLE_SELECTION_POWER)
       * Math.pow(ratingScale(p.rating), RATING_SELECTION_POWER);
@@ -1478,7 +1545,7 @@ export function simulateMatch(
           // The pass behind a shot that did not go in. A scored one is an
           // assist, chosen below, and counts as a key pass there.
           if (type !== 'penalty' && credit() < KEY_PASS_RATE) {
-            const passer = pickCreator(credit, att, zone, shooter.playerId, roles);
+            const passer = pickCreator(credit, att, zone, shooter.playerId, type, roles);
             if (passer) {
               const ps = stats.get(passer.playerId)!;
               ps.chancesCreated++;
@@ -1498,9 +1565,9 @@ export function simulateMatch(
           side.goals++;
           // Most goals are assisted; a solo effort or a penalty is not.
           const creator =
-            type === 'penalty' || rand() > (type === 'setPiece' ? 0.93 : OPEN_PLAY_ASSIST_RATE)
+            type === 'penalty' || rand() >= ASSIST_RATE[type]
               ? null
-              : pickCreator(rand, att, zone, shooter.playerId, roles);
+              : pickCreator(rand, att, zone, shooter.playerId, type, roles);
           if (creator) {
             const cs = stats.get(creator.playerId)!;
             cs.assists++;
