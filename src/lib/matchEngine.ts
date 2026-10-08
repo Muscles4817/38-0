@@ -180,6 +180,58 @@ const ratingScale = (rating: number) => Math.exp(RATING_CURVE * (rating - 80));
 // and who is well placed to take it. The base figures are open-play averages —
 // a header from a cross is a worse chance than a through ball.
 
+// ── Defending, credited ──────────────────────────────────────────────────────
+//
+// Whether an attack becomes a chance is decided by the two sides' qualities in
+// the zone, not by any one defender, and that stays true: nothing below changes
+// how often a side creates, shoots or scores. What it adds is WHO gets the
+// credit when an attack breaks down, a shot is blocked or a header is won, and
+// who was beaten when a goal went in. Without it, every defender in a side
+// shared the same goals-conceded number every match, and a 94-rated
+// centre-back rated exactly as his 85-rated partner.
+//
+// Reference, Premier League, per team per match: tackles ~16, interceptions
+// ~10, clearances ~18, blocked shots ~3.5. Aerial duels won is ~15 over the
+// whole pitch; only the ones in the defending box are modelled, about a third.
+//
+// The draws come from a stream of their own, seeded once per match, so that
+// crediting a tackle never shifts what happens in the next possession.
+
+/** Chance that an attack which comes to nothing ends in a defender's action. */
+const DEFENSIVE_ACTION_RATE = 0.5;
+/** How a defensive action divides: a tackle, an interception, or a clearance. */
+const TACKLE_SHARE = 0.36;
+const INTERCEPTION_SHARE = 0.23;
+/** Chance that a shot which misses the target was blocked by a defender. */
+const BLOCK_RATE = 0.43;
+/** Chance that a header that comes to nothing was won by a defender. */
+const AERIAL_WON_RATE = 0.8;
+/** How far a trait tilts who makes a defensive action, as the aerial contest does. */
+const DEFENSIVE_QUALITY_WEIGHT = 0.2;
+
+// ── On the ball, credited ────────────────────────────────────────────────────
+//
+// The same rule for the side in possession: nothing here changes how often a
+// side creates or scores. A press is a contest between the build-up players and
+// the pressers (see pressFactor), and these say who played through it, who
+// lost the ball to it, and whose pass set up each shot.
+//
+// How often a press engages depends on both styles — how high and complete the
+// press is, how much the side insists on playing out — and who wins it on the
+// same contest the press rule uses. So against a side that sits deep a
+// centre-back barely registers here, and against a high press he is in the
+// game every few minutes, for good or ill.
+//
+// Reference, per team per match: about 9.5 key passes (shots from a pass,
+// roughly three quarters of all shots).
+
+/** Share of possessions a complete, high press engages, against a side that always plays out. */
+const PRESS_ENGAGED_RATE = 0.3;
+/** At most this share of engaged possessions is lost, against pressers far better than the passers. */
+const PRESS_LOSS_SHARE = 0.6;
+/** Chance a shot came from a team-mate's pass rather than a carry, a rebound or a set piece's second ball. */
+const KEY_PASS_RATE = 0.75;
+
 export type ChanceType =
   | 'throughBall' | 'cross' | 'aerial' | 'longShot' | 'individual'
   | 'setPiece' | 'penalty';
@@ -342,8 +394,18 @@ export const PLAYSTYLES: Record<PlaystyleName, Playstyle> = {
 
 // ── How far a style's demands carry ──────────────────────────────────────────
 
-/** How much a press cuts an exposed side's chances. */
-const PRESS_EFFECT = 2.2;
+/**
+ * How much a press cuts the chances of a side playing out against it, when the
+ * pressers are wholly better than the passers and the press is high and whole.
+ */
+const PRESS_EFFECT = 1.0;
+
+/**
+ * How much of a gap in ability decides a contest on the ball: at this gap the
+ * better side wins it about three times in four. Half a trait point, or five
+ * rating points across the players involved.
+ */
+const CONTEST_SCALE = 0.5;
 
 /** How much a deep block cuts a patient side's chances. */
 const CONGESTION_EFFECT = 0.45;
@@ -353,6 +415,52 @@ const SPACE_EFFECT = 1.1;
 
 /** A team quality of this size counts as fully meeting a style's demand. */
 const FIT_REFERENCE = 0.45;
+
+// ── On the ball, by phase ────────────────────────────────────────────────────
+//
+// Who has to be good on the ball depends on where the opponent contests it. A
+// press is met by whoever is building from the back — the keeper, the centre-
+// backs, the full-backs, the holding midfielder — and a deep block by whoever
+// has to unpick it in the final third. So these three contests read the
+// players in those positions, not an average over all eleven: averaged over
+// the whole side, one ball-playing centre-back was a tenth of the number and
+// counted the same as a ball-playing striker, and swapping one in or out made
+// no measurable difference against a press.
+//
+// Each player's ability is his trait plus a baseline from his rating, so a
+// 90-rated centre-back is decent on the ball without a trait saying so. Most
+// players carry no trait at all (71% of centre-backs), and a quality that only
+// traits supply is zero for most sides: the median stored XI had no pressing
+// ability whatever, so most presses pressed nobody.
+
+/** An ordinary player in the data: the mean rating of everyone in a stored XI (76.8). */
+const ABILITY_REFERENCE_RATING = 77;
+/** Ten rating points above ordinary are worth one point of a trait. */
+const RATING_TO_ABILITY = 0.1;
+
+/** Who is on the ball when a side builds from the back. */
+const BUILD_UP_WEIGHT: Record<Position, number> = {
+  GK: 0.5, CB: 1.0, LB: 0.8, RB: 0.8, LWB: 0.7, RWB: 0.7, CDM: 1.0, CM: 0.6,
+  CAM: 0.2, LM: 0.3, RM: 0.3, LW: 0.1, RW: 0.1, CF: 0.1, ST: 0.05,
+};
+
+/** Who leads a press. */
+const PRESS_WEIGHT: Record<Position, number> = {
+  ST: 1.0, CF: 1.0, LW: 0.9, RW: 0.9, CAM: 0.8, LM: 0.7, RM: 0.7, CM: 0.7,
+  CDM: 0.5, LWB: 0.4, RWB: 0.4, LB: 0.3, RB: 0.3, CB: 0.15, GK: 0.0,
+};
+
+/** Who holds a deep block together. */
+const BLOCK_WEIGHT: Record<Position, number> = {
+  CB: 1.0, CDM: 1.0, LB: 0.8, RB: 0.8, LWB: 0.7, RWB: 0.7, CM: 0.6, GK: 0.3,
+  LM: 0.3, RM: 0.3, CAM: 0.15, LW: 0.1, RW: 0.1, CF: 0.05, ST: 0.05,
+};
+
+/** Who has to unpick a deep block. */
+const CREATE_WEIGHT: Record<Position, number> = {
+  CAM: 1.0, CF: 0.9, LW: 0.9, RW: 0.9, LM: 0.8, RM: 0.8, CM: 0.7, ST: 0.6,
+  CDM: 0.3, LWB: 0.4, RWB: 0.4, LB: 0.3, RB: 0.3, CB: 0.1, GK: 0.0,
+};
 
 // ── Inputs ───────────────────────────────────────────────────────────────────
 
@@ -418,6 +526,17 @@ export interface MatchPlayerStats {
   yellow: boolean;
   red: boolean;
   saves: number;
+  tackles: number;
+  interceptions: number;
+  clearances: number;
+  blocks: number;
+  aerialsWon: number;
+  /** Goals conceded where he was the defender beaten. */
+  beaten: number;
+  /** Times he played the ball through an opponent's press. */
+  pressBeaten: number;
+  /** Times he lost the ball to an opponent's press. */
+  lostToPress: number;
   cleanSheet: boolean;
   rating: number;
 }
@@ -494,6 +613,8 @@ interface TeamModel {
    */
   pressResistance: number;
   pressIntensity: number;
+  /** Ability of the defenders holding a deep block. */
+  blocking: number;
   runningThreat: number;
   creation: number;
   versatility: number;
@@ -562,6 +683,31 @@ function teamQuality(players: MatchPlayer[], name: string, roles: RoleMultiplier
 }
 
 /**
+ * A side's ability in one phase: its players' trait plus rating baseline,
+ * weighted by how much of that phase each position does.
+ *
+ * Zero for an ordinary side, which is what nearly every side was when this
+ * came from traits alone, so matches between ordinary sides play as they did.
+ * Negative for a side worse than ordinary on the ball in that phase.
+ */
+export function phaseAbility(
+  players: MatchPlayer[],
+  weight: Record<Position, number>,
+  name: string,
+  roles: RoleMultipliers,
+): number {
+  let total = 0;
+  let mass = 0;
+  for (const p of players) {
+    const w = weight[p.position] ?? 0.2;
+    if (w <= 0) continue;
+    total += w * (quality(p, name, roles) + RATING_TO_ABILITY * (p.rating - ABILITY_REFERENCE_RATING));
+    mass += w;
+  }
+  return mass === 0 ? 0 : total / mass;
+}
+
+/**
  * How well an eleven can execute the style it has been given, 0 to 1.
  *
  * A style with no demands fits everybody, which is what makes `balanced` a safe
@@ -616,10 +762,12 @@ function buildTeam(setup: TeamSetup, roles: RoleMultipliers): TeamModel {
     },
     midfield: weightedQuality(players, MIDFIELD_WEIGHT, null),
     aerial: aerialQuality(players, roles),
-    pressResistance: teamQuality(players, 'pressResist', roles),
-    pressIntensity: teamQuality(players, 'pressing', roles),
+    pressResistance: phaseAbility(players, BUILD_UP_WEIGHT, 'pressResist', roles),
+    pressIntensity: phaseAbility(players, PRESS_WEIGHT, 'pressing', roles),
+    // No trait describes holding a deep block, so this is the rating baseline.
+    blocking: phaseAbility(players, BLOCK_WEIGHT, 'blocking', roles),
     runningThreat: teamQuality(players, 'pace', roles),
-    creation: teamQuality(players, 'creation', roles),
+    creation: phaseAbility(players, CREATE_WEIGHT, 'creation', roles),
     versatility: players.filter(p => (p.positions?.length ?? 1) > 1).length
       / Math.max(1, players.length),
     focus: {
@@ -659,29 +807,41 @@ function quality(p: MatchPlayer, name: string, roles: RoleMultipliers): number {
 /**
  * How much a press cuts the chances of a side trying to play through it.
  *
- * Going long is the answer to a press, which is why `buildUp` sets the exposure
- * and why resistance on the ball subtracts from it. A side that hits it long is
- * not pressed at all, whoever it is playing.
+ * Going long is the answer to a press, which is why `buildUp` sets the
+ * exposure: a side that hits it long is not pressed, whoever it is playing.
+ * For a side that plays out, it is a contest between its passers at the back
+ * and the other side's pressers, and `pressure` — how high and how completely
+ * the opponent presses — sets how much rides on it.
  */
 export function pressFactor(
-  buildUp: number, pressResistance: number, opponentPress: number,
+  buildUp: number, passing: number, pressing: number, pressure: number,
 ): number {
-  const exposed = Math.max(0, buildUp - pressResistance);
-  return 1 / (1 + PRESS_EFFECT * Math.max(0, opponentPress) * exposed);
+  // The press only wins if the pressers are better than the passers. Between
+  // equals it wins as often as it loses, which is where the rule used to sit
+  // for an ordinary side, and a side better on the ball than the press is not
+  // troubled by it at all.
+  const edge = Math.max(0, 2 * contest(pressing - passing) - 1);
+  return 1 / (1 + PRESS_EFFECT * Math.max(0, pressure) * buildUp * edge);
 }
 
 /**
  * How much a deep defence cuts the chances of a patient side.
  *
- * Creation is what unpicks it; without any, patience against a low block is
- * just passing in front of them.
+ * Creation is what unpicks it, measured against the defenders holding the
+ * block: better creators than blockers loosen it, worse ones are shut out
+ * more than an ordinary side would be.
  */
 export function congestionFactor(
-  buildUp: number, creation: number, opponentLine: number,
+  buildUp: number, creating: number, blocking: number, opponentLine: number,
 ): number {
   const deep = 1 - opponentLine;
-  const congested = deep * buildUp * Math.max(0, 1 - creation * 2);
+  const congested = deep * buildUp * 2 * contest(blocking - creating);
   return 1 / (1 + CONGESTION_EFFECT * congested);
+}
+
+/** The chance the side ahead by `gap` in ability wins a contest on the ball. */
+function contest(gap: number): number {
+  return 1 / (1 + Math.exp(-gap / CONTEST_SCALE));
 }
 
 /**
@@ -852,6 +1012,109 @@ function pickFouler(
   return pickWeighted(rand, team.players, weights);
 }
 
+type DefensiveAct = 'tackle' | 'interception' | 'clearance' | 'block' | 'aerial' | 'beaten';
+
+/**
+ * Who in the defending side makes a defensive action, or was beaten.
+ *
+ * Built like pickShooter, from the other side of the ball: how much of the job
+ * the position does, whether he is in the zone under attack, how good he is
+ * (damped the same way), and the trait that bears on that kind of action.
+ * The one inversion is being beaten, where the weaker defender is the likelier.
+ */
+function defenderWeights(
+  team: TeamModel,
+  zone: Zone,
+  act: DefensiveAct,
+  sent: ReadonlySet<number>,
+  roles: RoleMultipliers,
+): { candidates: MatchPlayer[]; weights: number[] } {
+  const candidates = team.players.filter(p => p.position !== 'GK' && !sent.has(p.playerId));
+  const weights = candidates.map(p => {
+    const pz = positionZone(p.position);
+    const inZone = pz === zone ? 1.35 : pz === 'C' || zone === 'C' ? 1 : 0.4;
+    const defend = DEFEND_WEIGHT[p.position] ?? 0.3;
+    const skill = Math.pow(ratingScale(p.rating), RATING_SELECTION_POWER);
+    switch (act) {
+      case 'tackle':
+      case 'interception':
+        // Midfielders make as many of these as defenders do.
+        return (defend + (MIDFIELD_WEIGHT[p.position] ?? 0.3)) / 2 * inZone * skill
+          * Math.exp(DEFENSIVE_QUALITY_WEIGHT * quality(p, 'recovery', roles));
+      case 'clearance':
+        return defend * defend * inZone * skill
+          * Math.exp(DEFENSIVE_QUALITY_WEIGHT * quality(p, 'aerial', roles));
+      case 'block':
+        return defend * inZone * skill;
+      case 'aerial':
+        // Height, but in his own box: a striker is tall at both ends and is
+        // only part of the defending at one of them.
+        return (AERIAL_WEIGHT[p.position] ?? 0.4) * Math.sqrt(defend) * inZone * skill
+          * Math.exp(AERIAL_FROM_QUALITY * quality(p, 'aerial', roles));
+      case 'beaten':
+        return defend * inZone / skill;
+    }
+  });
+  return { candidates, weights };
+}
+
+/**
+ * Defender weights, kept for as long as a side's eleven and the role tables do
+ * not change — a whole season, since the same setup plays all 38 matches. A
+ * day's form scales the side's zone qualities, not its players' ratings, so it
+ * does not touch these. Only an eleven with nobody sent off is cached; after a
+ * red card the weights are worked out afresh.
+ */
+const DEFENDER_CACHE = new WeakMap<MatchPlayer[], WeakMap<RoleMultipliers, Map<string, { candidates: MatchPlayer[]; weights: number[] }>>>();
+const NOBODY_SENT: ReadonlySet<number> = new Set();
+
+/**
+ * Who was on the ball when a press engaged: the better passer to play through
+ * it, the weaker one to lose it. Weighted by how much of the build-up his
+ * position does, his rating (damped as for a shooter), and his `pressResist`.
+ */
+function pickBuildUpPlayer(
+  rand: () => number,
+  team: TeamModel,
+  beaten: boolean,
+  sent: ReadonlySet<number>,
+  roles: RoleMultipliers,
+): MatchPlayer | null {
+  const candidates = team.players.filter(p => !sent.has(p.playerId));
+  const weights = candidates.map(p => {
+    const share = BUILD_UP_WEIGHT[p.position] ?? 0.1;
+    const ability = Math.pow(ratingScale(p.rating), RATING_SELECTION_POWER)
+      * Math.exp(DEFENSIVE_QUALITY_WEIGHT * quality(p, 'pressResist', roles));
+    return beaten ? share * ability : share / ability;
+  });
+  return pickWeighted(rand, candidates, weights);
+}
+
+/** Who won the ball back for the press: the pressers, by position, rating and `pressing`. */
+function pickPresser(
+  rand: () => number,
+  team: TeamModel,
+  sent: ReadonlySet<number>,
+  roles: RoleMultipliers,
+): MatchPlayer | null {
+  const candidates = team.players.filter(p => !sent.has(p.playerId));
+  const weights = candidates.map(p => (PRESS_WEIGHT[p.position] ?? 0.2)
+    * Math.pow(ratingScale(p.rating), RATING_SELECTION_POWER)
+    * Math.exp(DEFENSIVE_QUALITY_WEIGHT * quality(p, 'pressing', roles)));
+  return pickWeighted(rand, candidates, weights);
+}
+
+/** A second, independent stream, so crediting defenders never shifts the match. */
+function creditStream(seed: number): () => number {
+  let a = seed >>> 0;
+  return () => {
+    a = (a + 0x6d2b79f5) >>> 0;
+    let t = Math.imul(a ^ (a >>> 15), 1 | a);
+    t = (t + Math.imul(t ^ (t >>> 7), 61 | t)) ^ t;
+    return ((t ^ (t >>> 14)) >>> 0) / 4294967296;
+  };
+}
+
 // ── The match ────────────────────────────────────────────────────────────────
 
 function blankStats(p: MatchPlayer): MatchPlayerStats {
@@ -868,6 +1131,14 @@ function blankStats(p: MatchPlayer): MatchPlayerStats {
     yellow: false,
     red: false,
     saves: 0,
+    tackles: 0,
+    interceptions: 0,
+    clearances: 0,
+    blocks: 0,
+    aerialsWon: 0,
+    beaten: 0,
+    pressBeaten: 0,
+    lostToPress: 0,
     cleanSheet: false,
     rating: 6,
   };
@@ -891,6 +1162,52 @@ export function simulateMatch(
   const stats = new Map<number, MatchPlayerStats>();
   for (const p of [...home.players, ...away.players]) stats.set(p.playerId, blankStats(p));
   const sent = new Set<number>();
+  const credit = creditStream(Math.floor(rand() * 4294967296));
+  // Who could make a given action depends only on the eleven, the zone and who
+  // is still on the pitch. Rebuilding the weights for each of a hundred actions
+  // a match took the season from 73 to 150 ms; see DEFENDER_CACHE.
+  const creditOnBall = (team: TeamModel, opponent: TeamModel, beaten: boolean): void => {
+    const onBall = pickBuildUpPlayer(credit, team, beaten, sent, roles);
+    if (onBall) {
+      const s = stats.get(onBall.playerId)!;
+      if (beaten) s.pressBeaten++;
+      else s.lostToPress++;
+    }
+    if (beaten) return;
+    const presser = pickPresser(credit, opponent, sent, roles);
+    if (presser) {
+      const s = stats.get(presser.playerId)!;
+      if (credit() < 0.55) s.tackles++;
+      else s.interceptions++;
+    }
+  };
+  const creditTo = (team: TeamModel, zone: Zone, act: DefensiveAct): void => {
+    const offField = team.players.some(p => sent.has(p.playerId));
+    let pool: { candidates: MatchPlayer[]; weights: number[] } | undefined;
+    if (offField) {
+      pool = defenderWeights(team, zone, act, sent, roles);
+    } else {
+      let byRoles = DEFENDER_CACHE.get(team.players);
+      if (!byRoles) { byRoles = new WeakMap(); DEFENDER_CACHE.set(team.players, byRoles); }
+      let byAct = byRoles.get(roles);
+      if (!byAct) { byAct = new Map(); byRoles.set(roles, byAct); }
+      const cacheKey = zone + act;
+      pool = byAct.get(cacheKey);
+      if (!pool) {
+        pool = defenderWeights(team, zone, act, NOBODY_SENT, roles);
+        byAct.set(cacheKey, pool);
+      }
+    }
+    const d = pickWeighted(credit, pool.candidates, pool.weights);
+    if (!d) return;
+    const ds = stats.get(d.playerId)!;
+    if (act === 'tackle') ds.tackles++;
+    else if (act === 'interception') ds.interceptions++;
+    else if (act === 'clearance') ds.clearances++;
+    else if (act === 'block') ds.blocks++;
+    else if (act === 'aerial') ds.aerialsWon++;
+    else ds.beaten++;
+  };
 
   const events: MatchEvent[] = [];
   const acc = {
@@ -954,12 +1271,26 @@ export function simulateMatch(
     // 1. Press disruption. A side that presses high hurts one trying to play
     //    out, and is beaten by one that goes long — the reason teams hoof it
     //    against a press. Resistance on the ball is what survives it.
-    const press = def.pressIntensity * def.style.line * def.fit;
-    const pressed = pressFactor(att.style.buildUp, att.pressResistance, press);
+    //
+    //    How high the press goes is the style's choice, its line. Whether it
+    //    works is the contest between their pressers and these passers, which
+    //    pressIntensity already measures from rating and traits. It used to be
+    //    multiplied by the style's fit as well, which counted the same thing
+    //    twice and backwards once ability had a rating baseline: a side with
+    //    no pressing traits had no fit for Gegenpress and so pressed nobody,
+    //    while Balanced, which asks for nothing, pressed at a mid block.
+    const pressed = pressFactor(att.style.buildUp, att.pressResistance, def.pressIntensity,
+      def.style.line);
+    // Did their press engage this possession, and if it did, could it win it?
+    // Credit only, from the credit stream: the shot rate below is unchanged.
+    const pressEngaged =
+      credit() < PRESS_ENGAGED_RATE * def.style.line * att.style.buildUp;
+    const pressWouldWin = pressEngaged
+      && credit() < PRESS_LOSS_SHARE * (1 - contest(att.pressResistance - def.pressIntensity));
 
     // 2. Congestion. A deep block leaves a patient side nowhere to play, and
     //    creation is what unpicks it.
-    const congested = congestionFactor(att.style.buildUp, att.creation, def.style.line);
+    const congested = congestionFactor(att.style.buildUp, att.creation, def.blocking, def.style.line);
 
     const shotRate =
       BASE_SHOT_RATE *
@@ -988,6 +1319,8 @@ export function simulateMatch(
           ? 'penalty'
           : pickChanceType(rand, att, zone);
       const shooter = pickShooter(rand, att, zone, type, roles);
+      // A possession that ended in a shot got through any press that met it.
+      if (pressEngaged) creditOnBall(att, def, true);
       if (shooter) {
         const shooterStats = stats.get(shooter.playerId)!;
         shooterStats.shots++;
@@ -1035,7 +1368,22 @@ export function simulateMatch(
           side.onTarget++;
         }
 
-        if (onTarget && rand() < xg / onTargetRate) {
+        const scored = onTarget && rand() < xg / onTargetRate;
+        const aerialChance = type === 'cross' || type === 'aerial' || type === 'setPiece';
+        if (!scored) {
+          // The pass behind a shot that did not go in. A scored one is an
+          // assist, chosen below, and counts as a key pass there.
+          if (type !== 'penalty' && credit() < KEY_PASS_RATE) {
+            const passer = pickCreator(credit, att, zone, shooter.playerId, roles);
+            if (passer) stats.get(passer.playerId)!.chancesCreated++;
+          }
+          if (!onTarget && credit() < BLOCK_RATE) creditTo(def, defZone, 'block');
+          if (aerialChance && credit() < AERIAL_WON_RATE) creditTo(def, defZone, 'aerial');
+        } else if (type !== 'penalty') {
+          creditTo(def, defZone, 'beaten');
+        }
+
+        if (scored) {
           shooterStats.goals++;
           side.goals++;
           // Most goals are assisted; a solo effort or a penalty is not.
@@ -1061,6 +1409,17 @@ export function simulateMatch(
         } else if (onTarget && keeper) {
           stats.get(keeper.playerId)!.saves++;
         }
+      }
+    } else if (pressWouldWin) {
+      // Lost in the build-up, to the press: charge the passer, credit the presser.
+      creditOnBall(att, def, false);
+    } else {
+      if (pressEngaged) creditOnBall(att, def, true);
+      if (credit() < DEFENSIVE_ACTION_RATE) {
+        // The attack came to nothing further up, and a defender was the reason.
+        const roll = credit();
+        creditTo(def, defZone,
+          roll < TACKLE_SHARE ? 'tackle' : roll < TACKLE_SHARE + INTERCEPTION_SHARE ? 'interception' : 'clearance');
       }
     }
 
@@ -1108,8 +1467,14 @@ export function simulateMatch(
       let r = 6.0;
       r += s.goals * 1.05 + s.assists * 0.65;
       r += s.shotsOnTarget * 0.08 + s.chancesCreated * 0.05;
+      // What he did without the ball. Being beaten for a goal carries most of
+      // the blame a defender used to share equally with his whole back line.
+      r += (s.tackles + s.interceptions) * 0.07 + s.clearances * 0.03
+        + s.blocks * 0.1 + s.aerialsWon * 0.05 - s.beaten * 0.3;
+      // On the ball under a press: playing through it, and losing it.
+      r += s.pressBeaten * 0.04 - s.lostToPress * 0.15;
       r += (own - against) * 0.12;
-      r -= against * 0.22 * defensive;
+      r -= against * 0.12 * defensive;
       if (against === 0) r += 0.45 * defensive;
       if (p.position === 'GK') r += s.saves * 0.11;
       if (s.yellow) r -= 0.3;

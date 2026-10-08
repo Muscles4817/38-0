@@ -632,9 +632,9 @@ function FinalSummary({ result, picks, odds, onResim }: {
               const stat = result.playerStats.find(s => s.playerId === p.playerId);
               const rtg  = stat?.avgMatchRating ?? 0;
               // Bands from the match engine's measured spread of season
-              // averages (440 player-seasons across 40 real XIs): about the
+              // averages (660 player-seasons across 60 real XIs): about the
               // top 5%, the top quarter, above the median, and the rest.
-              const rtgColor = rtg >= 6.5 ? 'text-accent' : rtg >= 6.2 ? 'text-sky' : rtg >= 6.0 ? 'text-fg' : 'text-muted';
+              const rtgColor = rtg >= 6.6 ? 'text-accent' : rtg >= 6.4 ? 'text-sky' : rtg >= 6.3 ? 'text-fg' : 'text-muted';
               const isDefender = p.position === 'GK' || ['CB','LB','RB','LWB','RWB'].includes(p.position);
               return (
                 <div key={i} className="flex items-center gap-2 sm:gap-3">

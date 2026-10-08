@@ -142,6 +142,16 @@ export interface PlayerStats {
   shotsOnTarget: number;
   chancesCreated: number;
   saves: number;
+  tackles: number;
+  interceptions: number;
+  clearances: number;
+  blocks: number;
+  aerialsWon: number;
+  /** Goals conceded where he was the defender beaten. */
+  beaten: number;
+  /** Times he played through an opponent's press, and lost the ball to one. */
+  pressBeaten: number;
+  lostToPress: number;
   yellowCards: number;
   redCards: number;
   /** One per match, from the match engine. */
@@ -548,21 +558,21 @@ export function computeOverall(picks: SquadPick[]): number {
 // over them fixes it, and is why this is a weighted sum over `SEASON_NODES`
 // rather than one comparison.
 //
-// Re-fitted when the season moved onto the match engine, on 900 seasons
-// (18,000 team-seasons) across the 2025/26, 2003/04 and 1992/93 fields at squad
-// ratings from 62 to 98: the curve is within 1.7 points of the XI's measured
-// mean and 2.6 of an opponent's. The engine is flatter than the model it
-// replaced — a rating edge buys about 60% as many points — which is why the
-// steepness fell from 0.113. See docs/simulation.md.
+// Re-fitted when on-ball ability became a contest between the players in each
+// phase and the press stopped depending on trait-based fit, on 900 seasons
+// (18,000 team-seasons) across the 2025/26, 2003/04 and 1992/93 fields at
+// squad ratings from 62 to 98: the curve is within 2.4 points of the XI's
+// measured mean and 2.7 of an opponent's. See
+// docs/simulation.md for this and the two fits before it.
 
 /** 38 wins. The ceiling the points curve saturates against. */
 const MAX_POINTS = 114;
 /** How sharply points rise with a rating edge over the field. */
-const POINTS_STEEPNESS = 0.066;
+const POINTS_STEEPNESS = 0.092;
 /** The rating edge at which a side is worth half the maximum points. */
-const POINTS_MIDPOINT = 2.68;
+const POINTS_MIDPOINT = 1.92;
 /** How far the player's own season lands either side of its expectation. */
-const SEASON_SD = 7.4;
+const SEASON_SD = 6.8;
 /** The same for an opponent's season, which is not shared across comparisons. */
 const OPPONENT_SD = 8.1;
 /** Quadrature nodes for integrating over the player's own season. */
@@ -696,7 +706,9 @@ export function simulateSeason(
     players.set(id, {
       id, sourceId, name, team, isUser, position,
       goals: 0, assists: 0, cleanSheets: 0, shots: 0, shotsOnTarget: 0, chancesCreated: 0,
-      saves: 0, yellowCards: 0, redCards: 0, ratings: [],
+      saves: 0, tackles: 0, interceptions: 0, clearances: 0, blocks: 0, aerialsWon: 0, beaten: 0,
+      pressBeaten: 0, lostToPress: 0,
+      yellowCards: 0, redCards: 0, ratings: [],
     });
     return id;
   }
@@ -776,6 +788,14 @@ export function simulateSeason(
           p.shotsOnTarget  += s.shotsOnTarget;
           p.chancesCreated += s.chancesCreated;
           p.saves          += s.saves;
+          p.tackles        += s.tackles;
+          p.interceptions  += s.interceptions;
+          p.clearances     += s.clearances;
+          p.blocks         += s.blocks;
+          p.aerialsWon     += s.aerialsWon;
+          p.beaten         += s.beaten;
+          p.pressBeaten    += s.pressBeaten;
+          p.lostToPress    += s.lostToPress;
           if (s.yellow) p.yellowCards++;
           if (s.red) p.redCards++;
           // A clean sheet is the keeper's and the back line's, as the awards
@@ -819,6 +839,14 @@ export function simulateSeason(
       shotsOnTarget:  s.shotsOnTarget,
       chancesCreated: s.chancesCreated,
       saves:          s.saves,
+      tackles:        s.tackles,
+      interceptions:  s.interceptions,
+      clearances:     s.clearances,
+      blocks:         s.blocks,
+      aerialsWon:     s.aerialsWon,
+      beaten:         s.beaten,
+      pressBeaten:    s.pressBeaten,
+      lostToPress:    s.lostToPress,
       yellowCards:    s.yellowCards,
       redCards:       s.redCards,
       matchRatings:   s.ratings,
@@ -917,6 +945,14 @@ interface SeasonPlayer {
   shotsOnTarget: number;
   chancesCreated: number;
   saves: number;
+  tackles: number;
+  interceptions: number;
+  clearances: number;
+  blocks: number;
+  aerialsWon: number;
+  beaten: number;
+  pressBeaten: number;
+  lostToPress: number;
   yellowCards: number;
   redCards: number;
   ratings: number[];

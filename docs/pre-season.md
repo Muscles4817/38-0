@@ -31,8 +31,10 @@ against a high line, recovery pace covering the space. Nobody writes down that a
 counter-attacking side punishes a possession side; it falls out of those rules.
 
 `fit` is `fitForStyle`, the 0–1 measure of whether the eleven has the qualities
-a style asks for. The engine scales what the style's demands buy — how hard its
-press bites, how dangerous its runners are in behind — by it.
+a style asks for. The engine scales how dangerous the style's runners are in
+behind by it. A press is not scaled by fit: how high it goes is the style's
+line, and whether it works is the contest between the pressers and the other
+side's passers — see [simulation.md](simulation.md#on-the-ball-by-phase).
 
 `tacticEffect` in `src/lib/simulation.ts` only describes a style for this
 screen: its line, build-up, tempo, possession bias and fit. Tempo is a property
@@ -43,7 +45,11 @@ ordinary side.
 ### Measured
 
 For Liverpool 2019/20 in the 2025/26 field, 40 seasons each on the same seeds:
-Park the bus 67.5 points, Total football 74.6; title odds from 18% to 60%. For a
+Park the bus 69.1 points, High press 77.8; title odds from 30% to 70%. Who you
+face matters as much as how you play: against a league that presses, two
+ball-playing centre-backs are worth six points a season to an 80-rated XI, and
+against a league that sits deep they are worth nothing — see *On the ball, by
+phase* in [simulation.md](simulation.md). For a
 flat 74-rated XI in 1992/93, 20 seasons each: Catenaccio 56.6, Gegenpress 47.8,
 Balanced 51.1. The best style differs by squad and by field, and a weak side is
 better off slowing the game down — a 68-rated XI takes 36 points parking the

@@ -14,6 +14,8 @@
 //   goals 1.40   shots 13.0   on target 4.4   conversion 10.8%
 //   fouls 10.4   yellows 1.9  reds 0.05       assisted goals 74%
 //   home 1.55 / away 1.25     clean sheets ~26%
+//   tackles ~16  interceptions ~10  clearances ~18  blocked shots ~3.5
+//   key passes ~9.5 (shots from a team-mate's pass)
 //   goals from a dead ball ~25%
 
 import { describe, it, expect } from 'vitest';
@@ -77,7 +79,7 @@ const rand = rng(20260903);
 const t = {
   n: 0, matches: 0, goals: 0, shots: 0, onTarget: 0, fouls: 0, yellows: 0, reds: 0,
   homeGoals: 0, awayGoals: 0, cleanSheets: 0, assistedGoals: 0, allGoals: 0,
-  setPieceGoals: 0,
+  setPieceGoals: 0, tackles: 0, interceptions: 0, clearances: 0, blocks: 0, keyPasses: 0,
 };
 const scorelines = new Map<string, number>();
 for (let repeat = 0; repeat < 3; repeat++) {
@@ -90,6 +92,11 @@ for (let repeat = 0; repeat < 3; repeat++) {
       for (const side of [m.home, m.away]) {
         t.goals += side.goals; t.shots += side.shots; t.onTarget += side.shotsOnTarget;
         t.fouls += side.fouls; t.yellows += side.yellows; t.reds += side.reds;
+        for (const p of side.players) {
+          t.tackles += p.tackles; t.interceptions += p.interceptions;
+          t.clearances += p.clearances; t.blocks += p.blocks;
+          t.keyPasses += p.chancesCreated;
+        }
       }
       t.homeGoals += m.home.goals;
       t.awayGoals += m.away.goals;
@@ -136,6 +143,30 @@ describe('the engine reproduces football, per team per match', () => {
     expect(per(t.yellows)).toBeLessThan(2.3);
     expect(per(t.reds)).toBeGreaterThan(0.01);
     expect(per(t.reds)).toBeLessThan(0.12);
+  });
+});
+
+describe('and defends like football', () => {
+  // These are credit, not causes: whether an attack becomes a chance is still
+  // decided by the two sides' zone qualities. What is checked is that the
+  // credit is handed out at the rates it happens in a real match.
+  it('makes about 16 tackles, 10 interceptions and 18 clearances', () => {
+    expect(per(t.tackles)).toBeGreaterThan(13);
+    expect(per(t.tackles)).toBeLessThan(19);
+    expect(per(t.interceptions)).toBeGreaterThan(8);
+    expect(per(t.interceptions)).toBeLessThan(12);
+    expect(per(t.clearances)).toBeGreaterThan(15);
+    expect(per(t.clearances)).toBeLessThan(21);
+  });
+
+  it('plays about 9.5 key passes', () => {
+    expect(per(t.keyPasses)).toBeGreaterThan(8);
+    expect(per(t.keyPasses)).toBeLessThan(11);
+  });
+
+  it('blocks about 3.5 shots', () => {
+    expect(per(t.blocks)).toBeGreaterThan(2.5);
+    expect(per(t.blocks)).toBeLessThan(4.5);
   });
 });
 

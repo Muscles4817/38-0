@@ -11,16 +11,25 @@ the goal and assist charts (see *Fixed* below). Measured since with
 `npm run sim:report`: Liverpool 2019/20 in the 2025/26 field and Liverpool
 2008/09 in its own, 40 seasons each.
 
-### Match ratings favour forwards, so every award goes to one
+### Ratings: defenders are credited now, and the award leans their way
 
-Player of the Season is now the best average match rating, and the ratings are
-built from what a player did. But a defender's only inputs are the goals his
-side concedes and clean sheets; the engine has no event for the chance he
-stopped, because defending is a team-level zone quality with no named defender.
-So the league award went to a forward in every season measured, centre-backs
-average 5.73 against a striker's 6.43 across 440 player-seasons, and Van Dijk
-(94) rates 6.36 to Salah's 6.66. Half of all season averages fall between 5.8
-and 6.2: the scale is compressed as well as skewed.
+Defenders have events of their own (see
+[simulation.md](simulation.md#defending-credited)), so a centre-back averages
+6.28 against a striker's 6.44 and the better of two centre-backs out-rates the
+other 70% of the time. What is left:
+
+- **The league award now leans to defenders**: 48% of seasons in the 2025/26
+  field, 65% in 2008/09, from 0%. Nemanja Vidić, the real winner in 2008/09,
+  wins it most often there, but so do Gary Cahill (Bolton) and Abdoulaye Faye
+  (Stoke): a defender in a side under siege gets more to do. Real per-event
+  rating systems have exactly this bias. Midfielders almost never win (3–5%).
+- **The event weights are chosen, not derived.** A tackle is +0.07 because it
+  gave a sensible spread, not because it is worth 0.07 of anything. Valuing an
+  event by the goals it prevents (what an attack in that zone is worth) is the
+  principled version, and it would come out much smaller than these.
+- **Per-position levels still differ**, 6.11 for a full-back to 6.44 for a
+  striker; recentring each position on its own average is the step after this.
+- **The scale is still narrow**: p10 6.05, p50 6.28, p95 6.61.
 
 ### Centre-backs score too often, full-backs create too little
 
@@ -35,10 +44,16 @@ Set pieces go to centre-backs, which is right in kind and too much in degree,
 and the assister for a cross is picked by attacking weight, where a full-back
 counts for little.
 
+Key passes make this visible: Alexander-Arnold and Robertson make 43 and 45 a
+season, close to the real rate, but their assists stay near 5 because the
+assister is picked by attacking weight. Firmino makes 85.
+
 ### The top of the table is flat
 
-Liverpool 2019/20 averages 73.6 points and 68 goals; the real side took 99 and
-scored 85. A flat 90-rated XI averages 67 points against the 2025/26 field. The
+Liverpool 2019/20 averages 74.8 points and 69 goals; the real side took 99 and
+scored 85. A flat 90-rated XI averages 73 points against the 2025/26 field. The
+on-ball contests (see simulation.md) moved the champion from 76.4 to 80.5
+points; it is still well short of a real ~88. The
 engine's quality constants (`EDGE_TO_CHANCES`, `FINISHING_EXPONENT`,
 `KEEPING_EXPONENT`) are deliberately gentle, per its own comments; the
 pre-season curve re-fitted to it is 60% as steep as the Poisson model's.
@@ -66,7 +81,10 @@ side's profile rather than its total.
 
 **`recovery` is 0 for 90% of stored XIs** (at most 0.59), and Counter-attack,
 Catenaccio and Low block all demand it, so almost nothing can fit them. That is
-the trait data, which lives in the authoring database.
+the trait data, which lives in the authoring database. Fit and pace are still
+read from traits alone, averaged over all eleven; the press and the deep block
+were moved to a rating baseline and phase positions, and the same treatment
+would suit them.
 
 ## 1. The draft pool is still lopsided
 

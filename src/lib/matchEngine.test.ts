@@ -198,3 +198,98 @@ describe('inferStyle', () => {
     for (const z of ['L', 'C', 'R'] as const) expect(focus[z]).toBeGreaterThan(0);
   });
 });
+
+describe('defending, credited', () => {
+  // Two centre-backs identical in everything but rating. The better one should
+  // be the one making the tackles and winning the headers — and the defender
+  // beaten for a goal should more often be the worse one.
+  const back = (id: number, rating: number): MatchPlayer =>
+    ({ playerId: id, name: `CB ${rating}`, position: 'CB', rating, roles: [] });
+  const shape = (base: number, cbs: [number, number]): MatchPlayer[] => [
+    { playerId: base, name: 'GK', position: 'GK', rating: 80 },
+    back(base + 1, cbs[0]), back(base + 2, cbs[1]),
+    { playerId: base + 3, name: 'LB', position: 'LB', rating: 80 },
+    { playerId: base + 4, name: 'RB', position: 'RB', rating: 80 },
+    { playerId: base + 5, name: 'CM1', position: 'CM', rating: 80 },
+    { playerId: base + 6, name: 'CM2', position: 'CM', rating: 80 },
+    { playerId: base + 7, name: 'LM', position: 'LM', rating: 80 },
+    { playerId: base + 8, name: 'RM', position: 'RM', rating: 80 },
+    { playerId: base + 9, name: 'ST1', position: 'ST', rating: 80 },
+    { playerId: base + 10, name: 'ST2', position: 'ST', rating: 80 },
+  ];
+  const side = (name: string, players: MatchPlayer[]): TeamSetup =>
+    ({ name, players, formation: '4-4-2', style: 'balanced', focus: { L: 1, C: 1, R: 1 } });
+
+  it('gives the better defender more of the credit, and less of the blame', () => {
+    const home = side('Home', shape(100, [90, 76]));
+    const away = side('Away', shape(200, [80, 80]));
+    let seed = 99;
+    const rand = () => { seed = (seed * 16807) % 2147483647; return seed / 2147483647; };
+    const good = { acts: 0, beaten: 0 };
+    const poor = { acts: 0, beaten: 0 };
+    for (let i = 0; i < 300; i++) {
+      const m = simulateMatch(home, away, rand);
+      for (const p of m.home.players) {
+        const tally = p.playerId === 101 ? good : p.playerId === 102 ? poor : null;
+        if (!tally) continue;
+        tally.acts += p.tackles + p.interceptions + p.clearances + p.blocks + p.aerialsWon;
+        tally.beaten += p.beaten;
+      }
+    }
+    expect(good.acts).toBeGreaterThan(poor.acts);
+    expect(good.beaten).toBeLessThan(poor.beaten);
+  });
+});
+
+describe('on the ball under a press, credited', () => {
+  // A side that plays out, against one opponent pressing high and the same
+  // opponent sitting deep. Who is in the game, and how often, should follow.
+  const eleven = (base: number, rating: number, cbRoles: string[] = []): MatchPlayer[] => [
+    { playerId: base, name: 'GK', position: 'GK', rating },
+    { playerId: base + 1, name: 'CB1', position: 'CB', rating, roles: cbRoles },
+    { playerId: base + 2, name: 'CB2', position: 'CB', rating, roles: cbRoles },
+    { playerId: base + 3, name: 'LB', position: 'LB', rating },
+    { playerId: base + 4, name: 'RB', position: 'RB', rating },
+    { playerId: base + 5, name: 'CDM', position: 'CDM', rating },
+    { playerId: base + 6, name: 'CM1', position: 'CM', rating },
+    { playerId: base + 7, name: 'CM2', position: 'CM', rating },
+    { playerId: base + 8, name: 'LW', position: 'LW', rating },
+    { playerId: base + 9, name: 'RW', position: 'RW', rating },
+    { playerId: base + 10, name: 'ST', position: 'ST', rating },
+  ];
+  const side = (name: string, players: MatchPlayer[], style: TeamSetup['style']): TeamSetup =>
+    ({ name, players, formation: '4-3-3', style, focus: { L: 1, C: 1, R: 1 } });
+  const roles = { goalMult: {}, assistMult: {}, qualities: { Passer: { pressResist: 3 } } };
+
+  function underPress(home: TeamSetup, away: TeamSetup, matches = 200) {
+    let seed = 41;
+    const rand = () => { seed = (seed * 16807) % 2147483647; return seed / 2147483647; };
+    const t = { beaten: 0, lost: 0 };
+    for (let i = 0; i < matches; i++) {
+      const m = simulateMatch(home, away, rand, roles);
+      for (const p of m.home.players) { t.beaten += p.pressBeaten; t.lost += p.lostToPress; }
+    }
+    return { beaten: t.beaten / matches, lost: t.lost / matches };
+  }
+
+  it('puts the build-up players in the game against a high press, and barely against a deep block', () => {
+    const me = side('Me', eleven(100, 80), 'possession');
+    const vsPress = underPress(me, side('Them', eleven(200, 84), 'gegenpress'));
+    const vsBlock = underPress(me, side('Them', eleven(200, 84), 'lowBlock'));
+    expect(vsPress.beaten + vsPress.lost).toBeGreaterThan(2 * (vsBlock.beaten + vsBlock.lost));
+  });
+
+  it('lets better passers lose the ball less to the same press', () => {
+    const press = side('Them', eleven(200, 84), 'gegenpress');
+    const plain = underPress(side('Me', eleven(100, 80), 'possession'), press);
+    const passers = underPress(side('Me', eleven(100, 80, ['Passer']), 'possession'), press);
+    expect(passers.lost).toBeLessThan(plain.lost);
+  });
+
+  it('barely presses a side that goes long', () => {
+    const press = side('Them', eleven(200, 84), 'gegenpress');
+    const long = underPress(side('Me', eleven(100, 80), 'routeOne'), press);
+    const short = underPress(side('Me', eleven(100, 80), 'tikiTaka'), press);
+    expect(long.beaten + long.lost).toBeLessThan((short.beaten + short.lost) / 3);
+  });
+});

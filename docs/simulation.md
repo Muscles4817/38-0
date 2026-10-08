@@ -47,9 +47,116 @@ four interaction rules — press, congestion, space in behind, recovery — are
 where the styles meet. `matchEngine.calibration.test.ts` asserts the rates
 (shots, conversion, cards, assisted share) against the Premier League.
 
-Match ratings are built from what the player did in the match — goals, assists,
-shots on target, chances created, saves, cards, the result and the goals
-conceded, weighted by how defensive his position is — not from his rating.
+Match ratings are built from what the player did in the match, not from his
+rating: goals, assists, shots on target, chances created, saves, cards, the
+result, the goals conceded weighted by how defensive his position is, and his
+defensive actions.
+
+### On the ball, by phase
+
+Two of the engine's interaction rules are contests on the ball, and who takes
+part in them depends on where the opponent contests it:
+
+| Rule | Reads, for the side in possession | Against, for the other side |
+| --- | --- | --- |
+| **the press** | build-up ability: keeper, centre-backs, full-backs, holding midfielder | pressing ability: forwards and midfielders |
+| **the deep block** | creation: attacking midfielders, wingers, forwards, central midfielders | blocking ability: centre-backs, holding midfielder, full-backs |
+
+Each player's ability is his trait (`pressResist`, `pressing`, `creation`) plus
+`0.1 × (rating − 77)`: ten rating points above an ordinary player are worth one
+point of a trait, and 77 is the mean rating of everyone in a stored XI. Most
+players carry no trait (71% of centre-backs), so without the baseline a quality
+was zero for most sides — the median stored XI had no pressing ability at all,
+and most presses pressed nobody.
+
+Both rules are **contests**: the chance the better side wins is logistic in the
+gap (`CONTEST_SCALE`). A press only bites when the pressers are better than the
+passers, scaled by how high and complete the press is and by how much the
+victim insists on playing out; a deep block congests in proportion to how much
+better its defenders are than the side's creators. Between equals both give
+what they gave an ordinary side before, which is why league goals and shots per
+match did not move (1.40 and 12.6).
+
+Before, every one of these qualities was averaged over all eleven players, so
+one ball-playing centre-back was a tenth of the number and counted the same as a
+ball-playing striker. Measured with two identical 80-rated XIs playing
+Possession against the 2025/26 field, 60 seasons each:
+
+| Opponents play | no traits at centre-back | two ball-playing centre-backs |
+| --- | ---: | ---: |
+| Gegenpress | 44.7 pts, 48.9 goals | 50.7 pts, 55.6 goals |
+| Low block | 46.2 pts, 39.0 goals | 46.6 pts, 39.3 goals |
+
+Before the change, swapping Matip's ball-playing trait in or out of Liverpool
+2019/20 moved nothing against a pressing league (74.3 and 74.4 points).
+
+It also spread the table: the champion averages 80.5 points, from 76.4, and a
+flat 90-rated XI in 2025/26 takes 73, from 67. Liverpool 2019/20's best styles
+are now High press (77.8) and Positional play (77.3), and Park the bus its worst
+(69.1).
+
+**The press is not scaled by fit.** How high it goes is the style's line, and
+whether it works is the contest. It used to be multiplied by the style's
+trait-based fit too, which counted the pressing twice and backwards once
+ability had a rating baseline: Liverpool 2025/26 has no pressing traits, so it
+had no fit for Gegenpress and pressed nobody, while playing Balanced — which
+asks for nothing and so always fits — it pressed at a mid block.
+
+### On the ball, credited
+
+Like the defensive events below, credit only: nothing changes how often a
+side creates or scores.
+
+| Event | When | Who, weighted by |
+| --- | --- | --- |
+| press beaten | a press engages a possession and loses it, or the possession ends in a shot | the build-up players: position, rating, `pressResist` |
+| lost to the press | a press engages and wins, which happens up to 60% of the time as the pressers outclass the passers | the build-up players, the weaker the likelier; the presser who won it gets a tackle or interception |
+| key pass | 75% of shots that do not score, plus every assist | the creator picked as for an assist |
+
+A press engages `0.3 × their line × your build-up` of possessions, so the build-up
+players are in the game more the higher the opponent presses and the more
+patiently their own side plays. Brighton's centre-backs playing Possession
+against Liverpool: 8.7 presses beaten and 2.0 lost a match against Gegenpress,
+5.0 and 1.2 against Balanced, 2.4 and 0.6 against a Low block. Key passes run at
+9.5 per team per match, against a real ~9.5.
+
+Ratings: +0.04 for a press beaten, −0.15 for losing the ball to one, +0.05 a key
+pass (as before, now counted for every shot rather than only for goals). For
+Liverpool 2019/20, Fabinho beats the press 76 times a season and loses the ball
+to it 0.3 times; Matip, the ball-playing centre-back, beats it 56 times to Van
+Dijk's 36. Alexander-Arnold and Robertson make 43 and 45 key passes.
+
+### Defending, credited
+
+Whether an attack becomes a chance is decided by the two sides' qualities in
+the zone, not by any one defender. Defensive events do not change that. They
+decide who gets the credit when something that already happens happens:
+
+| Event | When | Who, weighted by |
+| --- | --- | --- |
+| tackle / interception / clearance | half the attacks that come to nothing (36% / 23% / 41%) | defending position, zone, rating, `recovery` (tackles) or `aerial` (clearances) |
+| block | 43% of shots that miss the target | defending position, zone, rating |
+| header won | 80% of headed chances that do not score | height × how defensive the position is, rating, `aerial` |
+| beaten | every goal but a penalty | defending position, zone, and the *weaker* defender |
+
+Rating is damped as it is for a shooter (`RATING_SELECTION_POWER`). The draws
+come from a stream of their own, seeded once per match, so crediting a tackle
+never shifts what happens next. Per team per match that gives 15.8 tackles,
+10.0 interceptions, 18.0 clearances and 3.6 blocks, against a real 16, 10, 18
+and 3.5; `matchEngine.calibration.test.ts` asserts them.
+
+In the rating a tackle or interception is +0.07, a clearance +0.03, a block
++0.1, a header won +0.05, and being beaten for a goal −0.3. The share of the
+goals conceded that every defender carries was cut from 0.22 to 0.12, because
+most of that blame now has a name.
+
+Measured over 60 real XIs: a centre-back averages 6.28 and a striker 6.44
+(5.73 and 6.40 before), and of two centre-backs in one XI the better-rated is
+the better-rated in the season 70% of the time (they were indistinguishable
+before). Van Dijk rates 7.01 to Matip's 6.50 — his `AerialThreat` wins him
+far more headers and clearances — and is Liverpool 2019/20's Player of the
+Season in 85% of seasons. Across the 2008/09 league the award goes most often
+to Nemanja Vidić, who won it in reality.
 
 ## The plan
 
@@ -209,6 +316,23 @@ changed what the field is made of. `OPPONENT_SD` was 8.6 and the simulation now
 puts it at 7.5 — measured directly as the spread of each opponent's points over
 120 seasons, 7.4 to 7.6 across three fields — so it is 7.5. Expected points stay
 within 2.2 and projected finish within 0.9 across all nine cases.
+
+### Re-fitted a third time, when the press stopped reading fit
+
+`POINTS_STEEPNESS` 0.086 → 0.092, `POINTS_MIDPOINT` 2.04 → 1.92, `SEASON_SD`
+6.7 → 6.8. Champion 81.2 points, bottom club 29.3. The "does not flatter" case
+(an 88 in 2025/26) now carries the same recorded style-blind exception as the
+86 and 90 there: over 250 seasons it is projected a 45% title and plays 32%.
+
+### Re-fitted again, for on-ball contests
+
+After the press and the deep block became contests between the players in each
+phase (see *On the ball, by phase*), a weak side lost more than the odds knew:
+a 74-rated XI in 2025/26 went down 74% of the time against 54% projected.
+Re-measured on the same 900 seasons: `POINTS_STEEPNESS` 0.066 → 0.086,
+`POINTS_MIDPOINT` 2.68 → 2.04, `SEASON_SD` 7.4 → 6.7, `OPPONENT_SD` 8.1
+unchanged (√(7.8² + 2.0²)). Curve error 1.6 points for the XI, 2.8 for an
+opponent.
 
 ### Re-fitted for the match engine
 
