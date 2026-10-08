@@ -11,37 +11,42 @@ the goal and assist charts (see *Fixed* below). Measured since with
 `npm run sim:report`: Liverpool 2019/20 in the 2025/26 field and Liverpool
 2008/09 in its own, 40 seasons each.
 
-### Ratings: defenders are credited now, and the award leans their way
+### Ratings: what is left
 
-Defenders have events of their own (see
-[simulation.md](simulation.md#defending-credited)), so a centre-back averages
-6.28 against a striker's 6.44 and the better of two centre-backs out-rates the
-other 70% of the time. What is left:
+Ratings are now valued in goals and measured against each position's ordinary
+match (see [simulation.md](simulation.md#match-ratings)), so every position
+averages about 6.5 and the league award goes mostly to forwards and attacking
+midfielders, with a defender in 13–18% of seasons. What is left:
 
-- **The league award now leans to defenders**: 48% of seasons in the 2025/26
-  field, 65% in 2008/09, from 0%. Nemanja Vidić, the real winner in 2008/09,
-  wins it most often there, but so do Gary Cahill (Bolton) and Abdoulaye Faye
-  (Stoke): a defender in a side under siege gets more to do. Real per-event
-  rating systems have exactly this bias. Midfielders almost never win (3–5%).
-- **The event weights are chosen, not derived.** A tackle is +0.07 because it
-  gave a sensible spread, not because it is worth 0.07 of anything. Valuing an
-  event by the goals it prevents (what an attack in that zone is worth) is the
-  principled version, and it would come out much smaller than these.
-- **Per-position levels still differ**, 6.11 for a full-back to 6.44 for a
-  striker; recentring each position on its own average is the step after this.
-- **The scale is still narrow**: p10 6.05, p50 6.28, p95 6.61.
+- **The scale is still narrow**: season averages p10 6.14, p50 6.39, p95 6.73.
+  Spreading it is a presentation choice (`RATING_SPREAD`), not a fix.
+- **Two centre-backs in one XI separate less** than they did under the old
+  chosen weights (60% against 70%), because a tackle is now worth what it is:
+  little. Most of what separates real centre-backs is on the ball, and the
+  credit there (`pressResist`) has few traits to read.
+- **A goal still outweighs everything.** A striker who scores twice has a
+  match no defender can match on value. That is the value of a goal, but it
+  means the award leans to forwards in a field where they score freely (70% in
+  2025/26).
 
-### Centre-backs score too often, full-backs create too little
+### Full-backs create too little
+
+Defenders scored a fifth of all goals until the shooter was fixed: the floor
+that let anyone take an open-play shot was larger than a centre-back's
+attacking weight, penalties went to whoever was on the pitch, and every set
+piece was a header from the delivery. Now penalties go to the main attackers,
+the floor is small, and half of set-piece chances fall as open play does.
+Defenders score 14.5% of goals in 2003/04 and 18% in 2025/26, against a real
+13% in both (FBref); `matchEngine.calibration.test.ts` asserts it.
 
 | | engine | real |
 | --- | ---: | ---: |
-| Van Dijk goals, 2019/20 | 12.2 | 5 |
-| Alexander-Arnold / Robertson assists | 4.9 / 5.9 | 13 / 12 |
-| Carragher goals, 2008/09 | 4.7 | 0 |
+| Van Dijk goals, 2019/20 | 6.8 | 5 |
+| Alexander-Arnold / Robertson assists | 5.2 / 5.7 | 13 / 12 |
+| Carragher goals, 2008/09 | 3.1 | 0 |
 | Top-20 assisters' assists by defenders, 2008/09 | 1% | 19% |
 
-Set pieces go to centre-backs, which is right in kind and too much in degree,
-and the assister for a cross is picked by attacking weight, where a full-back
+The assister for a cross is picked by attacking weight, where a full-back
 counts for little.
 
 Key passes make this visible: Alexander-Arnold and Robertson make 43 and 45 a

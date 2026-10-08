@@ -82,6 +82,13 @@ const t = {
   setPieceGoals: 0, tackles: 0, interceptions: 0, clearances: 0, blocks: 0, keyPasses: 0,
 };
 const scorelines = new Map<string, number>();
+const GROUP: Partial<Record<Position, string>> = {
+  GK: 'GK', CB: 'CB', LB: 'FB', RB: 'FB', LWB: 'FB', RWB: 'FB', CDM: 'DM', CM: 'CM',
+  CAM: 'AM', LM: 'AM', RM: 'AM', LW: 'W', RW: 'W', ST: 'ST', CF: 'ST',
+};
+const ratingsByGroup = new Map<string, number[]>();
+const DEFENDERS = new Set<Position>(['CB', 'LB', 'RB', 'LWB', 'RWB']);
+let defenderGoals = 0;
 for (let repeat = 0; repeat < 3; repeat++) {
   for (const home of teams) {
     for (const away of teams) {
@@ -96,6 +103,9 @@ for (let repeat = 0; repeat < 3; repeat++) {
           t.tackles += p.tackles; t.interceptions += p.interceptions;
           t.clearances += p.clearances; t.blocks += p.blocks;
           t.keyPasses += p.chancesCreated;
+          const g = GROUP[p.position]!;
+          ratingsByGroup.set(g, [...(ratingsByGroup.get(g) ?? []), p.rating]);
+          if (DEFENDERS.has(p.position)) defenderGoals += p.goals;
         }
       }
       t.homeGoals += m.home.goals;
@@ -218,5 +228,26 @@ describe('and football-shaped matches', () => {
       .reduce((n, [, v]) => n + v, 0) / t.matches;
     expect(routs).toBeGreaterThan(0);
     expect(routs).toBeLessThan(0.05);
+  });
+});
+
+describe('and rates players fairly', () => {
+  // The match rating is a player's contribution measured against an ordinary
+  // player in his position (POSITION_MEAN in matchEngine.ts). If the engine
+  // changes what a position contributes, this says the means need measuring
+  // again, before the ratings tilt toward one position.
+  it('rates an ordinary player in every position about 6.5', () => {
+    for (const [group, ratings] of ratingsByGroup) {
+      const mean = ratings.reduce((a, b) => a + b, 0) / ratings.length;
+      expect(mean, group).toBeGreaterThan(6.3);
+      expect(mean, group).toBeLessThan(6.7);
+    }
+  });
+
+  it('gives defenders about an eighth of the goals', () => {
+    // FBref: 13% in 2003/04 and in 2025/26.
+    const share = defenderGoals / t.goals;
+    expect(share).toBeGreaterThan(0.08);
+    expect(share).toBeLessThan(0.2);
   });
 });

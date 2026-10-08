@@ -634,7 +634,7 @@ function FinalSummary({ result, picks, odds, onResim }: {
               // Bands from the match engine's measured spread of season
               // averages (660 player-seasons across 60 real XIs): about the
               // top 5%, the top quarter, above the median, and the rest.
-              const rtgColor = rtg >= 6.6 ? 'text-accent' : rtg >= 6.4 ? 'text-sky' : rtg >= 6.3 ? 'text-fg' : 'text-muted';
+              const rtgColor = rtg >= 6.7 ? 'text-accent' : rtg >= 6.5 ? 'text-sky' : rtg >= 6.4 ? 'text-fg' : 'text-muted';
               const isDefender = p.position === 'GK' || ['CB','LB','RB','LWB','RWB'].includes(p.position);
               return (
                 <div key={i} className="flex items-center gap-2 sm:gap-3">

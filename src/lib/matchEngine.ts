@@ -232,6 +232,88 @@ const PRESS_LOSS_SHARE = 0.6;
 /** Chance a shot came from a team-mate's pass rather than a carry, a rebound or a set piece's second ball. */
 const KEY_PASS_RATE = 0.75;
 
+// ── What an event is worth ───────────────────────────────────────────────────
+//
+// Every credited event carries a value in goals: what it added to, or took
+// from, its side's chance of scoring or conceding. The match rating is that
+// total measured against what an ordinary player in the same position
+// produces (see POSITION_MEAN), so a centre-back is rated on what a
+// centre-back's job is worth and a striker on a striker's.
+//
+//   goal                           +1 to the scorer
+//   key pass or assist             + the xG of the chance it made; an assist
+//                                    adds ASSIST_BONUS for the chance taken
+//   block                          + the xG of the shot it stopped
+//   header won in his own box      + half the xG of the chance it stopped
+//   tackle, interception, clearance+ the threat of the attack it ended: what
+//                                    that possession was expected to produce
+//   beaten for a goal              - BEATEN_SHARE of it
+//   keeper                         + the xG of every shot on target he saved,
+//                                    - (1 - xG) for every one that went in
+//   press beaten                   + the threat of the possession it kept
+//   lost to the press              - TURNOVER_VALUE; the presser gains it
+//   cards                          - YELLOW_VALUE / RED_VALUE
+//   the result                     + RESULT_SHARE of the goal difference, each
+
+/** Goals per shot in the league, for the threat of a possession that never got one. */
+const MEAN_SHOT_XG = 0.11;
+const ASSIST_BONUS = 0.2;
+const BEATEN_SHARE = 0.4;
+/**
+ * A ball lost in the build-up: about one high turnover in five ends in a shot,
+ * and a shot from there is worth about 0.15.
+ */
+const TURNOVER_VALUE = 0.03;
+const YELLOW_VALUE = 0.03;
+/** A red card: most of a match a man short, which costs about four tenths of a goal. */
+const RED_VALUE = 0.4;
+const RESULT_SHARE = 0.05;
+/** How far, in rating points, one standard deviation of value moves a match rating. */
+const RATING_SPREAD = 0.8;
+/** An ordinary performance, at any position. */
+const RATING_BASELINE = 6.5;
+
+type PositionGroup = 'GK' | 'CB' | 'FB' | 'DM' | 'CM' | 'AM' | 'W' | 'ST';
+
+function positionGroup(position: Position): PositionGroup {
+  switch (position) {
+    case 'GK': return 'GK';
+    case 'CB': return 'CB';
+    case 'LB': case 'RB': case 'LWB': case 'RWB': return 'FB';
+    case 'CDM': return 'DM';
+    case 'CM': return 'CM';
+    case 'CAM': case 'LM': case 'RM': return 'AM';
+    case 'LW': case 'RW': return 'W';
+    default: return 'ST';
+  }
+}
+
+/**
+ * What an ordinary player in each position is worth in a match, in goals.
+ * Measured, not chosen: two passes each of the 2025/26 and 2003/04 leagues on
+ * their stored lineups, averaged; the two agree to a few hundredths. A keeper
+ * averages below zero because every goal costs him more than a save earns back;
+ * that is what an ordinary keeper is. `matchEngine.calibration.test.ts` asserts
+ * that every position still averages a rating close to RATING_BASELINE, so a
+ * change to the engine that moves these fails rather than silently tilting the
+ * ratings.
+ */
+const POSITION_MEAN: Record<PositionGroup, number> = {
+  GK: -0.82, CB: 0.234, FB: 0.175, DM: 0.278, CM: 0.325, AM: 0.392, W: 0.479, ST: 0.585,
+};
+
+/**
+ * How far one match's value is from ordinary, per rating point. One scale for
+ * every outfield player, so a goal or a goal-saving block is worth the same to
+ * the rating whoever makes it: scaling each position by its own spread made a
+ * centre-back's goal worth half again a striker's, and defenders won Player of
+ * the Season three years in four. Measured as the spread around each
+ * position's own mean, pooled. A keeper's value is in different units (goals
+ * let in against their xG), so he keeps his own.
+ */
+const OUTFIELD_VALUE_SD = 0.47;
+const KEEPER_VALUE_SD = 1.1;
+
 export type ChanceType =
   | 'throughBall' | 'cross' | 'aerial' | 'longShot' | 'individual'
   | 'setPiece' | 'penalty';
@@ -537,6 +619,8 @@ export interface MatchPlayerStats {
   pressBeaten: number;
   /** Times he lost the ball to an opponent's press. */
   lostToPress: number;
+  /** What his events were worth, in goals, before comparing him with his position. */
+  value: number;
   cleanSheet: boolean;
   rating: number;
 }
@@ -944,6 +1028,9 @@ function pickChanceType(rand: () => number, team: TeamModel, zone: Zone): Chance
   return pickWeighted(rand, types, weights) ?? 'individual';
 }
 
+/** Of set-piece chances, the share that are a header from the delivery. */
+const SET_PIECE_HEADER_SHARE = 0.5;
+
 function pickShooter(
   rand: () => number,
   team: TeamModel,
@@ -955,13 +1042,24 @@ function pickShooter(
   const candidates = team.players.filter(p => p.position !== 'GK');
   // At a corner the whole side is in the box, and it is usually a centre-half
   // who gets on the end of it. Open-play weighting would all but exclude them.
-  const setPiece = type === 'setPiece';
+  // A penalty is taken by whoever is on them, almost always one of the side's
+  // main attackers, so the attacking weight counts twice. In open play a small
+  // floor lets anyone score, but no more than his position's weight earns:
+  // with a larger one, defenders scored a fifth of all goals against a real
+  // eighth (FBref, 2003/04 and 2025/26).
+  //
+  // Only about half of set-piece goals are headed in from the delivery; the
+  // rest are knock-downs, scrambles and direct free kicks, which fall to
+  // whoever is about the box much as open play does.
+  const setPiece = type === 'setPiece' && rand() < SET_PIECE_HEADER_SHARE;
+  const penalty = type === 'penalty';
   const weights = candidates.map(p => {
-    let w = setPiece
-      ? (AERIAL_WEIGHT[p.position] ?? 0.4) + 0.05
-      : (ATTACK_WEIGHT[p.position] ?? 0.2) + 0.05;
+    const attack = ATTACK_WEIGHT[p.position] ?? 0.2;
+    let w = setPiece ? (AERIAL_WEIGHT[p.position] ?? 0.4) + 0.05
+      : penalty ? attack * attack + 0.01
+      : attack + 0.01;
     const pz = positionZone(p.position);
-    if (!setPiece) w *= pz === zone ? 1.35 : pz === 'C' || zone === 'C' ? 1 : 0.55;
+    if (!setPiece && !penalty) w *= pz === zone ? 1.35 : pz === 'C' || zone === 'C' ? 1 : 0.55;
     let best = 1;
     const mults: number[] = [];
     for (const r of p.roles ?? []) {
@@ -1139,6 +1237,7 @@ function blankStats(p: MatchPlayer): MatchPlayerStats {
     beaten: 0,
     pressBeaten: 0,
     lostToPress: 0,
+    value: 0,
     cleanSheet: false,
     rating: 6,
   };
@@ -1166,12 +1265,12 @@ export function simulateMatch(
   // Who could make a given action depends only on the eleven, the zone and who
   // is still on the pitch. Rebuilding the weights for each of a hundred actions
   // a match took the season from 73 to 150 ms; see DEFENDER_CACHE.
-  const creditOnBall = (team: TeamModel, opponent: TeamModel, beaten: boolean): void => {
+  const creditOnBall = (team: TeamModel, opponent: TeamModel, beaten: boolean, threat: number): void => {
     const onBall = pickBuildUpPlayer(credit, team, beaten, sent, roles);
     if (onBall) {
       const s = stats.get(onBall.playerId)!;
-      if (beaten) s.pressBeaten++;
-      else s.lostToPress++;
+      if (beaten) { s.pressBeaten++; s.value += threat; }
+      else { s.lostToPress++; s.value -= TURNOVER_VALUE; }
     }
     if (beaten) return;
     const presser = pickPresser(credit, opponent, sent, roles);
@@ -1179,9 +1278,10 @@ export function simulateMatch(
       const s = stats.get(presser.playerId)!;
       if (credit() < 0.55) s.tackles++;
       else s.interceptions++;
+      s.value += TURNOVER_VALUE;
     }
   };
-  const creditTo = (team: TeamModel, zone: Zone, act: DefensiveAct): void => {
+  const creditTo = (team: TeamModel, zone: Zone, act: DefensiveAct, value: number): void => {
     const offField = team.players.some(p => sent.has(p.playerId));
     let pool: { candidates: MatchPlayer[]; weights: number[] } | undefined;
     if (offField) {
@@ -1201,6 +1301,7 @@ export function simulateMatch(
     const d = pickWeighted(credit, pool.candidates, pool.weights);
     if (!d) return;
     const ds = stats.get(d.playerId)!;
+    ds.value += value;
     if (act === 'tackle') ds.tackles++;
     else if (act === 'interception') ds.interceptions++;
     else if (act === 'clearance') ds.clearances++;
@@ -1309,6 +1410,9 @@ export function simulateMatch(
     const setPieceRate = BASE_SHOT_RATE * SET_PIECE_SHARE
       * tempo * shareNormalised
       * Math.exp(SET_PIECE_EDGE * edge) * (isHome ? HOME_SHOT_RATE : 1);
+    // What this possession was expected to produce, for valuing whoever ends
+    // it or keeps it alive. Read off the rates; it draws nothing.
+    const threat = (shotRate * (1 - SET_PIECE_SHARE) + setPieceRate) * MEAN_SHOT_XG;
     const openPlay = rand() < shotRate * (1 - SET_PIECE_SHARE);
     const deadBall = !openPlay && rand() < setPieceRate;
 
@@ -1320,7 +1424,7 @@ export function simulateMatch(
           : pickChanceType(rand, att, zone);
       const shooter = pickShooter(rand, att, zone, type, roles);
       // A possession that ended in a shot got through any press that met it.
-      if (pressEngaged) creditOnBall(att, def, true);
+      if (pressEngaged) creditOnBall(att, def, true, threat);
       if (shooter) {
         const shooterStats = stats.get(shooter.playerId)!;
         shooterStats.shots++;
@@ -1375,16 +1479,22 @@ export function simulateMatch(
           // assist, chosen below, and counts as a key pass there.
           if (type !== 'penalty' && credit() < KEY_PASS_RATE) {
             const passer = pickCreator(credit, att, zone, shooter.playerId, roles);
-            if (passer) stats.get(passer.playerId)!.chancesCreated++;
+            if (passer) {
+              const ps = stats.get(passer.playerId)!;
+              ps.chancesCreated++;
+              ps.value += xg;
+            }
           }
-          if (!onTarget && credit() < BLOCK_RATE) creditTo(def, defZone, 'block');
-          if (aerialChance && credit() < AERIAL_WON_RATE) creditTo(def, defZone, 'aerial');
+          if (!onTarget && credit() < BLOCK_RATE) creditTo(def, defZone, 'block', xg);
+          if (aerialChance && credit() < AERIAL_WON_RATE) creditTo(def, defZone, 'aerial', xg / 2);
         } else if (type !== 'penalty') {
-          creditTo(def, defZone, 'beaten');
+          creditTo(def, defZone, 'beaten', -BEATEN_SHARE);
         }
 
         if (scored) {
           shooterStats.goals++;
+          shooterStats.value += 1;
+          if (keeper) stats.get(keeper.playerId)!.value -= 1 - xg;
           side.goals++;
           // Most goals are assisted; a solo effort or a penalty is not.
           const creator =
@@ -1395,6 +1505,7 @@ export function simulateMatch(
             const cs = stats.get(creator.playerId)!;
             cs.assists++;
             cs.chancesCreated++;
+            cs.value += xg + ASSIST_BONUS;
           }
           events.push({
             minute,
@@ -1407,19 +1518,22 @@ export function simulateMatch(
             chanceType: type,
           });
         } else if (onTarget && keeper) {
-          stats.get(keeper.playerId)!.saves++;
+          const ks = stats.get(keeper.playerId)!;
+          ks.saves++;
+          ks.value += xg;
         }
       }
     } else if (pressWouldWin) {
       // Lost in the build-up, to the press: charge the passer, credit the presser.
-      creditOnBall(att, def, false);
+      creditOnBall(att, def, false, threat);
     } else {
-      if (pressEngaged) creditOnBall(att, def, true);
+      if (pressEngaged) creditOnBall(att, def, true, threat);
       if (credit() < DEFENSIVE_ACTION_RATE) {
         // The attack came to nothing further up, and a defender was the reason.
         const roll = credit();
         creditTo(def, defZone,
-          roll < TACKLE_SHARE ? 'tackle' : roll < TACKLE_SHARE + INTERCEPTION_SHARE ? 'interception' : 'clearance');
+          roll < TACKLE_SHARE ? 'tackle' : roll < TACKLE_SHARE + INTERCEPTION_SHARE ? 'interception' : 'clearance',
+          threat);
       }
     }
 
@@ -1435,6 +1549,7 @@ export function simulateMatch(
         const booked = rand() < FOUL_TO_YELLOW * (fs.yellow ? SECOND_YELLOW_LENIENCY : 1);
         if (straightRed || (booked && fs.yellow)) {
           fs.red = true;
+          fs.value -= RED_VALUE;
           sent.add(fouler.playerId);
           defSide.reds++;
           events.push({
@@ -1443,6 +1558,7 @@ export function simulateMatch(
           });
         } else if (booked) {
           fs.yellow = true;
+          fs.value -= YELLOW_VALUE;
           defSide.yellows++;
           events.push({
             minute, team: def.setup.name, type: 'yellow',
@@ -1463,22 +1579,11 @@ export function simulateMatch(
     for (const p of team.players) {
       const s = stats.get(p.playerId)!;
       s.cleanSheet = against === 0 && p.position !== 'ST' && p.position !== 'CF';
-      const defensive = DEFEND_WEIGHT[p.position] ?? 0.3;
-      let r = 6.0;
-      r += s.goals * 1.05 + s.assists * 0.65;
-      r += s.shotsOnTarget * 0.08 + s.chancesCreated * 0.05;
-      // What he did without the ball. Being beaten for a goal carries most of
-      // the blame a defender used to share equally with his whole back line.
-      r += (s.tackles + s.interceptions) * 0.07 + s.clearances * 0.03
-        + s.blocks * 0.1 + s.aerialsWon * 0.05 - s.beaten * 0.3;
-      // On the ball under a press: playing through it, and losing it.
-      r += s.pressBeaten * 0.04 - s.lostToPress * 0.15;
-      r += (own - against) * 0.12;
-      r -= against * 0.12 * defensive;
-      if (against === 0) r += 0.45 * defensive;
-      if (p.position === 'GK') r += s.saves * 0.11;
-      if (s.yellow) r -= 0.3;
-      if (s.red) r -= 1.4;
+      // The result belongs to everybody, a little.
+      s.value += RESULT_SHARE * (own - against);
+      const group = positionGroup(p.position);
+      const sd = group === 'GK' ? KEEPER_VALUE_SD : OUTFIELD_VALUE_SD;
+      const r = RATING_BASELINE + RATING_SPREAD * (s.value - POSITION_MEAN[group]) / sd;
       s.rating = Math.round(Math.max(1, Math.min(10, r)) * 10) / 10;
       players.push(s);
     }

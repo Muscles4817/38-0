@@ -165,9 +165,21 @@ describe('a season played to a plan', () => {
     // than about a fifth of a season's points over the worst one. A ladder of
     // styles would make picking one matter more than picking players, which is
     // what went wrong with the six styles this taxonomy replaced.
-    const points = STYLES.map(style => average(style, 82, r => r.points));
-    const spread = Math.max(...points) - Math.min(...points);
-    expect(spread).toBeLessThan(20);
+    //
+    // Six seasons a style is a noisy measure (a style's mean is good to about
+    // ±2.7 points), and the gap between the best and worst of fourteen noisy
+    // means overstates the true one, so the bound allows two standard errors
+    // of that gap. At 30 seeds the spread measured 17 points.
+    const stats = STYLES.map(style => {
+      const points = seasons(style, 82).map(r => r.points);
+      const mean = points.reduce((a, b) => a + b, 0) / points.length;
+      const variance = points.reduce((a, b) => a + (b - mean) ** 2, 0) / (points.length - 1);
+      return { mean, se: Math.sqrt(variance / points.length) };
+    });
+    const best = stats.reduce((a, b) => (b.mean > a.mean ? b : a));
+    const worst = stats.reduce((a, b) => (b.mean < a.mean ? b : a));
+    const noise = 2 * Math.hypot(best.se, worst.se);
+    expect(best.mean - worst.mean).toBeLessThan(20 + noise);
   });
 
   it('suits a strong side and a weak side differently', SLOW, () => {

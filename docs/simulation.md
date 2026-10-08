@@ -47,10 +47,9 @@ four interaction rules — press, congestion, space in behind, recovery — are
 where the styles meet. `matchEngine.calibration.test.ts` asserts the rates
 (shots, conversion, cards, assisted share) against the Premier League.
 
-Match ratings are built from what the player did in the match, not from his
-rating: goals, assists, shots on target, chances created, saves, cards, the
-result, the goals conceded weighted by how defensive his position is, and his
-defensive actions.
+Match ratings are built from what the player did in the match, valued in
+goals and measured against an ordinary player in his position: see
+[Match ratings](#match-ratings).
 
 ### On the ball, by phase
 
@@ -120,8 +119,9 @@ against Liverpool: 8.7 presses beaten and 2.0 lost a match against Gegenpress,
 5.0 and 1.2 against Balanced, 2.4 and 0.6 against a Low block. Key passes run at
 9.5 per team per match, against a real ~9.5.
 
-Ratings: +0.04 for a press beaten, −0.15 for losing the ball to one, +0.05 a key
-pass (as before, now counted for every shot rather than only for goals). For
+In the rating a press beaten is worth the threat of the possession it kept,
+a ball lost to one −0.03 (the presser gains it), and a key pass the xG of the
+chance it made (see [Match ratings](#match-ratings)). For
 Liverpool 2019/20, Fabinho beats the press 76 times a season and loses the ball
 to it 0.3 times; Matip, the ball-playing centre-back, beats it 56 times to Van
 Dijk's 36. Alexander-Arnold and Robertson make 43 and 45 key passes.
@@ -145,18 +145,37 @@ never shifts what happens next. Per team per match that gives 15.8 tackles,
 10.0 interceptions, 18.0 clearances and 3.6 blocks, against a real 16, 10, 18
 and 3.5; `matchEngine.calibration.test.ts` asserts them.
 
-In the rating a tackle or interception is +0.07, a clearance +0.03, a block
-+0.1, a header won +0.05, and being beaten for a goal −0.3. The share of the
-goals conceded that every defender carries was cut from 0.22 to 0.12, because
-most of that blame now has a name.
+### Match ratings
 
-Measured over 60 real XIs: a centre-back averages 6.28 and a striker 6.44
-(5.73 and 6.40 before), and of two centre-backs in one XI the better-rated is
-the better-rated in the season 70% of the time (they were indistinguishable
-before). Van Dijk rates 7.01 to Matip's 6.50 — his `AerialThreat` wins him
-far more headers and clearances — and is Liverpool 2019/20's Player of the
-Season in 85% of seasons. Across the 2008/09 league the award goes most often
-to Nemanja Vidić, who won it in reality.
+Every credited event carries a value in goals, listed in `matchEngine.ts`
+under *What an event is worth*: a goal is 1; a key pass or an assist the xG
+of the chance it made; a block the xG of the shot it stopped; a tackle,
+interception or clearance the threat of the attack it ended (what such a
+possession produces on average); a keeper gains the xG
+of every save and loses 1 − xG for every goal. Nothing is weighted for
+effect: a tackle is small because ending one attack is worth little.
+
+A player's match is then his total against an ordinary player in his
+position (`POSITION_MEAN`, measured over two passes each of the 2025/26 and
+2003/04 leagues), on one scale for every outfield player
+(`OUTFIELD_VALUE_SD`): 6.5 is an ordinary match, and 0.47 of a goal above
+ordinary is +0.8. The scale is shared so that a goal, or a goal-saving block,
+is worth the same whoever makes it. Scaling each position by its own spread,
+tried first, made a centre-back's goal worth half again a striker's, and
+defenders won the league award in 70–80% of seasons. A keeper's value is
+in other units and keeps its own scale.
+
+Measured: every position averages 6.41–6.58 on the 2025/26 lineups, which
+`matchEngine.calibration.test.ts` asserts; across 60 real XIs the season
+averages run p10 6.14, p50 6.39, p95 6.73. Strikers and wingers spread
+widest (a season's goals vary most), centre-backs and full-backs least. For
+Liverpool 2019/20 Van Dijk rates 6.88, Salah 6.84, Mané 6.82 and Matip 6.52;
+the XI's award goes to Van Dijk in 40% of seasons and Salah in 33%. For
+2008/09 Gerrard rates 7.07 and wins the league award in 40% of seasons,
+which he won in reality (FWA). The league award goes to a forward in 70% of
+seasons in the 2025/26 field (25% in 2008/09), a midfielder 18% (57%) and a
+defender 13% (18%). Of two centre-backs in one XI the better-rated out-rates
+the other 60% of the time.
 
 ## The plan
 
@@ -173,8 +192,7 @@ drilled a drafted side is.
 
 Player of the Season, for the XI and for the league, is the best average match
 rating. Golden Boot, top assister and Golden Glove are counts. The awards are
-exactly as good as the ratings: see the open issue in
-[known-issues.md](known-issues.md).
+exactly as good as the ratings: see [Match ratings](#match-ratings).
 
 ## Randomness
 
@@ -190,9 +208,9 @@ When no seed is passed, `Date.now() % 999983` is used.
 | --- | --- |
 | Shots, conversion, home advantage | `BASE_SHOT_RATE`, `CHANCE_QUALITY`, `HOME_*` in `matchEngine.ts` |
 | How far quality carries | `EDGE_TO_CHANCES`, `FINISHING_EXPONENT`, `KEEPING_EXPONENT` |
-| Who gets on the end of a chance | `ATTACK_WEIGHT`, `ROLE_CHANCE_AFFINITY`, `ROLE_SELECTION_POWER`, `RATING_SELECTION_POWER` |
+| Who gets on the end of a chance | `ATTACK_WEIGHT`, `AERIAL_WEIGHT`, `SET_PIECE_HEADER_SHARE`, `ROLE_CHANCE_AFFINITY`, `ROLE_SELECTION_POWER`, `RATING_SELECTION_POWER` |
 | Set pieces | `SET_PIECE_*`, `AERIAL_*` |
-| Match ratings | the `finish` step at the end of `simulateMatch` |
+| Match ratings | the event values (*What an event is worth*), `POSITION_MEAN`, `OUTFIELD_VALUE_SD`, and the `finish` step at the end of `simulateMatch` |
 | Role multipliers and qualities | **the database** (`role_config`), not the defaults in code |
 | Styles and their interactions | `PLAYSTYLES`, `PRESS_EFFECT`, `CONGESTION_EFFECT`, `SPACE_EFFECT`, `FIT_REFERENCE` |
 | Pre-season projection | `POINTS_STEEPNESS`, `POINTS_MIDPOINT`, `SEASON_SD`, `OPPONENT_SD` in `simulation.ts` — measured, not chosen; see below |
