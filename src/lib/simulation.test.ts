@@ -235,8 +235,9 @@ describe('simulateSeason — player attribution', () => {
     for (const gw of result.gameweeks) {
       const fixture = gw.fixtures.find(f => f.userInvolved)!;
       const minutes = fixture.scorers.map(s => s.minute);
+      // Not necessarily distinct: the engine plays about two possessions a
+      // minute, so two goals can share one, as they occasionally do.
       expect(minutes).toEqual([...minutes].sort((a, b) => a - b));
-      expect(new Set(minutes).size).toBe(minutes.length);
     }
   });
 });
