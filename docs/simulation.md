@@ -48,16 +48,20 @@ where the styles meet. `matchEngine.calibration.test.ts` asserts the rates
 (shots, conversion, cards, assisted share) against the Premier League.
 
 The man who made the chance is picked for its kind too (`pickCreator`): a
-cross from the flank it came down, mostly a full-back or a wide man
-(`CROSS_WEIGHT`); a through ball from the middle (`THROUGH_WEIGHT`); a set
-piece from the side's takers, chosen by delivery (`setPiece` trait plus the
-rating baseline); a dribble or a long shot often from nobody (`ASSIST_RATE`
-by chance type, 74–77% of goals assisted overall). Penalties go to the side's
-main attackers, and to a `penalty` specialist above all. Defenders provide
-26–28% of assists across a league, against a real 21–25%; for Liverpool
-2019/20 Robertson makes 10.4 a season and Alexander-Arnold 9.6 (real 12 and
-13), and the league's top assister averages 15–16, the record (20) rarely
-reached.
+cross from the flank it came down, mostly a wide man or a full-back
+(`CROSS_WEIGHT`), by delivery (`setPiece`); a through ball from the middle or
+the front line (`THROUGH_WEIGHT`), by `creation`; a set piece from the side's
+takers, by delivery; a dribble or a long shot often from nobody (`ASSIST_RATE`
+by chance type, 74–77% of goals assisted overall). Delivery and creation are
+abilities as in the on-ball phases: the trait plus a baseline from the
+rating, so an untraited 92 still creates more than an untraited 79. Only a
+lay-off for a dribble or a long shot, which no one skill makes, reads the
+role's general `assistMult`. Penalties go to the side's main attackers, and
+to a `penalty` specialist above all. Across a league defenders provide
+24–25% of assists, midfielders 58–60% and forwards 15–18% (real 2025/26: 21%,
+65%, 15%); for Liverpool 2019/20 Salah makes 7.5 a season, Mané 7.8,
+Robertson 8.4 and Alexander-Arnold 8.1 (real 10, 8, 12, 13), and the
+league's top assister averages 15–16.
 
 Match ratings are built from what the player did in the match, valued in
 goals and measured against an ordinary player in his position: see
@@ -223,7 +227,7 @@ When no seed is passed, `Date.now() % 999983` is used.
 | How far quality carries | `EDGE_TO_CHANCES`, `FINISHING_EXPONENT`, `KEEPING_EXPONENT` |
 | Who gets on the end of a chance | `ATTACK_WEIGHT`, `AERIAL_WEIGHT`, `SET_PIECE_HEADER_SHARE`, `PENALTY_TAKER_QUALITY_WEIGHT`, `ROLE_CHANCE_AFFINITY`, `ROLE_SELECTION_POWER`, `RATING_SELECTION_POWER` |
 | Set pieces | `SET_PIECE_*`, `AERIAL_*` |
-| Who made it | `CROSS_WEIGHT`, `THROUGH_WEIGHT`, `SET_PIECE_TAKER_WEIGHT`, `SET_PIECE_TAKER_QUALITY_WEIGHT`, `ASSIST_RATE`, role `assistMult` |
+| Who made it | `CROSS_WEIGHT`, `THROUGH_WEIGHT`, `CREATOR_ABILITY_WEIGHT`, `SET_PIECE_TAKER_WEIGHT`, `SET_PIECE_TAKER_QUALITY_WEIGHT`, `ASSIST_RATE`, role `assistMult` (lay-offs only) |
 | Match ratings | the event values (*What an event is worth*), `POSITION_MEAN`, `OUTFIELD_VALUE_SD`, and the `finish` step at the end of `simulateMatch` |
 | Role multipliers and qualities | **the database** (`role_config`), not the defaults in code |
 | Styles and their interactions | `PLAYSTYLES`, `PRESS_EFFECT`, `CONGESTION_EFFECT`, `SPACE_EFFECT`, `FIT_REFERENCE` |

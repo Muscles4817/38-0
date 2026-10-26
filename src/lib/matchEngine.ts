@@ -296,7 +296,7 @@ function positionGroup(position: Position): PositionGroup {
  * ratings.
  */
 const POSITION_MEAN: Record<PositionGroup, number> = {
-  GK: -0.83, CB: 0.209, FB: 0.236, DM: 0.28, CM: 0.343, AM: 0.42, W: 0.486, ST: 0.47,
+  GK: -0.83, CB: 0.206, FB: 0.225, DM: 0.274, CM: 0.344, AM: 0.424, W: 0.513, ST: 0.479,
 };
 
 /**
@@ -782,7 +782,7 @@ export function phaseAbility(
   for (const p of players) {
     const w = weight[p.position] ?? 0.2;
     if (w <= 0) continue;
-    total += w * (quality(p, name, roles) + RATING_TO_ABILITY * (p.rating - ABILITY_REFERENCE_RATING));
+    total += w * ability(p, name, roles);
     mass += w;
   }
   return mass === 0 ? 0 : total / mass;
@@ -875,6 +875,11 @@ function quality(p: MatchPlayer, name: string, roles: RoleMultipliers): number {
   let total = 0;
   for (const r of p.roles ?? []) total += roles.qualities?.[r]?.[name] ?? 0;
   return total;
+}
+
+/** One player's on-ball ability: his trait plus the baseline from his rating, as in `phaseAbility`. */
+function ability(p: MatchPlayer, name: string, roles: RoleMultipliers): number {
+  return quality(p, name, roles) + RATING_TO_ABILITY * (p.rating - ABILITY_REFERENCE_RATING);
 }
 
 // ── The interaction rules, as functions ──────────────────────────────────────
@@ -1089,14 +1094,14 @@ function pickShooter(
 
 /** Who delivers a cross. */
 const CROSS_WEIGHT: Record<Position, number> = {
-  LB: 0.65, RB: 0.65, LWB: 0.8, RWB: 0.8, LM: 1.0, RM: 1.0, LW: 0.85, RW: 0.85,
+  LB: 0.5, RB: 0.5, LWB: 0.65, RWB: 0.65, LM: 1.0, RM: 1.0, LW: 0.85, RW: 0.85,
   CAM: 0.3, CM: 0.3, CDM: 0.15, CF: 0.15, ST: 0.1, CB: 0.03, GK: 0,
 };
 
 /** Who plays the final pass through the middle. */
 const THROUGH_WEIGHT: Record<Position, number> = {
-  CAM: 1.0, CF: 0.85, CM: 0.8, LW: 0.6, RW: 0.6, LM: 0.5, RM: 0.5, ST: 0.5,
-  CDM: 0.45, LWB: 0.3, RWB: 0.3, LB: 0.25, RB: 0.25, CB: 0.1, GK: 0,
+  CAM: 1.0, CF: 0.85, LW: 0.75, RW: 0.75, CM: 0.65, ST: 0.6, LM: 0.5, RM: 0.5,
+  CDM: 0.35, LWB: 0.3, RWB: 0.3, LB: 0.25, RB: 0.25, CB: 0.05, GK: 0,
 };
 
 /** Who takes corners and wide free kicks, before delivery is counted. */
@@ -1123,6 +1128,13 @@ const ASSIST_RATE: Record<ChanceType, number> = {
  */
 const SET_PIECE_TAKER_QUALITY_WEIGHT = 0.4;
 
+/**
+ * How much the ability that delivers a chance — `setPiece` for a cross,
+ * `creation` for a through ball, each with the rating baseline — decides who
+ * made it, per point.
+ */
+const CREATOR_ABILITY_WEIGHT = 0.15;
+
 function pickCreator(
   rand: () => number,
   team: TeamModel,
@@ -1138,20 +1150,23 @@ function pickCreator(
     if (type === 'setPiece') {
       // Rating counts here as it does for any on-ball ability: a side with no
       // specialist has its best players take them.
-      const delivery = quality(p, 'setPiece', roles) + RATING_TO_ABILITY * (p.rating - ABILITY_REFERENCE_RATING);
-      return (SET_PIECE_TAKER_WEIGHT[p.position] ?? 0.3) * Math.exp(SET_PIECE_TAKER_QUALITY_WEIGHT * delivery);
+      return (SET_PIECE_TAKER_WEIGHT[p.position] ?? 0.3)
+        * Math.exp(SET_PIECE_TAKER_QUALITY_WEIGHT * ability(p, 'setPiece', roles));
     } else if (type === 'cross' || type === 'aerial') {
       // From the flank the attack came down; the far side rarely.
       w = CROSS_WEIGHT[p.position] ?? 0.2;
       if (zone !== 'C') w *= pz === zone ? 2 : pz === 'C' ? 0.6 : 0.15;
-    } else {
-      w = type === 'throughBall' ? (THROUGH_WEIGHT[p.position] ?? 0.3) : (ATTACK_WEIGHT[p.position] ?? 0.2) + 0.12;
-      w *= pz === zone ? 1.5 : pz === 'C' || zone === 'C' ? 1 : 0.5;
+      return w * Math.exp(CREATOR_ABILITY_WEIGHT * ability(p, 'setPiece', roles));
+    } else if (type === 'throughBall') {
+      w = (THROUGH_WEIGHT[p.position] ?? 0.3) * (pz === zone ? 1.5 : pz === 'C' || zone === 'C' ? 1 : 0.5);
+      return w * Math.exp(CREATOR_ABILITY_WEIGHT * ability(p, 'creation', roles));
     }
-    // A role's assist multiplier already says who creates (a Crossing
-    // specialist 2.8, a Chance creator 2.0); reading his `creation` or
-    // `setPiece` trait as well counted the same fact twice, and one wide man
-    // with both took a third of his side's assists.
+    // A lay-off for a dribble or a shot from distance: no one skill makes
+    // it, so the role's general assist tendency stands in. For a cross or a
+    // through ball the role used to stand in too, and it said the wrong
+    // thing: a Crossing specialist's 2.8 made Robertson a through-ball
+    // passer, a Winger's 1.8 put Riera ahead of an untraited Gerrard.
+    w = ((ATTACK_WEIGHT[p.position] ?? 0.2) + 0.12) * (pz === zone ? 1.5 : pz === 'C' || zone === 'C' ? 1 : 0.5);
     const mults = (p.roles ?? []).map(r => roles.assistMult[r] ?? 1);
     return w * combineRoleMults(mults, ROLE_SELECTION_POWER)
       * Math.pow(ratingScale(p.rating), RATING_SELECTION_POWER);

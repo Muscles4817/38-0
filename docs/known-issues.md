@@ -40,19 +40,32 @@ are now asserted by `matchEngine.calibration.test.ts`.
 | | engine | real |
 | --- | ---: | ---: |
 | Goals by defenders, 2003/04 / 2025/26 | 14.5% / 18% | 13% / 13% |
-| Assists by defenders, 2003/04 / 2025/26 | 26% / 28% | 25% / 21% |
+| Assists by defenders / midfielders / forwards, 2025/26 | 25% / 60% / 15% | 21% / 65% / 15% |
 | Van Dijk goals, 2019/20 | 6.8 | 5 |
-| Alexander-Arnold / Robertson assists | 9.6 / 10.4 | 13 / 12 |
-| Firmino assists | 3.7 | 8 |
+| Alexander-Arnold / Robertson assists | 8.1 / 8.4 | 13 / 12 |
+| Salah / Mané assists | 7.5 / 7.8 | 10 / 8 |
+| Firmino assists | 4.0 | 8 |
+| Riera / Gerrard assists, 2008/09 | 10.2 / 7.7 | 3 / 9 |
 | Carragher goals, 2008/09 | 3.1 | 0 |
-| Top-20 assisters' assists by defenders, 2008/09 | 23% | 19% |
 
-What is left: a striker who drops deep to create, Firmino, is weighted as a
-striker for a through ball (0.5 against a CAM's 1.0) unless his role says
-otherwise, so he makes too few. Wide midfielders in a 4-4-2 make a few too
-many (Riera 10 against a real 3), because a cross is picked by position and
-role with nothing about how good a crosser he is: reading the `setPiece`
-trait as well counted the same thing his role already says.
+What is left is in the data, not the engine:
+
+- **Traits switched off by their own slot.** A trait applies only in the
+  positions its role allows (`validPositions`), and 105 of the 1,680 trait
+  assignments in stored XIs fall outside their player's own lineup slot.
+  Firmino's only trait is Chance creator, which does not apply at ST, so in
+  the game he is an untraited striker; Alexander-Arnold's Chance creator is
+  off at RB, Kuyt's Pressing forward at RM. The fix is in the editor: a
+  trait that fits the slot (False nine for Firmino), or the role's positions.
+  The commonest: Anchor at CM (17), No-nonsense defender at RB (9),
+  Attacking full-back at LM (8).
+- **Stars with no traits.** 75 of the 219 stored-XI players rated 88 or more
+  have none, Gerrard, Fàbregas, Ødegaard and Pirès among them. The rating
+  baseline keeps them creative, but a 79-rated Winger (Riera) still out-delivers
+  an untraited 92 at set pieces and crosses.
+- A side's full-backs make fewer than Liverpool's did: Alexander-Arnold and
+  Robertson were exceptional, and the general full-back weight is set by the
+  league-wide share, which they would otherwise push too high.
 
 ### The top of the table is flat
 
