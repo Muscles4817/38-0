@@ -223,11 +223,15 @@ describe('defending, credited', () => {
   it('gives the better defender more of the credit, and less of the blame', () => {
     const home = side('Home', shape(100, [90, 76]));
     const away = side('Away', shape(200, [80, 80]));
-    let seed = 99;
-    const rand = () => { seed = (seed * 16807) % 2147483647; return seed / 2147483647; };
+    // The file's mulberry32. This used a Park–Miller generator, whose
+    // successive draws are correlated (a small one is followed by a small one),
+    // over 300 matches: about sixty goals each way, too few to separate two
+    // defenders reliably. Over 5,000 the worse one is beaten 1,199 times to
+    // the better one's 892.
+    const rand = rng(99);
     const good = { acts: 0, beaten: 0 };
     const poor = { acts: 0, beaten: 0 };
-    for (let i = 0; i < 300; i++) {
+    for (let i = 0; i < 1500; i++) {
       const m = simulateMatch(home, away, rand);
       for (const p of m.home.players) {
         const tally = p.playerId === 101 ? good : p.playerId === 102 ? poor : null;
