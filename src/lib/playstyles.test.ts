@@ -69,7 +69,10 @@ function duel(a: TeamSetup, b: TeamSetup, seed: number, matches = 900): number {
 
 // An even matchup lands here, so it is the line every claim below is measured
 // against rather than against 1.5.
-const EVEN = duel(team('A', 'balanced', 0), team('B', 'balanced', 500), 11);
+// Measured over 10,000 matches. At 900 it carried ±0.045 of noise of its own,
+// as much as half the margins tested against it, and a style worth +0.12 over
+// 40,000 matches failed its +0.1 bar on one draw and passed on another.
+const EVEN = duel(team('A', 'balanced', 0), team('B', 'balanced', 500), 11, 10000);
 
 describe('no style wins on its own', () => {
   // Enough round-robins to be stable, few enough to finish inside the default
@@ -258,9 +261,11 @@ describe('a style you cannot play does not work', () => {
   // room over an equally rated side: technicians were worth +0.25 points a game
   // and are worth +0.16, measured over 6,000. At 900 matches that sits within
   // two standard errors of the margin and fails on a bad draw.
-  it('rewards tiki-taka only with the technicians for it', { timeout: 30_000 }, () => {
+  it('rewards tiki-taka only with the technicians for it', { timeout: 60_000 }, () => {
+    // +0.12 over 40,000 matches; at 4,000 its noise (±0.02) was a fifth of
+    // the bar, so it is measured on as many matches as EVEN.
     const ppg = duel(team('With', 'tikiTaka', 0, TECHNICAL),
-      team('Without', 'tikiTaka', 500, NO_TAGS), 77, 4000);
+      team('Without', 'tikiTaka', 500, NO_TAGS), 77, 10000);
     expect(ppg, `${ppg.toFixed(2)} against an even ${EVEN.toFixed(2)}`).toBeGreaterThan(EVEN + 0.1);
   });
 

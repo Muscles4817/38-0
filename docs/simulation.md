@@ -370,6 +370,30 @@ Re-measured on the same 900 seasons: `POINTS_STEEPNESS` 0.066 → 0.086,
 unchanged (√(7.8² + 2.0²)). Curve error 1.6 points for the XI, 2.8 for an
 opponent.
 
+### Re-fitted when quality was made to carry twice as far
+
+`EDGE_TO_CHANCES`, `FINISHING_EXPONENT` and `KEEPING_EXPONENT` were doubled
+(0.2 → 0.4, 0.4 → 0.8, 0.32 → 0.64) to match 152 real club-seasons (see
+known-issues.md, *The top of the table is flat*). Re-measured on the same 900
+seasons as below:
+
+| | before | after |
+| --- | ---: | ---: |
+| `POINTS_STEEPNESS` | 0.092 | 0.131 |
+| `POINTS_MIDPOINT` | 1.92 | 1.85 |
+| `SEASON_SD` | 6.8 | 6.3 |
+| `OPPONENT_SD` | 8.1 | 8.2 (season 7.85, club error 2.44) |
+
+The curve is within 1.6 points of the XI's measured mean at every rating from
+62 to 98. A field's clubs average 1.7–2.3 points above it, more in 2025/26:
+real clubs carry traits and styles a flat XI does not.
+
+The recorded two-horse-race exception in `preSeasonOdds.calibration.test.ts`
+moved. 1992/93 is now inside the ordinary bound (an 82-rated XI projected a
+31.7% title, wins 27%), and the same defect shows instead against Arsenal
+2003/04: rated 88, expected 86 points, played to 90.7, so an 86-rated XI is
+projected 26% and wins 12% (250 seasons).
+
 ### Re-fitted for the match engine
 
 The constants above were fitted to the Poisson model. Re-measured on 900
@@ -471,6 +495,33 @@ about a second for 40 seasons.
 
 Run it before and after a change and compare. `--league` picks the field; it
 defaults to the XI's own season when that season has one, else 2025/26.
+
+### Against real tables: `npm run sim:spread`
+
+```bash
+npm run sim:spread -- --season 2003/04 --passes 20
+```
+
+`scripts/sim-spread.mjs` plays a real league season, every club on its stored
+XI and style exactly as `simulateSeason` sets them up (`leagueSetups`), and
+prints per club: points, goals for and against, possession, shots for and
+against, xG per shot, and goals per xG at both ends, next to the real final
+table from `data/raw/tables/premier-league.json` (eight seasons, from
+Wikipedia, each checked for W+D+L, points and total goals). Below the table:
+
+- where the spread of goals comes from, split into shots, xG per shot and
+  finishing (keeping, at the other end), as shares that add to 100%;
+- the spread, range and correlation of points, goals for and goals against
+  against the real season, with the spread one season would have once
+  season-to-season noise is added;
+- points per goal of difference, simulated and real;
+- scorers: the Golden Boot, each club's top scorer's share of its goals and
+  shots, and penalty goals, against the FBref exports where the season has
+  them.
+
+`--json file` writes the per-club rows, to pool seasons. FBref, which has
+shots and xG per club, is not reachable from the cloud sessions, so the
+stages are measured in the simulation but not compared with real ones yet.
 
 ## Changing the simulation safely
 

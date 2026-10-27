@@ -53,11 +53,16 @@ const HOME_SHOT_RATE = 1.1;
 const HOME_CHANCE_QUALITY = 1.04;
 
 // How far quality carries. A better side creates more chances AND finishes them
-// better, and those compound — so these three are deliberately gentle. Set them
-// high and a strong squad wins by an amount no real league has ever seen.
-const EDGE_TO_CHANCES = 0.2;
-const FINISHING_EXPONENT = 0.4;
-const KEEPING_EXPONENT = 0.32;
+// better, and those compound. These were set gently by hand (0.2, 0.4, 0.32),
+// for fear of a strong squad winning by more than any real league allows, and
+// against 152 real club-seasons that gave 63% of the real effect of a strength
+// point: elite sides scored 12 goals and 17 points short. Doubled, goals for
+// match the real tables (+2.78 a strength point against +2.79) and goals
+// against nearly do (−2.11 against −2.31), with league scoring unchanged.
+// Measured with `npm run sim:spread`; see docs/known-issues.md.
+const EDGE_TO_CHANCES = 0.4;
+const FINISHING_EXPONENT = 0.8;
+const KEEPING_EXPONENT = 0.64;
 
 // Role multipliers were written for an engine that multiplied a goal *count*.
 // Here they decide who gets on the end of a chance, where the same numbers are
@@ -1075,9 +1080,16 @@ function pickShooter(
       best = Math.max(best, affinity[r] ?? 1);
     }
     if (penalty) w *= Math.exp(PENALTY_TAKER_QUALITY_WEIGHT * quality(p, 'penalty', roles));
-    return w * combineRoleMults(mults, ROLE_SELECTION_POWER)
-      * Math.pow(best, ROLE_SELECTION_POWER)
-      * Math.pow(ratingScale(p.rating), RATING_SELECTION_POWER);
+    // A role's general goal multiplier and its affinity for this kind of
+    // chance say the same thing — a Poacher gets on the end of things — so the
+    // stronger counts, not their product. Multiplied, a Poacher was boosted
+    // 1.48 for being one and 1.34 again on a through ball, and a 95-rated one
+    // took 38% of his side's shots. A suppressing role (a Chance creator's
+    // 0.5) still suppresses.
+    const general = combineRoleMults(mults, ROLE_SELECTION_POWER);
+    const specific = Math.pow(best, ROLE_SELECTION_POWER);
+    const role = general >= 1 ? Math.max(general, specific) : general * specific;
+    return w * role * Math.pow(ratingScale(p.rating), RATING_SELECTION_POWER);
   });
   return pickWeighted(rand, candidates, weights);
 }
