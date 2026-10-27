@@ -69,13 +69,48 @@ What is left is in the data, not the engine:
 
 ### The top of the table is flat
 
-Liverpool 2019/20 averages 74.8 points and 69 goals; the real side took 99 and
-scored 85. A flat 90-rated XI averages 73 points against the 2025/26 field. The
-on-ball contests (see simulation.md) moved the champion from 76.4 to 80.5
-points; it is still well short of a real ~88. The
-engine's quality constants (`EDGE_TO_CHANCES`, `FINISHING_EXPONENT`,
-`KEEPING_EXPONENT`) are deliberately gentle, per its own comments; the
-pre-season curve re-fitted to it is 60% as steep as the Poisson model's.
+Measured with `npm run sim:spread` against the real final tables of eight
+seasons (1995/96, 1999/00, 2003/04, 2004/05, 2006/07, 2008/09, 2009/10,
+2025/26): 152 club-seasons, each played 20 times on its stored XI.
+
+**The engine orders clubs right and spaces them too closely.** Correlation with
+the real points is 0.72–0.95 a season. Clubs below 80 land within a few points
+of reality; the gap opens at the top:
+
+| club strength | n | sim pts | real pts | sim GF | real GF | sim GA | real GA |
+| --- | ---: | ---: | ---: | ---: | ---: | ---: | ---: |
+| < 74 | 20 | 38.5 | 36.5 | 39.3 | 39.0 | 55.8 | 62.5 |
+| 74–77 | 60 | 45.1 | 45.7 | 43.6 | 43.7 | 50.0 | 53.3 |
+| 77–80 | 35 | 49.8 | 54.3 | 47.5 | 51.2 | 47.3 | 47.5 |
+| 80–83 | 19 | 57.9 | 63.2 | 55.4 | 59.6 | 43.0 | 41.3 |
+| 83–86 | 10 | 63.5 | 79.2 | 59.6 | 74.6 | 38.3 | 34.9 |
+| 86+ | 8 | 70.8 | 87.6 | 66.1 | 77.6 | 33.3 | 26.4 |
+
+Per point of club strength the engine gives 63% of the real effect, evenly at
+both ends: points +2.14 against +3.41, goals for +1.81 against +2.79, goals
+against −1.41 against −2.31. It is not the conversion of goals into points:
+points per goal of difference are 0.64–0.68 simulated and 0.66–0.75 real, a
+season at a time. It is the goals.
+
+**No one stage is the cause.** Raising one lever by half recovers 2–5 of the
+16–17 missing points at the top: `EDGE_TO_CHANCES` (shots), `FINISHING_EXPONENT`
+with `KEEPING_EXPONENT`, `SET_PIECE_EDGE` (dead balls barely scale with
+quality), or letting possession buy some chances back. Scaling all three
+quality constants together does it: at ×2 goals for match reality (+2.78 per
+strength point against +2.79) and goals against nearly do (−2.11 against
+−2.31), with league goals unchanged (49.5 a club against a real 50.6).
+
+**Even then the elite are 8–9 points short**, with their goal difference within
+a goal of the real one. A dominant real side wins 1–0 again and again; one in
+the engine wins 4–0 and draws 1–1, because nothing in a match changes with the
+score: a side ahead does not manage the game and a side behind does not throw
+men forward. Score effects are the likely second half of the fix.
+
+Two cautions. Club ratings may be partly hindsight, rating a side that won the
+league higher, which would make the real slope look steeper than quality alone
+explains. And the old warning still holds: a table forced right by inflating
+scorelines is wrong in a different way. At ×2 the scorelines stay at real
+league rates, which is why it is worth trying.
 
 ### Counter-attack may be too strong
 

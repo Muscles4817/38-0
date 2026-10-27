@@ -449,6 +449,48 @@ function toMatchPlayer(pick: SquadPick, validPos: Partial<Record<PlayerRole, Pos
   };
 }
 
+/**
+ * A club as the engine plays it: its XI with the roles that apply in each
+ * slot, and its recorded style, or one inferred from the eleven.
+ */
+function opponentSetup(
+  squad: OpponentSquad,
+  validPos: Partial<Record<PlayerRole, Position[]>>,
+  playerId: (p: OpponentSquad['players'][number], index: number) => number,
+): TeamSetup {
+  const eleven: MatchPlayer[] = squad.players.map((p, i) => ({
+    playerId: playerId(p, i),
+    name: p.name,
+    position: p.position,
+    rating: p.rating,
+    roles: activeRoles(p.roles, p.position, validPos),
+  }));
+  const inferred = inferStyle(eleven);
+  return {
+    name: squad.clubName,
+    players: eleven,
+    formation: squad.formation ?? '',
+    style: squad.style && PLAYSTYLES[squad.style] ? squad.style : inferred.style,
+    focus: squad.focus ?? inferred.focus,
+    cohesion: squad.cohesion ?? DEFAULT_COHESION,
+  };
+}
+
+/**
+ * The real clubs of a league as the season plays them, for tools that measure
+ * the engine on a whole league (scripts/sim-spread.mjs). Player ids are
+ * club index × 100 + slot.
+ */
+export function leagueSetups(opponents: OpponentSquad[], roleConfig?: RoleConfig): TeamSetup[] {
+  const validPos = validPositionsFor(roleConfig);
+  return opponents.map((squad, t) => opponentSetup(squad, validPos, (_, i) => t * 100 + i));
+}
+
+/** The engine's role tables, as `simulateSeason` builds them. */
+export function engineRoles(roleConfig?: RoleConfig): RoleMultipliers {
+  return toRoleMultipliers(roleConfig);
+}
+
 // ── Tactics ───────────────────────────────────────────────────────────────────
 //
 // A style is played by the match engine, not converted into a bonus. Its line,
@@ -733,24 +775,9 @@ export function simulateSeason(
     },
   }];
   for (const squad of opponents) {
-    const eleven: MatchPlayer[] = squad.players.map((p, i) => ({
-      playerId: enter(squad.clubName, false, p.name, p.position, i),
-      name: p.name,
-      position: p.position,
-      rating: p.rating,
-      roles: activeRoles(p.roles, p.position, validPos),
-    }));
-    const inferred = inferStyle(eleven);
     sides.push({
       name: squad.clubName,
-      setup: {
-        name: squad.clubName,
-        players: eleven,
-        formation: squad.formation ?? '',
-        style: squad.style && PLAYSTYLES[squad.style] ? squad.style : inferred.style,
-        focus: squad.focus ?? inferred.focus,
-        cohesion: squad.cohesion ?? DEFAULT_COHESION,
-      },
+      setup: opponentSetup(squad, validPos, (p, i) => enter(squad.clubName, false, p.name, p.position, i)),
     });
   }
 

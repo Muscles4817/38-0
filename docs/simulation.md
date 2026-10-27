@@ -472,6 +472,30 @@ about a second for 40 seasons.
 Run it before and after a change and compare. `--league` picks the field; it
 defaults to the XI's own season when that season has one, else 2025/26.
 
+### Against real tables: `npm run sim:spread`
+
+```bash
+npm run sim:spread -- --season 2003/04 --passes 20
+```
+
+`scripts/sim-spread.mjs` plays a real league season, every club on its stored
+XI and style exactly as `simulateSeason` sets them up (`leagueSetups`), and
+prints per club: points, goals for and against, possession, shots for and
+against, xG per shot, and goals per xG at both ends, next to the real final
+table from `data/raw/tables/premier-league.json` (eight seasons, from
+Wikipedia, each checked for W+D+L, points and total goals). Below the table:
+
+- where the spread of goals comes from, split into shots, xG per shot and
+  finishing (keeping, at the other end), as shares that add to 100%;
+- the spread, range and correlation of points, goals for and goals against
+  against the real season, with the spread one season would have once
+  season-to-season noise is added;
+- points per goal of difference, simulated and real.
+
+`--json file` writes the per-club rows, to pool seasons. FBref, which has
+shots and xG per club, is not reachable from the cloud sessions, so the
+stages are measured in the simulation but not compared with real ones yet.
+
 ## Changing the simulation safely
 
 1. `src/lib/simulation.test.ts` covers the invariants that must hold whatever
