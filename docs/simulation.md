@@ -514,7 +514,10 @@ Wikipedia, each checked for W+D+L, points and total goals). Below the table:
 - the spread, range and correlation of points, goals for and goals against
   against the real season, with the spread one season would have once
   season-to-season noise is added;
-- points per goal of difference, simulated and real.
+- points per goal of difference, simulated and real;
+- scorers: the Golden Boot, each club's top scorer's share of its goals and
+  shots, and penalty goals, against the FBref exports where the season has
+  them.
 
 `--json file` writes the per-club rows, to pool seasons. FBref, which has
 shots and xG per club, is not reachable from the cloud sessions, so the

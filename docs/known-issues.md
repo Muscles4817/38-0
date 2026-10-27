@@ -118,13 +118,33 @@ explains. And the old warning still holds: a table forced right by inflating
 scorelines is wrong in a different way. At ×2 the scorelines stay at real
 league rates, which is why it is worth trying.
 
-**Side effect: a dominant striker scores more.** Haaland takes 38% of
-Manchester City's shots in the engine (197 a season) and converts 16%; the real
-one takes about a fifth and converts more. That concentration is older than
-this change (42% of City's goals at the old constants, 46% now), but with City
-scoring a realistic 68–73 goals it puts the 2025/26 Golden Boot at 33–36 on
-average and the record (36) in reach a quarter of the time. Who shoots is the
-next thing to fix: shot share too concentrated, conversion too flat.
+**Who shoots, checked after it.** With elite sides scoring realistic totals, a
+dominant striker's share showed: Haaland took 38% of City's shots and 46% of
+its goals, 31.5 a season against a real 27. Part of it was a double count — a
+Poacher was boosted once for being one and again for his affinity with a
+through ball — and now the stronger of the two counts (`pickShooter`). Haaland
+averages 27.6 and Henry 29.6 (real 27 and 30). Across whole leagues
+(`npm run sim:spread`, scorers section, against FBref):
+
+| | sim | real |
+| --- | ---: | ---: |
+| Golden Boot, 1995/96 / 2003/04 / 2008/09 / 2025/26 | 28.3 / 30.5 / 24.1 / 30.3 | 31 / 30 / 19 / 27 |
+| top scorer's share of a club's goals, same seasons | 30 / 29 / 28 / 31% | 29 / 29 / 25 / 24% |
+| penalty goals | 4.9–5.5% | 5.4–7.8% |
+
+Left: the 2025/26 game spreads its goals more than the engine does (24% for a
+club's top scorer against 31%), penalties are a little rare, and in the
+2025/26 field the record (36) falls in about a fifth of seasons, mostly to
+Haaland, who really did break it once in his four seasons. In a report with
+Arsenal 2003/04 as the XI it falls a third of the time because the league
+then holds two Henrys, the drafted one and the real club's (see *The draft
+pool includes the season you play in*).
+
+**The very top overshoots in goals, not points.** Club by club, ×2 puts most
+elite sides within about ten goals of their real total, either way. The
+exception is the highest-rated side in the data, Arsenal 2003/04 (88, Henry
+97): 98 goals against a real 73, though 87 points against 90. Chelsea 2009/10
+goes the other way (72 against 103).
 
 ### Counter-attack may be too strong
 

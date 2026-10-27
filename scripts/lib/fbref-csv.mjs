@@ -88,6 +88,7 @@ export function parseFbrefCsv(text, { competition, season, club, source = null }
   const iMin = col('Min');
   const iGls = col('Gls');
   const iAst = col('Ast');
+  const iPK = col('PK');
   const iCrdY = col('CrdY');
   const iCrdR = col('CrdR');
   // FBref's last column is its own player id. It is the thing that makes player
@@ -118,6 +119,7 @@ export function parseFbrefCsv(text, { competition, season, club, source = null }
       minutes: num(cells[iMin]) ?? 0,
       goals: iGls === -1 ? null : num(cells[iGls]),
       assists: iAst === -1 ? null : num(cells[iAst]),
+      penaltyGoals: iPK === -1 ? null : num(cells[iPK]),
       yellow: iCrdY === -1 ? null : num(cells[iCrdY]),
       red: iCrdR === -1 ? null : num(cells[iCrdR]),
     });

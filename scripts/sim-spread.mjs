@@ -95,13 +95,33 @@ const acc = new Map(teams.map(t => [t.name, blank()]));
 const seasonPoints = new Map(teams.map(t => [t.name, []]));
 const champions = [];
 const lasts = [];
+// Scorers, per season: the Golden Boot, each club's top scorer's share of its
+// goals and of its shots, and penalty goals.
+const goldenBoots = [];
+const topShares = [];
+const topShotShares = [];
+let penaltyGoals = 0, allGoals = 0;
 const sds = [];
 
 for (let pass = 0; pass < PASSES; pass++) {
   const pts = new Map(teams.map(t => [t.name, 0]));
+  const seasonScorers = new Map(teams.map(t => [t.name, new Map()]));
   for (const home of teams) for (const away of teams) {
     if (home === away) continue;
     const m = simulateMatch(home, away, rand, roles);
+    for (const side of [m.home, m.away]) {
+      const ps = seasonScorers.get(side.name);
+      for (const p of side.players) {
+        const r = ps.get(p.name) ?? { g: 0, s: 0 };
+        r.g += p.goals; r.s += p.shots;
+        ps.set(p.name, r);
+      }
+    }
+    for (const e of m.events) {
+      if (e.type !== 'goal') continue;
+      allGoals++;
+      if (e.chanceType === 'penalty') penaltyGoals++;
+    }
     for (const [us, them] of [[m.home, m.away], [m.away, m.home]]) {
       const a = acc.get(us.name);
       a.gf += us.goals; a.ga += them.goals;
@@ -112,6 +132,14 @@ for (let pass = 0; pass < PASSES; pass++) {
       a.pts += p; pts.set(us.name, pts.get(us.name) + p);
     }
   }
+  for (const [club, ps] of seasonScorers) {
+    const goals = [...ps.values()].reduce((s, p) => s + p.g, 0);
+    const shots = [...ps.values()].reduce((s, p) => s + p.s, 0);
+    const top = [...ps.values()].sort((x, y) => y.g - x.g)[0];
+    if (goals > 0) topShares.push(top.g / goals);
+    if (shots > 0) topShotShares.push(top.s / shots);
+  }
+  goldenBoots.push(Math.max(...[...seasonScorers.values()].flatMap(ps => [...ps.values()].map(p => p.g))));
   const table = [...pts.values()].sort((x, y) => y - x);
   champions.push(table[0]);
   lasts.push(table[table.length - 1]);
@@ -200,5 +228,23 @@ if (realTable) {
   console.log(`\nNo real data for ${SEASON}.`);
 }
 console.log(`(Season-to-season noise in one club's points, measured: sd ${f1(ptsNoise)}.)`);
+// Scorers against the FBref exports: the same season, every club's players.
+const realScorers = squads.map(sq => {
+  const file = path.join('data/raw/fbref/premier-league', SEASON.replace('/', '-'), `${slug(sq.clubName)}.csv`);
+  if (!fs.existsSync(file) || fs.statSync(file).size === 0) return null;
+  try { return parseFbrefCsv(fs.readFileSync(file, 'utf8')).players; } catch { return null; }
+}).filter(Boolean);
+console.log(`\nScorers (${PASSES} seasons; real from FBref where the season has exports):`);
+const realLine = (sim, real) => `sim ${sim}${real == null ? '' : `  real ${real}`}`;
+const realTops = realScorers.map(ps => {
+  const goals = ps.reduce((s, p) => s + (p.goals ?? 0), 0);
+  return goals > 0 ? Math.max(...ps.map(p => p.goals ?? 0)) / goals : null;
+}).filter(x => x != null);
+const realBoot = realScorers.length >= 10 ? Math.max(...realScorers.flatMap(ps => ps.map(p => p.goals ?? 0))) : null;
+const realPens = realScorers.length >= 10 ? realScorers.flat().reduce((s, p) => s + (p.penaltyGoals ?? 0), 0) / realScorers.flat().reduce((s, p) => s + (p.goals ?? 0), 0) : null;
+console.log(`  Golden Boot                ${realLine(`${f1(mean(goldenBoots))} (most ${Math.max(...goldenBoots)})`, realBoot)}`);
+console.log(`  top scorer's share of a club's goals  ${realLine(`${(100 * mean(topShares)).toFixed(0)}%`, realTops.length >= 10 ? `${(100 * mean(realTops)).toFixed(0)}%` : null)}`);
+console.log(`  top scorer's share of a club's shots  sim ${(100 * mean(topShotShares)).toFixed(0)}%`);
+console.log(`  penalty goals              ${realLine(`${(100 * penaltyGoals / allGoals).toFixed(1)}%`, realPens == null ? null : `${(100 * realPens).toFixed(1)}%`)}`);
 if (args.json) fs.writeFileSync(args.json, JSON.stringify({ season: SEASON, rows }, null, 1));
 console.log();
