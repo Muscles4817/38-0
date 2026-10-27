@@ -53,11 +53,16 @@ const HOME_SHOT_RATE = 1.1;
 const HOME_CHANCE_QUALITY = 1.04;
 
 // How far quality carries. A better side creates more chances AND finishes them
-// better, and those compound — so these three are deliberately gentle. Set them
-// high and a strong squad wins by an amount no real league has ever seen.
-const EDGE_TO_CHANCES = 0.2;
-const FINISHING_EXPONENT = 0.4;
-const KEEPING_EXPONENT = 0.32;
+// better, and those compound. These were set gently by hand (0.2, 0.4, 0.32),
+// for fear of a strong squad winning by more than any real league allows, and
+// against 152 real club-seasons that gave 63% of the real effect of a strength
+// point: elite sides scored 12 goals and 17 points short. Doubled, goals for
+// match the real tables (+2.78 a strength point against +2.79) and goals
+// against nearly do (−2.11 against −2.31), with league scoring unchanged.
+// Measured with `npm run sim:spread`; see docs/known-issues.md.
+const EDGE_TO_CHANCES = 0.4;
+const FINISHING_EXPONENT = 0.8;
+const KEEPING_EXPONENT = 0.64;
 
 // Role multipliers were written for an engine that multiplied a goal *count*.
 // Here they decide who gets on the end of a chance, where the same numbers are

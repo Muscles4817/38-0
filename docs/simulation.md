@@ -370,6 +370,30 @@ Re-measured on the same 900 seasons: `POINTS_STEEPNESS` 0.066 → 0.086,
 unchanged (√(7.8² + 2.0²)). Curve error 1.6 points for the XI, 2.8 for an
 opponent.
 
+### Re-fitted when quality was made to carry twice as far
+
+`EDGE_TO_CHANCES`, `FINISHING_EXPONENT` and `KEEPING_EXPONENT` were doubled
+(0.2 → 0.4, 0.4 → 0.8, 0.32 → 0.64) to match 152 real club-seasons (see
+known-issues.md, *The top of the table is flat*). Re-measured on the same 900
+seasons as below:
+
+| | before | after |
+| --- | ---: | ---: |
+| `POINTS_STEEPNESS` | 0.092 | 0.131 |
+| `POINTS_MIDPOINT` | 1.92 | 1.85 |
+| `SEASON_SD` | 6.8 | 6.3 |
+| `OPPONENT_SD` | 8.1 | 8.2 (season 7.85, club error 2.44) |
+
+The curve is within 1.6 points of the XI's measured mean at every rating from
+62 to 98. A field's clubs average 1.7–2.3 points above it, more in 2025/26:
+real clubs carry traits and styles a flat XI does not.
+
+The recorded two-horse-race exception in `preSeasonOdds.calibration.test.ts`
+moved. 1992/93 is now inside the ordinary bound (an 82-rated XI projected a
+31.7% title, wins 27%), and the same defect shows instead against Arsenal
+2003/04: rated 88, expected 86 points, played to 90.7, so an 86-rated XI is
+projected 26% and wins 12% (250 seasons).
+
 ### Re-fitted for the match engine
 
 The constants above were fitted to the Poisson model. Re-measured on 900

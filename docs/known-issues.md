@@ -67,13 +67,19 @@ What is left is in the data, not the engine:
   Robertson were exceptional, and the general full-back weight is set by the
   league-wide share, which they would otherwise push too high.
 
-### The top of the table is flat
+### The top of the table: goals fixed, points still short
 
 Measured with `npm run sim:spread` against the real final tables of eight
 seasons (1995/96, 1999/00, 2003/04, 2004/05, 2006/07, 2008/09, 2009/10,
 2025/26): 152 club-seasons, each played 20 times on its stored XI.
 
-**The engine orders clubs right and spaces them too closely.** Correlation with
+**Fixed in part.** The three quality constants are now doubled, which matches
+the goals; the numbers below are from before, for the record. After: per
+strength point, goals for +2.78 against a real +2.79, goals against −2.11
+against −2.31, points +3.00 against +3.41; points RMSE across the 152 clubs
+9.7 → 8.1. Liverpool 2019/20 averages 84.3 points (74.8 before; real 99).
+
+**Before: the engine ordered clubs right and spaced them too closely.** Correlation with
 the real points is 0.72–0.95 a season. Clubs below 80 land within a few points
 of reality; the gap opens at the top:
 
@@ -111,6 +117,14 @@ league higher, which would make the real slope look steeper than quality alone
 explains. And the old warning still holds: a table forced right by inflating
 scorelines is wrong in a different way. At ×2 the scorelines stay at real
 league rates, which is why it is worth trying.
+
+**Side effect: a dominant striker scores more.** Haaland takes 38% of
+Manchester City's shots in the engine (197 a season) and converts 16%; the real
+one takes about a fifth and converts more. That concentration is older than
+this change (42% of City's goals at the old constants, 46% now), but with City
+scoring a realistic 68–73 goals it puts the 2025/26 Golden Boot at 33–36 on
+average and the record (36) in reach a quarter of the time. Who shoots is the
+next thing to fix: shot share too concentrated, conversion too flat.
 
 ### Counter-attack may be too strong
 

@@ -132,18 +132,20 @@ describe('the projection against the season it projects', () => {
       // in the measurement itself.
       //
       // One case is allowed more, and it is a recorded defect rather than a
-      // loosened bar. A club's `strength` is the flat mean of its XI's ratings
-      // while the match engine reads a team as three lines, and the two
-      // disagree for a lopsided XI. In 1992/93 that puts Manchester United 2.3
-      // points clear of an 82-rated XI when the simulation has them level, and
-      // at the top of a two-horse race 2.3 points is worth twenty points of
-      // title probability. Everything else about that case is accurate: 76
-      // points projected against 76.8 played, 2nd against 1.9th.
+      // loosened bar. A club's `strength` is the flat mean of its XI's ratings,
+      // and the model judges a club by that alone. Arsenal 2003/04 is rated 88
+      // and the model expects 86 points of them; the simulation plays them to
+      // 90.7, their real total. At the top of a two-horse race four points is
+      // worth fourteen points of title probability: measured over 250 seasons,
+      // an 86-rated XI is projected 26% and wins 12%. Everything else about
+      // the case is accurate: 82 points projected against 80.2 played, 2nd
+      // against 2.3rd. (The same defect used to show in 1992/93, against
+      // Manchester United, until the engine's quality constants were doubled.)
       //
       // The bound is still a bound — it fails if the gap grows — and the fix is
       // in known-issues.md, because `strength` also decides which clubs make
       // way and what the pre-season screen shows.
-      const TITLE_IN_A_TWO_HORSE_RACE = overall === 82 && season === '1992/93';
+      const TITLE_IN_A_TWO_HORSE_RACE = overall === 86 && season === '2003/04';
       const limit = TITLE_IN_A_TWO_HORSE_RACE || STYLE_BLIND_TOP ? 22 : 15;
 
       const within = (name: string, projected: number, measured: number) =>
