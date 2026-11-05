@@ -85,12 +85,19 @@ function fbrefGoals(clubName) {
 // ── The season, played ────────────────────────────────
 
 const squads = getOpponentSquads(league.seasonId, 'PL');
+// The game keeps the twentieth place for the player's XI, so a season here
+// has nineteen clubs and each plays 36 matches. Every season total below is
+// scaled to 38, the real season's length; unscaled, every club came out about
+// 5% short of its real total and the top of the table looked flatter than it
+// is.
+const GAMES = 2 * (squads.length - 1);
+const TO_38 = 38 / GAMES;
 const roleConfig = getRoleConfig();
 const teams = leagueSetups(squads, roleConfig);
 const roles = engineRoles(roleConfig);
 const rand = rng(SEED);
 
-const blank = () => ({ pts: 0, gf: 0, ga: 0, sf: 0, sa: 0, xf: 0, xa: 0, poss: 0, games: 0 });
+const blank = () => ({ pts: 0, gf: 0, ga: 0, sf: 0, sa: 0, xf: 0, xa: 0, poss: 0, games: 0, w: 0, d: 0, margin3: 0 });
 const acc = new Map(teams.map(t => [t.name, blank()]));
 const seasonPoints = new Map(teams.map(t => [t.name, []]));
 const champions = [];
@@ -130,6 +137,8 @@ for (let pass = 0; pass < PASSES; pass++) {
       a.poss += us.possession; a.games++;
       const p = us.goals > them.goals ? 3 : us.goals === them.goals ? 1 : 0;
       a.pts += p; pts.set(us.name, pts.get(us.name) + p);
+      if (p === 3) a.w++; else if (p === 1) a.d++;
+      if (us.goals - them.goals >= 3) a.margin3++;
     }
   }
   for (const [club, ps] of seasonScorers) {
@@ -139,12 +148,12 @@ for (let pass = 0; pass < PASSES; pass++) {
     if (goals > 0) topShares.push(top.g / goals);
     if (shots > 0) topShotShares.push(top.s / shots);
   }
-  goldenBoots.push(Math.max(...[...seasonScorers.values()].flatMap(ps => [...ps.values()].map(p => p.g))));
+  goldenBoots.push(TO_38 * Math.max(...[...seasonScorers.values()].flatMap(ps => [...ps.values()].map(p => p.g))));
   const table = [...pts.values()].sort((x, y) => y - x);
-  champions.push(table[0]);
-  lasts.push(table[table.length - 1]);
-  sds.push(sd(table));
-  for (const [name, p] of pts) seasonPoints.get(name).push(p);
+  champions.push(table[0] * TO_38);
+  lasts.push(table[table.length - 1] * TO_38);
+  sds.push(sd(table) * TO_38);
+  for (const [name, p] of pts) seasonPoints.get(name).push(p * TO_38);
 }
 
 // ── Report ────────────────────────────────────────────
@@ -160,11 +169,12 @@ const lpad = (s, n) => String(s).padStart(n);
 
 const rows = squads.map(sq => {
   const a = acc.get(sq.clubName);
-  const per = PASSES; // per season
+  const per = PASSES / TO_38; // per 38-match season
   return {
     club: sq.clubName,
     strength: sq.strength,
     pts: a.pts / per, gf: a.gf / per, ga: a.ga / per,
+    won: a.w / per, drawn: a.d / per, bigWins: a.margin3 / per,
     shotsFor: a.sf / a.games, shotsAgainst: a.sa / a.games,
     poss: a.poss / a.games,
     xgPerShot: a.xf / a.sf, xgPerShotAgainst: a.xa / a.sa,
@@ -174,7 +184,7 @@ const rows = squads.map(sq => {
   };
 }).sort((x, y) => y.pts - x.pts);
 
-console.log(`\n${SEASON}, ${teams.length} clubs on their stored XIs, ${PASSES} seasons\n`);
+console.log(`\n${SEASON}, ${teams.length} clubs on their stored XIs, ${PASSES} seasons of ${GAMES} matches, totals scaled to 38\n`);
 console.log(`${pad('club', 24)} ${lpad('str', 4)} │ ${lpad('pts', 5)} ${lpad('GF', 5)} ${lpad('GA', 5)} │ ${lpad('poss', 5)} ${lpad('sh', 5)} ${lpad('shA', 5)} │ ${lpad('xG/sh', 6)} ${lpad('xGA/sh', 6)} ${lpad('G/xG', 5)} ${lpad('GA/xGA', 6)} │ ${lpad('real pts GF GA', 14)}`);
 console.log('─'.repeat(119));
 for (const r of rows) {
@@ -194,7 +204,7 @@ console.log(`Where the spread of goals against comes from:  ${shares(col('ga'), 
 
 const range = k => { const xs = col(k); return `${f1(Math.min(...xs))}–${f1(Math.max(...xs))}`; };
 console.log(`\nShots per match ${range('shotsFor')}, faced ${range('shotsAgainst')}; possession ${Math.min(...col('poss')).toFixed(0)}–${Math.max(...col('poss')).toFixed(0)}%`);
-console.log(`Champion ${f1(mean(champions))} pts (best ${Math.max(...champions)}), bottom ${f1(mean(lasts))}, spread of a table (sd) ${f1(mean(sds))}`);
+console.log(`Champion ${f1(mean(champions))} pts (best ${f1(Math.max(...champions))}), bottom ${f1(mean(lasts))}, spread of a table (sd) ${f1(mean(sds))}`);
 
 // Compared with the real season, club by club. The simulated numbers are
 // averages over many seasons, so their spread is narrower than one season's by
@@ -219,6 +229,16 @@ if (realTable) {
   const slope = (xs, ys) => cov(xs, ys) / sd(xs) ** 2;
   const realGd = realTable.map(r => r.goalsFor - r.goalsAgainst), realPts = realTable.map(r => r.points);
   console.log(`  points per goal of difference   sim ${f2(slope(rows.map(r => r.gf - r.ga), col('pts')))}  real ${f2(slope(realGd, realPts))}`);
+  // How the points were made: draws across the league, and the strongest
+  // clubs' record. A side that wins by three and then draws makes the same
+  // goal difference as one that wins every week by one, and fewer points.
+  const realDrawRate = realTable.reduce((s, r) => s + r.drawn, 0) / realTable.reduce((s, r) => s + r.played, 0);
+  const simDrawRate = mean(rows.map(r => r.drawn)) / 38;
+  console.log(`  draws          sim ${(100 * simDrawRate).toFixed(1)}% of results  real ${(100 * realDrawRate).toFixed(1)}%`);
+  const top = [...rows].sort((x, y) => y.strength - x.strength).slice(0, 3).filter(r => r.real);
+  for (const r of top) {
+    console.log(`  ${pad(r.club, 22)} W-D-L sim ${f1(r.won)}-${f1(r.drawn)}-${f1(38 - r.won - r.drawn)} (GD ${f1(r.gf - r.ga)}, ${f1(r.bigWins)} wins by 3+)   real ${r.real.won}-${r.real.drawn}-${r.real.lost} (GD ${r.real.goalsFor - r.real.goalsAgainst})`);
+  }
   const champ = realTable[0], last = realTable[realTable.length - 1];
   console.log(`  champion       sim ${f1(mean(champions))}  real ${champ.points} (${champ.club})   bottom sim ${f1(mean(lasts))}  real ${last.points}   table sd sim ${f1(mean(sds))}  real ${f1(sd(realTable.map(r => r.points)))}`);
 } else if (rows.filter(r => r.fbrefGf != null).length >= 10) {
@@ -242,7 +262,7 @@ const realTops = realScorers.map(ps => {
 }).filter(x => x != null);
 const realBoot = realScorers.length >= 10 ? Math.max(...realScorers.flatMap(ps => ps.map(p => p.goals ?? 0))) : null;
 const realPens = realScorers.length >= 10 ? realScorers.flat().reduce((s, p) => s + (p.penaltyGoals ?? 0), 0) / realScorers.flat().reduce((s, p) => s + (p.goals ?? 0), 0) : null;
-console.log(`  Golden Boot                ${realLine(`${f1(mean(goldenBoots))} (most ${Math.max(...goldenBoots)})`, realBoot)}`);
+console.log(`  Golden Boot                ${realLine(`${f1(mean(goldenBoots))} (most ${f1(Math.max(...goldenBoots))})`, realBoot)}`);
 console.log(`  top scorer's share of a club's goals  ${realLine(`${(100 * mean(topShares)).toFixed(0)}%`, realTops.length >= 10 ? `${(100 * mean(realTops)).toFixed(0)}%` : null)}`);
 console.log(`  top scorer's share of a club's shots  sim ${(100 * mean(topShotShares)).toFixed(0)}%`);
 console.log(`  penalty goals              ${realLine(`${(100 * penaltyGoals / allGoals).toFixed(1)}%`, realPens == null ? null : `${(100 * realPens).toFixed(1)}%`)}`);

@@ -67,84 +67,91 @@ What is left is in the data, not the engine:
   Robertson were exceptional, and the general full-back weight is set by the
   league-wide share, which they would otherwise push too high.
 
-### The top of the table: goals fixed, points still short
+### The top of the table: fixed, measured against real tables
 
 Measured with `npm run sim:spread` against the real final tables of eight
 seasons (1995/96, 1999/00, 2003/04, 2004/05, 2006/07, 2008/09, 2009/10,
-2025/26): 152 club-seasons, each played 20 times on its stored XI.
+2025/26): 152 club-seasons, each played 20 times on its stored XI, totals
+scaled to 38 matches.
 
-**Fixed in part.** The three quality constants are now doubled, which matches
-the goals; the numbers below are from before, for the record. After: per
-strength point, goals for +2.78 against a real +2.79, goals against −2.11
-against −2.31, points +3.00 against +3.41; points RMSE across the 152 clubs
-9.7 → 8.1. Liverpool 2019/20 averages 84.3 points (74.8 before; real 99).
+**What was wrong.** The engine ordered clubs right (0.72–0.95 correlation with
+the real points a season) and spaced them too closely: a point of club
+strength was worth +2.26 points against a real +3.41, +1.91 goals for against
++2.79, −1.49 against against −2.31 — two thirds of the real effect, evenly at
+both ends. Clubs below 80 landed within a few points; the elite fell 12–13
+short. No one stage was the cause: raising shots, finishing or keeping, set
+pieces, or letting possession buy chances back each recovered a fraction.
 
-**Before: the engine ordered clubs right and spaced them too closely.** Correlation with
-the real points is 0.72–0.95 a season. Clubs below 80 land within a few points
-of reality; the gap opens at the top:
+**The fix, in two parts.** The three quality constants now carry 2.2 times
+their old reach, and the match responds to the score (see simulation.md and
+`STATE_*` in matchEngine.ts): a side ahead eases off, a side behind sees more
+of the ball and pushes, and is counter-attacked. Doubling alone matched the
+goals but made results too decisive — draws fell from 25.1% to 23.3% and elite
+sides won 8.8 games a season by three or more — which the score effects undo.
+The home shot rate was refitted with them (home goals 1.22 times away; real
+about 1.24) and the base rate lowered to keep goals a game at 2.83.
 
-| club strength | n | sim pts | real pts | sim GF | real GF | sim GA | real GA |
-| --- | ---: | ---: | ---: | ---: | ---: | ---: | ---: |
-| < 74 | 20 | 38.5 | 36.5 | 39.3 | 39.0 | 55.8 | 62.5 |
-| 74–77 | 60 | 45.1 | 45.7 | 43.6 | 43.7 | 50.0 | 53.3 |
-| 77–80 | 35 | 49.8 | 54.3 | 47.5 | 51.2 | 47.3 | 47.5 |
-| 80–83 | 19 | 57.9 | 63.2 | 55.4 | 59.6 | 43.0 | 41.3 |
-| 83–86 | 10 | 63.5 | 79.2 | 59.6 | 74.6 | 38.3 | 34.9 |
-| 86+ | 8 | 70.8 | 87.6 | 66.1 | 77.6 | 33.3 | 26.4 |
+| club strength | n | before: pts / real | now: pts / real | now: GF / real | now: GA / real |
+| --- | ---: | ---: | ---: | ---: | ---: |
+| < 74 | 20 | 40.6 / 36.5 | 35.5 / 36.5 | 42.0 / 39.0 | 66.4 / 62.5 |
+| 74–77 | 60 | 47.6 / 45.7 | 44.9 / 45.7 | 46.7 / 43.7 | 57.4 / 53.3 |
+| 77–80 | 35 | 52.5 / 54.3 | 52.8 / 54.3 | 53.3 / 51.2 | 52.0 / 47.5 |
+| 80–83 | 19 | 61.1 / 63.2 | 64.8 / 63.2 | 64.2 / 59.6 | 46.3 / 41.3 |
+| 83–86 | 10 | 67.1 / 79.2 | 76.0 / 79.2 | 75.0 / 74.6 | 40.1 / 34.9 |
+| 86+ | 8 | 74.8 / 87.6 | 83.7 / 87.6 | 82.9 / 77.6 | 33.5 / 26.4 |
 
-Per point of club strength the engine gives 63% of the real effect, evenly at
-both ends: points +2.14 against +3.41, goals for +1.81 against +2.79, goals
-against −1.41 against −2.31. It is not the conversion of goals into points:
-points per goal of difference are 0.64–0.68 simulated and 0.66–0.75 real, a
-season at a time. It is the goals.
+| | before | now | real |
+| --- | ---: | ---: | ---: |
+| points per strength point | +2.26 | +3.34 | +3.41 |
+| goals for / against per strength point | +1.91 / −1.49 | +2.83 / −2.15 | +2.79 / −2.31 |
+| draws | 25.1% | 26.0% | 26.5% |
+| points per goal of difference | 0.66 | 0.67 | 0.65 |
+| elite (85+) W-D-L | 21.3-8.7-8.0 | 24.6-8.1-5.3 | 25.5-7.9-4.5 |
+| points RMSE per club | 8.6 | 6.9 | — |
 
-**No one stage is the cause.** Raising one lever by half recovers 2–5 of the
-16–17 missing points at the top: `EDGE_TO_CHANCES` (shots), `FINISHING_EXPONENT`
-with `KEEPING_EXPONENT`, `SET_PIECE_EDGE` (dead balls barely scale with
-quality), or letting possession buy some chances back. Scaling all three
-quality constants together does it: at ×2 goals for match reality (+2.78 per
-strength point against +2.79) and goals against nearly do (−2.11 against
-−2.31), with league goals unchanged (49.5 a club against a real 50.6).
+Liverpool 2019/20 as the XI averages about 86 points (real 99).
 
-**Even then the elite are 8–9 points short**, with their goal difference within
-a goal of the real one. A dominant real side wins 1–0 again and again; one in
-the engine wins 4–0 and draws 1–1, because nothing in a match changes with the
-score: a side ahead does not manage the game and a side behind does not throw
-men forward. Score effects are the likely second half of the fix.
+**What is left.** Goals run about 6% high against these eight seasons (53.6 a
+club against 50.6; 2.83 a game is the modern rate, and the older seasons scored
+less), most of it conceded by the weaker sides. And the elite still concede
+about five goals more than they did, and win a few points fewer.
 
-Two cautions. Club ratings may be partly hindsight, rating a side that won the
-league higher, which would make the real slope look steeper than quality alone
-explains. And the old warning still holds: a table forced right by inflating
-scorelines is wrong in a different way. At ×2 the scorelines stay at real
-league rates, which is why it is worth trying.
+Two cautions. Club ratings may be partly hindsight, rating a side that won
+the league higher, which would make the real slope look steeper than quality
+alone explains. And a table forced right by inflating scorelines is wrong in
+a different way: the scorelines here stay at real league rates.
 
 **Who shoots, checked after it.** With elite sides scoring realistic totals, a
 dominant striker's share showed: Haaland took 38% of City's shots and 46% of
 its goals, 31.5 a season against a real 27. Part of it was a double count — a
 Poacher was boosted once for being one and again for his affinity with a
-through ball — and now the stronger of the two counts (`pickShooter`). Haaland
-averages 27.6 and Henry 29.6 (real 27 and 30). Across whole leagues
+through ball — and now the stronger of the two counts (`pickShooter`). After
+the score effects Haaland averages 30.5 a 38-match season (36% of City's
+shots, converting 16%; real 27) and Henry 30.9 (real 30). Across whole leagues
 (`npm run sim:spread`, scorers section, against FBref):
 
 | | sim | real |
 | --- | ---: | ---: |
-| Golden Boot, 1995/96 / 2003/04 / 2008/09 / 2025/26 | 28.3 / 30.5 / 24.1 / 30.3 | 31 / 30 / 19 / 27 |
-| top scorer's share of a club's goals, same seasons | 30 / 29 / 28 / 31% | 29 / 29 / 25 / 24% |
-| penalty goals | 4.9–5.5% | 5.4–7.8% |
+| Golden Boot, 2003/04 / 2025/26 | 32.5 / 33.5 | 30 / 27 |
+| top scorer's share of a club's goals, same seasons | 29 / 32% | 29 / 24% |
+| penalty goals | 5.1–5.4% | 7.0–7.8% |
 
-Left: the 2025/26 game spreads its goals more than the engine does (24% for a
-club's top scorer against 31%), penalties are a little rare, and in the
-2025/26 field the record (36) falls in about a fifth of seasons, mostly to
+(Measured after the score effects, totals scaled to 38 matches.)
+
+Left: the Golden Boot runs a few goals high, most of all in 2025/26, whose
+game spreads its goals more than the engine does (24% for a club's top scorer
+against 32%); penalties are a little rare; and in the
+2025/26 field the record (36) falls in about one season in seven, mostly to
 Haaland, who really did break it once in his four seasons. In a report with
 Arsenal 2003/04 as the XI it falls a third of the time because the league
 then holds two Henrys, the drafted one and the real club's (see *The draft
 pool includes the season you play in*).
 
-**The very top overshoots in goals, not points.** Club by club, ×2 puts most
-elite sides within about ten goals of their real total, either way. The
-exception is the highest-rated side in the data, Arsenal 2003/04 (88, Henry
-97): 98 goals against a real 73, though 87 points against 90. Chelsea 2009/10
-goes the other way (72 against 103).
+**The very top overshoots in goals, not points.** Most elite sides land within
+about ten goals of their real total, either way. The exception is the
+highest-rated side in the data, Arsenal 2003/04 (88, Henry 97): 105 goals a
+season against a real 73, though about 88 points against 90. The real
+Invincibles drew twelve times. Chelsea 2009/10 goes the other way (103 real).
 
 ### Counter-attack may be too strong
 

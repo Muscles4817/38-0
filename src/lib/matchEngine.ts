@@ -40,7 +40,7 @@ export type PlayerRole = string;
 const POSSESSIONS = 200;
 
 /** Chance that a possession produces a shot, for evenly matched sides. */
-const BASE_SHOT_RATE = 0.137;
+const BASE_SHOT_RATE = 0.13;
 
 /** Chance that a possession concedes a foul. */
 const BASE_FOUL_RATE = 0.099;
@@ -48,21 +48,26 @@ const BASE_FOUL_RATE = 0.099;
 // Home advantage. The Premier League runs about 1.55 goals at home against
 // 1.25 away, and it is not one effect: the home side sees marginally more of
 // the ball, works more openings, and gets the run of the tight decisions.
+//
+// Score effects take some of it back — a home side ahead eases off, an away
+// side behind pushes — so the home shot rate was refitted with them, and the
+// base rate lowered to keep goals a game where they were: home goals 1.22 times
+// away goals (1.15 before score effects, real about 1.24), 2.83 a game.
 const HOME_POSSESSION = 1.07;
-const HOME_SHOT_RATE = 1.1;
+const HOME_SHOT_RATE = 1.22;
 const HOME_CHANCE_QUALITY = 1.04;
 
 // How far quality carries. A better side creates more chances AND finishes them
 // better, and those compound. These were set gently by hand (0.2, 0.4, 0.32),
-// for fear of a strong squad winning by more than any real league allows, and
-// against 152 real club-seasons that gave 63% of the real effect of a strength
-// point: elite sides scored 12 goals and 17 points short. Doubled, goals for
-// match the real tables (+2.78 a strength point against +2.79) and goals
-// against nearly do (−2.11 against −2.31), with league scoring unchanged.
-// Measured with `npm run sim:spread`; see docs/known-issues.md.
-const EDGE_TO_CHANCES = 0.4;
-const FINISHING_EXPONENT = 0.8;
-const KEEPING_EXPONENT = 0.64;
+// for fear of a strong squad winning by more than any real league allows.
+// Against 152 real club-seasons (`npm run sim:spread`) that gave about two
+// thirds of the real effect of a strength point. They are now 2.2 times that,
+// fitted together with the score effects below, which take a little back by
+// ending blowouts: a strength point is worth +3.38 points (real +3.41), +2.87
+// goals for (+2.79) and −2.16 against (−2.31). See docs/known-issues.md.
+const EDGE_TO_CHANCES = 0.44;
+const FINISHING_EXPONENT = 0.88;
+const KEEPING_EXPONENT = 0.704;
 
 // Role multipliers were written for an engine that multiplied a goal *count*.
 // Here they decide who gets on the end of a chance, where the same numbers are
@@ -95,6 +100,27 @@ const SET_PIECE_QUALITY = 0.092;
 
 /** How far an aerial mismatch carries on a set piece. */
 const AERIAL_EXPONENT = 0.5;
+
+// ── The score ────────────────────────────────────────────────────────────────
+//
+// A match is not played the same at 2–0 as at 0–0. A side ahead stops
+// chasing; a side behind sees more of the ball and throws men forward, and the
+// space it leaves is counter-attacked. Without this, a side kept attacking at
+// 3–0 and gave nothing away at 0–1: against the real tables of eight seasons
+// draws were 23.3% of results (real 26.5%), a goal of difference was worth 0.61
+// points (0.65), and elite sides won 8.8 games a season by three or more and
+// lost 6.2 (real 4.5). With these, 25.9%, 0.67, 7.6 and 5.2. Each effect grows
+// with the lead, up to STATE_MAX_LEAD, and with the minute: a goal in the 85th
+// changes more than one in the 5th.
+
+/** How much more of the ball the trailing side sees, per goal behind, at full time (logit). */
+const STATE_POSSESSION = 0.2;
+/** How much a lead lowers a side's will to attack, per goal, at full time (log shot rate). */
+const STATE_INTENT = 0.15;
+/** How much better a side's chances are against an opponent chasing the game, per goal behind, at full time. */
+const STATE_COUNTER = 0.1;
+/** A lead beyond this changes nothing more. */
+const STATE_MAX_LEAD = 2;
 
 // ── Cohesion ─────────────────────────────────────────────────────────────────
 //
@@ -292,8 +318,8 @@ function positionGroup(position: Position): PositionGroup {
 
 /**
  * What an ordinary player in each position is worth in a match, in goals.
- * Measured, not chosen: two passes each of the 2025/26 and 2003/04 leagues on
- * their stored lineups, averaged; the two agree to a few hundredths. A keeper
+ * Measured, not chosen: three passes each of the 2025/26 and 2003/04 leagues on
+ * their stored lineups as the game sets them up (`leagueSetups`). A keeper
  * averages below zero because every goal costs him more than a save earns back;
  * that is what an ordinary keeper is. `matchEngine.calibration.test.ts` asserts
  * that every position still averages a rating close to RATING_BASELINE, so a
@@ -301,7 +327,7 @@ function positionGroup(position: Position): PositionGroup {
  * ratings.
  */
 const POSITION_MEAN: Record<PositionGroup, number> = {
-  GK: -0.83, CB: 0.206, FB: 0.225, DM: 0.274, CM: 0.344, AM: 0.424, W: 0.513, ST: 0.479,
+  GK: -0.87, CB: 0.202, FB: 0.237, DM: 0.277, CM: 0.376, AM: 0.443, W: 0.625, ST: 0.497,
 };
 
 /**
@@ -313,7 +339,7 @@ const POSITION_MEAN: Record<PositionGroup, number> = {
  * position's own mean, pooled. A keeper's value is in different units (goals
  * let in against their xG), so he keeps his own.
  */
-const OUTFIELD_VALUE_SD = 0.47;
+const OUTFIELD_VALUE_SD = 0.48;
 const KEEPER_VALUE_SD = 1.1;
 
 export type ChanceType =
@@ -1419,7 +1445,13 @@ export function simulateMatch(
 
   for (let i = 0; i < POSSESSIONS; i++) {
     const minute = Math.min(90, Math.floor((i / POSSESSIONS) * 90) + 1);
-    const isHome = rand() < homeShare;
+    // The score so far, as the home side sees it, and how late it is.
+    const progress = i / POSSESSIONS;
+    const homeLead = Math.max(-STATE_MAX_LEAD, Math.min(STATE_MAX_LEAD, acc.home.goals - acc.away.goals));
+    const shareNow = homeLead === 0 ? homeShare
+      : 1 / (1 + ((1 - homeShare) / homeShare) * Math.exp(STATE_POSSESSION * progress * homeLead));
+    const isHome = rand() < shareNow;
+    const lead = isHome ? homeLead : -homeLead;
     const att = isHome ? home : away;
     const def = isHome ? away : home;
     const side = isHome ? acc.home : acc.away;
@@ -1494,6 +1526,7 @@ export function simulateMatch(
       pressed *
       congested *
       Math.exp(EDGE_TO_CHANCES * carry * edge) *
+      Math.exp(-STATE_INTENT * progress * lead) *
       (isHome ? HOME_SHOT_RATE : 1);
 
     // Two independent routes to a shot. The second barely cares who is on top.
@@ -1554,6 +1587,8 @@ export function simulateMatch(
             * Math.pow(finishing, FINISHING_EXPONENT * carry)
             * Math.pow(keeping, -KEEPING_EXPONENT * carry) / defPenalty;
         }
+        // Against a side chasing the game there is space to break into.
+        if (lead > 0 && type !== 'penalty') xg *= Math.exp(STATE_COUNTER * progress * lead);
         xg = Math.min(0.95, xg);
         side.xg += xg;
 
