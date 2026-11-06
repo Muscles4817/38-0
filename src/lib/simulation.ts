@@ -1,6 +1,6 @@
 import { type Position, effectiveRating } from './formations';
 import {
-  DEFAULT_COHESION, PLAYSTYLES, fitForStyle, inferStyle, simulateMatch,
+  DEFAULT_COHESION, PLAYSTYLES, fitForStyle, inferStyle, lineRatings, simulateMatch,
   type MatchPlayer, type PlaystyleName, type RoleMultipliers, type TeamSetup, type Zone,
 } from './matchEngine';
 
@@ -353,19 +353,9 @@ function sortedTable(standings: Map<string, MutableStanding>): TeamStanding[] {
 // ── Line strengths ────────────────────────────────────────────────────────────
 //
 // Attack, midfield and defence as the league table and the pre-season screen
-// show them. They are a summary for the player to read, not an input: the match
-// engine reads the eleven itself, zone by zone.
-
-// CM sits in both attack and defence — it's a genuinely balanced role.
-function isAttPosition(pos: Position): boolean {
-  return ['ST','CF','LW','RW','LM','RM','CAM','CM'].includes(pos);
-}
-function isDefPosition(pos: Position): boolean {
-  return ['GK','CB','LB','RB','LWB','RWB','CDM','CM'].includes(pos);
-}
-function isMidPosition(pos: Position): boolean {
-  return ['CM','CDM','CAM','LM','RM'].includes(pos);
-}
+// show them: the engine's own line qualities (`lineRatings`), in rating points.
+// They are a summary for the player to read, not an input: the match engine
+// reads the eleven itself, zone by zone.
 
 // How sharply a rating compounds into effectiveness. Each 5-point band is worth
 // about 17% more than the one below, so 85→90 matters more than 75→80. The
@@ -397,11 +387,8 @@ function scaledAvgRating(players: { rating: number }[]): number {
 export const __ratingCurve = { RATING_CURVE, ratingScale, scaledAvgRating };
 
 function lineStrengths(players: { position: Position; rating: number }[]): { att: number; mid: number; def: number } {
-  return {
-    att: Math.round(scaledAvgRating(players.filter(p => isAttPosition(p.position)))),
-    mid: Math.round(scaledAvgRating(players.filter(p => isMidPosition(p.position)))),
-    def: Math.round(scaledAvgRating(players.filter(p => isDefPosition(p.position)))),
-  };
+  const lines = lineRatings(players);
+  return { att: Math.round(lines.att), mid: Math.round(lines.mid), def: Math.round(lines.def) };
 }
 
 // ── Roles, as the match engine reads them ─────────────────────────────────────

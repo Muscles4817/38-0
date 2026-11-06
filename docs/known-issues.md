@@ -231,25 +231,26 @@ changing it moves three things at once and wants measuring on its own.
 - **Four club-seasons ship with a single player.** 2017/18 Liverpool holds only
   Adam Lallana, and AC Milan 1994/95, 2002/03 and 2004/05 hold one man each
   (Maldini, Seedorf, Maldini). They are leftovers from seeding a player without
-  the squad around him, they reach `game-data.json`, and none of them can field
-  an eleven — `derive-lineups.mjs` reports them and skips them. Either collect
-  the squad or delete the club-season; a one-man club-season is not something
-  the game should offer.
-- **Line ratings disagree with the simulation.** `LineRatings.tsx` counts LW/RW
-  as midfield; `simulation.ts` counts them as attack. The bars do not describe
-  the numbers being simulated.
-- **The draft pool includes the season you play in.** It has always included
-  2025/26, so a drafted player could be his own opponent; now that the season
-  is chosen on the pre-season screen, any of the fourteen playable seasons can
-  be picked to face an XI drafted out of it. Classic mode still excludes the
-  default season, and nothing excludes a chosen one. The pre-season screen now
-  says so when the chosen season is one the XI was drafted from, which is the
-  cheap half of the fix; the real one is to leave a drafted player out of his
-  club's XI for that season.
+  the squad around him. The draft no longer offers a club-season smaller than
+  an XI (`listDraftableSquads`), so they are hidden rather than gone: collect
+  the squads in the editor, or delete the club-seasons, to finish it.
+- **A drafted player can face himself, by design.** The draft pool includes the
+  season you play in, so a drafted Henry can meet the real Arsenal's Henry in
+  2003/04. This is deliberate: a drafted player stays in his club's XI. The
+  pre-season screen says so when the chosen season is one the XI was drafted
+  from. It shows in the reports: with Arsenal 2003/04 as the XI the Golden
+  Boot record falls more often, because the league holds two Henrys.
 
 ## Fixed, for reference
 
 Do not re-report these:
+
+- **Line ratings disagreed with the simulation.** The draft bars put wingers in
+  midfield and the league table counted a CM in all three lines, while the
+  engine counts every player toward each line by his position's weight. Both
+  now come from the engine (`positionLine`, `lineRatings` in matchEngine.ts):
+  a position sits in the line it weighs most in, and the number is the line's
+  quality as the engine reads it, in rating points.
 
 - **The season was a scoreline and a lottery, not a match.** `simulateSeason`
   drew two Poisson goal counts and then a weighted draw for scorer and

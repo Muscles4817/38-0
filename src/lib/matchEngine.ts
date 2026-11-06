@@ -739,6 +739,42 @@ const ZONES: Zone[] = ['L', 'C', 'R'];
 /** Attacking down the left is met by the opponent's right. */
 const OPPOSITE: Record<Zone, Zone> = { L: 'R', C: 'C', R: 'L' };
 
+// ── Lines, as the engine reads them ──────────────────────────────────────────
+//
+// For the screens that show a side's attack, midfield and defence. They used
+// to keep lists of their own — the draft bars put wingers in midfield, the
+// league table counted a CM in all three lines — so the bars did not describe
+// the numbers being simulated. Both now come from the weights above.
+
+export type Line = 'gk' | 'def' | 'mid' | 'att';
+
+/** The line a position does most of its work in, by the engine's weights; a tie goes to midfield. */
+export function positionLine(position: Position): Line {
+  if (position === 'GK') return 'gk';
+  const att = ATTACK_WEIGHT[position] ?? 0;
+  const mid = MIDFIELD_WEIGHT[position] ?? 0;
+  const def = DEFEND_WEIGHT[position] ?? 0;
+  if (mid >= att && mid >= def) return 'mid';
+  return att > def ? 'att' : 'def';
+}
+
+/**
+ * A side's attack, midfield and defence in rating points, exactly as the
+ * engine weighs them before traits: every player counts toward each line by
+ * his position's weight, and the attack and defence are the mean of the three
+ * zones. A side with no players yet reads as 70.
+ */
+export function lineRatings(players: { position: Position; rating: number }[]): { att: number; mid: number; def: number } {
+  const ps = players.map((p, i) => ({ playerId: i, name: '', position: p.position, rating: p.rating }));
+  const toRating = (q: number) => 80 + Math.log(q) / RATING_CURVE;
+  const zones = (w: Record<Position, number>) => ZONES.reduce((s, z) => s + weightedQuality(ps, w, z), 0) / ZONES.length;
+  return {
+    att: toRating(zones(ATTACK_WEIGHT)),
+    mid: toRating(weightedQuality(ps, MIDFIELD_WEIGHT, null)),
+    def: toRating(zones(DEFEND_WEIGHT)),
+  };
+}
+
 function weightedQuality(
   players: MatchPlayer[],
   weight: Record<Position, number>,

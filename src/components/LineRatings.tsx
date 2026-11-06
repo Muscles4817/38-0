@@ -1,13 +1,18 @@
 'use client';
 
-import { Formation, Position } from '@/lib/formations';
+import { Formation } from '@/lib/formations';
+import { lineRatings, positionLine, type Line } from '@/lib/matchEngine';
 import { SquadPick } from '@/lib/simulation';
 
-const LINES: { key: string; label: string; positions: Position[]; color: string }[] = [
-  { key: 'gk',  label: 'GK',  positions: ['GK'],                                     color: 'var(--c-yellow)' },
-  { key: 'def', label: 'DEF', positions: ['LB','CB','RB','LWB','RWB'],               color: 'var(--c-blue)' },
-  { key: 'mid', label: 'MID', positions: ['CDM','CM','CAM','LM','RM','LW','RW'],     color: 'var(--c-accent)' },
-  { key: 'att', label: 'ATT', positions: ['ST','CF'],                                 color: 'var(--c-red)' },
+// Which slots belong to a line, and the line's number, both come from the match
+// engine: a winger is in attack because that is where the engine counts him,
+// and the number is the line's quality as the engine weighs it, every player
+// counting toward it by his position's weight.
+const LINES: { key: Line; label: string; color: string }[] = [
+  { key: 'gk',  label: 'GK',  color: 'var(--c-yellow)' },
+  { key: 'def', label: 'DEF', color: 'var(--c-blue)' },
+  { key: 'mid', label: 'MID', color: 'var(--c-accent)' },
+  { key: 'att', label: 'ATT', color: 'var(--c-red)' },
 ];
 
 interface Props {
@@ -19,14 +24,14 @@ export default function LineRatings({ formation, picks }: Props) {
   return (
     <div className="w-full space-y-2">
       {LINES.map(line => {
-        const totalSlots = formation.slots.filter(s => line.positions.includes(s.position)).length;
+        const totalSlots = formation.slots.filter(s => positionLine(s.position) === line.key).length;
         if (totalSlots === 0) return null;
 
-        const linePicks = picks.filter(p => line.positions.includes(p.position));
+        const linePicks = picks.filter(p => positionLine(p.position) === line.key);
         const filled = linePicks.length;
-        const avg = filled > 0
-          ? Math.round(linePicks.reduce((s, p) => s + p.rating, 0) / filled)
-          : null;
+        const avg = filled === 0 ? null
+          : line.key === 'gk' ? linePicks[0].rating
+          : Math.round(lineRatings(picks)[line.key]);
 
         // Bar width: normalised from 60–99 range so differences are visible
         const barPct = avg !== null ? Math.max(0, Math.min(100, ((avg - 60) / 39) * 100)) : 0;

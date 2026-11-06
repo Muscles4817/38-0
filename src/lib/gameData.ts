@@ -251,7 +251,11 @@ export function listDraftableSquads(yearStart: number, yearEnd: number): SpunSqu
   for (const squad of gameData.squads) {
     const season = seasonById.get(squad.seasonId);
     if (!season || season.yearStart < yearStart || season.yearStart >= yearEnd) continue;
-    if (squad.players.length === 0) continue;
+    // A club-season with fewer players than an XI is a leftover from seeding one
+    // player without the squad around him (Liverpool 2017/18 holds only
+    // Lallana), not a squad, so it is not offered. Collecting the squad in the
+    // editor brings it back.
+    if (squad.players.length < 11) continue;
     const spun = toSpunSquad(squad);
     if (spun) result.push(spun);
   }

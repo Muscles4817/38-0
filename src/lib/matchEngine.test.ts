@@ -1,6 +1,6 @@
 import { describe, it, expect } from 'vitest';
 import {
-  simulateMatch, inferStyle, PLAYSTYLES,
+  lineRatings, positionLine, simulateMatch, inferStyle, PLAYSTYLES,
   type TeamSetup, type MatchPlayer, type PlaystyleName,
 } from './matchEngine';
 import type { Position } from './formations';
@@ -295,5 +295,29 @@ describe('on the ball under a press, credited', () => {
     const long = underPress(side('Me', eleven(100, 80), 'routeOne'), press);
     const short = underPress(side('Me', eleven(100, 80), 'tikiTaka'), press);
     expect(long.beaten + long.lost).toBeLessThan((short.beaten + short.lost) / 3);
+  });
+});
+
+describe('the lines the screens show', () => {
+  it('puts each position in the line the engine counts it in', () => {
+    expect(positionLine('GK')).toBe('gk');
+    for (const p of ['CB', 'LB', 'RB', 'LWB', 'RWB'] as Position[]) expect(positionLine(p), p).toBe('def');
+    for (const p of ['CDM', 'CM', 'CAM', 'LM', 'RM'] as Position[]) expect(positionLine(p), p).toBe('mid');
+    for (const p of ['LW', 'RW', 'ST', 'CF'] as Position[]) expect(positionLine(p), p).toBe('att');
+  });
+
+  it('reads a side of one rating as that rating in every line', () => {
+    const shape: Position[] = ['GK', 'LB', 'CB', 'CB', 'RB', 'CDM', 'CM', 'CM', 'LW', 'RW', 'ST'];
+    const lines = lineRatings(shape.map(position => ({ position, rating: 83 })));
+    expect(lines.att).toBeCloseTo(83, 6);
+    expect(lines.mid).toBeCloseTo(83, 6);
+    expect(lines.def).toBeCloseTo(83, 6);
+  });
+
+  it('lets a better attack raise the attack line most', () => {
+    const shape: Position[] = ['GK', 'LB', 'CB', 'CB', 'RB', 'CDM', 'CM', 'CM', 'LW', 'RW', 'ST'];
+    const lines = lineRatings(shape.map(position => ({ position, rating: ['LW', 'RW', 'ST'].includes(position) ? 90 : 78 })));
+    expect(lines.att).toBeGreaterThan(lines.mid);
+    expect(lines.mid).toBeGreaterThan(lines.def);
   });
 });
