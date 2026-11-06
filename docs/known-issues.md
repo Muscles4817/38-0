@@ -82,39 +82,38 @@ both ends. Clubs below 80 landed within a few points; the elite fell 12–13
 short. No one stage was the cause: raising shots, finishing or keeping, set
 pieces, or letting possession buy chances back each recovered a fraction.
 
-**The fix, in two parts.** The three quality constants now carry 2.2 times
-their old reach, and the match responds to the score (see simulation.md and
-`STATE_*` in matchEngine.ts): a side ahead eases off, a side behind sees more
-of the ball and pushes, and is counter-attacked. Doubling alone matched the
-goals but made results too decisive — draws fell from 25.1% to 23.3% and elite
-sides won 8.8 games a season by three or more — which the score effects undo.
-The home shot rate was refitted with them (home goals 1.22 times away; real
-about 1.24) and the base rate lowered to keep goals a game at 2.83.
+**The fix.** The three quality constants carry twice their old reach, and the
+match responds to the score (see simulation.md and `STATE_*` in
+matchEngine.ts): a side ahead eases off, a side behind sees more of the ball
+and pushes, and is counter-attacked. Doubling alone matched the goals but made
+results too decisive — draws fell from 25.1% to 23.3% and elite sides won 8.8
+games a season by three or more — which the score effects undo. The tactics
+rework that followed (see *Tactics* below) let possession buy some chances and
+was fitted with them; `BASE_SHOT_RATE` was re-centred to keep 1.40 goals a team.
 
 | club strength | n | before: pts / real | now: pts / real | now: GF / real | now: GA / real |
 | --- | ---: | ---: | ---: | ---: | ---: |
-| < 74 | 20 | 40.6 / 36.5 | 35.5 / 36.5 | 42.0 / 39.0 | 66.4 / 62.5 |
-| 74–77 | 60 | 47.6 / 45.7 | 44.9 / 45.7 | 46.7 / 43.7 | 57.4 / 53.3 |
-| 77–80 | 35 | 52.5 / 54.3 | 52.8 / 54.3 | 53.3 / 51.2 | 52.0 / 47.5 |
-| 80–83 | 19 | 61.1 / 63.2 | 64.8 / 63.2 | 64.2 / 59.6 | 46.3 / 41.3 |
-| 83–86 | 10 | 67.1 / 79.2 | 76.0 / 79.2 | 75.0 / 74.6 | 40.1 / 34.9 |
-| 86+ | 8 | 74.8 / 87.6 | 83.7 / 87.6 | 82.9 / 77.6 | 33.5 / 26.4 |
+| < 74 | 20 | 40.6 / 36.5 | 35.3 / 36.5 | 39.9 / 39.0 | 65.4 / 62.5 |
+| 74–77 | 60 | 47.6 / 45.7 | 45.1 / 45.7 | 45.0 / 43.7 | 55.3 / 53.3 |
+| 77–80 | 35 | 52.5 / 54.3 | 52.3 / 54.3 | 50.8 / 51.2 | 50.1 / 47.5 |
+| 80–83 | 19 | 61.1 / 63.2 | 64.7 / 63.2 | 62.7 / 59.6 | 44.2 / 41.3 |
+| 83–86 | 10 | 67.1 / 79.2 | 75.0 / 79.2 | 73.8 / 74.6 | 38.4 / 34.9 |
+| 86+ | 8 | 74.8 / 87.6 | 84.5 / 87.6 | 80.6 / 77.6 | 30.7 / 26.4 |
 
 | | before | now | real |
 | --- | ---: | ---: | ---: |
-| points per strength point | +2.26 | +3.34 | +3.41 |
-| goals for / against per strength point | +1.91 / −1.49 | +2.83 / −2.15 | +2.79 / −2.31 |
-| draws | 25.1% | 26.0% | 26.5% |
-| points per goal of difference | 0.66 | 0.67 | 0.65 |
-| elite (85+) W-D-L | 21.3-8.7-8.0 | 24.6-8.1-5.3 | 25.5-7.9-4.5 |
-| points RMSE per club | 8.6 | 6.9 | — |
+| points per strength point | +2.26 | +3.31 | +3.41 |
+| goals for / against per strength point | +1.91 / −1.49 | +2.85 / −2.20 | +2.79 / −2.31 |
+| draws | 25.1% | 26.6% | 26.5% |
+| points per goal of difference | 0.66 | 0.66 | 0.65 |
+| elite (85+) W-D-L | 21.3-8.7-8.0 | 24.7-8.1-5.2 | 25.5-7.9-4.5 |
+| points RMSE per club | 8.6 | 7.1 | — |
 
-Liverpool 2019/20 as the XI averages about 86 points (real 99).
+Liverpool 2019/20 as the XI averages about 86 points (real 99), and wins the title in 68% of seasons.
 
-**What is left.** Goals run about 6% high against these eight seasons (53.6 a
-club against 50.6; 2.83 a game is the modern rate, and the older seasons scored
-less), most of it conceded by the weaker sides. And the elite still concede
-about five goals more than they did, and win a few points fewer.
+**What is left.** The weaker sides concede two to three goals a season too
+many, and the elite about four; the elite still win a few points fewer than
+they did.
 
 Two cautions. Club ratings may be partly hindsight, rating a side that won
 the league higher, which would make the real slope look steeper than quality
@@ -132,16 +131,16 @@ shots, converting 16%; real 27) and Henry 30.9 (real 30). Across whole leagues
 
 | | sim | real |
 | --- | ---: | ---: |
-| Golden Boot, 2003/04 / 2025/26 | 32.5 / 33.5 | 30 / 27 |
-| top scorer's share of a club's goals, same seasons | 29 / 32% | 29 / 24% |
+| Golden Boot, 2003/04 / 2025/26 | 31.3 / 33.3 | 30 / 27 |
+| top scorer's share of a club's goals, same seasons | 29 / 31% | 29 / 24% |
 | penalty goals | 5.1–5.4% | 7.0–7.8% |
 
-(Measured after the score effects, totals scaled to 38 matches.)
+(Measured after the tactics rework, totals scaled to 38 matches.)
 
 Left: the Golden Boot runs a few goals high, most of all in 2025/26, whose
 game spreads its goals more than the engine does (24% for a club's top scorer
 against 32%); penalties are a little rare; and in the
-2025/26 field the record (36) falls in about one season in seven, mostly to
+2025/26 field the record (36) falls in about one season in five, mostly to
 Haaland, who really did break it once in his four seasons. In a report with
 Arsenal 2003/04 as the XI it falls a third of the time because the league
 then holds two Henrys, the drafted one and the real club's (see *The draft
@@ -153,33 +152,45 @@ highest-rated side in the data, Arsenal 2003/04 (88, Henry 97): 105 goals a
 season against a real 73, though about 88 points against 90. The real
 Invincibles drew twelve times. Chelsea 2009/10 goes the other way (103 real).
 
-### Counter-attack may be too strong
+### Tactics: reworked for football correctness; what is left
 
-In 2025/26 the five clubs that most outperform their rating all play
-Counter-attack (Aston Villa by 6.5 points), and Ollie Watkins wins the Golden
-Boot more often than Haaland (17 to 6 in 40 seasons). A flat 74-rated XI in
-1992/93 takes 55.7 points countering and 51.1 playing Balanced. It may be the
-matchup working as designed — counter punishes a high line — or it may be too
-strong; it wants measuring on its own. It is also why the pre-season odds carry
-a second recorded exception in their calibration test: they cannot see styles.
+The styles were checked by what they do between identical, traitless squads,
+where nothing but the style differs, and four things were wrong as football
+(see [playstyles.md](playstyles.md#what-was-wrong-as-football)):
 
-### Tactics: fit is absolute, and one quality is missing
+- possession bought no chances, so Counter-attack took as many shots with 40%
+  of the ball as its opponents did with 60%, and Tiki-taka fewer than its own
+  opponents with 63%;
+- the defending side's shape did not change what it conceded: every style
+  conceded 0.105–0.107 xG a shot;
+- a press only took chances away, and only from worse passers, so between
+  equals Gegenpress paid for its high line and bought nothing (bottom, 1.23
+  points a game);
+- fit was a total of traits over all eleven, scaled by rating, against a fixed
+  bar: Barcelona 2009/10 read 100% for Park the bus and Route one.
 
-**Fit is absolute, so elite sides fit almost everything.** Barcelona 2009/10 is
-100% for Tiki-taka and also for Route one and Park the bus. It is not general
-saturation: across all 423 stored XIs only about 7% reach 100% for any one
-style. A side with many highly rated, heavily traited players clears a sparse
-demand (Park the bus asks only for `aerial`) without being built for it.
-Measuring "fully meets" against real sides, the 90th percentile of each quality
-instead of the fixed 0.45, barely changes this. Fit would have to describe a
-side's profile rather than its total.
+All four are fixed, and the identical-squad spread is 1.4 points per 10 games
+(it was 3.2). Fit is now a profile: Barcelona 2009/10 fits Possession (75%)
+and Tiki-taka (71%), Park the bus 16%; Stoke 2008/09 fits Route one (71%).
 
-**`recovery` is 0 for 90% of stored XIs** (at most 0.59), and Counter-attack,
-Catenaccio and Low block all demand it, so almost nothing can fit them. That is
-the trait data, which lives in the authoring database. Fit and pace are still
-read from traits alone, averaged over all eleven; the press and the deep block
-were moved to a rating baseline and phase positions, and the same treatment
-would suit them.
+What is left:
+
+- **The real-data check on styles is weak.** Only 2025/26 and the iconic
+  club-seasons have a recorded style; the rest are inferred, mostly Balanced.
+  Across the 152 club-seasons no style's points residual against the real
+  table is clearly outside noise (Counter-attack +4.5 ± 5.1 over five, Low
+  block −3.8 ± 2.1 over eleven), much as before.
+- **Pace and recovery are trait-only, and the traits are sparse.** Henry,
+  Salah and Mané carry no pace trait, so Arsenal 2003/04 and Liverpool 2019/20
+  read 23% and 10% for Counter-attack and do little in behind. Recovery now
+  takes the rating baseline (reading the game), so high lines are not
+  defenceless, but pace on the break does not.
+- **No trait describes defending.** A deep block is played on rating and work
+  rate (`pressing`); a `defending` quality, if a trait ever gives one, is read.
+- **Weak high-pressing sides are punished.** Bournemouth 2025/26 take about 38
+  points (real 57; 43 before this rework): their press meets elite passers and
+  their high line concedes through balls. Their real success came from
+  coaching the data does not record.
 
 ## 1. The draft pool is still lopsided
 

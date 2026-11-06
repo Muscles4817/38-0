@@ -30,11 +30,13 @@ press against a side playing out, a deep block against a patient one, runners
 against a high line, recovery pace covering the space. Nobody writes down that a
 counter-attacking side punishes a possession side; it falls out of those rules.
 
-`fit` is `fitForStyle`, the 0–1 measure of whether the eleven has the qualities
-a style asks for. The engine scales how dangerous the style's runners are in
-behind by it. A press is not scaled by fit: how high it goes is the style's
-line, and whether it works is the contest between the pressers and the other
-side's passers — see [simulation.md](simulation.md#on-the-ball-by-phase).
+`fit` is `fitForStyle`, 0–1: whether the style is played through what the
+eleven is good at, and how much of its best the style leaves unused — a
+profile, not a total (see [playstyles.md](playstyles.md#style-fit-a-profile-not-a-total)).
+It describes; it scales nothing. What a style is worth comes from the same
+phase abilities in the match: how high a press goes is the style's line, and
+whether it wins the ball is the pressers against the other side's passers —
+see [simulation.md](simulation.md#on-the-ball-by-phase).
 
 `tacticEffect` in `src/lib/simulation.ts` only describes a style for this
 screen: its line, build-up, tempo, possession bias and fit. Tempo is a property
@@ -45,15 +47,17 @@ ordinary side.
 ### Measured
 
 For Liverpool 2019/20 in the 2025/26 field, 40 seasons each on the same seeds:
-Park the bus 69.1 points, High press 77.8; title odds from 30% to 70%. Who you
+Park the bus 74.6 points, Gegenpress 88.9 (101 goals); title odds from 20% to
+85%. Who you
 face matters as much as how you play: against a league that presses, two
 ball-playing centre-backs are worth six points a season to an 80-rated XI, and
 against a league that sits deep they are worth nothing — see *On the ball, by
 phase* in [simulation.md](simulation.md). For a
-flat 74-rated XI in 1992/93, 20 seasons each: Catenaccio 56.6, Gegenpress 47.8,
-Balanced 51.1. The best style differs by squad and by field, and a weak side is
-better off slowing the game down — a 68-rated XI takes 36 points parking the
-bus and 29 pressing, where an 88 is about level between the two.
+flat 74-rated XI in 1992/93, 20 seasons each: Catenaccio 52.0, Counter-attack
+50.6, Balanced 49.7, Gegenpress 47.9, Park the bus 47.6. The best style differs
+by squad and by field, and a weak side is better off slowing the game down — a
+68-rated XI takes 29.5 points parking the bus and 25.6 pressing, where an 88
+takes 98.2 pressing and 85.8 parking it.
 
 Run `npm run sim:report -- --club <club> --season <season> --tactic all` to
 measure any XI.

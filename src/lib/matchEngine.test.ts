@@ -1,6 +1,6 @@
 import { describe, it, expect } from 'vitest';
 import {
-  lineRatings, positionLine, simulateMatch, inferStyle, PLAYSTYLES,
+  lineRatings, phaseAbility, positionLine, simulateMatch, inferStyle, PLAYSTYLES,
   type TeamSetup, type MatchPlayer, type PlaystyleName,
 } from './matchEngine';
 import type { Position } from './formations';
@@ -319,5 +319,32 @@ describe('the lines the screens show', () => {
     const lines = lineRatings(shape.map(position => ({ position, rating: ['LW', 'RW', 'ST'].includes(position) ? 90 : 78 })));
     expect(lines.att).toBeGreaterThan(lines.mid);
     expect(lines.mid).toBeGreaterThan(lines.def);
+  });
+});
+
+describe('who takes part in a phase', () => {
+  // The positions you expect are not the only ones that play a phase. A
+  // wing-back with nobody ahead of him is his flank's width, and a winger who
+  // works back is part of a deep block.
+  const QUALITIES = {
+    goalMult: {}, assistMult: {},
+    qualities: { Pacey: { pace: 3, recovery: 1 }, Workhorse: { pressing: 2 } },
+  };
+  const xi = (shape: [Position, string[]?][]): MatchPlayer[] =>
+    shape.map(([position, roles], i) => ({ playerId: i, name: `P${i}`, position, rating: 78, roles: roles ?? [] }));
+
+  it('counts a wing-back with no winger ahead in the counter', () => {
+    // The same pacey wide defender, as a wing-back in a back three with nobody
+    // ahead of him, and as a full-back behind a winger.
+    const wingBack = xi([['GK'], ['CB'], ['CB'], ['CB'], ['LWB', ['Pacey']], ['CM'], ['CM'], ['CM'], ['RWB'], ['ST'], ['ST']]);
+    const fullBack = xi([['GK'], ['CB'], ['CB'], ['RB'], ['LB', ['Pacey']], ['LM'], ['CM'], ['CM'], ['RM'], ['ST'], ['ST']]);
+    expect(phaseAbility(wingBack, 'break', QUALITIES)).toBeGreaterThan(phaseAbility(fullBack, 'break', QUALITIES));
+  });
+
+  it('counts a winger who works back in the block', () => {
+    const shape: [Position, string[]?][] = [['GK'], ['LB'], ['CB'], ['CB'], ['RB'], ['CDM'], ['CM'], ['CM'], ['LW'], ['RW'], ['ST']];
+    const diligent = xi(shape.map(([p]) => [p, p === 'LW' || p === 'RW' ? ['Workhorse'] : []]));
+    const plain = xi(shape);
+    expect(phaseAbility(diligent, 'block', QUALITIES)).toBeGreaterThan(phaseAbility(plain, 'block', QUALITIES));
   });
 });

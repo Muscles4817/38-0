@@ -7,7 +7,8 @@
 // piece of tuning; these assert the shape of the trade.
 
 import { describe, expect, it } from 'vitest';
-import type { Position } from './formations';
+import { getFormation, type Position } from './formations';
+import { gameData, getLineup, getSquad, getTacticEffect } from './gameData';
 import { PLAYSTYLES, type PlaystyleName } from './matchEngine';
 import {
   simulateSeason,
@@ -61,7 +62,7 @@ const COMPLETE: RoleConfig = {
   qualities: {
     Complete: {
       pressResist: 3, pressing: 3, pace: 3, creation: 3,
-      aerial: 3, recovery: 3, dribble: 3, setPiece: 3,
+      aerial: 3, recovery: 3, dribble: 3, setPiece: 3, defending: 3,
     },
   },
 };
@@ -77,13 +78,32 @@ describe('tacticEffect', () => {
     expect(plan.tempo).toBe(1);
   });
 
-  it('gives no fit to a side without the players a style needs', () => {
-    // Gegenpress asks for pressing and pace. An XI with no roles has neither.
-    expect(tacticEffect(makeXI(80), 'gegenpress').fit).toBe(0);
+  it('gives little fit to a side without the players a style needs', () => {
+    // Gegenpress asks for pressing and pace. An XI with no roles has the
+    // rating to press a little and no pace to speak of.
+    expect(tacticEffect(makeXI(80), 'gegenpress').fit).toBeLessThan(0.35);
   });
 
   it('gives full fit to a side that has them', () => {
     expect(tacticEffect(makeXI(80, ['Complete']), 'gegenpress', COMPLETE).fit).toBeGreaterThan(0.9);
+  });
+
+  it('reads a profile, not a total: a side of technicians does not fit a deep block', () => {
+    // Barcelona 2009/10 used to read 100% for Park the bus: elite players clear
+    // any fixed bar. Fit now asks whether the style is played through what
+    // the side is good at, and what it leaves unused.
+    const TECHNICIANS: RoleConfig = { qualities: { Technician: { pressResist: 3, creation: 3 } } };
+    const technical = makeXI(88, ['Technician']);
+    const tiki = tacticEffect(technical, 'tikiTaka', TECHNICIANS).fit;
+    const bus = tacticEffect(technical, 'parkTheBus', TECHNICIANS).fit;
+    expect(tiki, `tiki-taka ${tiki.toFixed(2)}, park the bus ${bus.toFixed(2)}`).toBeGreaterThan(0.8);
+    expect(bus).toBeLessThan(0.3);
+  });
+
+  it('lets an all-round side fit styles at both ends', () => {
+    const allRound = makeXI(80, ['Complete']);
+    expect(tacticEffect(allRound, 'tikiTaka', COMPLETE).fit).toBeGreaterThan(0.8);
+    expect(tacticEffect(allRound, 'parkTheBus', COMPLETE).fit).toBeGreaterThan(0.8);
   });
 
   it('reports the style as the engine plays it', () => {
@@ -194,5 +214,35 @@ describe('a season played to a plan', () => {
     const strongFast = average('gegenpress', 88, r => r.points, false) - average('parkTheBus', 88, r => r.points, false);
     const weakFast   = average('gegenpress', 68, r => r.points, false) - average('parkTheBus', 68, r => r.points, false);
     expect(strongFast).toBeGreaterThan(weakFast);
+  });
+});
+
+describe('fit on real elevens', () => {
+  // Read through the game's own data, so a trait or style change that makes
+  // fit absolute again — every elite side a perfect fit for everything — fails.
+  const fitOf = (club: string, season: string, style: PlaystyleName) => {
+    const c = gameData.clubs.find(x => x.name === club)!;
+    const s = gameData.seasons.find(x => x.label === season)!;
+    const squad = getSquad(c.id, s.id)!;
+    const lineup = getLineup(c.id, s.id)!;
+    const formation = getFormation(lineup.formation)!;
+    const byId = new Map(squad.players.map(p => [p.playerId, p]));
+    const picks: SquadPick[] = lineup.slots.map(sl => {
+      const p = byId.get(sl.playerId)!;
+      return { slotIndex: sl.slotIndex, position: formation.slots[sl.slotIndex].position, playerId: p.playerId,
+        playerName: p.name, rating: p.rating, clubName: club, seasonLabel: season, positions: p.positions, roles: p.roles };
+    });
+    return getTacticEffect(picks, style).fit;
+  };
+
+  it('fits peak Barcelona to keeping the ball, not to parking the bus', () => {
+    expect(fitOf('Barcelona', '2009/10', 'tikiTaka')).toBeGreaterThan(0.6);
+    expect(fitOf('Barcelona', '2009/10', 'parkTheBus')).toBeLessThan(0.3);
+    expect(fitOf('Barcelona', '2009/10', 'routeOne')).toBeLessThan(0.4);
+  });
+
+  it('fits Stoke to the long ball, not to tiki-taka', () => {
+    expect(fitOf('Stoke City', '2008/09', 'routeOne')).toBeGreaterThan(0.6);
+    expect(fitOf('Stoke City', '2008/09', 'tikiTaka')).toBeLessThan(0.2);
   });
 });

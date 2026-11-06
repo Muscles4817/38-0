@@ -370,31 +370,33 @@ Re-measured on the same 900 seasons: `POINTS_STEEPNESS` 0.066 → 0.086,
 unchanged (√(7.8² + 2.0²)). Curve error 1.6 points for the XI, 2.8 for an
 opponent.
 
-### Re-fitted for score effects and quality at 2.2
+### Re-fitted for score effects, quality, and the tactics rework
 
-Twice in quick succession. First `EDGE_TO_CHANCES`, `FINISHING_EXPONENT` and
-`KEEPING_EXPONENT` were doubled (0.2, 0.4, 0.32 → 0.4, 0.8, 0.64); then score
-effects came in and the three went to 2.2 times the original (0.44, 0.88,
-0.704), with `HOME_SHOT_RATE` 1.1 → 1.22 and `BASE_SHOT_RATE` 0.137 → 0.130 (see
-known-issues.md, *The top of the table*). Re-measured on the same 900 seasons
-as below:
+Three times in quick succession. First `EDGE_TO_CHANCES`, `FINISHING_EXPONENT`
+and `KEEPING_EXPONENT` were doubled (0.2, 0.4, 0.32 → 0.4, 0.8, 0.64); then
+score effects came in and they went to 2.2 times the original, with
+`HOME_SHOT_RATE` 1.1 → 1.22; then the tactics rework (possession buys some
+chances, a press wins the ball, the defending line shapes what is conceded)
+and they came back to twice the original, with `BASE_SHOT_RATE` 0.137 → 0.116
+(see known-issues.md, *The top of the table* and *Tactics*). Re-measured on the
+same 900 seasons as below:
 
-| | before both | after doubling | now |
-| --- | ---: | ---: | ---: |
-| `POINTS_STEEPNESS` | 0.092 | 0.131 | 0.138 |
-| `POINTS_MIDPOINT` | 1.92 | 1.85 | 1.95 |
-| `SEASON_SD` | 6.8 | 6.3 | 6.4 |
-| `OPPONENT_SD` | 8.1 | 8.2 | 8.0 (season 7.54, club error 2.56) |
+| | before all three | after doubling | after score effects | now |
+| --- | ---: | ---: | ---: | ---: |
+| `POINTS_STEEPNESS` | 0.092 | 0.131 | 0.138 | 0.136 |
+| `POINTS_MIDPOINT` | 1.92 | 1.85 | 1.95 | 1.80 |
+| `SEASON_SD` | 6.8 | 6.3 | 6.4 | 6.3 |
+| `OPPONENT_SD` | 8.1 | 8.2 | 8.0 | 7.8 (season 7.49, club error 2.19) |
 
-The curve is within 2.6 points of the XI's measured mean at every rating from
-62 to 98. A field's clubs average 1.9–2.5 points above it: real clubs carry
+The curve is within 1.4 points of the XI's measured mean at every rating from
+62 to 98. A field's clubs average 1.1–1.8 points above it: real clubs carry
 traits and styles a flat XI does not.
 
 The recorded two-horse-race exception in `preSeasonOdds.calibration.test.ts`
 moved. 1992/93 is inside the ordinary bound (an 82-rated XI projected a 32%
 title, wins 28%), and the same defect shows instead against Arsenal 2003/04:
-rated 88, expected 86 points, played to about 90, so an 86-rated XI is
-projected 26% and wins 10% (250 seasons).
+rated 88, expected 86 points, played to about 91, so an 86-rated XI is
+projected 26% and wins 12% (250 seasons).
 
 ### Re-fitted for the match engine
 
