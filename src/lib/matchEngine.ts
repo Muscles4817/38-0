@@ -40,7 +40,7 @@ export type PlayerRole = string;
 const POSSESSIONS = 200;
 
 /** Chance that a possession produces a shot, for evenly matched sides. */
-const BASE_SHOT_RATE = 0.116;
+const BASE_SHOT_RATE = 0.125;
 
 /**
  * How much of an extra share of the ball becomes extra chances: about a third.
@@ -365,7 +365,7 @@ function positionGroup(position: Position): PositionGroup {
  * ratings.
  */
 const POSITION_MEAN: Record<PositionGroup, number> = {
-  GK: -0.875, CB: 0.184, FB: 0.22, DM: 0.269, CM: 0.372, AM: 0.433, W: 0.576, ST: 0.499,
+  GK: -0.869, CB: 0.192, FB: 0.225, DM: 0.282, CM: 0.37, AM: 0.429, W: 0.617, ST: 0.528,
 };
 
 /**
@@ -377,18 +377,33 @@ const POSITION_MEAN: Record<PositionGroup, number> = {
  * position's own mean, pooled. A keeper's value is in different units (goals
  * let in against their xG), so he keeps his own.
  */
-const OUTFIELD_VALUE_SD = 0.49;
+const OUTFIELD_VALUE_SD = 0.5;
 const KEEPER_VALUE_SD = 1.1;
 
 export type ChanceType =
   | 'throughBall' | 'cross' | 'aerial' | 'longShot' | 'individual'
   | 'setPiece' | 'penalty';
 
+/**
+ * How much more often an attack ends in a shot from distance than in any one
+ * other kind of open-play chance. About a third of Premier League shots come
+ * from outside the box and about a tenth of the goals; at 1, long shots were
+ * 11.5% of shots and 3.5% of goals, so the keeper's game against them, and a
+ * deep block's cost of facing them, barely existed.
+ */
+const LONG_SHOT_WEIGHT = 4.5;
+
+/**
+ * The xG of each kind of chance before the finisher, the keeper and the
+ * matchup. The close-range ones were raised by 30% when long shots came up to
+ * a third of shots: the speculative efforts now sit where they belong, and
+ * what is left inside the box is the dangerous part.
+ */
 const CHANCE_QUALITY: Record<ChanceType, number> = {
-  throughBall: 0.16,
-  individual: 0.11,
-  aerial: 0.095,
-  cross: 0.08,
+  throughBall: 0.208,
+  individual: 0.143,
+  aerial: 0.124,
+  cross: 0.104,
   longShot: 0.032,
   setPiece: SET_PIECE_QUALITY,
   penalty: 0.78,
@@ -1286,16 +1301,21 @@ function pickChanceType(
   // chances but through balls and runs. Balanced at a middling line, so the
   // attacker's own mix reads as it did between two ordinary sides.
   const line = opponent.style.line;
+  //
+  // Half as steep as it was set when long shots were rare: most shots from
+  // distance are taken against a set defence anyway (LONG_SHOT_WEIGHT), and
+  // letting a deep line push still more of what it concedes out there counted
+  // the same thing twice and made sitting deep the best plan between equals.
   const allowed: Record<ChanceType, number> = {
-    throughBall: 0.4 + 1.2 * line,
-    individual: 0.7 + 0.6 * line,
-    longShot: 1.6 - 1.2 * line,
-    cross: 1.3 - 0.6 * line,
-    aerial: 1.3 - 0.6 * line,
+    throughBall: 0.7 + 0.6 * line,
+    individual: 0.85 + 0.3 * line,
+    longShot: 1.3 - 0.6 * line,
+    cross: 1.15 - 0.3 * line,
+    aerial: 1.15 - 0.3 * line,
     setPiece: 1, penalty: 1,
   };
   const weights = types.map(t => {
-    let w = (mix[t] ?? 1) * allowed[t];
+    let w = (mix[t] ?? 1) * allowed[t] * (t === 'longShot' ? LONG_SHOT_WEIGHT : 1);
     // Attacks down a flank arrive as crosses; through the middle they do not.
     if (zone === 'C') w *= t === 'cross' ? 0.35 : t === 'throughBall' ? 1.5 : 1;
     else w *= t === 'cross' ? 2.2 : t === 'throughBall' ? 0.7 : 1;

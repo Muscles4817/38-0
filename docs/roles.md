@@ -26,7 +26,7 @@ counter-attacking and of punishing a high line.
 | `pressResist` | Keeps the ball under pressure |
 | `creation` | Unlocks a set defence |
 | `dribble` | Beats a man one on one |
-| `shotStopping` | Goalkeeping reflexes |
+| `shotStopping` | the keeper's saving, by the kind of shot (`SHOT_STOPPING_REACH`) | positioning and handling, so most against shots he sees coming: with a ShotStopper (3), long shots −9.3%, individual efforts −5.5%, headers −4.2%, crosses −2.6%, set pieces −2.2%, through balls −1.7%, penalties unchanged; −3.5% in all (40,000 matches). About 1.6 goals a season fewer, measured on 17 club-seasons with paired seeds. Close-range reflexes are a separate ability, not yet added |
 | `claiming` | Commands his box; claims crosses |
 | `setPiece` | Dead-ball delivery |
 | `penalty` | Takes penalties |

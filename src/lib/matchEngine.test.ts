@@ -352,9 +352,9 @@ describe('who takes part in a phase', () => {
 describe('a keeper who is a shot-stopper', () => {
   // The same keeper, with and without the trait, behind the same side. The
   // trait is positioning and handling: most against shots from distance, least
-  // against a one-on-one. Measured over 40,000 matches: long shots −8%,
-  // individual efforts −5%, crosses and headers −4%, set pieces −3%, through
-  // balls −1.4%, penalties unchanged; −3.2% in all.
+  // against a one-on-one. Measured over 40,000 matches: long shots −9%,
+  // individual efforts −5.5%, headers −4%, crosses −2.6%, set pieces −2%,
+  // through balls −1.7%, penalties unchanged; −3.5% in all.
   const QUALITIES = { goalMult: {}, assistMult: {}, qualities: { ShotStopper: { shotStopping: 3 } } };
   const shape: Position[] = ['GK', 'LB', 'CB', 'CB', 'RB', 'LM', 'CM', 'CM', 'RM', 'ST', 'ST'];
   const side = (name: string, base: number, keeperRoles: string[]): TeamSetup => ({
