@@ -57,7 +57,7 @@ read yet, the trait is decorative in a match, whatever it says.
 | `setPiece` | the `delivery` phase; crossers and set-piece takers | who delivers, and how well |
 | `penalty` | who takes penalties | |
 | `discipline` | fouls and cards | |
-| `shotStopping` | the keeper's saving | each point keeps like a rating point more: a ShotStopper (3) concedes about 1.5 goals a season fewer, measured on 17 club-seasons with paired seeds |
+| `shotStopping` | the keeper's saving, by the kind of shot (`SHOT_STOPPING_REACH`) | positioning and handling, so most against shots he sees coming: with a ShotStopper (3), long shots −8%, individual efforts −5%, crosses and headers −4%, set pieces −3%, through balls −1.4%, penalties unchanged (40,000 matches). About 1.3 goals a season fewer, measured on 17 club-seasons with paired seeds. Close-range reflexes are a separate ability, not yet added |
 | `dribble` | draws a player into the `break` phase only | not yet an ability of its own |
 | `claiming` | nothing yet | |
 | `longShot` | nothing yet (long shots go by role affinity) | |

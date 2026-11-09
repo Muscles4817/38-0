@@ -79,11 +79,28 @@ const FINISHING_EXPONENT = 0.8;
 const KEEPING_EXPONENT = 0.64;
 
 /**
- * How many rating points of keeping a point of `shotStopping` is worth. A
- * ShotStopper (3) keeps as a keeper three points better would: by measurement,
- * one to two goals a season (see docs/roles.md).
+ * How many rating points of keeping a point of `shotStopping` is worth, by the
+ * kind of shot. Shot-stopping is positioning and handling: it decides shots the
+ * keeper sees coming — from distance, from a free kick or a header at a
+ * corner — far more than a one-on-one or a cut-back from six yards, which are
+ * reflexes. A ShotStopper (3) keeps a long shot as a keeper six points better
+ * would, and a through ball as one a point better.
+ *
+ * Long shots are few and rarely go in, so most of what the trait saves comes
+ * from the shots in between: individual efforts, crosses and headers.
  */
-const SHOT_STOPPING_TO_RATING = 1;
+const SHOT_STOPPING_REACH: Record<ChanceType, number> = {
+  longShot: 2.0,
+  // Most set-piece goals are headers and scrambles from close in, which are
+  // reflexes and claiming the cross; only the direct free kick is the
+  // shot-stopper's shot.
+  setPiece: 0.5,
+  individual: 1.0,
+  aerial: 0.7,
+  cross: 0.7,
+  throughBall: 0.4,
+  penalty: 0,
+};
 
 // Role multipliers were written for an engine that multiplied a goal *count*.
 // Here they decide who gets on the end of a chance, where the same numbers are
@@ -1786,10 +1803,14 @@ export function simulateMatch(
         let finishing = ratingScale(shooter.rating);
         for (const r of shooter.roles ?? []) finishing *= Math.sqrt(affinity[r] ?? 1);
         const keeper = def.keeper;
-        // A shot-stopper keeps as a better-rated keeper would: his rating is
-        // his whole game, and the trait says the shot-stopping is the best of it.
-        const keeping = keeper
-          ? ratingScale(keeper.rating + SHOT_STOPPING_TO_RATING * quality(keeper, 'shotStopping', roles))
+        const keeping = keeper ? ratingScale(keeper.rating) : 1;
+        // A shot-stopper keeps as a better-rated keeper would, by how much the
+        // shot is one his positioning and handling decide (SHOT_STOPPING_REACH).
+        // Applied to set pieces too, which otherwise ignore the keeper, for the
+        // direct free kicks among them.
+        const stopping = keeper
+          ? Math.pow(ratingScale(80 + SHOT_STOPPING_REACH[type] * quality(keeper, 'shotStopping', roles)),
+            -KEEPING_EXPONENT * carry)
           : 1;
 
         // A style's demands are a cost paid up front; what it gives back is
@@ -1814,6 +1835,7 @@ export function simulateMatch(
             * Math.pow(finishing, FINISHING_EXPONENT * carry)
             * Math.pow(keeping, -KEEPING_EXPONENT * carry) / defPenalty;
         }
+        xg *= stopping;
         // Against a side chasing the game there is space to break into.
         if (lead > 0 && type !== 'penalty') xg *= Math.exp(STATE_COUNTER * progress * lead);
         xg = Math.min(0.95, xg);
