@@ -1963,7 +1963,9 @@ const ROLE_QUALITIES: Record<string, Partial<Record<Quality, number>>> = {
   Poacher:             {},
   Regista:             { pressResist: 3, creation: 3, setPiece: 1 },
   SetPieceDeliverer:   { setPiece: 3, penalty: 1 },
-  SweeperKeeper:       { pressResist: 2, claiming: 1 },
+  // A sweeper keeper is the last man behind a high line: coming off it to
+  // clear the ball played in behind is what the name means.
+  SweeperKeeper:       { pressResist: 2, claiming: 1, recovery: 3 },
   TargetMan:           { aerial: 2 },
   Trequartista:        { creation: 3, dribble: 1 },
   Winger:              { setPiece: 2 },

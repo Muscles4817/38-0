@@ -51,7 +51,7 @@ read yet, the trait is decorative in a match, whatever it says.
 | --- | --- | --- |
 | `aerial` | aerial phases, headed chances, set pieces | who wins headers at both ends |
 | `pace` | the `break` phase | runs in behind against a high line |
-| `recovery` | the `cover` phase | covering the space behind |
+| `recovery` | the `cover` phase | covering the space behind. A `SweeperKeeper` (recovery 3) is the last man behind a high line: against a quick counter-attacking side he saves 3.3% of goals behind a gegenpress line, 2.2% behind a balanced one, 0.8% behind a parked bus, and nothing against a side with no pace (20,000 matches each). In the real leagues it is worth about 0.1 goals a season on 11 club-seasons, because few opponents in the data carry pace traits that beat these sides' cover: the space it closes is usually not there |
 | `pressing` | the `press` phase; work rate in the `block` | winning the ball high; a working wide man defends |
 | `pressResist` | the `build` phase | playing through a press |
 | `creation` | the `create` phase; through-ball creators | unpicking a deep block |

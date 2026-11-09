@@ -114,6 +114,13 @@ describe('role qualities', () => {
     expect(keeperQualities.has('claiming')).toBe(true);
   });
 
+  it('let a sweeper keeper sweep', () => {
+    // Coming off his line to clear the ball played in behind a high line is
+    // what the name means, and the engine reads it as cover.
+    const role = gameData.roles.find(r => r.name === 'SweeperKeeper');
+    expect(role?.qualities?.recovery ?? 0).toBeGreaterThan(0);
+  });
+
   it('do not double as a scoring bonus', () => {
     // A trait that exists to describe an ability should not also make a player
     // score more. The ones that legitimately do — Poacher, AerialThreat — are

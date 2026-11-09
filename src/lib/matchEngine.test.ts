@@ -410,3 +410,53 @@ describe('goalkeeping traits', () => {
     expect(quick.closeIn, detail).toBeLessThan(stopper.closeIn);
   });
 });
+
+describe('a sweeper keeper', () => {
+  // He is the last man behind a high line: he comes off it to clear the ball
+  // played in behind. So he matters against quick runners when his side
+  // holds a high line, much less behind a deep block, and not at all against
+  // a side with nobody to run in behind. Measured over 20,000 matches against
+  // a quick counter-attacking side: −3.3% conceded behind a gegenpress line,
+  // −2.2% behind a balanced one, −0.8% behind a parked bus.
+  const SWEEPING = { pressResist: 2, claiming: 1, recovery: 3 };
+  const STAYS_HOME = { pressResist: 2, claiming: 1 };
+  const shape: Position[] = ['GK', 'LB', 'CB', 'CB', 'RB', 'LM', 'CM', 'CM', 'RM', 'ST', 'ST'];
+  const side = (name: string, base: number, style: PlaystyleName, roleOf: (p: Position) => string[]): TeamSetup => ({
+    name, formation: '4-4-2', style, focus: { L: 1, C: 1, R: 1 },
+    players: shape.map((position, i) => ({
+      playerId: base + i, name: `${name} ${i}`, position, rating: 78, roles: roleOf(position),
+    })),
+  });
+  const quick = (p: Position) => ['ST', 'LM', 'RM'].includes(p) ? ['Pacey'] : [];
+  const keeper = (p: Position) => p === 'GK' ? ['SweeperKeeper'] : [];
+  const conceded = (style: PlaystyleName, sweeper: Partial<Record<string, number>>, attackers = quick) => {
+    const roles = {
+      goalMult: {}, assistMult: {},
+      qualities: { Pacey: { pace: 3, recovery: 1 }, SweeperKeeper: sweeper },
+    };
+    const rand = rng(17);
+    let goals = 0;
+    for (let i = 0; i < 4000; i++) {
+      goals += simulateMatch(side('Opp', 100, 'counter', attackers), side('Us', 200, style, keeper), rand, roles).home.goals;
+    }
+    return goals;
+  };
+
+  it('counts in covering the space behind', () => {
+    const us = side('Us', 200, 'balanced', keeper).players;
+    const roles = (q: Partial<Record<string, number>>) => ({ goalMult: {}, assistMult: {}, qualities: { SweeperKeeper: q } });
+    expect(phaseAbility(us, 'cover', roles(SWEEPING))).toBeGreaterThan(phaseAbility(us, 'cover', roles(STAYS_HOME)));
+  });
+
+  it('saves more behind a high line than behind a deep block', { timeout: 60_000 }, () => {
+    const high = conceded('gegenpress', STAYS_HOME) - conceded('gegenpress', SWEEPING);
+    const deep = conceded('parkTheBus', STAYS_HOME) - conceded('parkTheBus', SWEEPING);
+    expect(high, `saved ${high} behind a high line, ${deep} behind a deep block`).toBeGreaterThan(0);
+    expect(high).toBeGreaterThan(deep);
+  });
+
+  it('changes nothing against a side with nobody to run in behind', () => {
+    const plain = () => [];
+    expect(conceded('gegenpress', SWEEPING, plain)).toBe(conceded('gegenpress', STAYS_HOME, plain));
+  });
+});
