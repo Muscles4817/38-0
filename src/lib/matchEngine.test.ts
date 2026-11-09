@@ -412,12 +412,14 @@ describe('goalkeeping traits', () => {
 });
 
 describe('a sweeper keeper', () => {
-  // He is the last man behind a high line: he comes off it to clear the ball
-  // played in behind. So he matters against quick runners when his side
-  // holds a high line, much less behind a deep block, and not at all against
-  // a side with nobody to run in behind. Measured over 20,000 matches against
-  // a quick counter-attacking side: −3.3% conceded behind a gegenpress line,
-  // −2.2% behind a balanced one, −0.8% behind a parked bus.
+  // He is the last man behind a high line. He covers the space quick runners
+  // go into, and he comes off his line to get to the ball played in behind
+  // before whoever is chasing it. So he matters most when his side holds a
+  // high line, and little behind a deep block where there is no space behind.
+  // Measured over 20,000 matches against a quick counter-attacking side:
+  // −10.4% conceded behind a gegenpress line, −4.7% behind a balanced one,
+  // −1.6% behind a parked bus; against a possession side with no pace, −5.1%,
+  // −2.3% and −0.4%.
   const SWEEPING = { pressResist: 2, claiming: 1, recovery: 3 };
   const STAYS_HOME = { pressResist: 2, claiming: 1 };
   const shape: Position[] = ['GK', 'LB', 'CB', 'CB', 'RB', 'LM', 'CM', 'CM', 'RM', 'ST', 'ST'];
@@ -455,8 +457,10 @@ describe('a sweeper keeper', () => {
     expect(high).toBeGreaterThan(deep);
   });
 
-  it('changes nothing against a side with nobody to run in behind', () => {
+  it('gets to a ball in behind first, however quick the man chasing it', () => {
     const plain = () => [];
-    expect(conceded('gegenpress', SWEEPING, plain)).toBe(conceded('gegenpress', STAYS_HOME, plain));
+    const swept = conceded('gegenpress', SWEEPING, plain);
+    const stays = conceded('gegenpress', STAYS_HOME, plain);
+    expect(swept, `${swept} conceded sweeping, ${stays} staying home`).toBeLessThan(stays);
   });
 });

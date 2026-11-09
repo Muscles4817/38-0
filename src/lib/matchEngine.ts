@@ -129,6 +129,20 @@ const REFLEXES_REACH: Record<ChanceType, number> = {
   penalty: 0,
 };
 
+/**
+ * How often a sweeper keeper gets to the ball played in behind before the
+ * runner, per point of his `recovery` and per unit of his own side's line.
+ * Behind a high line there is grass between the last defender and the keeper,
+ * and a keeper who reads it and comes off his line is there first: the chance
+ * never becomes a shot. Behind a deep block that grass is not there.
+ *
+ * Independent of the runner's pace: a ball over the top is a race the keeper
+ * can win against anyone. Sized so a SweeperKeeper (recovery 3) behind a
+ * gegenpress line (0.9) cuts out about one through ball in six, which is
+ * about two goals a season.
+ */
+const SWEEP_PER_POINT = 0.065;
+
 // Role multipliers were written for an engine that multiplied a goal *count*.
 // Here they decide who gets on the end of a chance, where the same numbers are
 // far too strong: a Poacher at 2.2 took half his side's shots. A leading
@@ -1837,7 +1851,16 @@ export function simulateMatch(
         : rand() < 0.011
           ? 'penalty'
           : pickChanceType(rand, att, def, zone, transition);
-      const shooter = pickShooter(rand, att, zone, type, roles);
+      // A ball played in behind can be met by a keeper who sweeps, if there
+      // is space behind his line for him to sweep. Drawn only when there is,
+      // so a side without one plays exactly the match it did before.
+      const sweeper = def.keeper;
+      const sweep = type === 'throughBall' && sweeper
+        ? SWEEP_PER_POINT * Math.max(0, quality(sweeper, 'recovery', roles)) * def.style.line
+        : 0;
+      const sweptUp = sweep > 0 && rand() < sweep;
+      if (sweptUp) stats.get(sweeper!.playerId)!.value += CHANCE_QUALITY.throughBall;
+      const shooter = sweptUp ? undefined : pickShooter(rand, att, zone, type, roles);
       // A possession that ended in a shot got through any press that met it.
       if (pressEngaged && !turnover) creditOnBall(att, def, true, threat);
       if (shooter) {
