@@ -12,7 +12,7 @@
 import { describe, it, expect } from 'vitest';
 import { gameData } from './gameData';
 import {
-  simulateMatch, PLAYSTYLES, pressFactor, congestionFactor, spaceFactor,
+  simulateMatch, PLAYSTYLES, PHASES, pressTurnover, congestionFactor, spaceFactor,
   type TeamSetup, type MatchPlayer, type PlaystyleName,
 } from './matchEngine';
 import type { Position } from './formations';
@@ -176,30 +176,35 @@ describe('the interaction rules', () => {
   const PRESSURE = 0.9;
   const PRESSERS = 0.6;
 
-  it('a press costs a side playing out, and barely touches one going long', () => {
-    const short = pressFactor(PLAYSTYLES.tikiTaka.buildUp, 0, PRESSERS, PRESSURE);
-    const long = pressFactor(PLAYSTYLES.routeOne.buildUp, 0, PRESSERS, PRESSURE);
-    expect(short, `short build-up keeps ${short.toFixed(3)}, long ball ${long.toFixed(3)}`)
-      .toBeLessThan(long);
-    expect(long, 'going long should be nearly immune').toBeGreaterThan(0.95);
+  it('a press wins the ball off a side playing out, and barely off one going long', () => {
+    const short = pressTurnover(PLAYSTYLES.tikiTaka.buildUp, 0, PRESSERS, PRESSURE);
+    const long = pressTurnover(PLAYSTYLES.routeOne.buildUp, 0, PRESSERS, PRESSURE);
+    expect(short, `short build-up loses ${short.toFixed(3)} of possessions, long ball ${long.toFixed(3)}`)
+      .toBeGreaterThan(long);
+    expect(long, 'going long should be nearly immune').toBeLessThan(0.02);
   });
 
-  it('lets a side with better passers than the press play through it', () => {
-    const technical = pressFactor(PLAYSTYLES.tikiTaka.buildUp, 0.9, PRESSERS, PRESSURE);
-    const not = pressFactor(PLAYSTYLES.tikiTaka.buildUp, 0, PRESSERS, PRESSURE);
+  it('wins less off a side with better passers than the press', () => {
+    const technical = pressTurnover(PLAYSTYLES.tikiTaka.buildUp, 0.9, PRESSERS, PRESSURE);
+    const not = pressTurnover(PLAYSTYLES.tikiTaka.buildUp, 0, PRESSERS, PRESSURE);
     expect(technical, `${technical.toFixed(3)} with better passers, ${not.toFixed(3)} without`)
-      .toBeGreaterThan(not);
-    expect(technical).toBe(1);
+      .toBeLessThan(not);
   });
 
-  it('bites harder the better the pressers are than the passers', () => {
-    const slight = pressFactor(1, 0, 0.2, PRESSURE);
-    const heavy = pressFactor(1, 0, 1.0, PRESSURE);
-    expect(heavy).toBeLessThan(slight);
+  it('wins more the better the pressers are than the passers', () => {
+    const slight = pressTurnover(1, 0, 0.2, PRESSURE);
+    const heavy = pressTurnover(1, 0, 1.0, PRESSURE);
+    expect(heavy).toBeGreaterThan(slight);
+  });
+
+  it('wins some of the ball between equals, which is what a press is for', () => {
+    // It used to only take chances away, and only from worse passers, so
+    // between equals Gegenpress paid for its high line and bought nothing.
+    expect(pressTurnover(1, 0, 0, PRESSURE)).toBeGreaterThan(0.05);
   });
 
   it('does nothing to anybody when the opponent does not press', () => {
-    expect(pressFactor(1, 0, 1, 0)).toBe(1);
+    expect(pressTurnover(1, 0, 1, 0)).toBe(0);
   });
 
   it('congests a patient side against a deep block, and creation relieves it', () => {
@@ -222,30 +227,31 @@ describe('the interaction rules', () => {
   });
 
   it('rewards runners against a high line and nothing against a deep one', () => {
-    const vsHigh = spaceFactor(PLAYSTYLES.direct.buildUp, 0.6, 1, PLAYSTYLES.gegenpress.line, 0);
-    const vsDeep = spaceFactor(PLAYSTYLES.direct.buildUp, 0.6, 1, PLAYSTYLES.lowBlock.line, 0);
+    const vsHigh = spaceFactor(PLAYSTYLES.direct.buildUp, 0.6, PLAYSTYLES.gegenpress.line, 0);
+    const vsDeep = spaceFactor(PLAYSTYLES.direct.buildUp, 0.6, PLAYSTYLES.lowBlock.line, 0);
     expect(vsHigh, `${vsHigh.toFixed(3)} against a high line, ${vsDeep.toFixed(3)} against a deep one`)
       .toBeGreaterThan(vsDeep);
   });
 
   it('gives a patient side nothing from space in behind', () => {
-    const patient = spaceFactor(PLAYSTYLES.tikiTaka.buildUp, 0.6, 1, 0.9, 0);
-    const direct = spaceFactor(PLAYSTYLES.direct.buildUp, 0.6, 1, 0.9, 0);
+    const patient = spaceFactor(PLAYSTYLES.tikiTaka.buildUp, 0.6, 0.9, 0);
+    const direct = spaceFactor(PLAYSTYLES.direct.buildUp, 0.6, 0.9, 0);
     expect(patient).toBeLessThan(direct);
   });
 
   it('lets recovery pace cover the space', () => {
-    const exposed = spaceFactor(0.3, 0.6, 1, 0.9, 0);
-    const covered = spaceFactor(0.3, 0.6, 1, 0.9, 0.6);
+    const exposed = spaceFactor(0.3, 0.6, 0.9, 0);
+    const covered = spaceFactor(0.3, 0.6, 0.9, 0.6);
     expect(covered, `${covered.toFixed(3)} with recovery, ${exposed.toFixed(3)} without`)
       .toBeLessThan(exposed);
     expect(covered).toBe(1);
   });
 
-  it('gives nothing to a side that cannot play its style', () => {
-    const canPlay = spaceFactor(0.3, 0.6, 1, 0.9, 0);
-    const cannot = spaceFactor(0.3, 0.6, 0, 0.9, 0);
-    expect(cannot).toBeLessThan(canPlay);
+  it('gives nothing to a side with nobody to run into it', () => {
+    const runners = spaceFactor(0.3, 0.6, 0.9, 0);
+    const none = spaceFactor(0.3, 0, 0.9, 0);
+    expect(none).toBe(1);
+    expect(none).toBeLessThan(runners);
   });
 });
 
@@ -339,11 +345,19 @@ describe('the taxonomy', () => {
     }
   });
 
-  it('only asks for qualities a trait can actually provide', () => {
+  it('only asks for phases a side can actually be good at', () => {
+    // A phase is played well through rating (a skill) or through a trait (a
+    // physical gift, which rating does not give). One that is neither would
+    // be a demand nobody could meet.
     const provided = new Set(gameData.roles.flatMap(r => Object.keys(r.qualities ?? {})));
     for (const [name, s] of Object.entries(PLAYSTYLES)) {
-      for (const need of Object.keys(s.needs)) {
-        expect(provided, `${name} needs "${need}", which no trait grants`).toContain(need);
+      for (const need of Object.keys(s.needs) as (keyof typeof PHASES)[]) {
+        const spec = PHASES[need];
+        expect(spec, `${name} needs "${need}", which is not a phase`).toBeDefined();
+        if (!spec.rated) {
+          const granted = Object.keys(spec.ability).some(q => provided.has(q));
+          expect(granted, `${name} needs "${need}", which no trait grants`).toBe(true);
+        }
       }
     }
   });
@@ -351,8 +365,8 @@ describe('the taxonomy', () => {
   it('keeps route one and direct as different things', () => {
     // Direct is fast vertical passing to feet and into space; route one is a
     // long ball to a target man. They want different players.
-    expect(PLAYSTYLES.direct.needs.pace).toBeGreaterThan(0);
-    expect(PLAYSTYLES.routeOne.needs.aerial).toBeGreaterThan(0);
+    expect(PLAYSTYLES.direct.needs.break).toBeGreaterThan(0);
+    expect(PLAYSTYLES.routeOne.needs.aerialAttack).toBeGreaterThan(0);
     expect(PLAYSTYLES.direct.buildUp).toBeGreaterThan(PLAYSTYLES.routeOne.buildUp);
   });
 
@@ -360,7 +374,7 @@ describe('the taxonomy', () => {
     // Parking the bus trades all attacking intent for density; catenaccio is
     // an attacking plan wearing a defensive shape, and asks for an outlet.
     expect(PLAYSTYLES.parkTheBus.tempo).toBeLessThan(PLAYSTYLES.lowBlock.tempo);
-    expect(PLAYSTYLES.catenaccio.needs.pace).toBeGreaterThan(0);
-    expect(PLAYSTYLES.lowBlock.needs.pace ?? 0).toBe(0);
+    expect(PLAYSTYLES.catenaccio.needs.break).toBeGreaterThan(0);
+    expect(PLAYSTYLES.lowBlock.needs.break ?? 0).toBe(0);
   });
 });

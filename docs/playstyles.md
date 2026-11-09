@@ -77,44 +77,95 @@ route one is a long ball to a target man. Low block, parking the bus and
 catenaccio are three different things — the last is an attacking plan wearing a
 defensive shape, built to nullify and then break.
 
-## Derived team qualities
+## Phases, and who takes part
 
-Alongside the existing `attackZone`, `defendZone`, `midfield` and `aerial`,
-computed from the eleven's ratings, positions and roles:
+A side's abilities are measured phase by phase, over the players who actually
+play that phase (`PHASES`, `involvement` and `phaseAbility` in matchEngine.ts):
 
-- **pressResistance** — ball-players in defence and deep midfield
-- **pressIntensity** — mobile, aggressive midfielders and a pressing forward
-- **runningThreat** — pace and runs in behind
-- **creation** — the ability to unpick a deep block
-- **versatility** — players who genuinely cover more than one position
+| phase | what it measures | who mostly plays it |
+| --- | --- | --- |
+| build | playing out under a press (`pressResist`) | GK, CB, FB, DM |
+| press | winning it back high (`pressing`) | forwards, wide men, CM |
+| block | holding a deep block (`defending`, work rate as `pressing`) | CB, DM, FB, CM |
+| create | unpicking a block (`creation`) | CAM, wide men, CF, CM |
+| break | running in behind (`pace`) | forwards, wide men |
+| cover | getting back to cover the space (`recovery`) | CB, FB, DM |
+| delivery | crosses and set pieces (`setPiece`) | wide men, full-backs |
+| aerialAttack / aerialDefence | heading it in, heading it out (`aerial`) | ST / CB, DM |
 
-## Style fit, and the asymmetry that makes it bite
+Who takes part is not a fixed list of positions. Each player's part in a phase
+is his position's share, adjusted for **the shape around him** — a flank with no
+winger hands its attacking duty to the full-back or wing-back on it, a flank with
+no full-back hands defending to the wide man — plus **his appetite for it**: a
+trait that describes the work (pace for a break, pressing for a press and, as
+work rate, for a block) draws him in beyond his position. So a wing-back with no
+winger ahead runs the counter, and a winger who works back is part of the block.
 
-Each style scores 0–1 for how well the actual eleven can execute it.
+A phase's ability is the weighted mean, over everyone involved, of its
+qualities, plus a baseline from rating for a skill (build, press, block, create,
+cover, delivery) but not for a physical gift (pace, height): a 90-rated striker
+is not fast or tall because he is 90-rated.
 
-**The cost is always paid. The benefit is collected × fit.**
+## Style fit: a profile, not a total
 
-Play tiki-taka without technicians and you get the low tempo and the high line
-and none of the control. That single rule is what stops a style being a free
-label, and it is what makes drafting a squad *for* a style meaningful.
+Each style needs some phases (`needs`): Park the bus a block and aerial
+defence; Counter-attack a break and a block; Tiki-taka build-up and creation.
+Fit asks two things of the side's abilities in those phases:
 
-## Interactions — four rules, not a 196-cell table
+- **can it do it** — the ability, against an ordinary side's zero;
+- **is it them** — what the style leaves unused: a side whose real strengths are
+  elsewhere, technicians asked to defend deep, gives them up to play it.
 
-1. **Space in behind** — chance quality rises with `runningThreat` × the
-   attacker's directness × the opponent's line height.
-2. **Press disruption** — a contest between the opponent's pressers and your
-   build-up players (`pressIntensity` against `pressResistance`, each from the
-   players in those positions, rating plus traits). It cuts your chance rate
-   only when their pressers are better than your passers, scaled by how high
-   their line is and how short your build-up. Going long immunises you.
-3. **Congestion** — a contest between a deep opponent's defenders and your
-   creators: the better their block is than your `creation`, the more it cuts
-   your chance rate.
-4. **Aerial route** — route one and wing play resolve chance quality as an
-   aerial contest, extending what set pieces already do.
+An all-round side fits most styles; a specialist fits its own. Barcelona 2009/10
+fits Possession 75% and Tiki-taka 71%, Park the bus 16%; Stoke 2008/09 fits
+Route one 71%. The old measure added up traits over all eleven, scaled by
+rating, against a fixed bar, and read Barcelona 100% for Park the bus.
 
-Press beats short build-up, long ball beats press, possession beats long ball.
-That triangle falls out of rules 2 and 3; nobody writes it down.
+Fit describes; it does not multiply anything. What a style is worth in a match
+comes from the same phase abilities in the contests below, so the fit shown
+before the season says what the engine will do.
+
+## What was wrong as football
+
+Measured between identical, traitless squads, where only the style differs:
+
+| | before | now |
+| --- | ---: | ---: |
+| Tiki-taka shots for / against (63% of the ball) | 11.0 / 11.6 | 10.5 / 10.4 |
+| Counter-attack shots for / against (40%) | 12.3 / 12.3 | 10.5 / 11.4 |
+| xG a shot conceded, deep blocks / high lines | 0.106 / 0.106 | 0.099 / 0.115 |
+| Gegenpress, points a game | 1.23 (last) | 1.32 |
+| Counter-attack, points a game | 1.53 (first) | 1.41 |
+| spread, points per 10 games | 3.2 | 1.4 |
+
+- **Possession bought no chances.** Every side's chance rate was normalised by
+  its share of the ball, so a side with 40% took as many shots as one with 60%
+  — and Counter-attack, with better chance types on top, came first.
+- **The defence did not shape what it conceded.** The attacker's style alone
+  chose the chance type.
+- **A press had no upside.** It only cut the opponent's chances, and only when
+  the pressers were better, so between equals Gegenpress came last.
+- **Fit was a total**, as above.
+
+## Interactions
+
+1. **The press** — how often it engages is the pressing side's line against how
+   much the other plays out; whether it wins the ball is their pressers against
+   these passers (`pressTurnover`). A ball won high is the pressing side's
+   possession: a transition, a through ball or a run at a defence out of shape,
+   which becomes a shot about one time in five. Going long immunises you.
+2. **Possession** — about a third of an extra share of the ball becomes extra
+   chances (`POSSESSION_TO_SHOTS`); the rest is the ball going round a set
+   defence.
+3. **The defending line shapes the chances conceded** — a deep block concedes
+   shots from distance and balls into a crowded box; a high line concedes
+   through balls and runs (`pickChanceType`).
+4. **Congestion** — a deep block against a patient side: their `block` against
+   your `create`.
+5. **Space in behind** — a direct side's runners (`break`) against the
+   defence's `cover`, scaled by the opponent's line height.
+6. **Aerial route** — route one and wing play resolve chance quality as an
+   aerial contest, as set pieces do.
 
 ## Where the styles are used today
 
@@ -146,10 +197,11 @@ taxonomy replaced.
 
 **Possession was a free advantage, and that was the whole ladder.** A side with
 62% of the ball was taking 62% of the chances, so every patient style sat at the
-top of the table. Each side's chance rate is now normalised by its share of the
-ball, which means possession buys patience rather than volume — what patient
-build-up against a set defence actually looks like. That single change took the
-spread from 9.1 points per 10 games to about 2.
+top of the table. Each side's chance rate was then normalised by its share of
+the ball, which took the spread from 9.1 points per 10 games to about 2 — and
+went too far: possession bought nothing, and the side with less of the ball got
+as many shots. About a third of an extra share now becomes chances (see *What
+was wrong as football*).
 
 **The rules are pure functions, because measuring them through matches did not
 work.** Three attempts confounded them with something else: a pressing side and
@@ -158,7 +210,7 @@ weaker everywhere rather than only at pressing; and giving each style the squad
 it wants compares squads, since a route-one eleven is built from roles with 0.1x
 goal multipliers and can barely score whatever it does. Measured through shot
 counts the press came out backwards, showing short build-up *gaining* 24%
-against a press. `pressFactor`, `congestionFactor` and `spaceFactor` are
+against a press. `pressTurnover`, `congestionFactor` and `spaceFactor` are
 exported and unit-tested for what they claim.
 
 **Two of the intended counters were wrong and are not asserted.** "Possession

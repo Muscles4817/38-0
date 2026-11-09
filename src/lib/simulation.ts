@@ -1,6 +1,6 @@
 import { type Position, effectiveRating } from './formations';
 import {
-  DEFAULT_COHESION, PLAYSTYLES, fitForStyle, inferStyle, simulateMatch,
+  DEFAULT_COHESION, PLAYSTYLES, fitForStyle, inferStyle, lineRatings, simulateMatch,
   type MatchPlayer, type PlaystyleName, type RoleMultipliers, type TeamSetup, type Zone,
 } from './matchEngine';
 
@@ -353,19 +353,9 @@ function sortedTable(standings: Map<string, MutableStanding>): TeamStanding[] {
 // ── Line strengths ────────────────────────────────────────────────────────────
 //
 // Attack, midfield and defence as the league table and the pre-season screen
-// show them. They are a summary for the player to read, not an input: the match
-// engine reads the eleven itself, zone by zone.
-
-// CM sits in both attack and defence — it's a genuinely balanced role.
-function isAttPosition(pos: Position): boolean {
-  return ['ST','CF','LW','RW','LM','RM','CAM','CM'].includes(pos);
-}
-function isDefPosition(pos: Position): boolean {
-  return ['GK','CB','LB','RB','LWB','RWB','CDM','CM'].includes(pos);
-}
-function isMidPosition(pos: Position): boolean {
-  return ['CM','CDM','CAM','LM','RM'].includes(pos);
-}
+// show them: the engine's own line qualities (`lineRatings`), in rating points.
+// They are a summary for the player to read, not an input: the match engine
+// reads the eleven itself, zone by zone.
 
 // How sharply a rating compounds into effectiveness. Each 5-point band is worth
 // about 17% more than the one below, so 85→90 matters more than 75→80. The
@@ -397,11 +387,8 @@ function scaledAvgRating(players: { rating: number }[]): number {
 export const __ratingCurve = { RATING_CURVE, ratingScale, scaledAvgRating };
 
 function lineStrengths(players: { position: Position; rating: number }[]): { att: number; mid: number; def: number } {
-  return {
-    att: Math.round(scaledAvgRating(players.filter(p => isAttPosition(p.position)))),
-    mid: Math.round(scaledAvgRating(players.filter(p => isMidPosition(p.position)))),
-    def: Math.round(scaledAvgRating(players.filter(p => isDefPosition(p.position)))),
-  };
+  const lines = lineRatings(players);
+  return { att: Math.round(lines.att), mid: Math.round(lines.mid), def: Math.round(lines.def) };
 }
 
 // ── Roles, as the match engine reads them ─────────────────────────────────────
@@ -600,23 +587,24 @@ export function computeOverall(picks: SquadPick[]): number {
 // over them fixes it, and is why this is a weighted sum over `SEASON_NODES`
 // rather than one comparison.
 //
-// Re-fitted when score effects came in and quality was set to carry 2.2 times
-// its original reach, on 900 seasons (18,000 team-seasons) across the 2025/26,
+// Re-fitted when the styles were reworked (possession buys chances, a press
+// wins the ball, the defending line shapes what is conceded, phases read who
+// takes part), on 900 seasons (18,000 team-seasons) across the 2025/26,
 // 2003/04 and 1992/93 fields at squad ratings from 62 to 98: the curve is
-// within 2.6 points of the XI's measured mean at every rating, and a field's
-// clubs average 1.9–2.5 points above it. See docs/simulation.md for this and
+// within 1.4 points of the XI's measured mean at every rating, and a field's
+// clubs average 1.1–1.8 points above it. See docs/simulation.md for this and
 // the fits before it.
 
 /** 38 wins. The ceiling the points curve saturates against. */
 const MAX_POINTS = 114;
 /** How sharply points rise with a rating edge over the field. */
-const POINTS_STEEPNESS = 0.138;
+const POINTS_STEEPNESS = 0.136;
 /** The rating edge at which a side is worth half the maximum points. */
-const POINTS_MIDPOINT = 1.95;
+const POINTS_MIDPOINT = 1.80;
 /** How far the player's own season lands either side of its expectation. */
-const SEASON_SD = 6.4;
+const SEASON_SD = 6.3;
 /** The same for an opponent's season, which is not shared across comparisons. */
-const OPPONENT_SD = 8.0;
+const OPPONENT_SD = 7.8;
 /** Quadrature nodes for integrating over the player's own season. */
 const SEASON_NODES = 41;
 

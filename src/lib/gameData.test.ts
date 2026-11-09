@@ -216,9 +216,12 @@ describe('listDraftableSquads', () => {
     expect(listDraftableSquads(1900, 1901)).toEqual([]);
   });
 
-  it('never returns an empty squad', () => {
+  it('never offers a club-season smaller than an XI', () => {
+    // Four ship with one player each (Liverpool 2017/18 holds only Lallana).
+    const offered = new Set(listDraftableSquads(1992, 2026).map(s => `${s.clubName} ${s.seasonLabel}`));
+    expect(offered.has('Liverpool 2017/18')).toBe(false);
     for (const squad of listDraftableSquads(1992, 2026)) {
-      expect(squad.players.length).toBeGreaterThan(0);
+      expect(squad.players.length).toBeGreaterThanOrEqual(11);
       expect(squad.clubName.length).toBeGreaterThan(0);
       expect(squad.seasonLabel.length).toBeGreaterThan(0);
     }

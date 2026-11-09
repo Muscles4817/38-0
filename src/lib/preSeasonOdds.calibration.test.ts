@@ -135,11 +135,11 @@ describe('the projection against the season it projects', () => {
       // loosened bar. A club's `strength` is the flat mean of its XI's ratings,
       // and the model judges a club by that alone. Arsenal 2003/04 is rated 88
       // and the model expects 86 points of them; the simulation plays them to
-      // about 90, their real total. At the top of a two-horse race four points
-      // is worth fifteen points of title probability: measured over 250
-      // seasons, an 86-rated XI is projected 26% and wins 10%. Everything else
-      // about the case is accurate: 82 points projected against 81.5 played,
-      // 2nd against 2.2nd. (The same defect used to show in 1992/93, against
+      // about 91, their real total being 90. At the top of a two-horse race
+      // five points is worth fourteen points of title probability: measured
+      // over 250 seasons, an 86-rated XI is projected 26% and wins 12%.
+      // Everything else about the case is accurate: 83 points projected
+      // against 80.9 played, 2nd against 2.3rd. (The same defect used to show in 1992/93, against
       // Manchester United, until the engine's quality constants were raised.)
       //
       // The bound is still a bound — it fails if the gap grows — and the fix is
@@ -170,7 +170,7 @@ describe('the projection against the season it projects', () => {
 
     // The same recorded exception as the cases above: the top of the 2025/26
     // field, where the odds cannot see the styles. Measured over 250 seasons
-    // at 88: title 61% projected, 48% played.
+    // at 88: title 61% projected, 41% played.
     expect(Math.abs(odds.winLeague - played.title)).toBeLessThanOrEqual(22);
     expect(Math.abs(odds.projectedPosition - played.meanPosition))
       .toBeLessThanOrEqual(2 + 2 * played.positionError);

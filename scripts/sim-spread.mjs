@@ -172,6 +172,8 @@ const rows = squads.map(sq => {
   const per = PASSES / TO_38; // per 38-match season
   return {
     club: sq.clubName,
+    style: teams.find(t => t.name === sq.clubName)?.style,
+    styleRecorded: Boolean(sq.style),
     strength: sq.strength,
     pts: a.pts / per, gf: a.gf / per, ga: a.ga / per,
     won: a.w / per, drawn: a.d / per, bigWins: a.margin3 / per,
