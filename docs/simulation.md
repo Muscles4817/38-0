@@ -42,10 +42,31 @@ side that controls midfield; each possession attacks down a flank or the
 middle and may become a chance of a type (through ball, cross, header, long
 shot, set piece, penalty); the shooter is picked for that kind of chance, with
 role multipliers damped (`ROLE_SELECTION_POWER`) so a Poacher does not take half
-his side's shots; and the chance is finished against a keeper for an xG. The
+his side's shots; a through ball may first be swept up by a keeper who comes
+off his line behind a high one (`SWEEP_PER_POINT`), and a ball into the box
+claimed by one who comes for it (`CLAIM_PER_POINT`); and the chance is finished
+against a keeper for an xG. The
 four interaction rules — press, congestion, space in behind, recovery — are
 where the styles meet. `matchEngine.calibration.test.ts` asserts the rates
 (shots, conversion, cards, assisted share) against the Premier League.
+
+The mix of chances, across the 2025/26, 2003/04 and 1992/93 leagues:
+
+| | long shot | set piece | cross | through ball | individual | header | penalty |
+| --- | ---: | ---: | ---: | ---: | ---: | ---: | ---: |
+| shots | 32.5% | 27.4% | 11.5% | 10.4% | 9.5% | 7.9% | 0.8% |
+| goals | 9.9% | 25.6% | 12.0% | 22.0% | 13.8% | 10.4% | 6.4% |
+
+About a third of Premier League shots come from outside the box and about a
+tenth of the goals. Long shots used to be 11.5% of shots and 3.5% of goals, so
+a keeper's game against them, and a deep block's cost of facing them, barely
+existed. `LONG_SHOT_WEIGHT` sets how often an attack ends in one; the
+close-range chance qualities were raised 30% and `BASE_SHOT_RATE` to 0.125 to
+keep 1.40 goals and 13.2 shots a team. How steeply a defending line shapes the
+chances it concedes was halved at the same time: with long shots the default,
+letting a deep line push still more of what it conceded out to distance
+counted the same thing twice, and made sitting deep the best plan between
+equals (identical-squad spread 2.8 points per 10 games, then 2.2).
 
 The man who made the chance is picked for its kind too (`pickCreator`): a
 cross from the flank it came down, mostly a wide man or a full-back
@@ -378,18 +399,19 @@ score effects came in and they went to 2.2 times the original, with
 `HOME_SHOT_RATE` 1.1 → 1.22; then the tactics rework (possession buys some
 chances, a press wins the ball, the defending line shapes what is conceded)
 and they came back to twice the original, with `BASE_SHOT_RATE` 0.137 → 0.116
-(see known-issues.md, *The top of the table* and *Tactics*). Re-measured on the
-same 900 seasons as below:
+(see known-issues.md, *The top of the table* and *Tactics*); then long shots
+came up to a third of shots, with `BASE_SHOT_RATE` 0.125 (see *A match*).
+Re-measured on the same 900 seasons as below:
 
-| | before all three | after doubling | after score effects | now |
-| --- | ---: | ---: | ---: | ---: |
-| `POINTS_STEEPNESS` | 0.092 | 0.131 | 0.138 | 0.136 |
-| `POINTS_MIDPOINT` | 1.92 | 1.85 | 1.95 | 1.80 |
-| `SEASON_SD` | 6.8 | 6.3 | 6.4 | 6.3 |
-| `OPPONENT_SD` | 8.1 | 8.2 | 8.0 | 7.8 (season 7.49, club error 2.19) |
+| | before all | after doubling | after score effects | after tactics | now |
+| --- | ---: | ---: | ---: | ---: | ---: |
+| `POINTS_STEEPNESS` | 0.092 | 0.131 | 0.138 | 0.136 | 0.139 |
+| `POINTS_MIDPOINT` | 1.92 | 1.85 | 1.95 | 1.80 | 2.00 |
+| `SEASON_SD` | 6.8 | 6.3 | 6.4 | 6.3 | 6.3 |
+| `OPPONENT_SD` | 8.1 | 8.2 | 8.0 | 7.8 | 7.9 (season 7.54, club error 2.34) |
 
-The curve is within 1.4 points of the XI's measured mean at every rating from
-62 to 98. A field's clubs average 1.1–1.8 points above it: real clubs carry
+The curve is within 1.5 points of the XI's measured mean at every rating from
+62 to 98. A field's clubs average 2.1–2.8 points above it: real clubs carry
 traits and styles a flat XI does not.
 
 The recorded two-horse-race exception in `preSeasonOdds.calibration.test.ts`

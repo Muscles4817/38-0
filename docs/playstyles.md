@@ -89,7 +89,7 @@ play that phase (`PHASES`, `involvement` and `phaseAbility` in matchEngine.ts):
 | block | holding a deep block (`defending`, work rate as `pressing`) | CB, DM, FB, CM |
 | create | unpicking a block (`creation`) | CAM, wide men, CF, CM |
 | break | running in behind (`pace`) | forwards, wide men |
-| cover | getting back to cover the space (`recovery`) | CB, FB, DM |
+| cover | getting back to cover the space (`recovery`) | CB, FB, DM; a sweeper keeper |
 | delivery | crosses and set pieces (`setPiece`) | wide men, full-backs |
 | aerialAttack / aerialDefence | heading it in, heading it out (`aerial`) | ST / CB, DM |
 

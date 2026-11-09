@@ -14,7 +14,7 @@ import type { Position } from './formations';
 
 const VOCABULARY = [
   'aerial', 'pace', 'recovery', 'pressing', 'pressResist', 'creation',
-  'dribble', 'shotStopping', 'claiming', 'setPiece', 'penalty', 'longShot',
+  'dribble', 'shotStopping', 'reflexes', 'claiming', 'setPiece', 'penalty', 'longShot',
   'discipline',
 ];
 
@@ -110,7 +110,15 @@ describe('role qualities', () => {
       keeperRoles.flatMap(r => Object.keys(r.qualities ?? {})),
     );
     expect(keeperQualities.has('shotStopping')).toBe(true);
+    expect(keeperQualities.has('reflexes')).toBe(true);
     expect(keeperQualities.has('claiming')).toBe(true);
+  });
+
+  it('let a sweeper keeper sweep', () => {
+    // Coming off his line to clear the ball played in behind a high line is
+    // what the name means, and the engine reads it as cover.
+    const role = gameData.roles.find(r => r.name === 'SweeperKeeper');
+    expect(role?.qualities?.recovery ?? 0).toBeGreaterThan(0);
   });
 
   it('do not double as a scoring bonus', () => {
@@ -118,7 +126,7 @@ describe('role qualities', () => {
     // score more. The ones that legitimately do — Poacher, AerialThreat — are
     // about finishing; the new descriptive traits are not.
     const descriptive = ['Pacey', 'Sweeper', 'Stopper', 'Workhorse', 'Carrier',
-      'ShotStopper', 'CommandingKeeper'];
+      'ShotStopper', 'Reflexes', 'CommandingKeeper'];
     for (const name of descriptive) {
       const role = gameData.roles.find(r => r.name === name);
       expect(role, `${name} is missing`).toBeDefined();

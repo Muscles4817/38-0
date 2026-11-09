@@ -348,3 +348,138 @@ describe('who takes part in a phase', () => {
     expect(phaseAbility(diligent, 'block', QUALITIES)).toBeGreaterThan(phaseAbility(plain, 'block', QUALITIES));
   });
 });
+
+describe('goalkeeping traits', () => {
+  // The same keeper, with and without a trait, behind the same side.
+  //
+  // ShotStopper is positioning and handling: most against shots from
+  // distance, least against a one-on-one. Measured over 40,000 matches: long
+  // shots −19%, individual efforts −10%, headers −4%, crosses −2.7%, set
+  // pieces −2%, through balls −1.2%, penalties unchanged; −5% in all.
+  //
+  // Reflexes is the save from close range: through balls −8.7%, crosses −8%,
+  // headers −7.5%, individual efforts −5%, set pieces −4.6%, long shots −1.2%,
+  // penalties unchanged; −5.3% in all.
+  //
+  // Claiming is coming for the ball in the air: a CommandingKeeper (3) takes
+  // crosses −9.4%, headers −8.5%, set pieces −6.7%, −3.3% in all; a keeper who
+  // FlapsAtCrosses (−2) turns them into better chances, +6.2%, +4.3%, +4.1%,
+  // +1.9% in all (20,000 matches).
+  const QUALITIES = {
+    goalMult: {}, assistMult: {},
+    qualities: {
+      ShotStopper: { shotStopping: 3 }, Reflexes: { reflexes: 3 },
+      CommandingKeeper: { claiming: 3 }, FlapsAtCrosses: { claiming: -2 },
+    },
+  };
+  const shape: Position[] = ['GK', 'LB', 'CB', 'CB', 'RB', 'LM', 'CM', 'CM', 'RM', 'ST', 'ST'];
+  const side = (name: string, base: number, keeperRoles: string[]): TeamSetup => ({
+    name, formation: '4-4-2', style: 'balanced', focus: { L: 1, C: 1, R: 1 },
+    players: shape.map((position, i) => ({
+      playerId: base + i, name: `${name} ${i}`, position, rating: 78,
+      roles: position === 'GK' ? keeperRoles : [],
+    })),
+  });
+  const CLOSE = new Set(['throughBall', 'cross', 'aerial']);
+  const IN_THE_AIR = new Set(['cross', 'aerial', 'setPiece']);
+  const conceded = (keeperRoles: string[], matches = 3000) => {
+    const rand = rng(31);
+    let goals = 0, fromDistance = 0, closeIn = 0, inTheAir = 0;
+    for (let i = 0; i < matches; i++) {
+      const m = simulateMatch(side('Opp', 100, []), side('Us', 200, keeperRoles), rand, QUALITIES);
+      goals += m.home.goals;
+      for (const e of m.events) {
+        if (e.type !== 'goal' || e.team !== 'Opp') continue;
+        if (e.chanceType === 'longShot') fromDistance++;
+        else if (CLOSE.has(e.chanceType!)) closeIn++;
+        if (IN_THE_AIR.has(e.chanceType!)) inTheAir++;
+      }
+    }
+    return { goals, fromDistance, closeIn, inTheAir };
+  };
+
+  it('a shot-stopper concedes fewer', () => {
+    const plain = conceded([]).goals;
+    const stopper = conceded(['ShotStopper']).goals;
+    expect(stopper, `${stopper} conceded with the trait, ${plain} without`).toBeLessThan(plain * 0.975);
+  });
+
+  it('a keeper with reflexes concedes fewer', () => {
+    const plain = conceded([]).goals;
+    const quick = conceded(['Reflexes']).goals;
+    expect(quick, `${quick} conceded with the trait, ${plain} without`).toBeLessThan(plain * 0.975);
+  });
+
+  it('divide the shots between them: distance for one, close range for the other', { timeout: 60_000 }, () => {
+    const plain = conceded([], 6000);
+    const stopper = conceded(['ShotStopper'], 6000);
+    const quick = conceded(['Reflexes'], 6000);
+    const detail = `long shots ${plain.fromDistance}/${stopper.fromDistance}/${quick.fromDistance}, `
+      + `close in ${plain.closeIn}/${stopper.closeIn}/${quick.closeIn} (plain/ShotStopper/Reflexes)`;
+    expect(stopper.fromDistance, detail).toBeLessThan(quick.fromDistance);
+    expect(quick.closeIn, detail).toBeLessThan(stopper.closeIn);
+  });
+
+  it('a commanding keeper claims the ball in the air, and one who flaps does not', { timeout: 60_000 }, () => {
+    const plain = conceded([], 6000);
+    const commanding = conceded(['CommandingKeeper'], 6000);
+    const flaps = conceded(['FlapsAtCrosses'], 6000);
+    const detail = `from the air ${plain.inTheAir}/${commanding.inTheAir}/${flaps.inTheAir} (plain/commanding/flaps)`;
+    expect(commanding.inTheAir, detail).toBeLessThan(plain.inTheAir * 0.96);
+    expect(flaps.inTheAir, detail).toBeGreaterThan(plain.inTheAir * 1.02);
+  });
+});
+
+describe('a sweeper keeper', () => {
+  // He is the last man behind a high line. He covers the space quick runners
+  // go into, and he comes off his line to get to the ball played in behind
+  // before whoever is chasing it. So he matters most when his side holds a
+  // high line, and little behind a deep block where there is no space behind.
+  // Measured over 20,000 matches against a quick counter-attacking side:
+  // −10.4% conceded behind a gegenpress line, −4.7% behind a balanced one,
+  // −1.6% behind a parked bus; against a possession side with no pace, −5.1%,
+  // −2.3% and −0.4%.
+  const SWEEPING = { pressResist: 2, claiming: 1, recovery: 3 };
+  const STAYS_HOME = { pressResist: 2, claiming: 1 };
+  const shape: Position[] = ['GK', 'LB', 'CB', 'CB', 'RB', 'LM', 'CM', 'CM', 'RM', 'ST', 'ST'];
+  const side = (name: string, base: number, style: PlaystyleName, roleOf: (p: Position) => string[]): TeamSetup => ({
+    name, formation: '4-4-2', style, focus: { L: 1, C: 1, R: 1 },
+    players: shape.map((position, i) => ({
+      playerId: base + i, name: `${name} ${i}`, position, rating: 78, roles: roleOf(position),
+    })),
+  });
+  const quick = (p: Position) => ['ST', 'LM', 'RM'].includes(p) ? ['Pacey'] : [];
+  const keeper = (p: Position) => p === 'GK' ? ['SweeperKeeper'] : [];
+  const conceded = (style: PlaystyleName, sweeper: Partial<Record<string, number>>, attackers = quick) => {
+    const roles = {
+      goalMult: {}, assistMult: {},
+      qualities: { Pacey: { pace: 3, recovery: 1 }, SweeperKeeper: sweeper },
+    };
+    const rand = rng(17);
+    let goals = 0;
+    for (let i = 0; i < 4000; i++) {
+      goals += simulateMatch(side('Opp', 100, 'counter', attackers), side('Us', 200, style, keeper), rand, roles).home.goals;
+    }
+    return goals;
+  };
+
+  it('counts in covering the space behind', () => {
+    const us = side('Us', 200, 'balanced', keeper).players;
+    const roles = (q: Partial<Record<string, number>>) => ({ goalMult: {}, assistMult: {}, qualities: { SweeperKeeper: q } });
+    expect(phaseAbility(us, 'cover', roles(SWEEPING))).toBeGreaterThan(phaseAbility(us, 'cover', roles(STAYS_HOME)));
+  });
+
+  it('saves more behind a high line than behind a deep block', { timeout: 60_000 }, () => {
+    const high = conceded('gegenpress', STAYS_HOME) - conceded('gegenpress', SWEEPING);
+    const deep = conceded('parkTheBus', STAYS_HOME) - conceded('parkTheBus', SWEEPING);
+    expect(high, `saved ${high} behind a high line, ${deep} behind a deep block`).toBeGreaterThan(0);
+    expect(high).toBeGreaterThan(deep);
+  });
+
+  it('gets to a ball in behind first, however quick the man chasing it', () => {
+    const plain = () => [];
+    const swept = conceded('gegenpress', SWEEPING, plain);
+    const stays = conceded('gegenpress', STAYS_HOME, plain);
+    expect(swept, `${swept} conceded sweeping, ${stays} staying home`).toBeLessThan(stays);
+  });
+});

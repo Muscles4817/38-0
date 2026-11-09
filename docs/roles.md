@@ -26,7 +26,8 @@ counter-attacking and of punishing a high line.
 | `pressResist` | Keeps the ball under pressure |
 | `creation` | Unlocks a set defence |
 | `dribble` | Beats a man one on one |
-| `shotStopping` | Goalkeeping reflexes |
+| `shotStopping` | Saves shots: positioning and handling, most against shots from distance |
+| `reflexes` | Saves from close range: the one-on-one, the cut-back, the header from six yards |
 | `claiming` | Commands his box; claims crosses |
 | `setPiece` | Dead-ball delivery |
 | `penalty` | Takes penalties |
@@ -40,6 +41,29 @@ in `roleQualities.test.ts`.
 
 Qualities are stored as JSON on `role_config`, so adding a quality needs no
 migration.
+
+## What the engine reads
+
+A quality does something only where the match engine reads it. Where it is not
+read yet, the trait is decorative in a match, whatever it says.
+
+| quality | read by | effect |
+| --- | --- | --- |
+| `aerial` | aerial phases, headed chances, set pieces | who wins headers at both ends |
+| `pace` | the `break` phase | runs in behind against a high line |
+| `recovery` | the `cover` phase; on a keeper, sweeping (`SWEEP_PER_POINT`) | covering the space behind. On a keeper it is also coming off his line: he cuts out a share of balls played in behind, per point and in proportion to his own side's line, however quick the runner. A `SweeperKeeper` (recovery 3) against a quick counter-attacking side concedes 10.4% fewer behind a gegenpress line, 4.7% behind a balanced one, 1.6% behind a parked bus; against a possession side with no pace, 5.1%, 2.3% and 0.4% (20,000 matches each). In the real leagues, about 1.9 goals a season fewer on 11 club-seasons with paired seeds, from Liverpool 2025/26 behind a gegenpress line (6.1) to Liverpool 2008/09 in a low block (0.2). Covering alone was worth 0.1: few opponents in the data carry pace traits that beat these sides' cover |
+| `pressing` | the `press` phase; work rate in the `block` | winning the ball high; a working wide man defends |
+| `pressResist` | the `build` phase | playing through a press |
+| `creation` | the `create` phase; through-ball creators | unpicking a deep block |
+| `setPiece` | the `delivery` phase; crossers and set-piece takers | who delivers, and how well |
+| `penalty` | who takes penalties | |
+| `discipline` | fouls and cards | |
+| `shotStopping` | the keeper's saving, by the kind of shot (`SHOT_STOPPING_REACH`) | positioning and handling, so most against shots he sees coming: with a ShotStopper (3), long shots −19%, individual efforts −10%, headers −3.9%, crosses −2.7%, set pieces −2.1%, through balls −1.2%, penalties unchanged; −5% in all (40,000 matches). About 2.6 goals a season fewer, measured on 17 club-seasons with paired seeds (Bournemouth 2025/26, who face many shots, 8.5), and more against sides that shoot from distance. Close-range saves are `reflexes` |
+| `reflexes` | the keeper's saving, by the kind of shot (`REFLEXES_REACH`) | reactions, so most against shots from close in: with Reflexes (3), through balls −8.7%, crosses −8%, headers −7.5%, individual efforts −5%, set pieces −4.6%, long shots −1.2%, penalties unchanged; −5.3% in all (40,000 matches). About 2.7 goals a season fewer, measured by giving the 17 ShotStopper keepers Reflexes instead, with paired seeds — as much as a ShotStopper, from the other end of the shot mix. No keeper in the data has it yet |
+| `dribble` | draws a player into the `break` phase only | not yet an ability of its own |
+| `claiming` | the keeper coming for the ball in the air (`CLAIM_PER_POINT`, `CLAIM_REACH`) | before a cross, a header or a set piece becomes a shot, a keeper with claiming takes a share of them (none of a through ball, a long shot or an individual effort). A keeper who flaps does not face more crosses; he turns the ones he faces into better chances. A CommandingKeeper (3) concedes crosses −9.4%, headers −8.5%, set pieces −6.7%, −3.3% in all (1.8 goals a season) against an ordinary side, 2.6 against a crossing side with target men; FlapsAtCrosses (−2) +1.9% in all (1.0 a season), 2.5 against a crossing side (20,000 matches). In the real leagues, pooled over five seeds: FlapsAtCrosses +1.6 goals a season on all 6 club-seasons that have it; CommandingKeeper −1.2 on the only one (Aston Villa 2025/26); a SweeperKeeper's claiming 1 is lost in the noise |
+| `longShot` | nothing yet (long shots go by role affinity) | |
+| `defending` | the `block` phase | no trait grants it yet |
 
 ## The traits added for the playstyle work
 
@@ -57,6 +81,7 @@ from a set of roles containing no forward at all.
 | `Carrier` | pressResist 3, dribble 2 | Beats a press by running through it |
 | `Dribbler` | dribble 3 | Beats his man, as distinct from a winger who crosses |
 | `ShotStopper` | shotStopping 3 | There was exactly one goalkeeping role |
+| `Reflexes` | reflexes 3 | Saving is two abilities: a ShotStopper sees it coming, a keeper with reflexes reacts to what he does not |
 | `CommandingKeeper` | claiming 3, aerial 1 | Claims crosses — meaningful now set pieces exist |
 | `PenaltyTaker` | penalty 3 | A penalty is 0.78 xG and anyone was taking them |
 | `LongShot` | longShot 3 | The engine has a long-shot chance type with almost nothing attached |

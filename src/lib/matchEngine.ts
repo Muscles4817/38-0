@@ -40,7 +40,7 @@ export type PlayerRole = string;
 const POSSESSIONS = 200;
 
 /** Chance that a possession produces a shot, for evenly matched sides. */
-const BASE_SHOT_RATE = 0.116;
+const BASE_SHOT_RATE = 0.125;
 
 /**
  * How much of an extra share of the ball becomes extra chances: about a third.
@@ -77,6 +77,93 @@ const HOME_CHANCE_QUALITY = 1.04;
 const EDGE_TO_CHANCES = 0.4;
 const FINISHING_EXPONENT = 0.8;
 const KEEPING_EXPONENT = 0.64;
+
+/**
+ * How many rating points of keeping a point of `shotStopping` is worth, by the
+ * kind of shot. Shot-stopping is positioning and handling: it decides shots the
+ * keeper sees coming — from distance, from a free kick or a header at a
+ * corner — far more than a one-on-one or a cut-back from six yards, which are
+ * reflexes. A ShotStopper (3) keeps a long shot as a keeper twelve points
+ * better would, an individual effort as one six points better, and a through
+ * ball as one a point better.
+ *
+ * Sized so a specialist is worth about two and a half goals a season over a
+ * keeper of the same rating, most of it from distance: the rating already
+ * carries most of what makes a keeper good, and ten rating points are worth
+ * about five goals.
+ */
+const SHOT_STOPPING_REACH: Record<ChanceType, number> = {
+  longShot: 4.0,
+  // Most set-piece goals are headers and scrambles from close in, which are
+  // reflexes and claiming the cross; only the direct free kick is the
+  // shot-stopper's shot.
+  setPiece: 0.5,
+  individual: 2.0,
+  aerial: 0.7,
+  cross: 0.7,
+  throughBall: 0.4,
+  penalty: 0,
+};
+
+/**
+ * How many rating points of keeping a point of `reflexes` is worth, by the
+ * kind of shot. Reflexes are the other half of goalkeeping: the save from
+ * close range, where there is no time to set and the keeper reacts — the
+ * one-on-one, the cut-back from six yards, the header from the edge of the
+ * six-yard box, the scramble after a corner. Next to nothing from distance,
+ * where a keeper has time to see it.
+ *
+ * Most goals are scored from close in, so the same reach is worth more goals
+ * here than from distance. Sized so a specialist is worth about as much over a
+ * season as a ShotStopper.
+ */
+const REFLEXES_REACH: Record<ChanceType, number> = {
+  throughBall: 2.0,
+  cross: 1.5,
+  aerial: 1.5,
+  setPiece: 1.0,
+  individual: 1.0,
+  longShot: 0.2,
+  // A penalty is a guess and a dive, not a reaction; nothing reads penalty
+  // saving yet.
+  penalty: 0,
+};
+
+/**
+ * How often a sweeper keeper gets to the ball played in behind before the
+ * runner, per point of his `recovery` and per unit of his own side's line.
+ * Behind a high line there is grass between the last defender and the keeper,
+ * and a keeper who reads it and comes off his line is there first: the chance
+ * never becomes a shot. Behind a deep block that grass is not there.
+ *
+ * Independent of the runner's pace: a ball over the top is a race the keeper
+ * can win against anyone. Sized so a SweeperKeeper (recovery 3) behind a
+ * gegenpress line (0.9) cuts out about one through ball in six, which is
+ * about two goals a season.
+ */
+const SWEEP_PER_POINT = 0.065;
+
+/**
+ * Claiming: a keeper who comes for the ball in the air. Per point of
+ * `claiming`, the share of balls into his box he takes before anyone can
+ * attack them, by the kind of chance. A cross or a header from open play is
+ * a ball he can come for; a set piece mostly is (a corner, a free kick swung
+ * in) and partly is not (a direct free kick). Nothing else is in the air.
+ *
+ * A keeper who flaps (negative claiming) does not face more crosses. He turns
+ * the ones he faces into better chances: the punch that goes nowhere, the
+ * ball dropped in the six-yard box. So the same number raises those chances'
+ * quality instead.
+ *
+ * Sized so a CommandingKeeper (3) is worth about two goals a season against an
+ * ordinary side and more against one that crosses, and a keeper who
+ * FlapsAtCrosses (−2) costs about one, again more against a crossing side.
+ */
+const CLAIM_PER_POINT = 0.03;
+const CLAIM_REACH: Record<ChanceType, number> = {
+  cross: 1, aerial: 1, setPiece: 0.8,
+  throughBall: 0, individual: 0, longShot: 0, penalty: 0,
+};
 
 // Role multipliers were written for an engine that multiplied a goal *count*.
 // Here they decide who gets on the end of a chance, where the same numbers are
@@ -341,7 +428,7 @@ function positionGroup(position: Position): PositionGroup {
  * ratings.
  */
 const POSITION_MEAN: Record<PositionGroup, number> = {
-  GK: -0.875, CB: 0.184, FB: 0.22, DM: 0.269, CM: 0.372, AM: 0.433, W: 0.576, ST: 0.499,
+  GK: -0.869, CB: 0.192, FB: 0.225, DM: 0.282, CM: 0.37, AM: 0.429, W: 0.617, ST: 0.528,
 };
 
 /**
@@ -353,18 +440,33 @@ const POSITION_MEAN: Record<PositionGroup, number> = {
  * position's own mean, pooled. A keeper's value is in different units (goals
  * let in against their xG), so he keeps his own.
  */
-const OUTFIELD_VALUE_SD = 0.49;
+const OUTFIELD_VALUE_SD = 0.5;
 const KEEPER_VALUE_SD = 1.1;
 
 export type ChanceType =
   | 'throughBall' | 'cross' | 'aerial' | 'longShot' | 'individual'
   | 'setPiece' | 'penalty';
 
+/**
+ * How much more often an attack ends in a shot from distance than in any one
+ * other kind of open-play chance. About a third of Premier League shots come
+ * from outside the box and about a tenth of the goals; at 1, long shots were
+ * 11.5% of shots and 3.5% of goals, so the keeper's game against them, and a
+ * deep block's cost of facing them, barely existed.
+ */
+const LONG_SHOT_WEIGHT = 4.5;
+
+/**
+ * The xG of each kind of chance before the finisher, the keeper and the
+ * matchup. The close-range ones were raised by 30% when long shots came up to
+ * a third of shots: the speculative efforts now sit where they belong, and
+ * what is left inside the box is the dangerous part.
+ */
 const CHANCE_QUALITY: Record<ChanceType, number> = {
-  throughBall: 0.16,
-  individual: 0.11,
-  aerial: 0.095,
-  cross: 0.08,
+  throughBall: 0.208,
+  individual: 0.143,
+  aerial: 0.124,
+  cross: 0.104,
   longShot: 0.032,
   setPiece: SET_PIECE_QUALITY,
   penalty: 0.78,
@@ -1262,16 +1364,21 @@ function pickChanceType(
   // chances but through balls and runs. Balanced at a middling line, so the
   // attacker's own mix reads as it did between two ordinary sides.
   const line = opponent.style.line;
+  //
+  // Half as steep as it was set when long shots were rare: most shots from
+  // distance are taken against a set defence anyway (LONG_SHOT_WEIGHT), and
+  // letting a deep line push still more of what it concedes out there counted
+  // the same thing twice and made sitting deep the best plan between equals.
   const allowed: Record<ChanceType, number> = {
-    throughBall: 0.4 + 1.2 * line,
-    individual: 0.7 + 0.6 * line,
-    longShot: 1.6 - 1.2 * line,
-    cross: 1.3 - 0.6 * line,
-    aerial: 1.3 - 0.6 * line,
+    throughBall: 0.7 + 0.6 * line,
+    individual: 0.85 + 0.3 * line,
+    longShot: 1.3 - 0.6 * line,
+    cross: 1.15 - 0.3 * line,
+    aerial: 1.15 - 0.3 * line,
     setPiece: 1, penalty: 1,
   };
   const weights = types.map(t => {
-    let w = (mix[t] ?? 1) * allowed[t];
+    let w = (mix[t] ?? 1) * allowed[t] * (t === 'longShot' ? LONG_SHOT_WEIGHT : 1);
     // Attacks down a flank arrive as crosses; through the middle they do not.
     if (zone === 'C') w *= t === 'cross' ? 0.35 : t === 'throughBall' ? 1.5 : 1;
     else w *= t === 'cross' ? 2.2 : t === 'throughBall' ? 0.7 : 1;
@@ -1766,7 +1873,22 @@ export function simulateMatch(
         : rand() < 0.011
           ? 'penalty'
           : pickChanceType(rand, att, def, zone, transition);
-      const shooter = pickShooter(rand, att, zone, type, roles);
+      // A ball played in behind can be met by a keeper who sweeps, if there
+      // is space behind his line for him to sweep. Drawn only when there is,
+      // so a side without one plays exactly the match it did before.
+      const sweeper = def.keeper;
+      const sweep = type === 'throughBall' && sweeper
+        ? SWEEP_PER_POINT * Math.max(0, quality(sweeper, 'recovery', roles)) * def.style.line
+        : 0;
+      const sweptUp = sweep > 0 && rand() < sweep;
+      if (sweptUp) stats.get(sweeper!.playerId)!.value += CHANCE_QUALITY.throughBall;
+      // A ball into the box can be claimed by a keeper who comes for it. Drawn
+      // only when he does, as with the sweep.
+      const claiming = def.keeper ? quality(def.keeper, 'claiming', roles) : 0;
+      const claim = CLAIM_PER_POINT * CLAIM_REACH[type] * claiming;
+      const claimed = claim > 0 && rand() < claim;
+      if (claimed) stats.get(def.keeper!.playerId)!.value += CHANCE_QUALITY[type];
+      const shooter = sweptUp || claimed ? undefined : pickShooter(rand, att, zone, type, roles);
       // A possession that ended in a shot got through any press that met it.
       if (pressEngaged && !turnover) creditOnBall(att, def, true, threat);
       if (shooter) {
@@ -1780,6 +1902,17 @@ export function simulateMatch(
         for (const r of shooter.roles ?? []) finishing *= Math.sqrt(affinity[r] ?? 1);
         const keeper = def.keeper;
         const keeping = keeper ? ratingScale(keeper.rating) : 1;
+        // A shot-stopper or a keeper with reflexes keeps as a better-rated
+        // keeper would, by how much the shot is one his positioning and
+        // handling (SHOT_STOPPING_REACH) or his reactions (REFLEXES_REACH)
+        // decide. Applied to set pieces too, which otherwise ignore the keeper,
+        // for the direct free kicks and the scrambles among them.
+        const stopping = keeper
+          ? Math.pow(ratingScale(80
+            + SHOT_STOPPING_REACH[type] * quality(keeper, 'shotStopping', roles)
+            + REFLEXES_REACH[type] * quality(keeper, 'reflexes', roles)),
+          -KEEPING_EXPONENT * carry)
+          : 1;
 
         // A style's demands are a cost paid up front; what it gives back is
         // collected only in proportion to whether the eleven can play it.
@@ -1803,6 +1936,9 @@ export function simulateMatch(
             * Math.pow(finishing, FINISHING_EXPONENT * carry)
             * Math.pow(keeping, -KEEPING_EXPONENT * carry) / defPenalty;
         }
+        xg *= stopping;
+        // A keeper who flaps at it turns a ball into the box into a better chance.
+        if (claim < 0) xg *= 1 - claim;
         // Against a side chasing the game there is space to break into.
         if (lead > 0 && type !== 'penalty') xg *= Math.exp(STATE_COUNTER * progress * lead);
         xg = Math.min(0.95, xg);
