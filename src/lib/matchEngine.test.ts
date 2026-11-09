@@ -348,3 +348,31 @@ describe('who takes part in a phase', () => {
     expect(phaseAbility(diligent, 'block', QUALITIES)).toBeGreaterThan(phaseAbility(plain, 'block', QUALITIES));
   });
 });
+
+describe('a keeper who is a shot-stopper', () => {
+  // The same keeper, with and without the trait, behind the same side. The
+  // trait keeps as three rating points more would, on open-play chances.
+  const QUALITIES = { goalMult: {}, assistMult: {}, qualities: { ShotStopper: { shotStopping: 3 } } };
+  const shape: Position[] = ['GK', 'LB', 'CB', 'CB', 'RB', 'LM', 'CM', 'CM', 'RM', 'ST', 'ST'];
+  const side = (name: string, base: number, keeperRoles: string[]): TeamSetup => ({
+    name, formation: '4-4-2', style: 'balanced', focus: { L: 1, C: 1, R: 1 },
+    players: shape.map((position, i) => ({
+      playerId: base + i, name: `${name} ${i}`, position, rating: 78,
+      roles: position === 'GK' ? keeperRoles : [],
+    })),
+  });
+  const conceded = (keeperRoles: string[]) => {
+    const rand = rng(31);
+    let goals = 0;
+    for (let i = 0; i < 3000; i++) {
+      goals += simulateMatch(side('Opp', 100, []), side('Us', 200, keeperRoles), rand, QUALITIES).home.goals;
+    }
+    return goals;
+  };
+
+  it('concedes fewer', () => {
+    const plain = conceded([]);
+    const stopper = conceded(['ShotStopper']);
+    expect(stopper, `${stopper} conceded with the trait, ${plain} without`).toBeLessThan(plain * 0.97);
+  });
+});

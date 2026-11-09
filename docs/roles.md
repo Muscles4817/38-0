@@ -41,6 +41,28 @@ in `roleQualities.test.ts`.
 Qualities are stored as JSON on `role_config`, so adding a quality needs no
 migration.
 
+## What the engine reads
+
+A quality does something only where the match engine reads it. Where it is not
+read yet, the trait is decorative in a match, whatever it says.
+
+| quality | read by | effect |
+| --- | --- | --- |
+| `aerial` | aerial phases, headed chances, set pieces | who wins headers at both ends |
+| `pace` | the `break` phase | runs in behind against a high line |
+| `recovery` | the `cover` phase | covering the space behind |
+| `pressing` | the `press` phase; work rate in the `block` | winning the ball high; a working wide man defends |
+| `pressResist` | the `build` phase | playing through a press |
+| `creation` | the `create` phase; through-ball creators | unpicking a deep block |
+| `setPiece` | the `delivery` phase; crossers and set-piece takers | who delivers, and how well |
+| `penalty` | who takes penalties | |
+| `discipline` | fouls and cards | |
+| `shotStopping` | the keeper's saving | each point keeps like a rating point more: a ShotStopper (3) concedes about 1.5 goals a season fewer, measured on 17 club-seasons with paired seeds |
+| `dribble` | draws a player into the `break` phase only | not yet an ability of its own |
+| `claiming` | nothing yet | |
+| `longShot` | nothing yet (long shots go by role affinity) | |
+| `defending` | the `block` phase | no trait grants it yet |
+
 ## The traits added for the playstyle work
 
 The five qualities the playstyle interactions read were previously inferred from
