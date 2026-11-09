@@ -143,6 +143,28 @@ const REFLEXES_REACH: Record<ChanceType, number> = {
  */
 const SWEEP_PER_POINT = 0.065;
 
+/**
+ * Claiming: a keeper who comes for the ball in the air. Per point of
+ * `claiming`, the share of balls into his box he takes before anyone can
+ * attack them, by the kind of chance. A cross or a header from open play is
+ * a ball he can come for; a set piece mostly is (a corner, a free kick swung
+ * in) and partly is not (a direct free kick). Nothing else is in the air.
+ *
+ * A keeper who flaps (negative claiming) does not face more crosses. He turns
+ * the ones he faces into better chances: the punch that goes nowhere, the
+ * ball dropped in the six-yard box. So the same number raises those chances'
+ * quality instead.
+ *
+ * Sized so a CommandingKeeper (3) is worth about two goals a season against an
+ * ordinary side and more against one that crosses, and a keeper who
+ * FlapsAtCrosses (−2) costs about one, again more against a crossing side.
+ */
+const CLAIM_PER_POINT = 0.03;
+const CLAIM_REACH: Record<ChanceType, number> = {
+  cross: 1, aerial: 1, setPiece: 0.8,
+  throughBall: 0, individual: 0, longShot: 0, penalty: 0,
+};
+
 // Role multipliers were written for an engine that multiplied a goal *count*.
 // Here they decide who gets on the end of a chance, where the same numbers are
 // far too strong: a Poacher at 2.2 took half his side's shots. A leading
@@ -1860,7 +1882,13 @@ export function simulateMatch(
         : 0;
       const sweptUp = sweep > 0 && rand() < sweep;
       if (sweptUp) stats.get(sweeper!.playerId)!.value += CHANCE_QUALITY.throughBall;
-      const shooter = sweptUp ? undefined : pickShooter(rand, att, zone, type, roles);
+      // A ball into the box can be claimed by a keeper who comes for it. Drawn
+      // only when he does, as with the sweep.
+      const claiming = def.keeper ? quality(def.keeper, 'claiming', roles) : 0;
+      const claim = CLAIM_PER_POINT * CLAIM_REACH[type] * claiming;
+      const claimed = claim > 0 && rand() < claim;
+      if (claimed) stats.get(def.keeper!.playerId)!.value += CHANCE_QUALITY[type];
+      const shooter = sweptUp || claimed ? undefined : pickShooter(rand, att, zone, type, roles);
       // A possession that ended in a shot got through any press that met it.
       if (pressEngaged && !turnover) creditOnBall(att, def, true, threat);
       if (shooter) {
@@ -1909,6 +1937,8 @@ export function simulateMatch(
             * Math.pow(keeping, -KEEPING_EXPONENT * carry) / defPenalty;
         }
         xg *= stopping;
+        // A keeper who flaps at it turns a ball into the box into a better chance.
+        if (claim < 0) xg *= 1 - claim;
         // Against a side chasing the game there is space to break into.
         if (lead > 0 && type !== 'penalty') xg *= Math.exp(STATE_COUNTER * progress * lead);
         xg = Math.min(0.95, xg);

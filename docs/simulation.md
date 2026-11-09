@@ -43,7 +43,8 @@ middle and may become a chance of a type (through ball, cross, header, long
 shot, set piece, penalty); the shooter is picked for that kind of chance, with
 role multipliers damped (`ROLE_SELECTION_POWER`) so a Poacher does not take half
 his side's shots; a through ball may first be swept up by a keeper who comes
-off his line behind a high one (`SWEEP_PER_POINT`); and the chance is finished
+off his line behind a high one (`SWEEP_PER_POINT`), and a ball into the box
+claimed by one who comes for it (`CLAIM_PER_POINT`); and the chance is finished
 against a keeper for an xG. The
 four interaction rules — press, congestion, space in behind, recovery — are
 where the styles meet. `matchEngine.calibration.test.ts` asserts the rates

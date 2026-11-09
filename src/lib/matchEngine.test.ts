@@ -360,9 +360,17 @@ describe('goalkeeping traits', () => {
   // Reflexes is the save from close range: through balls −8.7%, crosses −8%,
   // headers −7.5%, individual efforts −5%, set pieces −4.6%, long shots −1.2%,
   // penalties unchanged; −5.3% in all.
+  //
+  // Claiming is coming for the ball in the air: a CommandingKeeper (3) takes
+  // crosses −9.4%, headers −8.5%, set pieces −6.7%, −3.3% in all; a keeper who
+  // FlapsAtCrosses (−2) turns them into better chances, +6.2%, +4.3%, +4.1%,
+  // +1.9% in all (20,000 matches).
   const QUALITIES = {
     goalMult: {}, assistMult: {},
-    qualities: { ShotStopper: { shotStopping: 3 }, Reflexes: { reflexes: 3 } },
+    qualities: {
+      ShotStopper: { shotStopping: 3 }, Reflexes: { reflexes: 3 },
+      CommandingKeeper: { claiming: 3 }, FlapsAtCrosses: { claiming: -2 },
+    },
   };
   const shape: Position[] = ['GK', 'LB', 'CB', 'CB', 'RB', 'LM', 'CM', 'CM', 'RM', 'ST', 'ST'];
   const side = (name: string, base: number, keeperRoles: string[]): TeamSetup => ({
@@ -373,9 +381,10 @@ describe('goalkeeping traits', () => {
     })),
   });
   const CLOSE = new Set(['throughBall', 'cross', 'aerial']);
+  const IN_THE_AIR = new Set(['cross', 'aerial', 'setPiece']);
   const conceded = (keeperRoles: string[], matches = 3000) => {
     const rand = rng(31);
-    let goals = 0, fromDistance = 0, closeIn = 0;
+    let goals = 0, fromDistance = 0, closeIn = 0, inTheAir = 0;
     for (let i = 0; i < matches; i++) {
       const m = simulateMatch(side('Opp', 100, []), side('Us', 200, keeperRoles), rand, QUALITIES);
       goals += m.home.goals;
@@ -383,9 +392,10 @@ describe('goalkeeping traits', () => {
         if (e.type !== 'goal' || e.team !== 'Opp') continue;
         if (e.chanceType === 'longShot') fromDistance++;
         else if (CLOSE.has(e.chanceType!)) closeIn++;
+        if (IN_THE_AIR.has(e.chanceType!)) inTheAir++;
       }
     }
-    return { goals, fromDistance, closeIn };
+    return { goals, fromDistance, closeIn, inTheAir };
   };
 
   it('a shot-stopper concedes fewer', () => {
@@ -408,6 +418,15 @@ describe('goalkeeping traits', () => {
       + `close in ${plain.closeIn}/${stopper.closeIn}/${quick.closeIn} (plain/ShotStopper/Reflexes)`;
     expect(stopper.fromDistance, detail).toBeLessThan(quick.fromDistance);
     expect(quick.closeIn, detail).toBeLessThan(stopper.closeIn);
+  });
+
+  it('a commanding keeper claims the ball in the air, and one who flaps does not', { timeout: 60_000 }, () => {
+    const plain = conceded([], 6000);
+    const commanding = conceded(['CommandingKeeper'], 6000);
+    const flaps = conceded(['FlapsAtCrosses'], 6000);
+    const detail = `from the air ${plain.inTheAir}/${commanding.inTheAir}/${flaps.inTheAir} (plain/commanding/flaps)`;
+    expect(commanding.inTheAir, detail).toBeLessThan(plain.inTheAir * 0.96);
+    expect(flaps.inTheAir, detail).toBeGreaterThan(plain.inTheAir * 1.02);
   });
 });
 
