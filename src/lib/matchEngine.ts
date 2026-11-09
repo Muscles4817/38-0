@@ -83,19 +83,22 @@ const KEEPING_EXPONENT = 0.64;
  * kind of shot. Shot-stopping is positioning and handling: it decides shots the
  * keeper sees coming — from distance, from a free kick or a header at a
  * corner — far more than a one-on-one or a cut-back from six yards, which are
- * reflexes. A ShotStopper (3) keeps a long shot as a keeper six points better
- * would, and a through ball as one a point better.
+ * reflexes. A ShotStopper (3) keeps a long shot as a keeper twelve points
+ * better would, an individual effort as one six points better, and a through
+ * ball as one a point better.
  *
- * Long shots are few and rarely go in, so most of what the trait saves comes
- * from the shots in between: individual efforts, crosses and headers.
+ * Sized so a specialist is worth about two and a half goals a season over a
+ * keeper of the same rating, most of it from distance: the rating already
+ * carries most of what makes a keeper good, and ten rating points are worth
+ * about five goals.
  */
 const SHOT_STOPPING_REACH: Record<ChanceType, number> = {
-  longShot: 2.0,
+  longShot: 4.0,
   // Most set-piece goals are headers and scrambles from close in, which are
   // reflexes and claiming the cross; only the direct free kick is the
   // shot-stopper's shot.
   setPiece: 0.5,
-  individual: 1.0,
+  individual: 2.0,
   aerial: 0.7,
   cross: 0.7,
   throughBall: 0.4,

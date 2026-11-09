@@ -26,7 +26,7 @@ counter-attacking and of punishing a high line.
 | `pressResist` | Keeps the ball under pressure |
 | `creation` | Unlocks a set defence |
 | `dribble` | Beats a man one on one |
-| `shotStopping` | the keeper's saving, by the kind of shot (`SHOT_STOPPING_REACH`) | positioning and handling, so most against shots he sees coming: with a ShotStopper (3), long shots −9.3%, individual efforts −5.5%, headers −4.2%, crosses −2.6%, set pieces −2.2%, through balls −1.7%, penalties unchanged; −3.5% in all (40,000 matches). About 1.6 goals a season fewer, measured on 17 club-seasons with paired seeds. Close-range reflexes are a separate ability, not yet added |
+| `shotStopping` | Saves shots: positioning and handling, most against shots from distance |
 | `claiming` | Commands his box; claims crosses |
 | `setPiece` | Dead-ball delivery |
 | `penalty` | Takes penalties |
@@ -57,7 +57,7 @@ read yet, the trait is decorative in a match, whatever it says.
 | `setPiece` | the `delivery` phase; crossers and set-piece takers | who delivers, and how well |
 | `penalty` | who takes penalties | |
 | `discipline` | fouls and cards | |
-| `shotStopping` | the keeper's saving, by the kind of shot (`SHOT_STOPPING_REACH`) | positioning and handling, so most against shots he sees coming: with a ShotStopper (3), long shots −8%, individual efforts −5%, crosses and headers −4%, set pieces −3%, through balls −1.4%, penalties unchanged (40,000 matches). About 1.3 goals a season fewer, measured on 17 club-seasons with paired seeds. Close-range reflexes are a separate ability, not yet added |
+| `shotStopping` | the keeper's saving, by the kind of shot (`SHOT_STOPPING_REACH`) | positioning and handling, so most against shots he sees coming: with a ShotStopper (3), long shots −19%, individual efforts −10%, headers −3.9%, crosses −2.7%, set pieces −2.1%, through balls −1.2%, penalties unchanged; −5% in all (40,000 matches). About 2.6 goals a season fewer, measured on 17 club-seasons with paired seeds (Bournemouth 2025/26, who face many shots, 8.5), and more against sides that shoot from distance. Close-range reflexes are a separate ability, not yet added |
 | `dribble` | draws a player into the `break` phase only | not yet an ability of its own |
 | `claiming` | nothing yet | |
 | `longShot` | nothing yet (long shots go by role affinity) | |
