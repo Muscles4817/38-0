@@ -349,13 +349,21 @@ describe('who takes part in a phase', () => {
   });
 });
 
-describe('a keeper who is a shot-stopper', () => {
-  // The same keeper, with and without the trait, behind the same side. The
-  // trait is positioning and handling: most against shots from distance, least
-  // against a one-on-one. Measured over 40,000 matches: long shots −19%,
-  // individual efforts −10%, headers −4%, crosses −2.7%, set pieces −2%,
-  // through balls −1.2%, penalties unchanged; −5% in all.
-  const QUALITIES = { goalMult: {}, assistMult: {}, qualities: { ShotStopper: { shotStopping: 3 } } };
+describe('goalkeeping traits', () => {
+  // The same keeper, with and without a trait, behind the same side.
+  //
+  // ShotStopper is positioning and handling: most against shots from
+  // distance, least against a one-on-one. Measured over 40,000 matches: long
+  // shots −19%, individual efforts −10%, headers −4%, crosses −2.7%, set
+  // pieces −2%, through balls −1.2%, penalties unchanged; −5% in all.
+  //
+  // Reflexes is the save from close range: through balls −8.7%, crosses −8%,
+  // headers −7.5%, individual efforts −5%, set pieces −4.6%, long shots −1.2%,
+  // penalties unchanged; −5.3% in all.
+  const QUALITIES = {
+    goalMult: {}, assistMult: {},
+    qualities: { ShotStopper: { shotStopping: 3 }, Reflexes: { reflexes: 3 } },
+  };
   const shape: Position[] = ['GK', 'LB', 'CB', 'CB', 'RB', 'LM', 'CM', 'CM', 'RM', 'ST', 'ST'];
   const side = (name: string, base: number, keeperRoles: string[]): TeamSetup => ({
     name, formation: '4-4-2', style: 'balanced', focus: { L: 1, C: 1, R: 1 },
@@ -364,18 +372,41 @@ describe('a keeper who is a shot-stopper', () => {
       roles: position === 'GK' ? keeperRoles : [],
     })),
   });
-  const conceded = (keeperRoles: string[]) => {
+  const CLOSE = new Set(['throughBall', 'cross', 'aerial']);
+  const conceded = (keeperRoles: string[], matches = 3000) => {
     const rand = rng(31);
-    let goals = 0;
-    for (let i = 0; i < 3000; i++) {
-      goals += simulateMatch(side('Opp', 100, []), side('Us', 200, keeperRoles), rand, QUALITIES).home.goals;
+    let goals = 0, fromDistance = 0, closeIn = 0;
+    for (let i = 0; i < matches; i++) {
+      const m = simulateMatch(side('Opp', 100, []), side('Us', 200, keeperRoles), rand, QUALITIES);
+      goals += m.home.goals;
+      for (const e of m.events) {
+        if (e.type !== 'goal' || e.team !== 'Opp') continue;
+        if (e.chanceType === 'longShot') fromDistance++;
+        else if (CLOSE.has(e.chanceType!)) closeIn++;
+      }
     }
-    return goals;
+    return { goals, fromDistance, closeIn };
   };
 
-  it('concedes fewer', () => {
-    const plain = conceded([]);
-    const stopper = conceded(['ShotStopper']);
+  it('a shot-stopper concedes fewer', () => {
+    const plain = conceded([]).goals;
+    const stopper = conceded(['ShotStopper']).goals;
     expect(stopper, `${stopper} conceded with the trait, ${plain} without`).toBeLessThan(plain * 0.975);
+  });
+
+  it('a keeper with reflexes concedes fewer', () => {
+    const plain = conceded([]).goals;
+    const quick = conceded(['Reflexes']).goals;
+    expect(quick, `${quick} conceded with the trait, ${plain} without`).toBeLessThan(plain * 0.975);
+  });
+
+  it('divide the shots between them: distance for one, close range for the other', { timeout: 60_000 }, () => {
+    const plain = conceded([], 6000);
+    const stopper = conceded(['ShotStopper'], 6000);
+    const quick = conceded(['Reflexes'], 6000);
+    const detail = `long shots ${plain.fromDistance}/${stopper.fromDistance}/${quick.fromDistance}, `
+      + `close in ${plain.closeIn}/${stopper.closeIn}/${quick.closeIn} (plain/ShotStopper/Reflexes)`;
+    expect(stopper.fromDistance, detail).toBeLessThan(quick.fromDistance);
+    expect(quick.closeIn, detail).toBeLessThan(stopper.closeIn);
   });
 });

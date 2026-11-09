@@ -105,6 +105,30 @@ const SHOT_STOPPING_REACH: Record<ChanceType, number> = {
   penalty: 0,
 };
 
+/**
+ * How many rating points of keeping a point of `reflexes` is worth, by the
+ * kind of shot. Reflexes are the other half of goalkeeping: the save from
+ * close range, where there is no time to set and the keeper reacts — the
+ * one-on-one, the cut-back from six yards, the header from the edge of the
+ * six-yard box, the scramble after a corner. Next to nothing from distance,
+ * where a keeper has time to see it.
+ *
+ * Most goals are scored from close in, so the same reach is worth more goals
+ * here than from distance. Sized so a specialist is worth about as much over a
+ * season as a ShotStopper.
+ */
+const REFLEXES_REACH: Record<ChanceType, number> = {
+  throughBall: 2.0,
+  cross: 1.5,
+  aerial: 1.5,
+  setPiece: 1.0,
+  individual: 1.0,
+  longShot: 0.2,
+  // A penalty is a guess and a dive, not a reaction; nothing reads penalty
+  // saving yet.
+  penalty: 0,
+};
+
 // Role multipliers were written for an engine that multiplied a goal *count*.
 // Here they decide who gets on the end of a chance, where the same numbers are
 // far too strong: a Poacher at 2.2 took half his side's shots. A leading
@@ -1827,13 +1851,16 @@ export function simulateMatch(
         for (const r of shooter.roles ?? []) finishing *= Math.sqrt(affinity[r] ?? 1);
         const keeper = def.keeper;
         const keeping = keeper ? ratingScale(keeper.rating) : 1;
-        // A shot-stopper keeps as a better-rated keeper would, by how much the
-        // shot is one his positioning and handling decide (SHOT_STOPPING_REACH).
-        // Applied to set pieces too, which otherwise ignore the keeper, for the
-        // direct free kicks among them.
+        // A shot-stopper or a keeper with reflexes keeps as a better-rated
+        // keeper would, by how much the shot is one his positioning and
+        // handling (SHOT_STOPPING_REACH) or his reactions (REFLEXES_REACH)
+        // decide. Applied to set pieces too, which otherwise ignore the keeper,
+        // for the direct free kicks and the scrambles among them.
         const stopping = keeper
-          ? Math.pow(ratingScale(80 + SHOT_STOPPING_REACH[type] * quality(keeper, 'shotStopping', roles)),
-            -KEEPING_EXPONENT * carry)
+          ? Math.pow(ratingScale(80
+            + SHOT_STOPPING_REACH[type] * quality(keeper, 'shotStopping', roles)
+            + REFLEXES_REACH[type] * quality(keeper, 'reflexes', roles)),
+          -KEEPING_EXPONENT * carry)
           : 1;
 
         // A style's demands are a cost paid up front; what it gives back is

@@ -27,6 +27,7 @@ counter-attacking and of punishing a high line.
 | `creation` | Unlocks a set defence |
 | `dribble` | Beats a man one on one |
 | `shotStopping` | Saves shots: positioning and handling, most against shots from distance |
+| `reflexes` | Saves from close range: the one-on-one, the cut-back, the header from six yards |
 | `claiming` | Commands his box; claims crosses |
 | `setPiece` | Dead-ball delivery |
 | `penalty` | Takes penalties |
@@ -57,7 +58,8 @@ read yet, the trait is decorative in a match, whatever it says.
 | `setPiece` | the `delivery` phase; crossers and set-piece takers | who delivers, and how well |
 | `penalty` | who takes penalties | |
 | `discipline` | fouls and cards | |
-| `shotStopping` | the keeper's saving, by the kind of shot (`SHOT_STOPPING_REACH`) | positioning and handling, so most against shots he sees coming: with a ShotStopper (3), long shots −19%, individual efforts −10%, headers −3.9%, crosses −2.7%, set pieces −2.1%, through balls −1.2%, penalties unchanged; −5% in all (40,000 matches). About 2.6 goals a season fewer, measured on 17 club-seasons with paired seeds (Bournemouth 2025/26, who face many shots, 8.5), and more against sides that shoot from distance. Close-range reflexes are a separate ability, not yet added |
+| `shotStopping` | the keeper's saving, by the kind of shot (`SHOT_STOPPING_REACH`) | positioning and handling, so most against shots he sees coming: with a ShotStopper (3), long shots −19%, individual efforts −10%, headers −3.9%, crosses −2.7%, set pieces −2.1%, through balls −1.2%, penalties unchanged; −5% in all (40,000 matches). About 2.6 goals a season fewer, measured on 17 club-seasons with paired seeds (Bournemouth 2025/26, who face many shots, 8.5), and more against sides that shoot from distance. Close-range saves are `reflexes` |
+| `reflexes` | the keeper's saving, by the kind of shot (`REFLEXES_REACH`) | reactions, so most against shots from close in: with Reflexes (3), through balls −8.7%, crosses −8%, headers −7.5%, individual efforts −5%, set pieces −4.6%, long shots −1.2%, penalties unchanged; −5.3% in all (40,000 matches). About 2.7 goals a season fewer, measured by giving the 17 ShotStopper keepers Reflexes instead, with paired seeds — as much as a ShotStopper, from the other end of the shot mix. No keeper in the data has it yet |
 | `dribble` | draws a player into the `break` phase only | not yet an ability of its own |
 | `claiming` | nothing yet | |
 | `longShot` | nothing yet (long shots go by role affinity) | |
@@ -79,6 +81,7 @@ from a set of roles containing no forward at all.
 | `Carrier` | pressResist 3, dribble 2 | Beats a press by running through it |
 | `Dribbler` | dribble 3 | Beats his man, as distinct from a winger who crosses |
 | `ShotStopper` | shotStopping 3 | There was exactly one goalkeeping role |
+| `Reflexes` | reflexes 3 | Saving is two abilities: a ShotStopper sees it coming, a keeper with reflexes reacts to what he does not |
 | `CommandingKeeper` | claiming 3, aerial 1 | Claims crosses — meaningful now set pieces exist |
 | `PenaltyTaker` | penalty 3 | A penalty is 0.78 xG and anyone was taking them |
 | `LongShot` | longShot 3 | The engine has a long-shot chance type with almost nothing attached |
