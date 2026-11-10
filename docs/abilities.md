@@ -493,7 +493,6 @@ interesting because something beats them.
 
 The owner has decided the first; the other two are still open.
 
-
 - **Stamina and fatigue are built together, and not yet.** In-match fatigue is
   not built ahead of stamina; the two go in at the same time, later. Season
   fatigue without rotation is still unsolved.
