@@ -81,6 +81,9 @@ decides three things: **who joins an attack**, **what kind of chance the
 attack produces**, and **who is on the end of it**. Some movement also has a
 defensive cost, because a man who has gone forward is not back.
 
+How each of these enters the match, which traits get them, and the order they
+are built in: [movement.md](movement.md).
+
 ### Showing for the ball
 - **+** Always available. Finds the pocket, angles his body, makes the
   short pass on, so the side never has to force it. Busquets, Xavi, the

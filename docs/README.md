@@ -19,6 +19,7 @@ the codebase already works.
 
 - [`roles.md`](roles.md) — what a trait can say about a player
 - [`abilities.md`](abilities.md) — the target design: every ability a player can have, and what each does in a match
+- [`movement.md`](movement.md) — how the movement abilities work in the match, and the order they are built in
 - [`playstyles.md`](playstyles.md) — how a side plays, and why it is a decision
 
 ## Read these first
