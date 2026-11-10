@@ -491,9 +491,12 @@ interesting because something beats them.
 
 ## Open questions
 
-- **Stamina needs engine support first.** That means in-match fatigue, and
-  something for a season with no rotation. Is in-match fatigue alone worth
-  building first?
+The owner has decided the first; the other two are still open.
+
+
+- **Stamina and fatigue are built together, and not yet.** In-match fatigue is
+  not built ahead of stamina; the two go in at the same time, later. Season
+  fatigue without rotation is still unsolved.
 - **Which abilities should the editor show by name?** A person tags traits;
   abilities could stay underneath, or the editor could let a player carry an
   ability directly (Fellaini: attacking the box +3, aerial +2) when no trait
