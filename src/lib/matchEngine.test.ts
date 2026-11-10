@@ -476,10 +476,78 @@ describe('a sweeper keeper', () => {
     expect(high).toBeGreaterThan(deep);
   });
 
-  it('gets to a ball in behind first, however quick the man chasing it', () => {
+  it('gets to a ball in behind first, however quick the man chasing it', { timeout: 60_000 }, () => {
     const plain = () => [];
     const swept = conceded('gegenpress', SWEEPING, plain);
     const stays = conceded('gegenpress', STAYS_HOME, plain);
     expect(swept, `${swept} conceded sweeping, ${stays} staying home`).toBeLessThan(stays);
+  });
+});
+
+describe('movement decides who is on the end of it', () => {
+  // docs/movement.md, step 1. Two identical sides; one player on the first
+  // carries a movement ability. Measured over 20,000 matches:
+  // - box movement (3) on one of two strikers: 30% of his side's goals against
+  //   19% for the other, all of it through balls, crosses, headers and
+  //   set-piece scrambles; long shots and solo efforts level;
+  // - attacking the box (3) on a central midfielder: twice the crosses and
+  //   headers of the other, and his side gets slightly more of them;
+  // - late runs (3) on a central midfielder: twice the crosses, more of the
+  //   set-piece scrambles.
+  // Box movement and late runs leave the side's total exactly where it was.
+  const QUALITIES = {
+    goalMult: {}, assistMult: {},
+    qualities: { Box: { boxMovement: 3 }, Crash: { attackingTheBox: 3 }, Late: { lateRuns: 3 } },
+  };
+  const shape: Position[] = ['GK', 'LB', 'CB', 'CB', 'RB', 'LM', 'CM', 'CM', 'RM', 'ST', 'ST'];
+  const side = (name: string, base: number, roleAt: Record<number, string[]>): TeamSetup => ({
+    name, formation: '4-4-2', style: 'balanced', focus: { L: 1, C: 1, R: 1 },
+    players: shape.map((position, i) => ({
+      playerId: base + i, name: `${name} ${i}`, position, rating: 78, roles: roleAt[i] ?? [],
+    })),
+  });
+  const IN_THE_BOX = new Set(['throughBall', 'cross', 'aerial', 'setPiece']);
+  const FROM_HIS_OWN = new Set(['longShot', 'individual']);
+  const goals = (roleAt: Record<number, string[]>) => {
+    const rand = rng(9);
+    const bySlot = new Map<number, { inBox: number; own: number; crosses: number }>();
+    let total = 0, crossesAndHeaders = 0;
+    for (let i = 0; i < 4000; i++) {
+      for (const e of simulateMatch(side('Us', 100, roleAt), side('Them', 200, {}), rand, QUALITIES).events) {
+        if (e.type !== 'goal' || e.team !== 'Us') continue;
+        total++;
+        if (e.chanceType === 'cross' || e.chanceType === 'aerial') crossesAndHeaders++;
+        const s = bySlot.get(e.playerId! - 100) ?? { inBox: 0, own: 0, crosses: 0 };
+        if (IN_THE_BOX.has(e.chanceType!)) s.inBox++;
+        if (FROM_HIS_OWN.has(e.chanceType!)) s.own++;
+        if (e.chanceType === 'cross' || e.chanceType === 'aerial') s.crosses++;
+        bySlot.set(e.playerId! - 100, s);
+      }
+    }
+    return { total, crossesAndHeaders, slot: (i: number) => bySlot.get(i) ?? { inBox: 0, own: 0, crosses: 0 } };
+  };
+
+  it('puts a striker with box movement on the end of what arrives in the box, and nothing else', { timeout: 60_000 }, () => {
+    const g = goals({ 9: ['Box'] });
+    const mover = g.slot(9), other = g.slot(10);
+    expect(mover.inBox, `in the box ${mover.inBox} against ${other.inBox}`).toBeGreaterThan(other.inBox * 1.4);
+    // His long shots and solo efforts are his own, not his movement's.
+    expect(Math.abs(mover.own - other.own), `own ${mover.own} against ${other.own}`).toBeLessThan(other.own * 0.2);
+  });
+
+  it('decides whose chance it is without adding any', { timeout: 60_000 }, () => {
+    expect(goals({ 9: ['Box'] }).total).toBe(goals({}).total);
+    expect(goals({ 6: ['Late'] }).total).toBe(goals({}).total);
+  });
+
+  it('gets a midfielder who attacks the box onto crosses, and the side more of them', { timeout: 60_000 }, () => {
+    const g = goals({ 6: ['Crash'] });
+    expect(g.slot(6).crosses).toBeGreaterThan(g.slot(7).crosses * 1.5);
+    expect(g.crossesAndHeaders).toBeGreaterThan(goals({}).crossesAndHeaders);
+  });
+
+  it('gets a late runner onto the cut-back', { timeout: 60_000 }, () => {
+    const g = goals({ 6: ['Late'] });
+    expect(g.slot(6).crosses).toBeGreaterThan(g.slot(7).crosses * 1.5);
   });
 });

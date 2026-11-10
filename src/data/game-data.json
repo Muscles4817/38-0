@@ -125180,9 +125180,23 @@
       }
     },
     {
+      "name": "BoxCrasher",
+      "label": "Box Crasher",
+      "goalMult": 1,
+      "assistMult": 1,
+      "validPositions": [],
+      "description": "Gets into the box whenever the ball goes wide, whatever his position",
+      "attContrib": 0,
+      "midContrib": 0,
+      "defContrib": 0,
+      "qualities": {
+        "attackingTheBox": 3
+      }
+    },
+    {
       "name": "BoxToBox",
       "label": "Box to Box",
-      "goalMult": 1.3,
+      "goalMult": 1,
       "assistMult": 1.2,
       "validPositions": [
         "CM",
@@ -125193,7 +125207,8 @@
       "midContrib": -1,
       "defContrib": 1,
       "qualities": {
-        "pressing": 2
+        "pressing": 2,
+        "lateRuns": 1
       }
     },
     {
@@ -125267,7 +125282,8 @@
         "aerial": 1,
         "pace": 1,
         "pressing": 1,
-        "dribble": 1
+        "dribble": 1,
+        "boxMovement": 1
       }
     },
     {
@@ -125455,7 +125471,7 @@
     {
       "name": "LateRunner",
       "label": "Late Runner",
-      "goalMult": 1.8,
+      "goalMult": 1,
       "assistMult": 0.7,
       "validPositions": [
         "CM",
@@ -125467,7 +125483,7 @@
       "midContrib": 0,
       "defContrib": 0,
       "qualities": {
-        "longShot": 1
+        "lateRuns": 3
       }
     },
     {
@@ -125529,7 +125545,8 @@
       "defContrib": 0,
       "qualities": {
         "creation": 1,
-        "dribble": 1
+        "dribble": 1,
+        "lateRuns": 1
       }
     },
     {
@@ -125581,9 +125598,28 @@
       }
     },
     {
+      "name": "PlaysOnTheShoulder",
+      "label": "Plays on the Shoulder",
+      "goalMult": 1,
+      "assistMult": 1,
+      "validPositions": [
+        "ST",
+        "CF",
+        "LW",
+        "RW"
+      ],
+      "description": "Lives on the last defender's shoulder and times the run beyond him",
+      "attContrib": 0,
+      "midContrib": 0,
+      "defContrib": 0,
+      "qualities": {
+        "runsInBehind": 3
+      }
+    },
+    {
       "name": "Poacher",
       "label": "Poacher",
-      "goalMult": 2.2,
+      "goalMult": 1,
       "assistMult": 0.4,
       "validPositions": [
         "ST",
@@ -125595,7 +125631,9 @@
       "attContrib": 0,
       "midContrib": 0,
       "defContrib": 0,
-      "qualities": {}
+      "qualities": {
+        "boxMovement": 3
+      }
     },
     {
       "name": "Ponderous",
@@ -125799,7 +125837,7 @@
     {
       "name": "TargetMan",
       "label": "Target Man",
-      "goalMult": 1.3,
+      "goalMult": 1,
       "assistMult": 0.9,
       "validPositions": [
         "ST",
@@ -125810,7 +125848,8 @@
       "midContrib": 0,
       "defContrib": 0,
       "qualities": {
-        "aerial": 2
+        "aerial": 2,
+        "attackingTheBox": 2
       }
     },
     {

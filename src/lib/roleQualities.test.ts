@@ -128,7 +128,7 @@ describe('role qualities', () => {
     // score more. The ones that legitimately do — Poacher, AerialThreat — are
     // about finishing; the new descriptive traits are not.
     const descriptive = ['Pacey', 'Sweeper', 'Stopper', 'Workhorse', 'Carrier',
-      'ShotStopper', 'Reflexes', 'CommandingKeeper'];
+      'ShotStopper', 'Reflexes', 'CommandingKeeper', 'PlaysOnTheShoulder', 'BoxCrasher'];
     for (const name of descriptive) {
       const role = gameData.roles.find(r => r.name === name);
       expect(role, `${name} is missing`).toBeDefined();

@@ -69,6 +69,10 @@ read yet, the trait is decorative in a match, whatever it says.
 | `claiming` | the keeper coming for the ball in the air (`CLAIM_PER_POINT`, `CLAIM_REACH`) | before a cross, a header or a set piece becomes a shot, a keeper with claiming takes a share of them (none of a through ball, a long shot or an individual effort). A keeper who flaps does not face more crosses; he turns the ones he faces into better chances. A CommandingKeeper (3) concedes crosses −9.4%, headers −8.5%, set pieces −6.7%, −3.3% in all (1.8 goals a season) against an ordinary side, 2.6 against a crossing side with target men; FlapsAtCrosses (−2) +1.9% in all (1.0 a season), 2.5 against a crossing side (20,000 matches). In the real leagues, pooled over five seeds: FlapsAtCrosses +1.6 goals a season on all 6 club-seasons that have it; CommandingKeeper −1.2 on the only one (Aston Villa 2025/26); a SweeperKeeper's claiming 1 is lost in the noise |
 | `longShot` | nothing yet (long shots go by role affinity) | |
 | `defending` | the `block` phase | no trait grants it yet |
+| `boxMovement` | who shoots (`MOVEMENT_REACH`) | on the end of crosses, headers, through balls and set-piece scrambles; never long shots or solo efforts. See [movement.md](movement.md) |
+| `attackingTheBox` | who shoots; how many wide attacks become crosses (`BOX_COMMIT_TO_CROSSES`) | on the end of crosses and headers from any position, and a side that commits gets more crosses away |
+| `lateRuns` | who shoots | a midfielder onto the cut-back and the set-piece scramble |
+| `runsInBehind` | nothing yet | step 2 of [movement.md](movement.md) |
 
 ## The traits added for the playstyle work
 
@@ -90,6 +94,8 @@ from a set of roles containing no forward at all.
 | `CommandingKeeper` | claiming 3, aerial 1 | Claims crosses — meaningful now set pieces exist |
 | `PenaltyTaker` | penalty 3 | A penalty is 0.78 xG and anyone was taking them |
 | `LongShot` | longShot 3 | The engine has a long-shot chance type with almost nothing attached |
+| `PlaysOnTheShoulder` | runsInBehind 3 | Runs in behind is movement, not pace; nothing meant it |
+| `BoxCrasher` | attackingTheBox 3 | Fellaini: commits to the box from any position |
 
 Their goal and assist multipliers are deliberately modest. **A trait that exists
 to describe an ability must not also be a free scoring bonus**; its effect

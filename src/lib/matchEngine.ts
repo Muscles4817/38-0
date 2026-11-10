@@ -171,6 +171,37 @@ const CLAIM_REACH: Record<ChanceType, number> = {
 // far too strong: a Poacher at 2.2 took half his side's shots. A leading
 // striker takes roughly a quarter of them, so both role and rating are damped.
 const ROLE_SELECTION_POWER = 0.5;
+
+/**
+ * Movement decides who is on the end of a chance (docs/movement.md). Per point
+ * of each movement ability, by the kind of chance, how much likelier a player
+ * is to be the one who shoots. It makes no chance better and adds none; it
+ * only decides whose it is.
+ *
+ * - Box movement: in the right place in the box, for anything that arrives
+ *   there: a cross, a header, a through ball, the scramble after a set piece.
+ * - Attacking the box: there when the ball goes wide, for crosses and headers.
+ * - Late runs: arriving from midfield for the cut-back (a cross, here), the
+ *   second ball after a set piece, and now and then a through ball.
+ *
+ * None of it reaches a long shot or a solo effort, which are his own.
+ * `setPieceScramble` is a set-piece chance that is not headed from the
+ * delivery (SET_PIECE_HEADER_SHARE); the header itself goes to the tallest.
+ */
+const MOVEMENT_TO_SHOTS = 0.25;
+type ShooterChance = ChanceType | 'setPieceScramble';
+const MOVEMENT_REACH: Record<'boxMovement' | 'attackingTheBox' | 'lateRuns', Partial<Record<ShooterChance, number>>> = {
+  boxMovement: { cross: 1, aerial: 1, throughBall: 1, setPieceScramble: 1 },
+  attackingTheBox: { cross: 1, aerial: 1 },
+  lateRuns: { cross: 1, throughBall: 0.5, setPieceScramble: 1 },
+};
+
+/**
+ * How much more of a side's wide attacks become crosses, per point of
+ * `attackingTheBox` across its eleven: a cross is worth putting in when there
+ * is someone to aim at. A side whose men stay out gets fewer away.
+ */
+const BOX_COMMIT_TO_CROSSES = 0.03;
 const RATING_SELECTION_POWER = 0.6;
 
 // ── Set pieces ───────────────────────────────────────────────────────────────
@@ -476,8 +507,10 @@ const CHANCE_QUALITY: Record<ChanceType, number> = {
 /** Roles that are better than average at converting a given kind of chance. */
 const ROLE_CHANCE_AFFINITY: Record<ChanceType, Partial<Record<PlayerRole, number>>> = {
   aerial: { AerialThreat: 2.6, TargetMan: 1.9, NoNonsenseDefender: 1.3 },
-  cross: { AerialThreat: 2.2, TargetMan: 1.7, Poacher: 1.3 },
-  throughBall: { Poacher: 1.8, LateRunner: 1.6, InsideForward: 1.4, DeepLyingForward: 1.3 },
+  // Getting on the end of a cross or a through ball is box movement, attacking
+  // the box and late runs now (MOVEMENT_REACH), not a role's affinity.
+  cross: { AerialThreat: 2.2 },
+  throughBall: { InsideForward: 1.4, DeepLyingForward: 1.3 },
   individual: { InsideForward: 1.7, Trequartista: 1.5, Winger: 1.3 },
   longShot: { Mezzala: 1.5, Trequartista: 1.4, Regista: 1.2 },
   setPiece: { AerialThreat: 2.8, TargetMan: 2.0, NoNonsenseDefender: 1.9, BallPlayingDefender: 1.4 },
@@ -993,6 +1026,8 @@ interface TeamModel {
   /** Recovery: getting back to cover the space behind. */
   cover: number;
   creation: number;
+  /** Everyone's `attackingTheBox`, summed: how many it commits to a cross. */
+  boxCommit: number;
   versatility: number;
   /** 0-1: how well this eleven can play the style it has been given. */
   fit: number;
@@ -1184,6 +1219,7 @@ function buildTeam(setup: TeamSetup, roles: RoleMultipliers): TeamModel {
     runningThreat: phaseAbility(players, 'break', roles),
     cover: phaseAbility(players, 'cover', roles),
     creation: phaseAbility(players, 'create', roles),
+    boxCommit: players.reduce((s, p) => s + readChanceType(p, 'attackingTheBox', roles), 0),
     versatility: players.filter(p => (p.positions?.length ?? 1) > 1).length
       / Math.max(1, players.length),
     focus: {
@@ -1258,6 +1294,10 @@ const readDefensiveCredit = reader('defensiveCredit', ['recovery', 'aerial']);
 const readPressCredit = reader('pressCredit', ['pressResist', 'pressing']);
 /** The keeper: saving, sweeping behind a high line, and claiming crosses. */
 const readKeeper = reader('keeper', ['shotStopping', 'reflexes', 'claiming', 'recovery']);
+/** Who is on the end of a chance: movement in and around the box. */
+const readShooterMovement = reader('shooter', ['boxMovement', 'attackingTheBox', 'lateRuns']);
+/** What kind of chance an attack becomes: whether there is anyone to cross to. */
+const readChanceType = reader('chanceType', ['attackingTheBox']);
 
 // ── The interaction rules, as functions ──────────────────────────────────────
 //
@@ -1422,6 +1462,7 @@ function pickChanceType(
     // Attacks down a flank arrive as crosses; through the middle they do not.
     if (zone === 'C') w *= t === 'cross' ? 0.35 : t === 'throughBall' ? 1.5 : 1;
     else w *= t === 'cross' ? 2.2 : t === 'throughBall' ? 0.7 : 1;
+    if (t === 'cross' || t === 'aerial') w *= Math.exp(BOX_COMMIT_TO_CROSSES * team.boxCommit);
     return w;
   });
   return pickWeighted(rand, types, weights) ?? 'individual';
@@ -1472,6 +1513,13 @@ function pickShooter(
       best = Math.max(best, affinity[r] ?? 1);
     }
     if (penalty) w *= Math.exp(PENALTY_TAKER_QUALITY_WEIGHT * readPenaltyTaker(p, 'penalty', roles));
+    const chance: ShooterChance = type === 'setPiece' ? (setPiece ? 'setPiece' : 'setPieceScramble') : type;
+    let movement = 0;
+    for (const [name, reach] of Object.entries(MOVEMENT_REACH) as [keyof typeof MOVEMENT_REACH, Partial<Record<ShooterChance, number>>][]) {
+      const k = reach[chance] ?? 0;
+      if (k !== 0) movement += k * readShooterMovement(p, name, roles);
+    }
+    w *= Math.exp(MOVEMENT_TO_SHOTS * movement);
     // A role's general goal multiplier and its affinity for this kind of
     // chance say the same thing — a Poacher gets on the end of things — so the
     // stronger counts, not their product. Multiplied, a Poacher was boosted

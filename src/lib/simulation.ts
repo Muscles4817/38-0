@@ -26,8 +26,8 @@ export type PlayerRole = string;
 const ROLE_GOAL_MULT: Record<PlayerRole, number> = {
   InsideForward:       1.4,  // cuts inside to score
   Winger:              0.5,  // stays wide, crosses instead
-  Poacher:             1.6,  // pure box finisher — boosted by ST base already
-  TargetMan:           1.2,  // physical ST, wins headers
+  Poacher:             1.0,  // gets on the end of things through box movement now
+  TargetMan:           1.0,  // attacks the box and wins headers, through abilities now
   CompleteForward:     1.2,  // all-round striker
   Trequartista:        1.3,  // floats between lines
   FalseNine:           1.1,  // still scores (Messi) but primarily a creator
@@ -36,8 +36,8 @@ const ROLE_GOAL_MULT: Record<PlayerRole, number> = {
   DeepLyingPlaymaker:  0.4,  // rarely gets in the box
   Regista:             0.2,  // open-play goals almost nil; free kicks handled separately
   Mezzala:             1.3,  // breaks into the box from half-space
-  LateRunner:          1.4,  // times runs (Lampard, Gerrard)
-  BoxToBox:            1.2,  // balanced
+  LateRunner:          1.0,  // arrives late through the lateRuns ability now
+  BoxToBox:            1.0,  // arrives late through the lateRuns ability now
   Anchor:              0.2,  // pure shield, almost never scores
   Enforcer:            0.15, // win the ball, give it simple
   AttackingFullback:   1.0,  // overlaps but still a FB

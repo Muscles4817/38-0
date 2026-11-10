@@ -102,7 +102,9 @@ are built in: [movement.md](movement.md).
   through balls, worth most against a high line. Pace makes the run more
   dangerous, but it is a separate ability: a slow striker can still time a run.
 - **Counter:** a high line's recovery and a sweeping keeper.
-- **Status:** new. Today only pace stands in for it.
+- **Status:** the ability exists (`runsInBehind`) and the *Plays on the
+  Shoulder* trait gives it, but nothing reads it until step 2 of
+  [movement.md](movement.md). Today only pace stands in for it.
 
 ### Channel runs
 - **+** Moves from wide into the gap between full-back and centre-back. The
@@ -118,7 +120,8 @@ are built in: [movement.md](movement.md).
 - **Does:** who gets the chance. It does not create chances; it decides who is
   on the end of crosses, cut-backs and loose balls.
 - **Counter:** man marking.
-- **Status:** new. Today it is the Poacher's flat scoring bonus.
+- **Status:** built (`boxMovement`). Replaces most of the Poacher's flat
+  scoring bonus; see [movement.md](movement.md).
 
 ### Attacking the box
 - **+** Commits to the box whenever the ball goes wide, from whatever position
@@ -127,7 +130,8 @@ are built in: [movement.md](movement.md).
 - **−** Stays out. Will not commit numbers to a cross.
 - **Does:** chance creation and who gets the chance. More bodies on a cross
   make crosses and headers more dangerous and draw a non-striker onto them.
-- **Status:** new.
+- **Status:** built (`attackingTheBox`): who gets the chance, and more crosses
+  for a side that commits. The *Box Crasher* trait gives it.
 
 ### Late runs from midfield
 - **+** Arrives after the first wave, unmarked, for the cut-back or second
@@ -135,7 +139,9 @@ are built in: [movement.md](movement.md).
 - **Does:** who gets the chance. Midfielders onto cut-backs and loose balls.
   Hard to track, so weak against nothing in particular, but it leaves midfield
   short if the attack breaks down.
-- **Status:** new. Today *Late Runner* is made of long shooting.
+- **Status:** built (`lateRuns`), for who gets the chance. The cost (midfield
+  short when the attack breaks down) waits for the shape step in
+  [movement.md](movement.md).
 
 ### Dropping deep
 - **+** A forward who comes short between the lines. The false nine, the

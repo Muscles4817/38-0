@@ -3,7 +3,8 @@
 The design for the movement family of [abilities.md](abilities.md): for each
 movement ability, where it enters a match, what it changes, what beats it,
 which traits get it, and how we will know it works. Nothing here is built
-yet; the [build order](#build-order) says what comes first.
+yet beyond step 1; the [build order](#build-order) says what is done and what
+comes next.
 
 ## What the engine can and cannot see
 
@@ -223,6 +224,70 @@ Two movements have no trait that means them. Two new traits are proposed:
 *Aerial Threat* stays as it is. It can be any position, including a
 centre-back, who does not attack the box in open play.
 
+## Step 1, as built: who gets the chance
+
+Box movement, attacking the box and late runs are read in shooter selection
+(`MOVEMENT_REACH`, `MOVEMENT_TO_SHOTS` in `matchEngine.ts`). Each point makes a
+player likelier to be the one on the end of the chances it reaches. Attacking
+the box also turns more of a side's wide attacks into crosses
+(`BOX_COMMIT_TO_CROSSES`).
+
+**Recipes.**
+- Poacher: box movement +3.
+- Late Runner: late runs +3, instead of long shots +1.
+- Target Man: attacking the box +2.
+- Box-to-Box and Mezzala: late runs +1.
+- Complete Forward: box movement +1.
+- Box Crasher (new): attacking the box +3.
+- Plays on the Shoulder (new): runs in behind +3, which nothing reads until
+  step 2.
+
+**What was retired.** The flat goal multipliers on Poacher (2.2), Late Runner
+(1.8), Target Man (1.3) and Box-to-Box (1.3) are now 1. So are the Poacher's,
+Late Runner's and Target Man's affinities for crosses and through balls. What
+they meant is now movement.
+
+**Controlled duel** (20,000 matches, identical sides, one player different):
+- a striker with box movement +3 scores 30% of his side's goals against 19% for
+  the other striker. The difference is all through balls, crosses, headers and
+  set-piece scrambles; their long shots and solo efforts are level;
+- a central midfielder attacking the box +3 scores twice the crosses and
+  headers of the other, and his side gets slightly more of them;
+- a central midfielder with late runs +3 scores twice the crosses and more
+  set-piece scrambles.
+
+Box movement and late runs leave the side's total goals exactly where they
+were: they decide whose chance it is, not how many there are.
+
+**Against the real scorers.** Each trait's share of its club's non-penalty
+goals, per full season, against FBref over 19 seasons:
+
+| Trait | Before | After | Real |
+| --- | --- | --- | --- |
+| Poacher | 31.5% | 32.0% | 35.1% |
+| Late Runner | 14.9% | 14.6% | 16.2% |
+| Box-to-Box | 9.7% | 9.3% | 7.7% |
+| Target Man | 25.7% | 27.6% | 26.5% |
+| Complete Forward | 27.9% | 31.0% | 31.0% |
+
+They now score more of it from the right places. A Poacher's goals:
+
+| | from distance | solo efforts | headers |
+| --- | --- | --- | --- |
+| Before | 11.0% | 12.3% | 12.7% |
+| After | 8.8% | 9.6% | 15.0% |
+
+**League calibration unchanged.** +3.36 points per strength point (real +3.41),
+draws 25.6% (real 26.5%).
+
+**Golden Boot up about two goals.** Averaged over four seasons, 31.9, from 30.1
+(real 29.3). A club's top scorer's share of its goals is unchanged.
+
+**Still to do in this family.**
+- The cost of late runs (midfield short when the attack breaks down) waits for
+  step 5.
+- Man marking, the counter to all three, belongs to the defending family.
+
 ## Build order
 
 One step at a time. Each step is measured, committed, and reviewed before the
@@ -230,6 +295,7 @@ next.
 
 1. **Who gets the chance:** box movement, attacking the box, late runs. This
    retires most of the flat scoring bonus on Poacher and Late Runner.
+   **Done** — see above.
    *Measured by:* each player's share of his side's goals, against the real
    scorers ([FBref](https://fbref.com), which `sim:spread` already compares);
    a controlled duel for each ability; league calibration unchanged.
@@ -248,9 +314,7 @@ next.
 
 ## Open questions
 
-- **The two new traits.** Should *Plays on the Shoulder* and *Box Crasher* be
-  added, or should those movements wait for the editor to tag abilities
-  directly (an open question in abilities.md)?
+- ~~The two new traits.~~ Decided: both added.
 - **How much of the flat scoring bonus to retire in step 1.** The aim is all of
   the part that means "gets on the end of things". The rest — a striker who is
   simply a better finisher — waits for the finishing ability in the shooting
