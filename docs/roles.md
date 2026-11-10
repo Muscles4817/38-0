@@ -3,7 +3,7 @@
 > This describes what exists today. The target design — the full list of
 > abilities, their meanings and what each should do in a match — is
 > [abilities.md](abilities.md). Where the two disagree, this one is the code and
-> that one is the plan.
+> that one is the plan. The list of abilities itself is `src/lib/abilities.ts`.
 
 A role says two different kinds of thing about a player, and it is worth
 keeping them apart.

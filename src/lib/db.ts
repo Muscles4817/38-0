@@ -1,6 +1,7 @@
 import Database from 'better-sqlite3';
 import path from 'path';
 import fs from 'fs';
+import type { Ability } from './abilities';
 
 const DB_PATH = path.join(process.cwd(), 'data', '38-0.db');
 
@@ -1911,26 +1912,11 @@ const ROLE_DEFAULTS: (Omit<RoleRow, 'valid_positions' | 'qualities'> & { valid_p
 // in the data currently expresses pace, and running in behind is the whole
 // basis of counter-attacking. See docs/playstyles.md and docs/roles.md.
 //
-// Stored as JSON so a new quality does not need a migration. Values are roughly
-// 1 = notable, 2 = strong, 3 = defining.
-export const QUALITIES = {
-  aerial: 'Wins the ball in the air',
-  pace: 'Genuine speed; runs in behind',
-  recovery: 'Gets back and covers the space behind the defence',
-  pressing: 'Presses from the front or through midfield',
-  pressResist: 'Keeps the ball under pressure',
-  creation: 'Unlocks a set defence',
-  dribble: 'Beats a man one on one',
-  shotStopping: 'Saves shots he sees coming: positioning and handling',
-  reflexes: 'Saves from close range: reactions',
-  claiming: 'Commands his box; claims crosses',
-  setPiece: 'Dead-ball delivery',
-  penalty: 'Takes penalties',
-  longShot: 'Shoots from distance',
-  discipline: 'Stays on his feet. Negative means he does not.',
-} as const;
-
-export type Quality = keyof typeof QUALITIES;
+// Stored as JSON so a new quality does not need a migration. Each value is
+// -3 to +3: 1 = notable, 2 = strong, 3 = defining, and the same going down.
+// The list of abilities and what each means lives in src/lib/abilities.ts,
+// shared with the match engine.
+type Quality = Ability;
 
 const ROLE_QUALITIES: Record<string, Partial<Record<Quality, number>>> = {
   // A quality belongs on a trait only if you cannot be that trait without it.
