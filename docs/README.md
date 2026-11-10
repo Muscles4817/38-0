@@ -18,6 +18,7 @@ session with no memory of previous ones — can make a change that fits the way
 the codebase already works.
 
 - [`roles.md`](roles.md) — what a trait can say about a player
+- [`abilities.md`](abilities.md) — the target design: every ability a player can have, and what each does in a match
 - [`playstyles.md`](playstyles.md) — how a side plays, and why it is a decision
 
 ## Read these first
