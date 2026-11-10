@@ -24,7 +24,7 @@ export type PlayerRole = string;
 // This prevents two scoring roles from compounding absurdly while preserving
 // valid combos (Anchor×DLP = genuinely low scorer who occasionally creates).
 const ROLE_GOAL_MULT: Record<PlayerRole, number> = {
-  InsideForward:       1.4,  // cuts inside to score
+  InsideForward:       1.0,  // the run into the channel is the channelRuns ability now
   Winger:              0.5,  // stays wide, crosses instead
   Poacher:             1.0,  // gets on the end of things through box movement now
   TargetMan:           1.0,  // attacks the box and wins headers, through abilities now

@@ -42,7 +42,7 @@ side that controls midfield; each possession attacks down a flank or the
 middle and may become a chance of a type (through ball, cross, header, long
 shot, set piece, penalty); the shooter is picked for that kind of chance, by
 position, rating, movement (`MOVEMENT_REACH`: box movement, attacking the box,
-late runs) and what remains of the role multipliers, damped
+late runs, runs in behind, channel runs) and what remains of the role multipliers, damped
 (`ROLE_SELECTION_POWER`) so no one player takes half his side's shots; a through ball may first be swept up by a keeper who comes
 off his line behind a high one (`SWEEP_PER_POINT`), and a ball into the box
 claimed by one who comes for it (`CLAIM_PER_POINT`); and the chance is finished

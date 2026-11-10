@@ -288,6 +288,67 @@ draws 25.6% (real 26.5%).
   step 5.
 - Man marking, the counter to all three, belongs to the defending family.
 
+## Step 2, as built: running
+
+**Runs in behind** enters in three places:
+- **The break phase.** It is now pace plus runs in behind, added together
+  rather than averaged (`combine: 'sum'`). A side with pace and no runners is
+  exactly where it was. A slow man who times his run now threatens the space,
+  and one who is quick and runs counts for both.
+- **How many through balls.** A side with runners plays more through balls,
+  scaled by how high the other side's line is (`RUNS_TO_THROUGH_BALLS`).
+  Against a deep block there is nowhere to run, and it does nothing.
+- **Who gets them.** The runner is likelier to be on the end of the through
+  ball (`MOVEMENT_REACH`).
+
+**Channel runs** enter in two places:
+- **How the attack ends.** On an attack down his flank, some of what would
+  have been crosses become a through ball into the channel or a cut inside and
+  a shot (`CHANNEL_TO_INSIDE`).
+- **Who gets them.** He is likelier to be on the end of those.
+
+**Recipes.**
+- Inside Forward: channel runs +3, instead of dribbling +2. Its flat goal
+  multiplier (1.8) and its affinities for through balls and solo efforts are
+  retired.
+- Mezzala: channel runs +1.
+- Complete Forward: runs in behind +1.
+
+**Controlled duel** (20,000 matches, identical sides, one striker different):
+
+| Against | Plays on the shoulder | Quick | Both |
+| --- | --- | --- | --- |
+| a gegenpress line | +6.7% goals | +5.2% | +15.9% |
+| a balanced line | +3.4% | +2.9% | +7.5% |
+| a parked bus | +0.9% | +1.1% | +1.3% |
+
+Channel runs (+3) on both wide midfielders, against a balanced side:
+- crosses fall from 12.7% of the side's goals to 8.9%;
+- through balls rise from 19.0% to 21.4%, and solo efforts from 13.3% to 15.9%;
+- the wide men's share of the goals rises from 21.5% to 27.3%;
+- the side scores 2.4% more, because a ball into the channel is a better
+  chance than a cross. Nothing defends the channel yet: that is *stepping out*,
+  in step 5.
+
+**Against the real scorers.**
+- Inside Forward: 17.0% of his club's goals against a real 17.7%, as before,
+  now without the flat bonus.
+- Complete Forward: 32.1% against 31.0% (was 31.0%).
+- The goal mix moves by less than 0.3 points in every category.
+
+**League calibration unchanged.** +3.37 points per strength point (real
++3.41), draws 25.7% (real 26.5%).
+
+**The Golden Boot.** Averaged over four seasons it is 32.5 (31.9 after step 1,
+30.1 before; real 29.3). Nearly all of the rise is Henry in 2003/04. His share
+of Arsenal's goals is now 33.5% against a real 34.2%, which is closer than
+before (29.7%). The sim's top sides score about six goals a season more than
+the real ones did, and that is what puts the Golden Boot high, not his share.
+
+**Speed.** Each player's movement is now worked out once per match
+(`movementFactors`), not on every shot. A season simulates slightly faster
+than before the movement work began.
+
 ## Build order
 
 One step at a time. Each step is measured, committed, and reviewed before the
@@ -302,7 +363,7 @@ next.
 2. **Running:** runs in behind and channel runs. *Measured by:* the mix of
    chance types against the real one ([simulation.md](simulation.md)); the
    space-in-behind rule re-measured, because the break phase changes; a duel
-   against a high line and a deep one.
+   against a high line and a deep one. **Done** — see above.
 3. **Width:** holding width, overlapping, inverting. *Measured by:* the share of
    chances that are crosses, and assists by full-backs and wingers against
    FBref.

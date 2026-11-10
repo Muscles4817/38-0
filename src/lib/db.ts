@@ -1886,7 +1886,7 @@ const ROLE_DEFAULTS: (Omit<RoleRow, 'valid_positions' | 'qualities'> & { valid_p
   { name: 'DeepLyingPlaymaker',  label: 'Deep Lying Playmaker',  goal_mult: 0.40, assist_mult: 1.80, valid_positions: ['CDM','CM'],                                                      description: 'Dictates tempo from deep; rarely gets forward',                      att_contrib:  0, mid_contrib:  1, def_contrib:  0 },
   { name: 'Enforcer',            label: 'Enforcer',              goal_mult: 0.15, assist_mult: 0.50, valid_positions: ['CM','CDM'],                                                      description: 'Win it, keep it simple; physical midfield presence',                 att_contrib:  0, mid_contrib:  1, def_contrib:  2 },
   { name: 'FalseNine',           label: 'False Nine',            goal_mult: 1.10, assist_mult: 1.80, valid_positions: ['ST','CF'],                                                       description: 'Drops into midfield to link play; still a scoring threat',           att_contrib:  1, mid_contrib:  1, def_contrib:  0 },
-  { name: 'InsideForward',       label: 'Inside Forward',        goal_mult: 1.80, assist_mult: 0.60, valid_positions: ['LW','RW','LM','RM'],                                             description: 'Cuts inside from wide to shoot; sacrifices crossing for goals',      att_contrib:  1, mid_contrib:  0, def_contrib:  0 },
+  { name: 'InsideForward',       label: 'Inside Forward',        goal_mult: 1.00, assist_mult: 0.60, valid_positions: ['LW','RW','LM','RM'],                                             description: 'Cuts inside from wide to shoot; sacrifices crossing for goals',      att_contrib:  1, mid_contrib:  0, def_contrib:  0 },
   { name: 'InvertedWingback',    label: 'Inverted Wingback',     goal_mult: 1.10, assist_mult: 1.30, valid_positions: ['LB','RB','LWB','RWB'],                                           description: 'Cuts inside into dangerous half-spaces; box threat from fullback',   att_contrib:  1, mid_contrib:  1, def_contrib: -1 },
   { name: 'LateRunner',          label: 'Late Runner',           goal_mult: 1.00, assist_mult: 0.70, valid_positions: ['CM','CDM','CAM'],                                                description: 'Times runs into the box perfectly; Lampard/Gerrard archetype',       att_contrib:  1, mid_contrib:  0, def_contrib:  0 },
   { name: 'Mezzala',             label: 'Mezzala',               goal_mult: 1.50, assist_mult: 1.30, valid_positions: ['CM','LM','RM','CAM'],                                            description: 'Half-space runner who breaks into the box from midfield',            att_contrib:  1, mid_contrib:  1, def_contrib:  0 },
@@ -1931,18 +1931,20 @@ const ROLE_QUALITIES: Record<string, Partial<Record<Quality, number>>> = {
   BoxToBox:            { pressing: 2, lateRuns: 1 },
   ChanceCreator:       { creation: 3 },
   // "Complete" is the one trait that genuinely asserts everything.
-  CompleteForward:     { aerial: 1, pace: 1, pressing: 1, dribble: 1, boxMovement: 1 },
+  CompleteForward:     { aerial: 1, pace: 1, pressing: 1, dribble: 1, boxMovement: 1, runsInBehind: 1 },
   CrossingSpecialist:  { setPiece: 3 },
   DeepLyingForward:    { creation: 2, pressResist: 1 },
   DeepLyingPlaymaker:  { pressResist: 3, creation: 2 },
   // An enforcer commits fouls. That is what the word means.
   Enforcer:            { pressing: 2, discipline: -1 },
   FalseNine:           { creation: 2, pressResist: 2 },
-  InsideForward:       { dribble: 2, longShot: 1 },
+  // An inside forward is defined by his run into the channel. He may or may
+  // not be a good dribbler; an inverted winger has to be.
+  InsideForward:       { channelRuns: 3, longShot: 1 },
   InvertedWingback:    { pressResist: 1, creation: 1 },
   // Arriving late is what the name says; shooting from distance is not.
   LateRunner:          { lateRuns: 3 },
-  Mezzala:             { creation: 1, dribble: 1, lateRuns: 1 },
+  Mezzala:             { creation: 1, dribble: 1, lateRuns: 1, channelRuns: 1 },
   // "No-nonsense" literally asserts the limitation.
   NoNonsenseDefender:  { aerial: 2, pressResist: -2, creation: -2, discipline: -1 },
   // A poacher is the man in the right place in the box. How well he finishes

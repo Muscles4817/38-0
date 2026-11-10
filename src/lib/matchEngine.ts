@@ -190,11 +190,31 @@ const ROLE_SELECTION_POWER = 0.5;
  */
 const MOVEMENT_TO_SHOTS = 0.25;
 type ShooterChance = ChanceType | 'setPieceScramble';
-const MOVEMENT_REACH: Record<'boxMovement' | 'attackingTheBox' | 'lateRuns', Partial<Record<ShooterChance, number>>> = {
+const MOVEMENT_REACH: Record<'boxMovement' | 'attackingTheBox' | 'lateRuns' | 'runsInBehind' | 'channelRuns', Partial<Record<ShooterChance, number>>> = {
   boxMovement: { cross: 1, aerial: 1, throughBall: 1, setPieceScramble: 1 },
   attackingTheBox: { cross: 1, aerial: 1 },
   lateRuns: { cross: 1, throughBall: 0.5, setPieceScramble: 1 },
+  // The man the ball over the top is played for.
+  runsInBehind: { throughBall: 1 },
+  // Into the gap between full-back and centre-back: the ball slipped into the
+  // channel, or the cut inside and the shot.
+  channelRuns: { throughBall: 1, individual: 1 },
 };
+
+/**
+ * Per point of `runsInBehind` across a side, how many more of its attacks
+ * become through balls, scaled by how high the other side's line is: runners
+ * give the passer something to aim at, and a high line gives them somewhere to
+ * go. Against a deep block there is nowhere, and it does nothing.
+ */
+const RUNS_TO_THROUGH_BALLS = 0.03;
+
+/**
+ * Per point of `channelRuns` among the players on the flank an attack goes
+ * down, how far its chances move from crosses to the channel: a through ball
+ * into the gap, or a cut inside and a shot.
+ */
+const CHANNEL_TO_INSIDE = 0.12;
 
 /**
  * How much more of a side's wide attacks become crosses, per point of
@@ -202,6 +222,23 @@ const MOVEMENT_REACH: Record<'boxMovement' | 'attackingTheBox' | 'lateRuns', Par
  * is someone to aim at. A side whose men stay out gets fewer away.
  */
 const BOX_COMMIT_TO_CROSSES = 0.03;
+
+/** One player's MOVEMENT_REACH, as a multiplier on his chance of shooting, by kind of chance. */
+function movementFactors(p: MatchPlayer, roles: RoleMultipliers): Partial<Record<ShooterChance, number>> {
+  const sum: Partial<Record<ShooterChance, number>> = {};
+  for (const [name, reach] of Object.entries(MOVEMENT_REACH) as [keyof typeof MOVEMENT_REACH, Partial<Record<ShooterChance, number>>][]) {
+    const points = readShooterMovement(p, name, roles);
+    if (points === 0) continue;
+    for (const [chance, k] of Object.entries(reach) as [ShooterChance, number][]) {
+      sum[chance] = (sum[chance] ?? 0) + k * points;
+    }
+  }
+  const factors: Partial<Record<ShooterChance, number>> = {};
+  for (const [chance, s] of Object.entries(sum) as [ShooterChance, number][]) {
+    factors[chance] = Math.exp(MOVEMENT_TO_SHOTS * s);
+  }
+  return factors;
+}
 const RATING_SELECTION_POWER = 0.6;
 
 // ── Set pieces ───────────────────────────────────────────────────────────────
@@ -510,8 +547,9 @@ const ROLE_CHANCE_AFFINITY: Record<ChanceType, Partial<Record<PlayerRole, number
   // Getting on the end of a cross or a through ball is box movement, attacking
   // the box and late runs now (MOVEMENT_REACH), not a role's affinity.
   cross: { AerialThreat: 2.2 },
-  throughBall: { InsideForward: 1.4, DeepLyingForward: 1.3 },
-  individual: { InsideForward: 1.7, Trequartista: 1.5, Winger: 1.3 },
+  throughBall: { DeepLyingForward: 1.3 },
+  // The Inside Forward's run into the channel is `channelRuns` now.
+  individual: { Trequartista: 1.5, Winger: 1.3 },
   longShot: { Mezzala: 1.5, Trequartista: 1.4, Regista: 1.2 },
   setPiece: { AerialThreat: 2.8, TargetMan: 2.0, NoNonsenseDefender: 1.9, BallPlayingDefender: 1.4 },
   penalty: {},
@@ -798,6 +836,12 @@ interface PhaseSpec {
   appetite: Ability[];
   /** An attacking phase hands an empty flank to the full-back; a defending one to the wide man. */
   side: 'attack' | 'defence' | null;
+  /**
+   * How a player's abilities combine: their weighted mean (the default, so
+   * every phase is on the same scale), or their sum, where having both is
+   * more than having either.
+   */
+  combine?: 'mean' | 'sum';
 }
 
 const PHASE_SPECS: Record<Phase, PhaseSpec> = {
@@ -807,7 +851,11 @@ const PHASE_SPECS: Record<Phase, PhaseSpec> = {
   // a defender to the block, not just a body.
   block:  { weight: BLOCK_WEIGHT,    ability: { defending: 1, pressing: 0.5 }, appetite: ['defending', 'pressing'], side: 'defence' },
   create: { weight: CREATE_WEIGHT,   ability: { creation: 1 },    appetite: ['creation'],    side: 'attack' },
-  break:  { weight: BREAK_WEIGHT,    ability: { pace: 1 },        appetite: ['pace', 'dribble'], side: 'attack' },
+  // The threat in behind is the run and the speed of it, added: a slow man who
+  // times his run threatens the space, a quick one who never runs does not,
+  // and one who does both is worth more than either. Summed rather than
+  // averaged, so a side with pace and no runners is exactly where it was.
+  break:  { weight: BREAK_WEIGHT,    ability: { pace: 1, runsInBehind: 1 }, appetite: ['pace', 'runsInBehind', 'dribble'], side: 'attack', combine: 'sum' },
   // Covering the space behind is reading the game as much as pace, and good
   // defenders read it whatever their traits say; 90% of stored XIs carry no
   // recovery trait at all, and rating that as no cover left every high line
@@ -1028,6 +1076,16 @@ interface TeamModel {
   creation: number;
   /** Everyone's `attackingTheBox`, summed: how many it commits to a cross. */
   boxCommit: number;
+  /** Everyone's `runsInBehind`, summed: how many are looking to go beyond. */
+  runners: number;
+  /** `channelRuns` of the players on each flank, summed. */
+  channelRunners: Record<Zone, number>;
+  /**
+   * For each player, how much likelier his movement makes him to be on the end
+   * of each kind of chance (MOVEMENT_REACH). Worked out once per match rather
+   * than on every shot.
+   */
+  movement: Map<number, Partial<Record<ShooterChance, number>>>;
   versatility: number;
   /** 0-1: how well this eleven can play the style it has been given. */
   fit: number;
@@ -1139,7 +1197,8 @@ export function phaseAbility(players: MatchPlayer[], phase: Phase, roles: RoleMu
       traits += (k ?? 0) * readPhase(p, name, roles);
       weights += k ?? 0;
     }
-    const skill = (weights > 0 ? traits / weights : 0)
+    const combined = spec.combine === 'sum' ? traits : weights > 0 ? traits / weights : 0;
+    const skill = combined
       + (spec.rated ? RATING_TO_ABILITY * (p.rating - ABILITY_REFERENCE_RATING) : 0);
     total += w * skill;
     mass += w;
@@ -1220,6 +1279,11 @@ function buildTeam(setup: TeamSetup, roles: RoleMultipliers): TeamModel {
     cover: phaseAbility(players, 'cover', roles),
     creation: phaseAbility(players, 'create', roles),
     boxCommit: players.reduce((s, p) => s + readChanceType(p, 'attackingTheBox', roles), 0),
+    runners: players.reduce((s, p) => s + readChanceType(p, 'runsInBehind', roles), 0),
+    movement: new Map(players.map(p => [p.playerId, movementFactors(p, roles)])),
+    channelRunners: Object.fromEntries(ZONES.map(z => [z, players
+      .filter(p => positionZone(p.position) === z)
+      .reduce((s, p) => s + readChanceType(p, 'channelRuns', roles), 0)])) as Record<Zone, number>,
     versatility: players.filter(p => (p.positions?.length ?? 1) > 1).length
       / Math.max(1, players.length),
     focus: {
@@ -1295,9 +1359,9 @@ const readPressCredit = reader('pressCredit', ['pressResist', 'pressing']);
 /** The keeper: saving, sweeping behind a high line, and claiming crosses. */
 const readKeeper = reader('keeper', ['shotStopping', 'reflexes', 'claiming', 'recovery']);
 /** Who is on the end of a chance: movement in and around the box. */
-const readShooterMovement = reader('shooter', ['boxMovement', 'attackingTheBox', 'lateRuns']);
+const readShooterMovement = reader('shooter', ['boxMovement', 'attackingTheBox', 'lateRuns', 'runsInBehind', 'channelRuns']);
 /** What kind of chance an attack becomes: whether there is anyone to cross to. */
-const readChanceType = reader('chanceType', ['attackingTheBox']);
+const readChanceType = reader('chanceType', ['attackingTheBox', 'runsInBehind', 'channelRuns']);
 
 // ── The interaction rules, as functions ──────────────────────────────────────
 //
@@ -1463,6 +1527,12 @@ function pickChanceType(
     if (zone === 'C') w *= t === 'cross' ? 0.35 : t === 'throughBall' ? 1.5 : 1;
     else w *= t === 'cross' ? 2.2 : t === 'throughBall' ? 0.7 : 1;
     if (t === 'cross' || t === 'aerial') w *= Math.exp(BOX_COMMIT_TO_CROSSES * team.boxCommit);
+    if (t === 'throughBall') w *= Math.exp(RUNS_TO_THROUGH_BALLS * team.runners * line);
+    if (zone !== 'C') {
+      const inside = CHANNEL_TO_INSIDE * team.channelRunners[zone];
+      if (t === 'cross') w *= Math.exp(-inside);
+      else if (t === 'throughBall' || t === 'individual') w *= Math.exp(inside);
+    }
     return w;
   });
   return pickWeighted(rand, types, weights) ?? 'individual';
@@ -1514,12 +1584,7 @@ function pickShooter(
     }
     if (penalty) w *= Math.exp(PENALTY_TAKER_QUALITY_WEIGHT * readPenaltyTaker(p, 'penalty', roles));
     const chance: ShooterChance = type === 'setPiece' ? (setPiece ? 'setPiece' : 'setPieceScramble') : type;
-    let movement = 0;
-    for (const [name, reach] of Object.entries(MOVEMENT_REACH) as [keyof typeof MOVEMENT_REACH, Partial<Record<ShooterChance, number>>][]) {
-      const k = reach[chance] ?? 0;
-      if (k !== 0) movement += k * readShooterMovement(p, name, roles);
-    }
-    w *= Math.exp(MOVEMENT_TO_SHOTS * movement);
+    w *= team.movement.get(p.playerId)?.[chance] ?? 1;
     // A role's general goal multiplier and its affinity for this kind of
     // chance say the same thing — a Poacher gets on the end of things — so the
     // stronger counts, not their product. Multiplied, a Poacher was boosted

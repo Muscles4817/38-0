@@ -37,6 +37,7 @@ export const ABILITIES = {
   attackingTheBox: { family: 'movement', kind: 'skill', description: 'Commits to the box when the ball goes wide, from any position' },
   lateRuns: { family: 'movement', kind: 'skill', description: 'Arrives late from midfield, unmarked, for the cut-back or second ball' },
   runsInBehind: { family: 'movement', kind: 'skill', description: "Plays on the last defender's shoulder and goes beyond him" },
+  channelRuns: { family: 'movement', kind: 'skill', description: 'Moves from wide into the gap between full-back and centre-back' },
 
   // On the ball
   pressResist: { family: 'onTheBall', kind: 'skill', description: 'Keeps the ball under pressure' },
@@ -89,7 +90,6 @@ export function isSkill(name: Ability): name is Skill {
  * the test that checks every ability is read allows exactly these.
  */
 export const NOT_YET_READ: Partial<Record<Ability, string>> = {
-  runsInBehind: 'Step 2 of docs/movement.md: the break phase, through balls and who gets on the end of them.',
   longShot: 'Who shoots from distance still comes from role affinity and the goal multiplier.',
 };
 

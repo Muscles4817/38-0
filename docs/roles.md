@@ -72,7 +72,8 @@ read yet, the trait is decorative in a match, whatever it says.
 | `boxMovement` | who shoots (`MOVEMENT_REACH`) | on the end of crosses, headers, through balls and set-piece scrambles; never long shots or solo efforts. See [movement.md](movement.md) |
 | `attackingTheBox` | who shoots; how many wide attacks become crosses (`BOX_COMMIT_TO_CROSSES`) | on the end of crosses and headers from any position, and a side that commits gets more crosses away |
 | `lateRuns` | who shoots | a midfielder onto the cut-back and the set-piece scramble |
-| `runsInBehind` | nothing yet | step 2 of [movement.md](movement.md) |
+| `runsInBehind` | the `break` phase, added to pace (`combine: 'sum'`); how many through balls a side plays against a line (`RUNS_TO_THROUGH_BALLS`); who shoots | the run in behind, which pace makes more dangerous. Against a gegenpress line a striker with it adds 6.7% to his side's goals, a quick one 5.2%, both 15.9%; behind a parked bus all under 1.5% |
+| `channelRuns` | how a wide attack ends (`CHANNEL_TO_INSIDE`); who shoots | from wide into the channel: fewer crosses, more through balls and cut-ins, on his flank |
 
 ## The traits added for the playstyle work
 

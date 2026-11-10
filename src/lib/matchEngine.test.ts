@@ -508,7 +508,14 @@ describe('movement decides who is on the end of it', () => {
   });
   const IN_THE_BOX = new Set(['throughBall', 'cross', 'aerial', 'setPiece']);
   const FROM_HIS_OWN = new Set(['longShot', 'individual']);
+  // The same eleven is played more than once across these tests; play it once.
+  const played = new Map<string, ReturnType<typeof playGoals>>();
   const goals = (roleAt: Record<number, string[]>) => {
+    const key = JSON.stringify(roleAt);
+    if (!played.has(key)) played.set(key, playGoals(roleAt));
+    return played.get(key)!;
+  };
+  function playGoals(roleAt: Record<number, string[]>) {
     const rand = rng(9);
     const bySlot = new Map<number, { inBox: number; own: number; crosses: number }>();
     let total = 0, crossesAndHeaders = 0;
@@ -525,7 +532,7 @@ describe('movement decides who is on the end of it', () => {
       }
     }
     return { total, crossesAndHeaders, slot: (i: number) => bySlot.get(i) ?? { inBox: 0, own: 0, crosses: 0 } };
-  };
+  }
 
   it('puts a striker with box movement on the end of what arrives in the box, and nothing else', { timeout: 60_000 }, () => {
     const g = goals({ 9: ['Box'] });
@@ -549,5 +556,79 @@ describe('movement decides who is on the end of it', () => {
   it('gets a late runner onto the cut-back', { timeout: 60_000 }, () => {
     const g = goals({ 6: ['Late'] });
     expect(g.slot(6).crosses).toBeGreaterThan(g.slot(7).crosses * 1.5);
+  });
+});
+
+describe('running: in behind and into the channel', () => {
+  // docs/movement.md, step 2. Measured over 20,000 matches between identical
+  // sides, one striker different:
+  // - against a gegenpress line, a striker who plays on the shoulder adds 6.7%
+  //   to his side's goals, a quick one 5.2%, one who is both 15.9%;
+  // - behind a parked bus, all three under 1.5%.
+  // Channel runs (3) on both wide midfielders: crosses 12.7% of the side's
+  // goals to 8.9%; through balls and solo efforts up; the wide men's share of
+  // the goals 21.5% to 27.3%.
+  const QUALITIES = {
+    goalMult: {}, assistMult: {},
+    qualities: { Shoulder: { runsInBehind: 3 }, Pacey: { pace: 3 }, Channel: { channelRuns: 3 } },
+  };
+  const shape: Position[] = ['GK', 'LB', 'CB', 'CB', 'RB', 'LM', 'CM', 'CM', 'RM', 'ST', 'ST'];
+  const side = (name: string, base: number, style: PlaystyleName, roleAt: Record<number, string[]>): TeamSetup => ({
+    name, formation: '4-4-2', style, focus: { L: 1, C: 1, R: 1 },
+    players: shape.map((position, i) => ({
+      playerId: base + i, name: `${name} ${i}`, position, rating: 78, roles: roleAt[i] ?? [],
+    })),
+  });
+  // The same matchup is played more than once across these tests; play it once.
+  const played = new Map<string, ReturnType<typeof playOnce>>();
+  const play = (roleAt: Record<number, string[]>, against: PlaystyleName) => {
+    const key = JSON.stringify(roleAt) + against;
+    if (!played.has(key)) played.set(key, playOnce(roleAt, against));
+    return played.get(key)!;
+  };
+  function playOnce(roleAt: Record<number, string[]>, against: PlaystyleName, matches = 4000) {
+    const rand = rng(9);
+    let goals = 0;
+    const byType: Record<string, number> = {};
+    const throughBallsBy: Record<number, number> = {};
+    for (let i = 0; i < matches; i++) {
+      for (const e of simulateMatch(side('Us', 100, 'balanced', roleAt), side('Them', 200, against, {}), rand, QUALITIES).events) {
+        if (e.type !== 'goal' || e.team !== 'Us') continue;
+        goals++;
+        byType[e.chanceType!] = (byType[e.chanceType!] ?? 0) + 1;
+        if (e.chanceType === 'throughBall') throughBallsBy[e.playerId! - 100] = (throughBallsBy[e.playerId! - 100] ?? 0) + 1;
+      }
+    }
+    return { goals, byType, throughBallsBy };
+  }
+
+  it('counts the run and the pace of it together', () => {
+    const roles = QUALITIES;
+    const xi = (r: string[]) => side('Us', 100, 'balanced', { 9: r }).players;
+    const quick = phaseAbility(xi(['Pacey']), 'break', roles);
+    expect(phaseAbility(xi(['Shoulder']), 'break', roles)).toBeGreaterThan(phaseAbility(xi([]), 'break', roles));
+    expect(phaseAbility(xi(['Pacey', 'Shoulder']), 'break', roles)).toBeGreaterThan(quick);
+  });
+
+  it('is worth far more against a high line than against a deep block', { timeout: 60_000 }, () => {
+    const gain = (against: PlaystyleName) => play({ 9: ['Shoulder'] }, against).goals - play({}, against).goals;
+    const high = gain('gegenpress');
+    const deep = gain('parkTheBus');
+    expect(high, `${high} more against a high line, ${deep} against a deep block`).toBeGreaterThan(0);
+    expect(high).toBeGreaterThan(deep * 3);
+  });
+
+  it('puts the runner on the end of the through ball', { timeout: 60_000 }, () => {
+    const r = play({ 9: ['Shoulder'] }, 'gegenpress');
+    expect(r.throughBallsBy[9] ?? 0).toBeGreaterThan((r.throughBallsBy[10] ?? 0) * 1.3);
+  });
+
+  it('turns a wide attack into the channel instead of a cross', { timeout: 60_000 }, () => {
+    const plain = play({}, 'balanced');
+    const inside = play({ 5: ['Channel'], 8: ['Channel'] }, 'balanced');
+    const share = (r: typeof plain, t: string) => (r.byType[t] ?? 0) / r.goals;
+    expect(share(inside, 'cross')).toBeLessThan(share(plain, 'cross'));
+    expect(share(inside, 'throughBall') + share(inside, 'individual'))
+      .toBeGreaterThan(share(plain, 'throughBall') + share(plain, 'individual'));
   });
 });

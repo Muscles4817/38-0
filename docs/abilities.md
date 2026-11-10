@@ -102,16 +102,17 @@ are built in: [movement.md](movement.md).
   through balls, worth most against a high line. Pace makes the run more
   dangerous, but it is a separate ability: a slow striker can still time a run.
 - **Counter:** a high line's recovery and a sweeping keeper.
-- **Status:** the ability exists (`runsInBehind`) and the *Plays on the
-  Shoulder* trait gives it, but nothing reads it until step 2 of
-  [movement.md](movement.md). Today only pace stands in for it.
+- **Status:** built (`runsInBehind`), in the break phase alongside pace,
+  in how many through balls a side plays, and in who gets them. *Plays on the
+  Shoulder* gives it. See [movement.md](movement.md).
 
 ### Channel runs
 - **+** Moves from wide into the gap between full-back and centre-back. The
   Inside Forward, who may or may not be a good dribbler.
 - **Does:** chance creation. Turns an attack down the flank into a through ball
   or a shot from the inside channel rather than a cross.
-- **Status:** new. Today *Inside Forward* is wrongly made of dribbling.
+- **Status:** built (`channelRuns`). *Inside Forward* is now channel runs,
+  not dribbling. See [movement.md](movement.md).
 
 ### Box movement
 - **+** In the right place in the box: loses his marker, attacks the near post,
