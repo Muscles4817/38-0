@@ -216,12 +216,56 @@ const RUNS_TO_THROUGH_BALLS = 0.03;
  */
 const CHANNEL_TO_INSIDE = 0.12;
 
+// ── Width (docs/movement.md, step 3) ──
+//
+// A flank's width is what its players give it: a winger who holds the
+// touchline, a full-back who overlaps (half as much, because he arrives rather
+// than stays), less a full-back who inverts into midfield.
+
+/** Per point of width on the flank an attack goes down, how many more of its chances are crosses. */
+const WIDTH_TO_CROSSES = 0.08;
+/** How much of an overlapping full-back's `overlapping` counts as width. */
+const OVERLAP_WIDTH_SHARE = 0.5;
+/**
+ * A deep block is harder to keep compact against a side that is wide: per
+ * point of width across the two flanks (their mean), how much less of the
+ * congestion rule bites. Narrow sides (negative width) are congested more.
+ */
+const WIDTH_STRETCHES_BLOCK = 0.1;
+/** Per point of `overlapping`, how much likelier he is to be the one who crosses. */
+const OVERLAP_TO_CROSSER = 0.15;
+/**
+ * The space an overlapping full-back leaves. Per point of it on a flank, how
+ * much weaker that flank defends a counter-attack (a ball won by a press): he
+ * is up the pitch when it is lost.
+ */
+const OVERLAP_EXPOSURE = 0.05;
+/** Per point of `inverting`, how much stronger the middle defends a counter: he is already there. */
+const INVERT_PROTECTS_CENTRE = 0.05;
+/**
+ * An extra man in midfield (an inverting full-back, so far). Per point, how
+ * much more of the ball a side has, and how much better it plays out of a
+ * press: there is one more pass on.
+ */
+const MIDFIELD_NUMBERS_TO_POSSESSION = 0.015;
+const MIDFIELD_NUMBERS_TO_PRESS = 0.05;
+
 /**
  * How much more of a side's wide attacks become crosses, per point of
  * `attackingTheBox` across its eleven: a cross is worth putting in when there
  * is someone to aim at. A side whose men stay out gets fewer away.
  */
 const BOX_COMMIT_TO_CROSSES = 0.03;
+
+/** Something about each player, summed over the players on each flank (none in the middle). */
+function byFlank(players: MatchPlayer[], of: (p: MatchPlayer) => number): Record<Zone, number> {
+  const out: Record<Zone, number> = { L: 0, C: 0, R: 0 };
+  for (const p of players) {
+    const z = positionZone(p.position);
+    if (z !== 'C') out[z] += of(p);
+  }
+  return out;
+}
 
 /** One player's MOVEMENT_REACH, as a multiplier on his chance of shooting, by kind of chance. */
 function movementFactors(p: MatchPlayer, roles: RoleMultipliers): Partial<Record<ShooterChance, number>> {
@@ -900,9 +944,11 @@ function involvement(p: MatchPlayer, phase: Phase, players: MatchPlayer[], roles
     const onFlank = players.filter(q => positionZone(q.position) === lane);
     if (spec.side === 'attack' && !WIDE_ATTACK.includes(p.position)
       && !onFlank.some(q => WIDE_ATTACK.includes(q.position))) {
-      // Nobody in front of him on this flank: he is its width.
+      // Nobody in front of him on this flank: he is its width, unless he
+      // inverts into midfield instead.
       const duty = Math.max(...WIDE_ATTACK.map(q => spec.weight[q] ?? 0));
-      w = Math.max(w, FLANK_COVER * duty);
+      const inverts = Math.min(1, Math.max(0, readShape(p, 'inverting', roles)) / 3);
+      w = Math.max(w, FLANK_COVER * duty * (1 - inverts));
     }
     if (spec.side === 'defence' && !WIDE_DEFENCE.includes(p.position)
       && !onFlank.some(q => WIDE_DEFENCE.includes(q.position))) {
@@ -1086,6 +1132,12 @@ interface TeamModel {
    * than on every shot.
    */
   movement: Map<number, Partial<Record<ShooterChance, number>>>;
+  /** What each flank's players give it in width (see WIDTH_TO_CROSSES). */
+  width: Record<Zone, number>;
+  /** `overlapping` on each flank: the space left behind when the ball is lost. */
+  exposure: Record<Zone, number>;
+  /** Extra men in midfield when the side has the ball: `inverting`, summed. */
+  midfieldNumbers: number;
   versatility: number;
   /** 0-1: how well this eleven can play the style it has been given. */
   fit: number;
@@ -1281,6 +1333,10 @@ function buildTeam(setup: TeamSetup, roles: RoleMultipliers): TeamModel {
     boxCommit: players.reduce((s, p) => s + readChanceType(p, 'attackingTheBox', roles), 0),
     runners: players.reduce((s, p) => s + readChanceType(p, 'runsInBehind', roles), 0),
     movement: new Map(players.map(p => [p.playerId, movementFactors(p, roles)])),
+    width: byFlank(players, p => readShape(p, 'holdingWidth', roles)
+      + OVERLAP_WIDTH_SHARE * readShape(p, 'overlapping', roles) - readShape(p, 'inverting', roles)),
+    exposure: byFlank(players, p => readShape(p, 'overlapping', roles)),
+    midfieldNumbers: players.reduce((s, p) => s + readShape(p, 'inverting', roles), 0),
     channelRunners: Object.fromEntries(ZONES.map(z => [z, players
       .filter(p => positionZone(p.position) === z)
       .reduce((s, p) => s + readChanceType(p, 'channelRuns', roles), 0)])) as Record<Zone, number>,
@@ -1362,6 +1418,10 @@ const readKeeper = reader('keeper', ['shotStopping', 'reflexes', 'claiming', 're
 const readShooterMovement = reader('shooter', ['boxMovement', 'attackingTheBox', 'lateRuns', 'runsInBehind', 'channelRuns']);
 /** What kind of chance an attack becomes: whether there is anyone to cross to. */
 const readChanceType = reader('chanceType', ['attackingTheBox', 'runsInBehind', 'channelRuns']);
+/** A side's shape with the ball: its width, the space its full-backs leave, its numbers in midfield. */
+const readShape = reader('teamShape', ['holdingWidth', 'overlapping', 'inverting']);
+/** Who puts the cross in, beyond his position and delivery. */
+const readCrosser = reader('crosser', ['overlapping']);
 
 // ── The interaction rules, as functions ──────────────────────────────────────
 //
@@ -1396,10 +1456,11 @@ export function pressTurnover(
  * more than an ordinary side would be.
  */
 export function congestionFactor(
-  buildUp: number, creating: number, blocking: number, opponentLine: number,
+  buildUp: number, creating: number, blocking: number, opponentLine: number, width = 0,
 ): number {
   const deep = 1 - opponentLine;
-  const congested = deep * buildUp * 2 * contest(blocking - creating);
+  const congested = deep * buildUp * 2 * contest(blocking - creating)
+    * Math.exp(-WIDTH_STRETCHES_BLOCK * width);
   return 1 / (1 + CONGESTION_EFFECT * congested);
 }
 
@@ -1530,7 +1591,7 @@ function pickChanceType(
     if (t === 'throughBall') w *= Math.exp(RUNS_TO_THROUGH_BALLS * team.runners * line);
     if (zone !== 'C') {
       const inside = CHANNEL_TO_INSIDE * team.channelRunners[zone];
-      if (t === 'cross') w *= Math.exp(-inside);
+      if (t === 'cross') w *= Math.exp(WIDTH_TO_CROSSES * team.width[zone] - inside);
       else if (t === 'throughBall' || t === 'individual') w *= Math.exp(inside);
     }
     return w;
@@ -1668,7 +1729,8 @@ function pickCreator(
       // From the flank the attack came down; the far side rarely.
       w = CROSS_WEIGHT[p.position] ?? 0.2;
       if (zone !== 'C') w *= pz === zone ? 2 : pz === 'C' ? 0.6 : 0.15;
-      return w * Math.exp(CREATOR_ABILITY_WEIGHT * readCreator(p, 'setPiece', roles));
+      return w * Math.exp(CREATOR_ABILITY_WEIGHT * readCreator(p, 'setPiece', roles)
+        + OVERLAP_TO_CROSSER * readCrosser(p, 'overlapping', roles));
     } else if (type === 'throughBall') {
       w = (THROUGH_WEIGHT[p.position] ?? 0.3) * (pz === zone ? 1.5 : pz === 'C' || zone === 'C' ? 1 : 0.5);
       return w * Math.exp(CREATOR_ABILITY_WEIGHT * readCreator(p, 'creation', roles));
@@ -1913,8 +1975,10 @@ export function simulateMatch(
   // Who has the ball. Midfield control decides it, style pulls on it, and the
   // home side sees a little more of it.
   const midEdge = Math.log(home.midfield / away.midfield) / RATING_CURVE / 10;
-  const homeWeight = home.style.possessionBias * Math.exp(0.22 * midEdge) * HOME_POSSESSION;
-  const awayWeight = away.style.possessionBias;
+  const homeWeight = home.style.possessionBias * Math.exp(0.22 * midEdge) * HOME_POSSESSION
+    * Math.exp(MIDFIELD_NUMBERS_TO_POSSESSION * home.midfieldNumbers);
+  const awayWeight = away.style.possessionBias
+    * Math.exp(MIDFIELD_NUMBERS_TO_POSSESSION * away.midfieldNumbers);
   const homeShare = homeWeight / (homeWeight + awayWeight);
 
   for (let i = 0; i < POSSESSIONS; i++) {
@@ -1940,7 +2004,8 @@ export function simulateMatch(
     // and did it win.
     const pressEngaged = rand() < PRESS_ENGAGED_RATE * chaser.style.line * holder.style.buildUp;
     const turnover = pressEngaged
-      && rand() < PRESS_LOSS_SHARE * (1 - contest(holder.pressResistance - chaser.pressIntensity));
+      && rand() < PRESS_LOSS_SHARE * (1 - contest(holder.pressResistance
+        + MIDFIELD_NUMBERS_TO_PRESS * holder.midfieldNumbers - chaser.pressIntensity));
     if (turnover) creditOnBall(holder, chaser, false, 0);
 
     // A ball won high is the pressing side's possession: a transition.
@@ -1961,8 +2026,13 @@ export function simulateMatch(
 
     // Does this possession become a chance? Attacking quality in the zone,
     // against defensive quality in the zone it arrives at.
+    // On a counter, an overlapping full-back is up the pitch and his flank is
+    // short; an inverted one is already in the middle.
+    const shape = !transition ? 1
+      : defZone === 'C' ? Math.exp(INVERT_PROTECTS_CENTRE * def.midfieldNumbers)
+      : Math.exp(-OVERLAP_EXPOSURE * def.exposure[defZone]);
     const edge =
-      Math.log(att.attackZone[zone] / (def.defendZone[defZone] * defPenalty)) / RATING_CURVE / 10;
+      Math.log(att.attackZone[zone] / (def.defendZone[defZone] * defPenalty * shape)) / RATING_CURVE / 10;
     // Both sides' organisation decides how far the gap between them tells: a
     // drilled side exploits its superiority, and a drilled one resists it.
     const carry = (expression(att.setup.cohesion ?? DEFAULT_COHESION)
@@ -1992,7 +2062,8 @@ export function simulateMatch(
 
     // 2. Congestion. A deep block leaves a patient side nowhere to play, and
     //    creation is what unpicks it.
-    const congested = congestionFactor(att.style.buildUp, att.creation, def.blocking, def.style.line);
+    const congested = congestionFactor(att.style.buildUp, att.creation, def.blocking, def.style.line,
+      (att.width.L + att.width.R) / 2);
 
     const shotRate = transition
       ? TRANSITION_SHOT_RATE * Math.exp(EDGE_TO_CHANCES * carry * edge)

@@ -1,6 +1,6 @@
 import { describe, it, expect } from 'vitest';
 import {
-  lineRatings, phaseAbility, positionLine, simulateMatch, inferStyle, PLAYSTYLES,
+  congestionFactor, lineRatings, phaseAbility, positionLine, simulateMatch, inferStyle, PLAYSTYLES,
   type TeamSetup, type MatchPlayer, type PlaystyleName,
 } from './matchEngine';
 import type { Position } from './formations';
@@ -630,5 +630,78 @@ describe('running: in behind and into the channel', () => {
     expect(share(inside, 'cross')).toBeLessThan(share(plain, 'cross'));
     expect(share(inside, 'throughBall') + share(inside, 'individual'))
       .toBeGreaterThan(share(plain, 'throughBall') + share(plain, 'individual'));
+  });
+});
+
+describe('width: holding it, overlapping, inverting', () => {
+  // docs/movement.md, step 3. Measured over 20,000 matches between identical
+  // 4-4-2s, both wide midfielders or both full-backs different:
+  // - wingers who hold width: +2.7% goals against a balanced side, +4 to 5%
+  //   against a parked bus; narrow ones −1 to −4%;
+  // - overlapping full-backs: +0.4 to +2.5% goals and more of the assists,
+  //   paid for in goals conceded to a counter-press (up to +2.2%);
+  // - inverting full-backs: about two points more of the ball and fewer
+  //   conceded, but fewer crosses and fewer goals against a deep block.
+  const QUALITIES = {
+    goalMult: {}, assistMult: {},
+    qualities: {
+      Wide: { holdingWidth: 3 }, Narrow: { holdingWidth: -2 },
+      Overlap: { overlapping: 3 }, Invert: { inverting: 3 },
+    },
+  };
+  const shape: Position[] = ['GK', 'LB', 'CB', 'CB', 'RB', 'LM', 'CM', 'CM', 'RM', 'ST', 'ST'];
+  const side = (name: string, base: number, roleAt: Record<number, string[]>): TeamSetup => ({
+    name, formation: '4-4-2', style: 'balanced', focus: { L: 1, C: 1, R: 1 },
+    players: shape.map((position, i) => ({
+      playerId: base + i, name: `${name} ${i}`, position, rating: 78, roles: roleAt[i] ?? [],
+    })),
+  });
+  const played = new Map<string, { goals: number; crosses: number; fullBackAssists: number; possession: number }>();
+  const play = (roleAt: Record<number, string[]>) => {
+    const key = JSON.stringify(roleAt);
+    if (played.has(key)) return played.get(key)!;
+    const rand = rng(9);
+    let goals = 0, crosses = 0, fullBackAssists = 0, possession = 0;
+    const matches = 4000;
+    for (let i = 0; i < matches; i++) {
+      const m = simulateMatch(side('Us', 100, roleAt), side('Them', 200, {}), rand, QUALITIES);
+      possession += m.home.possession / matches;
+      for (const e of m.events) {
+        if (e.type !== 'goal' || e.team !== 'Us') continue;
+        goals++;
+        if (e.chanceType === 'cross' || e.chanceType === 'aerial') crosses++;
+        if (e.assistId === 101 || e.assistId === 104) fullBackAssists++;
+      }
+    }
+    const r = { goals, crosses, fullBackAssists, possession };
+    played.set(key, r);
+    return r;
+  };
+  const crossShare = (r: { goals: number; crosses: number }) => r.crosses / r.goals;
+
+  it('gets more crosses from wingers who hold the touchline, fewer from ones who drift in', { timeout: 60_000 }, () => {
+    const plain = play({});
+    expect(crossShare(play({ 5: ['Wide'], 8: ['Wide'] }))).toBeGreaterThan(crossShare(plain));
+    expect(crossShare(play({ 5: ['Narrow'], 8: ['Narrow'] }))).toBeLessThan(crossShare(plain));
+  });
+
+  it('stretches a deep block when the side is wide, and lets it stay compact when it is narrow', () => {
+    // buildUp, creating, blocking, the block's line, then the attacking side's width.
+    const at = (width: number) => congestionFactor(0.8, 0, 0, 0.1, width);
+    expect(at(3)).toBeGreaterThan(at(0));
+    expect(at(-2)).toBeLessThan(at(0));
+  });
+
+  it('lets an overlapping full-back supply the cross', { timeout: 60_000 }, () => {
+    const plain = play({});
+    const overlap = play({ 1: ['Overlap'], 4: ['Overlap'] });
+    expect(overlap.fullBackAssists / overlap.goals).toBeGreaterThan(plain.fullBackAssists / plain.goals * 1.08);
+  });
+
+  it('gives an inverting full-back to the midfield and takes him from the flank', { timeout: 60_000 }, () => {
+    const plain = play({});
+    const invert = play({ 1: ['Invert'], 4: ['Invert'] });
+    expect(invert.possession).toBeGreaterThan(plain.possession + 1);
+    expect(crossShare(invert)).toBeLessThan(crossShare(plain));
   });
 });

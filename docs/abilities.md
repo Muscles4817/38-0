@@ -158,21 +158,24 @@ are built in: [movement.md](movement.md).
 - **−** Drifts inside; the side is narrow.
 - **Does:** chance creation. More crosses, and a deep block finds it harder to
   stay compact. Pairs with switching play.
-- **Status:** new. Today the flank logic infers width from position only.
+- **Status:** built (`holdingWidth`). *Winger* gives it. See
+  [movement.md](movement.md).
 
 ### Overlapping
 - **+** A full-back who goes outside or beyond the wide man. The attacking
   full-back.
 - **Does:** chance creation and the flanks: he is the width when there is no
   winger ahead of him. The cost: space behind him for a counter.
-- **Status:** new. Today *Attacking Full-back* has no abilities at all.
+- **Status:** built (`overlapping`). *Attacking Full-back* gives it. See
+  [movement.md](movement.md).
 
 ### Inverting
 - **+** A full-back who moves into midfield when his side has the ball. The
   inverted wing-back.
 - **Does:** build-up and defending in transition: an extra man to keep the ball
   and to stop counters through the middle. The cost: no width from him.
-- **Status:** new.
+- **Status:** built (`inverting`). *Inverted Wingback* gives it. See
+  [movement.md](movement.md).
 
 ### Positional discipline
 - **+** Holds his position, always. The defensive midfielder who screens and

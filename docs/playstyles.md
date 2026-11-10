@@ -161,7 +161,8 @@ Measured between identical, traitless squads, where only the style differs:
    shots from distance and balls into a crowded box; a high line concedes
    through balls and runs (`pickChanceType`).
 4. **Congestion** — a deep block against a patient side: their `block` against
-   your `create`.
+   your `create`, eased by width on both flanks and worsened by a narrow side
+   (`WIDTH_STRETCHES_BLOCK`).
 5. **Space in behind** — a direct side's runners (`break`) against the
    defence's `cover`, scaled by the opponent's line height.
 6. **Aerial route** — route one and wing play resolve chance quality as an

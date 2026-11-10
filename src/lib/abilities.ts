@@ -38,6 +38,9 @@ export const ABILITIES = {
   lateRuns: { family: 'movement', kind: 'skill', description: 'Arrives late from midfield, unmarked, for the cut-back or second ball' },
   runsInBehind: { family: 'movement', kind: 'skill', description: "Plays on the last defender's shoulder and goes beyond him" },
   channelRuns: { family: 'movement', kind: 'skill', description: 'Moves from wide into the gap between full-back and centre-back' },
+  holdingWidth: { family: 'movement', kind: 'skill', description: 'Stays wide to stretch the defence. Negative: drifts inside' },
+  overlapping: { family: 'movement', kind: 'skill', description: 'A full-back who goes outside or beyond the wide man' },
+  inverting: { family: 'movement', kind: 'skill', description: 'A full-back who moves into midfield when his side has the ball' },
 
   // On the ball
   pressResist: { family: 'onTheBall', kind: 'skill', description: 'Keeps the ball under pressure' },

@@ -1926,7 +1926,7 @@ const ROLE_QUALITIES: Record<string, Partial<Record<Quality, number>>> = {
   // asserted all three and was wrong about all three.
   AerialThreat:        { aerial: 3 },
   Anchor:              { pressing: 1, pressResist: 1 },
-  AttackingFullback:   {},
+  AttackingFullback:   { overlapping: 3 },
   BallPlayingDefender: { pressResist: 3, creation: 1 },
   BoxToBox:            { pressing: 2, lateRuns: 1 },
   ChanceCreator:       { creation: 3 },
@@ -1941,7 +1941,7 @@ const ROLE_QUALITIES: Record<string, Partial<Record<Quality, number>>> = {
   // An inside forward is defined by his run into the channel. He may or may
   // not be a good dribbler; an inverted winger has to be.
   InsideForward:       { channelRuns: 3, longShot: 1 },
-  InvertedWingback:    { pressResist: 1, creation: 1 },
+  InvertedWingback:    { pressResist: 1, creation: 1, inverting: 3 },
   // Arriving late is what the name says; shooting from distance is not.
   LateRunner:          { lateRuns: 3 },
   Mezzala:             { creation: 1, dribble: 1, lateRuns: 1, channelRuns: 1 },
@@ -1957,7 +1957,7 @@ const ROLE_QUALITIES: Record<string, Partial<Record<Quality, number>>> = {
   SweeperKeeper:       { pressResist: 2, claiming: 1, recovery: 3 },
   TargetMan:           { aerial: 2, attackingTheBox: 2 },
   Trequartista:        { creation: 3, dribble: 1 },
-  Winger:              { setPiece: 2 },
+  Winger:              { setPiece: 2, holdingWidth: 3 },
 
   Pacey:               { pace: 3, recovery: 1 },
   Sweeper:             { recovery: 3, pressResist: 2 },

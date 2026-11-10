@@ -349,6 +349,76 @@ the real ones did, and that is what puts the Golden Boot high, not his share.
 (`movementFactors`), not on every shot. A season simulates slightly faster
 than before the movement work began.
 
+## Step 3, as built: width
+
+A flank's **width** is what its players give it, summed:
+- a winger's holding width;
+- half of a full-back's overlapping, because he arrives rather than stays;
+- minus a full-back's inverting.
+
+**Holding width** enters in two places:
+- **Crosses.** More of the attacks down that flank become crosses
+  (`WIDTH_TO_CROSSES`). It works against channel runs, which take crosses away.
+- **The deep block.** Width on both flanks makes a deep block harder to keep
+  compact (`WIDTH_STRETCHES_BLOCK`, in `congestionFactor`). A narrow side,
+  with negative width, is congested more.
+
+**Overlapping** enters in three places:
+- **Width**, at half value.
+- **The cross.** He is likelier to be the one who puts it in
+  (`OVERLAP_TO_CROSSER`).
+- **The cost.** When the side loses the ball to a press and is countered, his
+  flank defends worse, because he is up the pitch (`OVERLAP_EXPOSURE`).
+
+**Inverting** enters in four places:
+- **Midfield numbers.** An extra man in midfield, which gives a little more of
+  the ball (`MIDFIELD_NUMBERS_TO_POSSESSION`) and makes it easier to play out
+  of a press (`MIDFIELD_NUMBERS_TO_PRESS`).
+- **The counter.** The middle defends a counter better, because he is
+  already there (`INVERT_PROTECTS_CENTRE`).
+- **The cost.** His flank loses width, and with no winger ahead of him he no
+  longer takes on the flank's attacking duty.
+
+**Recipes.**
+- Winger: holding width +3.
+- Attacking Full-back: overlapping +3.
+- Inverted Wingback: inverting +3.
+
+**Controlled duel** (20,000 matches, identical 4-4-2s; both wide midfielders or
+both full-backs different):
+
+| | vs balanced | vs a parked bus | vs a gegenpress |
+| --- | --- | --- | --- |
+| Wingers holding width | +2.7% goals | +4.0% | +0.5% |
+| Wingers narrow (−2) | −1.1% | −2.3% | −0.7% |
+| Full-backs overlapping | +1.3% goals, +1.1% conceded | +2.5%, −1.1% | +0.5%, +0.9% (a possession side: +2.2% conceded) |
+| Full-backs inverting | −1.1% goals, −4.0% conceded, +2.2 pts of the ball | −2.6%, −2.4% | +1.2%, −4.1% |
+
+So width pays most against a deep block, an overlap is paid for on the
+counter, and inverting trades crosses for control. Overlapping full-backs
+supply 15.9% of their side's goals instead of 13.7%.
+
+**Against the real numbers** (FBref, 19 seasons):
+- Crosses and headers go from 24.7% of all goals to 25.0%.
+- Wingers' goals and assists are unchanged; they already crossed through
+  their delivery.
+- Attacking Full-backs' assists rise from 7.9% of their club's goals to 9.5%
+  (real 7.6%). Every full-back is over-credited with assists already: plain
+  full-backs get 7.3% against a real 4.5%. That is a crossing calibration
+  issue, not this step. What this step changes is the gap between an
+  attacking full-back and a plain one. It was 1.1 times; it is now 1.3 times,
+  against a real 1.7.
+
+**League calibration unchanged.**
+- +3.34 points per strength point (real +3.41); draws 25.6% (real 26.5%).
+- Possession by style is unchanged to the tenth of a point.
+- The Golden Boot holds at about 32.
+
+**Still to do in this family.** A counter is still started only by a press
+winning the ball. "When his side loses the ball, a counter down his flank" is
+modelled for that case alone; an attack that simply breaks down does not start
+a counter in this engine.
+
 ## Build order
 
 One step at a time. Each step is measured, committed, and reviewed before the
@@ -366,7 +436,7 @@ next.
    against a high line and a deep one. **Done** — see above.
 3. **Width:** holding width, overlapping, inverting. *Measured by:* the share of
    chances that are crosses, and assists by full-backs and wingers against
-   FBref.
+   FBref. **Done** — see above.
 4. **Between the lines:** dropping deep and showing for the ball. *Measured
    by:* possession share by style, and how often a press wins the ball.
 5. **Shape:** positional discipline and stepping out. *Measured by:* goals
