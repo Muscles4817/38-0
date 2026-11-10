@@ -477,7 +477,8 @@ interesting because something beats them.
    each with its meaning, its scale and whether it is a skill or a gift; every
    moment declares which abilities it reads; a test fails on any ability no
    moment reads. Season results must come out identical, and the keeper
-   abilities already built move into this structure unchanged.
+   abilities already built move into this structure unchanged. **Done** — see
+   [In the code](#in-the-code).
 3. **One family at a time.** Movement, on the ball, shooting, physical,
    defending, mental. Each family is designed as a whole, measured the way the
    goalkeeping abilities were (a controlled duel, then paired-seed leagues),
@@ -488,6 +489,35 @@ interesting because something beats them.
 5. **Retire the old route.** Once finishing, box movement and long shots are
    read from abilities, the flat goal and assist multipliers on traits stop
    deciding who scores.
+
+## In the code
+
+- **`src/lib/abilities.ts`** is the one list. Each ability has a family, a kind
+  (skill or gift) and a description. The editor seeds in `src/lib/db.ts` and
+  the match engine both take the list from here. It also holds the two
+  exceptions, each with a reason: abilities that exist but nothing reads yet
+  (`NOT_YET_READ`), and abilities the engine reads that no trait gives yet
+  (`NOT_YET_GIVEN`).
+- **The match engine reads an ability only through a moment.** In
+  `src/lib/matchEngine.ts`, each moment builds a reader that names the
+  abilities it reads (`reader('keeper', ['shotStopping', ...])`). A reader can
+  only be asked for those; anything else does not compile. The declarations
+  are collected in `MOMENT_READS`. `ratedReader` adds the rating baseline and
+  accepts skills only.
+- **Whether a phase counts a player's rating** is derived from its abilities'
+  kinds: rated if every ability it measures is a skill.
+- **`src/lib/abilities.test.ts`** fails if:
+  - an ability is read by no moment and is not listed as not yet read;
+  - an ability listed as not yet read is in fact read;
+  - a moment reads something that is not an ability;
+  - a phase's rating rule disagrees with its abilities.
+  `roleQualities.test.ts` does the same for abilities no trait gives.
+
+To add an ability:
+1. Add it to `abilities.ts`.
+2. Make a moment read it by adding it to that moment's reader.
+3. Give it to a trait's recipe in `db.ts`.
+The tests say which step is missing.
 
 ## Open questions
 

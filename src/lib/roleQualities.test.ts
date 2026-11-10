@@ -8,15 +8,12 @@
 
 import { describe, it, expect } from 'vitest';
 import { gameData } from './gameData';
+import { ABILITY_NAMES, NOT_YET_GIVEN } from './abilities';
 import { aerialQuality } from './matchEngine';
 import type { MatchPlayer, RoleMultipliers } from './matchEngine';
 import type { Position } from './formations';
 
-const VOCABULARY = [
-  'aerial', 'pace', 'recovery', 'pressing', 'pressResist', 'creation',
-  'dribble', 'shotStopping', 'reflexes', 'claiming', 'setPiece', 'penalty', 'longShot',
-  'discipline',
-];
+const VOCABULARY: string[] = ABILITY_NAMES;
 
 /** The qualities each playstyle interaction will read. */
 const NEEDED_BY_PLAYSTYLES = ['pace', 'pressing', 'pressResist', 'creation', 'aerial'];
@@ -82,6 +79,11 @@ describe('role qualities', () => {
     // disciplined.
     for (const quality of VOCABULARY) {
       const providers = gameData.roles.filter(r => (r.qualities?.[quality] ?? 0) !== 0);
+      if (quality in NOT_YET_GIVEN) {
+        // Listed as having no trait yet; once one gives it, it comes off the list.
+        expect(providers.map(r => r.name), `"${quality}" is given now`).toEqual([]);
+        continue;
+      }
       expect(providers.length, `nothing can express "${quality}"`).toBeGreaterThan(0);
     }
   });

@@ -23,6 +23,7 @@
 // is what gets fixed.
 
 import { type Position, positionZone } from './formations';
+import { type Ability, type Skill, isSkill } from './abilities';
 
 export type Zone = 'L' | 'C' | 'R';
 export type PlayerRole = string;
@@ -756,38 +757,48 @@ export type Phase =
   | 'build' | 'press' | 'block' | 'create' | 'break' | 'cover'
   | 'delivery' | 'aerialAttack' | 'aerialDefence';
 
-export const PHASES: Record<Phase, {
+interface PhaseSpec {
   weight: Record<Position, number>;
-  /** The qualities that measure how well it is done, with their weights. */
-  ability: Partial<Record<string, number>>;
-  /** Qualities that draw a player into it beyond his position. */
-  appetite: string[];
+  /** The abilities that measure how well it is done, with their weights. */
+  ability: Partial<Record<Ability, number>>;
+  /** Abilities that draw a player into it beyond his position. */
+  appetite: Ability[];
   /** An attacking phase hands an empty flank to the full-back; a defending one to the wide man. */
   side: 'attack' | 'defence' | null;
-  /**
-   * Whether a player's rating counts toward it. It does for a skill — a
-   * 90-rated centre-back is decent on the ball without a trait saying so — and
-   * not for a physical gift: a 90-rated striker is not fast or tall because
-   * he is 90-rated.
-   */
-  rated: boolean;
-}> = {
-  build:  { weight: BUILD_UP_WEIGHT, ability: { pressResist: 1 }, appetite: ['pressResist'], side: null, rated: true },
-  press:  { weight: PRESS_WEIGHT,    ability: { pressing: 1 },    appetite: ['pressing'],    side: 'attack', rated: true },
+}
+
+const PHASE_SPECS: Record<Phase, PhaseSpec> = {
+  build:  { weight: BUILD_UP_WEIGHT, ability: { pressResist: 1 }, appetite: ['pressResist'], side: null },
+  press:  { weight: PRESS_WEIGHT,    ability: { pressing: 1 },    appetite: ['pressing'],    side: 'attack' },
   // Work rate is part of defending: a winger who presses and tracks back adds
   // a defender to the block, not just a body.
-  block:  { weight: BLOCK_WEIGHT,    ability: { defending: 1, pressing: 0.5 }, appetite: ['defending', 'pressing'], side: 'defence', rated: true },
-  create: { weight: CREATE_WEIGHT,   ability: { creation: 1 },    appetite: ['creation'],    side: 'attack', rated: true },
-  break:  { weight: BREAK_WEIGHT,    ability: { pace: 1 },        appetite: ['pace', 'dribble'], side: 'attack', rated: false },
+  block:  { weight: BLOCK_WEIGHT,    ability: { defending: 1, pressing: 0.5 }, appetite: ['defending', 'pressing'], side: 'defence' },
+  create: { weight: CREATE_WEIGHT,   ability: { creation: 1 },    appetite: ['creation'],    side: 'attack' },
+  break:  { weight: BREAK_WEIGHT,    ability: { pace: 1 },        appetite: ['pace', 'dribble'], side: 'attack' },
   // Covering the space behind is reading the game as much as pace, and good
   // defenders read it whatever their traits say; 90% of stored XIs carry no
   // recovery trait at all, and rating that as no cover left every high line
   // open to anyone with a quick forward.
-  cover:  { weight: COVER_WEIGHT,    ability: { recovery: 1 },    appetite: ['recovery'],    side: 'defence', rated: true },
-  delivery:      { weight: CROSS_WEIGHT,          ability: { setPiece: 1 }, appetite: ['setPiece'], side: 'attack', rated: true },
-  aerialAttack:  { weight: AERIAL_ATTACK_WEIGHT,  ability: { aerial: 1 },   appetite: ['aerial'],   side: null, rated: false },
-  aerialDefence: { weight: AERIAL_DEFENCE_WEIGHT, ability: { aerial: 1 },   appetite: ['aerial'],   side: null, rated: false },
+  cover:  { weight: COVER_WEIGHT,    ability: { recovery: 1 },    appetite: ['recovery'],    side: 'defence' },
+  delivery:      { weight: CROSS_WEIGHT,          ability: { setPiece: 1 }, appetite: ['setPiece'], side: 'attack' },
+  aerialAttack:  { weight: AERIAL_ATTACK_WEIGHT,  ability: { aerial: 1 },   appetite: ['aerial'],   side: null },
+  aerialDefence: { weight: AERIAL_DEFENCE_WEIGHT, ability: { aerial: 1 },   appetite: ['aerial'],   side: null },
 };
+
+/**
+ * The phases, each with whether a player's rating counts toward it. It does
+ * when every ability the phase measures is a skill — a 90-rated centre-back is
+ * decent on the ball without a trait saying so — and not when one is a gift: a
+ * 90-rated striker is not fast or tall because he is 90-rated. Derived from
+ * the abilities themselves (src/lib/abilities.ts), so it cannot disagree with
+ * them.
+ */
+export const PHASES: Record<Phase, PhaseSpec & { rated: boolean }> = Object.fromEntries(
+  (Object.entries(PHASE_SPECS) as [Phase, PhaseSpec][]).map(([phase, spec]) => [phase, {
+    ...spec,
+    rated: (Object.keys(spec.ability) as Ability[]).every(isSkill),
+  }]),
+) as Record<Phase, PhaseSpec & { rated: boolean }>;
 
 /** How much more of a phase a player takes on, per point of a trait that draws him into it. */
 const APPETITE_PER_POINT = 0.15;
@@ -819,7 +830,7 @@ function involvement(p: MatchPlayer, phase: Phase, players: MatchPlayer[], roles
       w = Math.max(w, FLANK_COVER * duty);
     }
   }
-  for (const name of spec.appetite) w += APPETITE_PER_POINT * Math.max(0, quality(p, name, roles));
+  for (const name of spec.appetite) w += APPETITE_PER_POINT * Math.max(0, readPhase(p, name, roles));
   return w;
 }
 
@@ -1064,23 +1075,10 @@ export function aerialQuality(players: MatchPlayer[], roles: RoleMultipliers): n
   for (const p of players) {
     const w = AERIAL_WEIGHT[p.position] ?? 0.4;
     total += w * ratingScale(p.rating)
-      * Math.exp(AERIAL_FROM_QUALITY * quality(p, 'aerial', roles));
+      * Math.exp(AERIAL_FROM_QUALITY * readDeadBall(p, 'aerial', roles));
     mass += w;
   }
   return mass === 0 ? ratingScale(70) : total / mass;
-}
-
-/**
- * A team-level quality: everyone's contribution, weighted by how good he is.
- *
- * Divided by squad size so the numbers are comparable between sides, and so a
- * quality nobody has comes out at zero rather than at some baseline.
- */
-function teamQuality(players: MatchPlayer[], name: string, roles: RoleMultipliers): number {
-  if (players.length === 0) return 0;
-  let total = 0;
-  for (const p of players) total += quality(p, name, roles) * ratingScale(p.rating);
-  return total / players.length;
 }
 
 /**
@@ -1102,8 +1100,8 @@ export function phaseAbility(players: MatchPlayer[], phase: Phase, roles: RoleMu
     // scale and a side good at everything is equally good at each.
     let traits = 0;
     let weights = 0;
-    for (const [name, k] of Object.entries(spec.ability)) {
-      traits += (k ?? 0) * quality(p, name, roles);
+    for (const [name, k] of Object.entries(spec.ability) as [Ability, number][]) {
+      traits += (k ?? 0) * readPhase(p, name, roles);
       weights += k ?? 0;
     }
     const skill = (weights > 0 ? traits / weights : 0)
@@ -1201,23 +1199,65 @@ function buildTeam(setup: TeamSetup, roles: RoleMultipliers): TeamModel {
 
 // ── Selection ────────────────────────────────────────────────────────────────
 
-/**
- * What a player's roles say about one ability, summed.
- *
- * Qualities are how a trait describes what a player is GOOD AT, as distinct
- * from the goal and assist multipliers, which describe what he produces. The
- * playstyle interactions are all built on these. See docs/roles.md.
- */
-function quality(p: MatchPlayer, name: string, roles: RoleMultipliers): number {
+// ── Reading abilities ────────────────────────────────────────────────────────
+//
+// An ability is one thing a player is good or bad at (src/lib/abilities.ts);
+// a trait is a recipe of them. Nothing in this engine reads a trait's name.
+//
+// Every place a match reads an ability is a *moment*, and each moment declares
+// which abilities it reads by building its reader here. A reader can only be
+// asked for the abilities it declared — the types refuse anything else — so
+// MOMENT_READS is a true record of what the engine reads, and a test checks
+// that every ability is read by something. See docs/abilities.md.
+
+/** Each moment of a match that reads abilities, and the abilities it reads. */
+export const MOMENT_READS: Record<string, readonly Ability[]> = {};
+
+/** What a player's traits say about one ability, summed. */
+function traitPoints(p: MatchPlayer, name: Ability, roles: RoleMultipliers): number {
   let total = 0;
   for (const r of p.roles ?? []) total += roles.qualities?.[r]?.[name] ?? 0;
   return total;
 }
 
-/** One player's on-ball ability: his trait plus the baseline from his rating, as in `phaseAbility`. */
-function ability(p: MatchPlayer, name: string, roles: RoleMultipliers): number {
-  return quality(p, name, roles) + RATING_TO_ABILITY * (p.rating - ABILITY_REFERENCE_RATING);
+function declare(moment: string, reads: readonly Ability[]): void {
+  MOMENT_READS[moment] = [...new Set([...(MOMENT_READS[moment] ?? []), ...reads])];
 }
+
+/** A moment that reads what a player's traits say, and nothing else. */
+function reader<const A extends Ability>(moment: string, reads: readonly A[]) {
+  declare(moment, reads);
+  return (p: MatchPlayer, name: A, roles: RoleMultipliers): number => traitPoints(p, name, roles);
+}
+
+/**
+ * A moment that reads a skill as his traits plus the baseline his rating
+ * implies, as `phaseAbility` does for a rated phase. Skills only: a rating says
+ * nothing about a gift.
+ */
+function ratedReader<const S extends Skill>(moment: string, reads: readonly S[]) {
+  declare(moment, reads);
+  return (p: MatchPlayer, name: S, roles: RoleMultipliers): number =>
+    traitPoints(p, name, roles) + RATING_TO_ABILITY * (p.rating - ABILITY_REFERENCE_RATING);
+}
+
+/** The phases of play (PHASES): who takes part, and how well the side does it. */
+const readPhase = reader('phases', [...new Set(Object.values(PHASE_SPECS).flatMap(s =>
+  [...(Object.keys(s.ability) as Ability[]), ...s.appetite]))]);
+/** A side's presence in both boxes at a dead ball (`aerialQuality`). */
+const readDeadBall = reader('deadBallPresence', ['aerial']);
+/** Who takes a penalty. */
+const readPenaltyTaker = reader('penaltyTaker', ['penalty']);
+/** Who supplies the chance: the set-piece taker, the crosser, the through-ball passer. */
+const readCreator = ratedReader('creator', ['setPiece', 'creation']);
+/** Who gives away a foul. */
+const readFouler = reader('fouls', ['discipline']);
+/** Who is credited with a tackle, an interception, a clearance or a header. */
+const readDefensiveCredit = reader('defensiveCredit', ['recovery', 'aerial']);
+/** Who keeps the ball against a press, and who wins it for the press. */
+const readPressCredit = reader('pressCredit', ['pressResist', 'pressing']);
+/** The keeper: saving, sweeping behind a high line, and claiming crosses. */
+const readKeeper = reader('keeper', ['shotStopping', 'reflexes', 'claiming', 'recovery']);
 
 // ── The interaction rules, as functions ──────────────────────────────────────
 //
@@ -1431,7 +1471,7 @@ function pickShooter(
       mults.push(roles.goalMult[r] ?? 1);
       best = Math.max(best, affinity[r] ?? 1);
     }
-    if (penalty) w *= Math.exp(PENALTY_TAKER_QUALITY_WEIGHT * quality(p, 'penalty', roles));
+    if (penalty) w *= Math.exp(PENALTY_TAKER_QUALITY_WEIGHT * readPenaltyTaker(p, 'penalty', roles));
     // A role's general goal multiplier and its affinity for this kind of
     // chance say the same thing — a Poacher gets on the end of things — so the
     // stronger counts, not their product. Multiplied, a Poacher was boosted
@@ -1510,15 +1550,15 @@ function pickCreator(
       // Rating counts here as it does for any on-ball ability: a side with no
       // specialist has its best players take them.
       return (SET_PIECE_TAKER_WEIGHT[p.position] ?? 0.3)
-        * Math.exp(SET_PIECE_TAKER_QUALITY_WEIGHT * ability(p, 'setPiece', roles));
+        * Math.exp(SET_PIECE_TAKER_QUALITY_WEIGHT * readCreator(p, 'setPiece', roles));
     } else if (type === 'cross' || type === 'aerial') {
       // From the flank the attack came down; the far side rarely.
       w = CROSS_WEIGHT[p.position] ?? 0.2;
       if (zone !== 'C') w *= pz === zone ? 2 : pz === 'C' ? 0.6 : 0.15;
-      return w * Math.exp(CREATOR_ABILITY_WEIGHT * ability(p, 'setPiece', roles));
+      return w * Math.exp(CREATOR_ABILITY_WEIGHT * readCreator(p, 'setPiece', roles));
     } else if (type === 'throughBall') {
       w = (THROUGH_WEIGHT[p.position] ?? 0.3) * (pz === zone ? 1.5 : pz === 'C' || zone === 'C' ? 1 : 0.5);
-      return w * Math.exp(CREATOR_ABILITY_WEIGHT * ability(p, 'creation', roles));
+      return w * Math.exp(CREATOR_ABILITY_WEIGHT * readCreator(p, 'creation', roles));
     }
     // A lay-off for a dribble or a shot from distance: no one skill makes
     // it, so the role's general assist tendency stands in. For a cross or a
@@ -1544,7 +1584,7 @@ function pickFouler(
     if (p.position === 'GK') w *= 0.06;
     // Negative discipline means he gives away more of them; positive means the
     // opposite, which is why the sign is simply flipped rather than clamped.
-    w *= Math.pow(DISCIPLINE_TO_FOULS, -quality(p, 'discipline', roles));
+    w *= Math.pow(DISCIPLINE_TO_FOULS, -readFouler(p, 'discipline', roles));
     if (booked(p.playerId)) w *= BOOKED_FOUL_WEIGHT;
     return w;
   });
@@ -1579,17 +1619,17 @@ function defenderWeights(
       case 'interception':
         // Midfielders make as many of these as defenders do.
         return (defend + (MIDFIELD_WEIGHT[p.position] ?? 0.3)) / 2 * inZone * skill
-          * Math.exp(DEFENSIVE_QUALITY_WEIGHT * quality(p, 'recovery', roles));
+          * Math.exp(DEFENSIVE_QUALITY_WEIGHT * readDefensiveCredit(p, 'recovery', roles));
       case 'clearance':
         return defend * defend * inZone * skill
-          * Math.exp(DEFENSIVE_QUALITY_WEIGHT * quality(p, 'aerial', roles));
+          * Math.exp(DEFENSIVE_QUALITY_WEIGHT * readDefensiveCredit(p, 'aerial', roles));
       case 'block':
         return defend * inZone * skill;
       case 'aerial':
         // Height, but in his own box: a striker is tall at both ends and is
         // only part of the defending at one of them.
         return (AERIAL_WEIGHT[p.position] ?? 0.4) * Math.sqrt(defend) * inZone * skill
-          * Math.exp(AERIAL_FROM_QUALITY * quality(p, 'aerial', roles));
+          * Math.exp(AERIAL_FROM_QUALITY * readDefensiveCredit(p, 'aerial', roles));
       case 'beaten':
         return defend * inZone / skill;
     }
@@ -1623,7 +1663,7 @@ function pickBuildUpPlayer(
   const weights = candidates.map(p => {
     const share = involvement(p, 'build', team.players, roles);
     const ability = Math.pow(ratingScale(p.rating), RATING_SELECTION_POWER)
-      * Math.exp(DEFENSIVE_QUALITY_WEIGHT * quality(p, 'pressResist', roles));
+      * Math.exp(DEFENSIVE_QUALITY_WEIGHT * readPressCredit(p, 'pressResist', roles));
     return beaten ? share * ability : share / ability;
   });
   return pickWeighted(rand, candidates, weights);
@@ -1639,7 +1679,7 @@ function pickPresser(
   const candidates = team.players.filter(p => !sent.has(p.playerId));
   const weights = candidates.map(p => involvement(p, 'press', team.players, roles)
     * Math.pow(ratingScale(p.rating), RATING_SELECTION_POWER)
-    * Math.exp(DEFENSIVE_QUALITY_WEIGHT * quality(p, 'pressing', roles)));
+    * Math.exp(DEFENSIVE_QUALITY_WEIGHT * readPressCredit(p, 'pressing', roles)));
   return pickWeighted(rand, candidates, weights);
 }
 
@@ -1878,13 +1918,13 @@ export function simulateMatch(
       // so a side without one plays exactly the match it did before.
       const sweeper = def.keeper;
       const sweep = type === 'throughBall' && sweeper
-        ? SWEEP_PER_POINT * Math.max(0, quality(sweeper, 'recovery', roles)) * def.style.line
+        ? SWEEP_PER_POINT * Math.max(0, readKeeper(sweeper, 'recovery', roles)) * def.style.line
         : 0;
       const sweptUp = sweep > 0 && rand() < sweep;
       if (sweptUp) stats.get(sweeper!.playerId)!.value += CHANCE_QUALITY.throughBall;
       // A ball into the box can be claimed by a keeper who comes for it. Drawn
       // only when he does, as with the sweep.
-      const claiming = def.keeper ? quality(def.keeper, 'claiming', roles) : 0;
+      const claiming = def.keeper ? readKeeper(def.keeper, 'claiming', roles) : 0;
       const claim = CLAIM_PER_POINT * CLAIM_REACH[type] * claiming;
       const claimed = claim > 0 && rand() < claim;
       if (claimed) stats.get(def.keeper!.playerId)!.value += CHANCE_QUALITY[type];
@@ -1909,8 +1949,8 @@ export function simulateMatch(
         // for the direct free kicks and the scrambles among them.
         const stopping = keeper
           ? Math.pow(ratingScale(80
-            + SHOT_STOPPING_REACH[type] * quality(keeper, 'shotStopping', roles)
-            + REFLEXES_REACH[type] * quality(keeper, 'reflexes', roles)),
+            + SHOT_STOPPING_REACH[type] * readKeeper(keeper, 'shotStopping', roles)
+            + REFLEXES_REACH[type] * readKeeper(keeper, 'reflexes', roles)),
           -KEEPING_EXPONENT * carry)
           : 1;
 
