@@ -1442,9 +1442,12 @@ function pickShooter(
   zone: Zone,
   type: ChanceType,
   roles: RoleMultipliers,
+  sent: ReadonlySet<number>,
 ): MatchPlayer | null {
   const affinity = ROLE_CHANCE_AFFINITY[type];
-  const candidates = team.players.filter(p => p.position !== 'GK');
+  // A man who has been sent off takes no further part: he used to go on
+  // shooting, scoring and assisting from the dressing room.
+  const candidates = team.players.filter(p => p.position !== 'GK' && !sent.has(p.playerId));
   // At a corner the whole side is in the box, and it is usually a centre-half
   // who gets on the end of it. Open-play weighting would all but exclude them.
   // A penalty is taken by whoever is on them, almost always one of the side's
@@ -1541,8 +1544,10 @@ function pickCreator(
   shooterId: number,
   type: ChanceType,
   roles: RoleMultipliers,
+  sent: ReadonlySet<number>,
 ): MatchPlayer | null {
-  const candidates = team.players.filter(p => p.position !== 'GK' && p.playerId !== shooterId);
+  const candidates = team.players.filter(p =>
+    p.position !== 'GK' && p.playerId !== shooterId && !sent.has(p.playerId));
   const weights = candidates.map(p => {
     const pz = positionZone(p.position);
     let w: number;
@@ -1845,11 +1850,15 @@ export function simulateMatch(
     // Playing a man short tells in both boxes.
     const shortHanded = def.players.filter(p => sent.has(p.playerId)).length;
     const defPenalty = Math.pow(0.86, shortHanded);
+    // And going forward: ten men create less than eleven. Only the defending
+    // side used to pay for a red card, so a side a man down attacked as well
+    // as it had with eleven.
+    const attPenalty = Math.pow(0.86, att.players.filter(p => sent.has(p.playerId)).length);
 
     // Does this possession become a chance? Attacking quality in the zone,
     // against defensive quality in the zone it arrives at.
     const edge =
-      Math.log(att.attackZone[zone] / (def.defendZone[defZone] * defPenalty)) / RATING_CURVE / 10;
+      Math.log((att.attackZone[zone] * attPenalty) / (def.defendZone[defZone] * defPenalty)) / RATING_CURVE / 10;
     // Both sides' organisation decides how far the gap between them tells: a
     // drilled side exploits its superiority, and a drilled one resists it.
     const carry = (expression(att.setup.cohesion ?? DEFAULT_COHESION)
@@ -1928,7 +1937,7 @@ export function simulateMatch(
       const claim = CLAIM_PER_POINT * CLAIM_REACH[type] * claiming;
       const claimed = claim > 0 && rand() < claim;
       if (claimed) stats.get(def.keeper!.playerId)!.value += CHANCE_QUALITY[type];
-      const shooter = sweptUp || claimed ? undefined : pickShooter(rand, att, zone, type, roles);
+      const shooter = sweptUp || claimed ? undefined : pickShooter(rand, att, zone, type, roles, sent);
       // A possession that ended in a shot got through any press that met it.
       if (pressEngaged && !turnover) creditOnBall(att, def, true, threat);
       if (shooter) {
@@ -1999,7 +2008,7 @@ export function simulateMatch(
           // The pass behind a shot that did not go in. A scored one is an
           // assist, chosen below, and counts as a key pass there.
           if (type !== 'penalty' && credit() < KEY_PASS_RATE) {
-            const passer = pickCreator(credit, att, zone, shooter.playerId, type, roles);
+            const passer = pickCreator(credit, att, zone, shooter.playerId, type, roles, sent);
             if (passer) {
               const ps = stats.get(passer.playerId)!;
               ps.chancesCreated++;
@@ -2021,7 +2030,7 @@ export function simulateMatch(
           const creator =
             type === 'penalty' || rand() >= ASSIST_RATE[type]
               ? null
-              : pickCreator(rand, att, zone, shooter.playerId, type, roles);
+              : pickCreator(rand, att, zone, shooter.playerId, type, roles, sent);
           if (creator) {
             const cs = stats.get(creator.playerId)!;
             cs.assists++;

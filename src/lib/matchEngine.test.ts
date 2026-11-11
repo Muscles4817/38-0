@@ -178,6 +178,26 @@ describe('discipline', () => {
       expect(new Set(ids).size).toBe(ids.length);
     }
   });
+
+  it('takes a sent-off player out of the match: he neither scores nor assists afterwards', { timeout: 60_000 }, () => {
+    const rand = rng(405);
+    let redCards = 0;
+    for (let i = 0; i < 2500; i++) {
+      // Strikers who foul a great deal, so that the men most likely to score
+      // are also the ones being sent off.
+      const rash = { 9: ['Rash'], 10: ['Rash'] };
+      const m = simulateMatch(
+        team('H', 84, 'parkTheBus', 0, rash), team('A', 84, 'parkTheBus', 100, rash), rand,
+        { goalMult: {}, assistMult: {}, qualities: { Rash: { discipline: -4 } } });
+      for (const red of m.events.filter(e => e.type === 'red')) {
+        redCards++;
+        const after = m.events.filter(e => e.type === 'goal' && e.minute > red.minute);
+        expect(after.filter(e => e.playerId === red.playerId || e.assistId === red.playerId)).toEqual([]);
+      }
+    }
+    // Otherwise the loop above asserted nothing.
+    expect(redCards).toBeGreaterThan(50);
+  });
 });
 
 describe('inferStyle', () => {
