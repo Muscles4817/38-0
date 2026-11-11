@@ -468,7 +468,7 @@ function CompetitionPicker({ competitions, seasonId, onChoose }: {
                     : 'border-line-strong text-fg hover:border-line-hover'}`}
               >
                 <div className="font-bold text-sm">{season.seasonLabel}</div>
-                <div className="text-[10px] text-muted">avg {season.averageRating}</div>
+                <div className="text-[11px] text-muted">avg {season.averageRating}</div>
               </button>
             ))}
           </div>
@@ -515,7 +515,7 @@ function CompetitionSummary({ competition, draftedFrom }: {
 // ── Bits ─────────────────────────────────────────────────────────────────────
 
 function Label({ children }: { children: React.ReactNode }) {
-  return <div className="text-[10px] font-bold tracking-widest text-muted uppercase mb-2">{children}</div>;
+  return <div className="text-[11px] font-bold tracking-widest text-muted uppercase mb-2">{children}</div>;
 }
 
 // Moved here with the odds themselves, from the results page.

@@ -276,14 +276,14 @@ export default function SetupPage() {
           <div className="space-y-3">
             <div className="flex gap-4">
               <div className="flex-1">
-                <div className="text-[10px] text-muted mb-1">From</div>
+                <div className="text-[11px] text-muted mb-1">From</div>
                 <input type="range" min={1992} max={2025} value={yearStart}
                   aria-label="First season of the era"
                   onChange={e => changeEra(+e.target.value, yearEnd, 'start')}
                   className="w-full h-8 accent-[#00c896] touch-manipulation" />
               </div>
               <div className="flex-1">
-                <div className="text-[10px] text-muted mb-1">To</div>
+                <div className="text-[11px] text-muted mb-1">To</div>
                 <input type="range" min={1993} max={2026} value={yearEnd}
                   aria-label="Last season of the era"
                   onChange={e => changeEra(yearStart, +e.target.value, 'end')}
@@ -313,7 +313,7 @@ export default function SetupPage() {
                 Serie A, La Liga, the Bundesliga and the World Cup
               </div>
             </div>
-            <span className="text-[9px] text-accent font-bold uppercase tracking-widest bg-[#00c896]/10 px-1.5 py-0.5 rounded shrink-0">
+            <span className="text-[11px] text-accent font-bold uppercase tracking-widest bg-[#00c896]/10 px-1.5 py-0.5 rounded shrink-0">
               Active
             </span>
           </div>
@@ -327,7 +327,7 @@ export default function SetupPage() {
             ].map(l => (
               <div key={l.name}
                 className="relative rounded-lg border border-line bg-inset px-3 py-3 opacity-40 cursor-not-allowed select-none overflow-hidden">
-                <div className="absolute top-2 right-2 text-[9px] text-fainter font-bold uppercase tracking-widest bg-raised px-1.5 py-0.5 rounded">
+                <div className="absolute top-2 right-2 text-[11px] text-fainter font-bold uppercase tracking-widest bg-raised px-1.5 py-0.5 rounded">
                   Soon
                 </div>
                 <div className="text-lg mb-1">{l.flag}</div>
@@ -461,14 +461,14 @@ export default function SetupPage() {
 }
 
 function Label({ children }: { children: React.ReactNode }) {
-  return <div className="text-[10px] font-bold tracking-widest text-muted uppercase mb-2">{children}</div>;
+  return <div className="text-[11px] font-bold tracking-widest text-muted uppercase mb-2">{children}</div>;
 }
 
 /** One line of the side panel's read-back of the current settings. */
 function Summary({ label, value }: { label: string; value: string }) {
   return (
     <div className="flex items-baseline gap-3 text-xs">
-      <span className="text-subtle uppercase tracking-widest text-[10px] w-20 shrink-0">{label}</span>
+      <span className="text-subtle uppercase tracking-widest text-[11px] w-20 shrink-0">{label}</span>
       <span className="font-bold text-fg truncate">{value}</span>
     </div>
   );
@@ -484,7 +484,7 @@ function ChoiceSelect({ label, placeholder, value, options, onChange }: {
 }) {
   return (
     <label className="block mt-3">
-      <span className="block text-[10px] text-muted mb-1 uppercase tracking-widest font-bold">{label}</span>
+      <span className="block text-[11px] text-muted mb-1 uppercase tracking-widest font-bold">{label}</span>
       <select
         value={value}
         onChange={e => onChange(e.target.value)}
@@ -509,7 +509,7 @@ function ComingSoon({ summary, children }: { summary: string; children: React.Re
       <summary className="cursor-pointer list-none px-4 py-3 flex items-center gap-2 text-xs text-muted hover:text-fg transition-colors touch-manipulation">
         <span className="text-fainter transition-transform group-open:rotate-90">▶</span>
         <span className="flex-1">{summary}</span>
-        <span className="text-[9px] font-bold uppercase tracking-widest text-fainter bg-raised px-1.5 py-0.5 rounded">Soon</span>
+        <span className="text-[11px] font-bold uppercase tracking-widest text-fainter bg-raised px-1.5 py-0.5 rounded">Soon</span>
       </summary>
       <div className="grid grid-cols-1 gap-2 px-3 pb-3 sm:grid-cols-2">
         {children}

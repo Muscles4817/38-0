@@ -391,9 +391,9 @@ export default function DraftPage() {
 
         <div className="mt-4 w-full px-1 space-y-1">
           <div className="flex items-center justify-between mb-2">
-            <span className="text-[10px] text-muted uppercase tracking-widest font-bold">Line Ratings</span>
+            <span className="text-[11px] text-muted uppercase tracking-widest font-bold">Line Ratings</span>
             {picks.length > 0 && (
-              <span className="text-[10px] text-muted">Overall <span className="text-fg font-bold">{overall}</span></span>
+              <span className="text-[11px] text-muted">Overall <span className="text-fg font-bold">{overall}</span></span>
             )}
           </div>
           <LineRatings formation={formation} picks={picks} />
@@ -592,7 +592,7 @@ function SpinPanel({
               Cancel
             </button>
           </div>
-          <div className="text-[10px] text-muted uppercase tracking-widest mb-2">
+          <div className="text-[11px] text-muted uppercase tracking-widest mb-2">
             Where they can play
           </div>
           <div className="flex flex-wrap gap-2">

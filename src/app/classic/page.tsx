@@ -256,7 +256,7 @@ export default function ClassicPage() {
                   OVR {selected.overallRating}
                 </span>
               </span>
-              <span className="text-[10px] font-bold uppercase tracking-widest text-accent shrink-0">
+              <span className="text-[11px] font-bold uppercase tracking-widest text-accent shrink-0">
                 Change
               </span>
             </button>
@@ -283,7 +283,7 @@ export default function ClassicPage() {
                 type="button"
                 onClick={() => setIconsOnly(v => !v)}
                 aria-pressed={iconsOnly}
-                className={`px-3 py-2.5 rounded-lg text-[10px] font-bold uppercase tracking-widest shrink-0
+                className={`px-3 py-2.5 rounded-lg text-[11px] font-bold uppercase tracking-widest shrink-0
                             transition-colors touch-manipulation border ${
                   iconsOnly
                     ? 'bg-[#c9b84e] text-black border-[#c9b84e]'
@@ -309,7 +309,7 @@ export default function ClassicPage() {
                     key={opt}
                     type="button"
                     onClick={() => setSortBy(opt)}
-                    className={`px-3 py-2.5 rounded text-[10px] font-bold uppercase tracking-widest transition-colors touch-manipulation ${
+                    className={`px-3 py-2.5 rounded text-[11px] font-bold uppercase tracking-widest transition-colors touch-manipulation ${
                       sortBy === opt ? 'bg-[#00c896] text-black' : 'text-muted hover:text-fg'
                     }`}
                   >
@@ -319,14 +319,14 @@ export default function ClassicPage() {
               </div>
             </div>
 
-            <div className="text-[10px] font-bold tracking-widest text-muted uppercase">
+            <div className="text-[11px] font-bold tracking-widest text-muted uppercase">
               {sortedTeams.length} side{sortedTeams.length === 1 ? '' : 's'}
             </div>
           </div>
 
           {grouped && iconicTeams.length > 0 && (
             <section className="mb-6">
-              <div className="text-[10px] font-bold tracking-widest text-gold uppercase mb-2">
+              <div className="text-[11px] font-bold tracking-widest text-gold uppercase mb-2">
                 ★ Sides people name
               </div>
               <TeamGrid teams={iconicTeams} selected={selected} onSelect={selectTeam} />
@@ -343,7 +343,7 @@ export default function ClassicPage() {
                 is here for the player who came looking for one club.
               */
               <details className="group">
-                <summary className="cursor-pointer list-none flex items-center gap-2 py-3 text-[10px]
+                <summary className="cursor-pointer list-none flex items-center gap-2 py-3 text-[11px]
                                     font-bold tracking-widest text-muted uppercase hover:text-fg
                                     transition-colors touch-manipulation">
                   <span className="text-subtle transition-transform group-open:rotate-90">▶</span>
@@ -402,12 +402,12 @@ export default function ClassicPage() {
               <div className="flex-1 space-y-1 min-w-0">
                 {/* Header row */}
                 <div className="flex items-center justify-between mb-2">
-                  <div className="text-[10px] font-bold tracking-widest text-muted uppercase">
+                  <div className="text-[11px] font-bold tracking-widest text-muted uppercase">
                     XI — {selected.clubName} {selected.seasonLabel}
                   </div>
                   <button
                     onClick={resetToAuto}
-                    className="text-[10px] text-muted hover:text-accent transition-colors font-bold uppercase tracking-wider"
+                    className="text-[11px] text-muted hover:text-accent transition-colors font-bold uppercase tracking-wider"
                   >
                     Auto-fill
                   </button>
@@ -427,7 +427,7 @@ export default function ClassicPage() {
                         outline: isEditing ? '1px solid #00c896' : undefined,
                       }}
                     >
-                      <span className="text-[10px] font-bold w-10 shrink-0 text-left" style={{ color: 'var(--t-muted)' }}>
+                      <span className="text-[11px] font-bold w-10 shrink-0 text-left" style={{ color: 'var(--t-muted)' }}>
                         {slot.position}
                       </span>
                       {pick ? (
@@ -440,7 +440,7 @@ export default function ClassicPage() {
                       ) : (
                         <span className="text-sm text-subtle flex-1 text-left italic">— empty —</span>
                       )}
-                      <span className="text-[10px] text-muted shrink-0">{isEditing ? '▲' : '▼'}</span>
+                      <span className="text-[11px] text-muted shrink-0">{isEditing ? '▲' : '▼'}</span>
                     </button>
                   );
                 })}
@@ -500,13 +500,13 @@ export default function ClassicPage() {
                       >
                         <span className="flex-1 text-sm truncate">{e.name}</span>
                         {!posMatch && (
-                          <span className="text-[9px] text-(--c-yellow) shrink-0">out of pos</span>
+                          <span className="text-[11px] text-(--c-yellow) shrink-0">out of pos</span>
                         )}
                         {inOtherSlot && (
-                          <span className="text-[9px] text-muted shrink-0">in XI</span>
+                          <span className="text-[11px] text-muted shrink-0">in XI</span>
                         )}
                         {isCurrent && (
-                          <span className="text-[9px] text-accent shrink-0">current</span>
+                          <span className="text-[11px] text-accent shrink-0">current</span>
                         )}
                         <span className="text-xs font-bold tabular-nums shrink-0" style={{ color: ratingColor(e.rating) }}>
                           {e.rating}
@@ -542,7 +542,7 @@ function Chip({ label, selected, onClick }: { label: string; selected: boolean; 
       type="button"
       onClick={onClick}
       aria-pressed={selected}
-      className={`px-3 py-2.5 rounded-lg text-[10px] font-bold uppercase tracking-widest transition-colors touch-manipulation border ${
+      className={`px-3 py-2.5 rounded-lg text-[11px] font-bold uppercase tracking-widest transition-colors touch-manipulation border ${
         selected
           ? 'bg-[#00c896] text-black border-[#00c896]'
           : 'text-muted border-line hover:text-fg'
@@ -600,7 +600,7 @@ function TeamGrid({ teams, selected, onSelect }: {
 
 function Label({ children }: { children: React.ReactNode }) {
   return (
-    <div className="text-[10px] font-bold tracking-widest text-muted uppercase mb-2">
+    <div className="text-[11px] font-bold tracking-widest text-muted uppercase mb-2">
       {children}
     </div>
   );

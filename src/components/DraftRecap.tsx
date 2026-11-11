@@ -33,15 +33,15 @@ export default function DraftRecap({ picks }: Props) {
 
   return (
     <div className="w-full space-y-3 pt-3 border-t border-line">
-      <div className="text-[10px] font-bold tracking-widest text-muted uppercase">Squad Story</div>
+      <div className="text-[11px] font-bold tracking-widest text-muted uppercase">Squad Story</div>
 
       {/* Clubs */}
       <div>
-        <div className="text-[9px] text-muted uppercase tracking-widest mb-1">Clubs</div>
+        <div className="text-[11px] text-muted uppercase tracking-widest mb-1">Clubs</div>
         <div className="flex flex-col gap-0.5">
           {clubs.map(([name, count]) => (
             <div key={name} className="flex items-center gap-2">
-              <span className="text-[10px] text-muted flex-1 truncate">{name}</span>
+              <span className="text-[11px] text-muted flex-1 truncate">{name}</span>
               <div className="flex gap-0.5">
                 {Array.from({ length: count }).map((_, i) => (
                   <span key={i} className="w-1.5 h-1.5 rounded-full bg-[#00c896] inline-block" />
@@ -55,10 +55,10 @@ export default function DraftRecap({ picks }: Props) {
       {/* Eras */}
       {decades.length > 0 && (
         <div>
-          <div className="text-[9px] text-muted uppercase tracking-widest mb-1">Era</div>
+          <div className="text-[11px] text-muted uppercase tracking-widest mb-1">Era</div>
           <div className="flex gap-1.5 flex-wrap">
             {decades.map(d => (
-              <span key={d} className="text-[9px] px-1.5 py-0.5 rounded bg-raised text-subtle">
+              <span key={d} className="text-[11px] px-1.5 py-0.5 rounded bg-raised text-subtle">
                 {d} ×{eraCounts.get(d)}
               </span>
             ))}
@@ -69,10 +69,10 @@ export default function DraftRecap({ picks }: Props) {
       {/* Nations */}
       {nations.length > 0 && (
         <div>
-          <div className="text-[9px] text-muted uppercase tracking-widest mb-1">Nations</div>
+          <div className="text-[11px] text-muted uppercase tracking-widest mb-1">Nations</div>
           <div className="flex flex-wrap gap-1">
             {nations.map(([nat, count]) => (
-              <span key={nat} className="text-[9px] px-1.5 py-0.5 rounded bg-raised text-subtle">
+              <span key={nat} className="text-[11px] px-1.5 py-0.5 rounded bg-raised text-subtle">
                 {nat}{count > 1 ? ` ×${count}` : ''}
               </span>
             ))}

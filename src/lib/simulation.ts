@@ -157,6 +157,35 @@ export interface FixtureResult {
   awayGoals: number;
   userInvolved: boolean;
   scorers: { name: string; minute: number }[]; // only populated for user fixtures
+  /** What happened in the match, for the XI's own fixtures only. */
+  detail?: FixtureDetail;
+}
+
+/** One side's numbers in a match the XI played. */
+export interface FixtureSide {
+  shots: number;
+  shotsOnTarget: number;
+  expectedGoals: number;
+  possession: number;
+}
+
+/**
+ * A match the XI played, as the engine recorded it: both sides' numbers and
+ * every goal and card in order. Kept for the XI's 38 matches only; the other
+ * 342 are a scoreline.
+ */
+export interface FixtureDetail {
+  home: FixtureSide;
+  away: FixtureSide;
+  events: {
+    minute: number;
+    type: 'goal' | 'yellow' | 'red';
+    /** True when it was the XI's player. */
+    user: boolean;
+    name: string;
+    assist?: string;
+    penalty?: boolean;
+  }[];
 }
 
 export interface Gameweek {
@@ -805,7 +834,22 @@ export function simulateSeason(
           .filter(e => e.type === 'goal' && e.team === USER)
           .map(e => ({ name: e.playerName.split(' ').pop()!, minute: e.minute }))
         : [];
-      fixtures.push({ home: home.name, away: away.name, homeGoals, awayGoals, userInvolved, scorers });
+      const side = (t: typeof match.home): FixtureSide => ({
+        shots: t.shots, shotsOnTarget: t.shotsOnTarget, expectedGoals: t.expectedGoals, possession: t.possession,
+      });
+      const detail: FixtureDetail | undefined = userInvolved ? {
+        home: side(match.home),
+        away: side(match.away),
+        events: match.events.map(e => ({
+          minute: e.minute,
+          type: e.type,
+          user: e.team === USER,
+          name: e.playerName,
+          ...(e.assistName ? { assist: e.assistName } : {}),
+          ...(e.chanceType === 'penalty' ? { penalty: true } : {}),
+        })),
+      } : undefined;
+      fixtures.push({ home: home.name, away: away.name, homeGoals, awayGoals, userInvolved, scorers, detail });
     }
 
     gameweeks.push({ week: r + 1, fixtures, tableSnapshot: sortedTable(standings) });

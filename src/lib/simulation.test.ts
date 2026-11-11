@@ -241,6 +241,39 @@ describe('simulateSeason — player attribution', () => {
   });
 });
 
+describe('simulateSeason — the detail of the XI\'s own matches', () => {
+  const result = run(84, 78, 99);
+
+  it('is kept for the XI\'s fixtures and no others', () => {
+    for (const gw of result.gameweeks) {
+      for (const fixture of gw.fixtures) {
+        expect(fixture.detail !== undefined).toBe(fixture.userInvolved);
+      }
+    }
+  });
+
+  it('accounts for every goal in the scoreline, on the right side', () => {
+    for (const gw of result.gameweeks) {
+      const f = gw.fixtures.find(x => x.userInvolved)!;
+      const userIsHome = f.home === 'Your XI';
+      const goals = f.detail!.events.filter(e => e.type === 'goal');
+      expect(goals.filter(e => e.user).length).toBe(userIsHome ? f.homeGoals : f.awayGoals);
+      expect(goals.filter(e => !e.user).length).toBe(userIsHome ? f.awayGoals : f.homeGoals);
+    }
+  });
+
+  it('never has fewer shots on target than goals, or more than shots', () => {
+    for (const gw of result.gameweeks) {
+      const f = gw.fixtures.find(x => x.userInvolved)!;
+      for (const [side, goals] of [[f.detail!.home, f.homeGoals], [f.detail!.away, f.awayGoals]] as const) {
+        expect(side.shotsOnTarget).toBeGreaterThanOrEqual(goals);
+        expect(side.shots).toBeGreaterThanOrEqual(side.shotsOnTarget);
+      }
+      expect(f.detail!.home.possession + f.detail!.away.possession).toBeCloseTo(100, 0);
+    }
+  });
+});
+
 describe('simulateSeason — squad strength matters', () => {
   // Averaged over fixed seeds, so this is deterministic but not knife-edge.
   const seeds = [11, 222, 3333, 44444, 555555, 6060, 71717, 8888];
