@@ -12,6 +12,7 @@
 // cameos of four minutes each is not a squad member, while a rotation player
 // who started six games is. 270 minutes is three full matches.
 
+import crypto from 'node:crypto';
 import fs from 'node:fs';
 import path from 'node:path';
 import process from 'node:process';
@@ -58,13 +59,51 @@ if (files.length === 0) {
   process.exit(1);
 }
 
+// ── Two club-seasons holding the same export ─────────────────────────────────
+//
+// These files are pasted in by hand, one club at a time, and the obvious slip
+// is to paste an export into the wrong file — or into the right file and then
+// the next one as well. Nothing downstream can tell: both club-seasons parse,
+// both validate, and the squads look reasonable because they ARE a real squad,
+// just the wrong club's.
+//
+// It is also quietly destructive. The two clubs then share every player at
+// identical minutes, and build-squad-files assigns a player to whichever club
+// played him more — so a tie hands all of them to whichever file sorts first
+// and leaves the other club with nobody.
+//
+// 1991/92 Juventus arrived as a byte-for-byte copy of that season's AC Milan.
+// Two reviewers noticed by chance; this notices every time.
+const byContent = new Map();
+for (const file of files) {
+  const digest = crypto.createHash('sha1').update(fs.readFileSync(file)).digest('hex');
+  if (!byContent.has(digest)) byContent.set(digest, []);
+  byContent.get(digest).push(path.relative(IN_DIR, file).split(path.sep).join('/'));
+}
+const duplicated = [...byContent.values()].filter(group => group.length > 1);
+
+// Every file in a duplicated group is skipped, not just the later one: only one
+// of them can be right and nothing here can tell which, so writing either would
+// be a guess. The rest of the collection still ingests, because one mispaste
+// should not hold up the other four hundred club-seasons.
+const skip = new Set(duplicated.flat());
+
 let written = 0, players = 0, dropped = 0;
 const problems = [];
 const summary = [];
 
+for (const group of duplicated) {
+  problems.push(
+    `${group.join(' == ')}: the same export is in all of these, so only one can be ` +
+    `right and none was ingested. Paste the correct export over the others, or ` +
+    `empty them.`
+  );
+}
+
 for (const file of files) {
   const rel = path.relative(IN_DIR, file).split(path.sep);
   if (rel.length !== 3) { problems.push(`${file}: expected <competition>/<season>/<club>.csv`); continue; }
+  if (skip.has(rel.join('/'))) continue;
   const [competition, seasonDir, clubFile] = rel;
   const season = seasonDir.replace('-', '/');
   const slug = clubFile.replace(/\.csv$/, '');
@@ -130,11 +169,48 @@ for (const file of files) {
   }
 }
 
+// ── Rosters whose source is gone ─────────────────────────────────────────────
+//
+// A roster file is derived, so this directory should say exactly what the CSVs
+// say and nothing more. It did not: emptying a source file, or having it
+// skipped as a duplicate, left the roster written by an earlier run sitting
+// there, and `build-player-list.mjs` kept reading it. The 1991/92 Juventus
+// squad went on existing — as a copy of Milan's — after the export behind it
+// had been withdrawn.
+//
+// Each roster records the file it came from, so the check is exact rather than
+// a guess at which club-seasons ought to exist.
+const stale = [];
+if (fs.existsSync(OUT_DIR)) {
+  for (const seasonDir of fs.readdirSync(OUT_DIR)) {
+    const dir = path.join(OUT_DIR, seasonDir);
+    if (!fs.statSync(dir).isDirectory()) continue;
+    for (const f of fs.readdirSync(dir).filter(x => x.endsWith('.json'))) {
+      const file = path.join(dir, f);
+      let source = null;
+      try { source = JSON.parse(fs.readFileSync(file, 'utf8')).source; } catch { /* unreadable */ }
+      const abs = source ? path.join(ROOT, source) : null;
+      const alive = abs && fs.existsSync(abs) && fs.statSync(abs).size > 0 &&
+        !skip.has(path.relative(IN_DIR, abs).split(path.sep).join('/'));
+      if (!alive) {
+        stale.push(path.relative(ROOT, file).split(path.sep).join('/'));
+        if (!dryRun) fs.rmSync(file);
+      }
+    }
+  }
+}
+
 console.table(summary);
 console.log(
   `${dryRun ? 'Would write' : 'Wrote'} ${dryRun ? summary.length : written} roster file(s): ` +
   `${players} players in, ${dropped} below ${MIN_MINUTES} minutes.`
 );
+if (stale.length) {
+  console.log(
+    `
+Removed ${stale.length} roster file(s) whose export is empty or skipped:`);
+  for (const f of stale) console.log(`  ${f}`);
+}
 if (problems.length) {
   console.log('\nproblems:');
   for (const p of problems) console.log(`  ${p}`);
