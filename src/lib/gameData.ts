@@ -20,6 +20,7 @@ import {
   type OpponentSquad,
   type RoleConfig,
   type SimulationResult,
+  type StyleChange,
   type TacticEffect,
 } from './simulation';
 import { PLAYSTYLES, type Phase, type PlaystyleName } from './matchEngine';
@@ -647,6 +648,8 @@ export interface SeasonPlan {
   league?: string;
   /** How the XI is set up to play. */
   style?: PlaystyleName;
+  /** A change of style made during the season, decided on the results page. */
+  change?: StyleChange;
 }
 
 /** Runs a full 38-game season for the drafted XI against the stored opponents. */
@@ -661,5 +664,6 @@ export function runSeasonSimulation(
     seed,
     getRoleConfig(),
     plan.style ?? 'balanced',
+    plan.change,
   );
 }

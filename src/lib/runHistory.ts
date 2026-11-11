@@ -23,7 +23,13 @@ export interface RunRecord {
   /** The league-season it was played in. */
   seasonId: number;
   seasonLabel: string;
+  /** The style the season kicked off in. */
   style: string;
+  /**
+   * The style switched to at the halfway point, when the player changed it.
+   * Such a season measures neither style, so the tactics board leaves it out.
+   */
+  changedTo?: string;
   formation: string;
   overall: number;
   position: number;
@@ -72,6 +78,18 @@ export function withRun(list: readonly RunRecord[], run: RunRecord, limit = RUN_
   return [...list, run].slice(-limit);
 }
 
+/**
+ * Puts a season's final numbers in place of what was first written for it,
+ * matched on when it was played and its seed. A season is recorded as soon as
+ * it is played, so that leaving the page cannot erase a bad one; a change of
+ * style at the halfway point then rewrites its second half, and this keeps it
+ * one record.
+ */
+export function replaceRun(list: readonly RunRecord[], run: RunRecord): RunRecord[] {
+  const i = list.findIndex(r => r.playedAt === run.playedAt && r.seed === run.seed);
+  return i < 0 ? withRun(list, run) : list.map((r, j) => (j === i ? run : r));
+}
+
 export interface StyleRecord {
   style: string;
   played: number;
@@ -83,12 +101,13 @@ export interface StyleRecord {
 
 /**
  * What each style has done for one eleven in one league-season, best average
- * first. Styles never played are absent.
+ * first. Styles never played are absent, and so are seasons whose style was
+ * changed halfway: half a season of each is evidence for neither.
  */
 export function styleRecords(list: readonly RunRecord[], xi: string, seasonId: number): StyleRecord[] {
   const byStyle = new Map<string, RunRecord[]>();
   for (const run of list) {
-    if (run.xi !== xi || run.seasonId !== seasonId) continue;
+    if (run.xi !== xi || run.seasonId !== seasonId || run.changedTo) continue;
     byStyle.set(run.style, [...(byStyle.get(run.style) ?? []), run]);
   }
   return [...byStyle].map(([style, runs]) => ({

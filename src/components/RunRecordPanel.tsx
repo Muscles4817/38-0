@@ -11,6 +11,10 @@ function ordinal(n: number): string {
   return n + (s[(v - 20) % 10] || s[v] || s[0]);
 }
 
+function styleLabel(style: string): string {
+  return PLAYSTYLES[style as keyof typeof PLAYSTYLES]?.label ?? style;
+}
+
 /**
  * The seasons this browser has played: how many, how many titles, and the
  * best of them. Until this existed a finished run left nothing behind, so
@@ -41,7 +45,7 @@ export default function RunRecordPanel() {
             </span>
             <span className="w-12 shrink-0 font-bold text-fg">{run.points} pts</span>
             <span className="flex-1 min-w-0 truncate text-muted">
-              {PLAYSTYLES[run.style as keyof typeof PLAYSTYLES]?.label ?? run.style} · {run.seasonLabel} · XI {run.overall}
+              {styleLabel(run.style)}{run.changedTo ? ` → ${styleLabel(run.changedTo)}` : ''} · {run.seasonLabel} · XI {run.overall}
             </span>
           </li>
         ))}

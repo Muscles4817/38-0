@@ -7,9 +7,11 @@ import { getFormation, canFillSlot, Formation } from '@/lib/formations';
 import { describeCompetition, getTeamStrengths, runSeasonSimulation, type DataPlayer } from '@/lib/gameData';
 import { useStoredJson, clearStored, readStored, writeStored } from '@/lib/clientStorage';
 import {
-  parseRunHistory, RUN_HISTORY_KEY, styleRecords, withRun, xiKey, type StyleRecord,
+  parseRunHistory, replaceRun, RUN_HISTORY_KEY, styleRecords, withRun, xiKey,
+  type RunRecord, type StyleRecord,
 } from '@/lib/runHistory';
-import { PLAYSTYLES } from '@/lib/matchEngine';
+import { PLAYSTYLES, type PlaystyleName } from '@/lib/matchEngine';
+import { keyMoments, seasonStory, type KeyMoment } from '@/lib/keyMoments';
 import { parseSeenSquads, resolveSeenSquads, SEEN_SQUADS_KEY, type SeenSquad } from '@/lib/seenSquads';
 import { applyRules, type DraftFilter, type PoolRules } from '@/lib/draftPool';
 import { getTacticEffect } from '@/lib/gameData';
@@ -139,6 +141,50 @@ function WhatCouldHaveBeen({ formation, actualPicks, rules }: {
   );
 }
 
+// ── The season as it is written down ─────────────────────────────────────────
+
+/** The style a stored name refers to, as the screen names it. */
+function styleLabel(style: string): string {
+  return PLAYSTYLES[style as PlaystyleName]?.label ?? 'Balanced';
+}
+
+/** The gameweek after which the player is asked whether to change style. */
+function halfwayWeek(result: SimulationResult): number {
+  return Math.floor(result.gameweeks.length / 2);
+}
+
+/** A played season, as `38-0-history` keeps it. */
+function runRecord(
+  result: SimulationResult, seed: number, playedAt: number, picks: SquadPick[], plan: StoredPlan | null,
+): RunRecord | null {
+  const competition = describeCompetition(plan?.seasonId, plan?.league);
+  if (!competition) return null;
+  const fieldOveralls = getTeamStrengths(plan?.seasonId, plan?.league).map(t => t.overall);
+  const top = result.playerStats.reduce((a, b) => (b.goals > a.goals ? b : a));
+  const changedTo = result.styles.length > 1 ? result.styles[result.styles.length - 1].style : undefined;
+  return {
+    xi: xiKey(picks),
+    seasonId: competition.seasonId,
+    seasonLabel: competition.seasonLabel,
+    style: result.styles[0].style,
+    ...(changedTo ? { changedTo } : {}),
+    formation: readStored<{ formation?: string }>('38-0-setup')?.formation ?? '',
+    overall: computeOverall(picks),
+    position: result.finalPosition,
+    points: result.points,
+    wins: result.wins,
+    draws: result.draws,
+    losses: result.losses,
+    goalsFor: result.goalsFor,
+    goalsAgainst: result.goalsAgainst,
+    expectedPoints: preSeasonOdds(computeOverall(picks), fieldOveralls).expectedPoints,
+    topScorer: top.playerName,
+    topScorerGoals: top.goals,
+    seed,
+    playedAt,
+  };
+}
+
 // ── Main Page ────────────────────────────────────────────────────────────────
 
 export default function ResultsPage() {
@@ -161,8 +207,14 @@ export default function ResultsPage() {
   }), [setup]);
 
   // The season and the seed it was played on, kept together so the report can
-  // name the one that produced it.
-  const [played, setPlayed] = useState<{ result: SimulationResult; seed: number } | null>(null);
+  // name the one that produced it. `decided` is whether the half-time choice
+  // of style has been made; until it is, the live view stops at halfway.
+  const [played, setPlayed] = useState<{
+    result: SimulationResult;
+    seed: number;
+    playedAt: number;
+    decided: boolean;
+  } | null>(null);
   const simResult = played?.result ?? null;
   const [showFinal, setShowFinal] = useState(false);
   // Bumping this re-runs the season with the same squad and plan.
@@ -204,42 +256,45 @@ export default function ResultsPage() {
       if (cancelled) return;
       // Written down as it is played, here rather than in an effect on the
       // result, so that a season is recorded exactly once however often this
-      // page re-renders. The tactics board and the home page read it.
-      const competition = describeCompetition(plan?.seasonId, plan?.league);
-      if (competition) {
-        const fieldOveralls = getTeamStrengths(plan?.seasonId, plan?.league).map(t => t.overall);
-        const top = result.playerStats.reduce((a, b) => (b.goals > a.goals ? b : a));
-        writeStored(RUN_HISTORY_KEY, withRun(parseRunHistory(readStored<unknown>(RUN_HISTORY_KEY)), {
-          xi: xiKey(picks),
-          seasonId: competition.seasonId,
-          seasonLabel: competition.seasonLabel,
-          style: plan?.style ?? 'balanced',
-          formation: readStored<{ formation?: string }>('38-0-setup')?.formation ?? '',
-          overall: computeOverall(picks),
-          position: result.finalPosition,
-          points: result.points,
-          wins: result.wins,
-          draws: result.draws,
-          losses: result.losses,
-          goalsFor: result.goalsFor,
-          goalsAgainst: result.goalsAgainst,
-          expectedPoints: preSeasonOdds(computeOverall(picks), fieldOveralls).expectedPoints,
-          topScorer: top.playerName,
-          topScorerGoals: top.goals,
-          seed,
-          playedAt: Date.now(),
-        }));
-      }
-      setPlayed({ result, seed });
+      // page re-renders, and so that leaving at halfway cannot erase a bad
+      // one. A change of style at halfway rewrites this record rather than
+      // adding one. The tactics board and the home page read it.
+      const playedAt = Date.now();
+      const record = runRecord(result, seed, playedAt, picks, plan);
+      if (record) writeStored(RUN_HISTORY_KEY, withRun(parseRunHistory(readStored<unknown>(RUN_HISTORY_KEY)), record));
+      setPlayed({ result, seed, playedAt, decided: false });
     }, 0);
     return () => { cancelled = true; clearTimeout(t); };
-  }, [picks, plan?.seasonId, plan?.league, plan?.style, run]);
+  }, [picks, plan, run]);
 
   const history = useStoredJson<unknown>(RUN_HISTORY_KEY);
   const records = useMemo(
     () => (opponent ? styleRecords(parseRunHistory(history), xiKey(picks), opponent.seasonId) : []),
     [history, picks, opponent],
   );
+
+  /**
+   * The half-time decision. Keeping the style changes nothing. Changing it
+   * replays the season on the same seed with the new style from the next
+   * gameweek: the first half comes out exactly as it was shown (see
+   * `simulateSeason`), so only what has not been seen yet is new.
+   */
+  function handleHalfTime(style: PlaystyleName) {
+    if (!played) return;
+    if (style === played.result.styles[0].style) {
+      setPlayed({ ...played, decided: true });
+      return;
+    }
+    const result = runSeasonSimulation(picks, played.seed, {
+      seasonId: plan?.seasonId,
+      league:   plan?.league,
+      style:    plan?.style,
+      change:   { afterWeek: halfwayWeek(played.result), style },
+    });
+    const record = runRecord(result, played.seed, played.playedAt, picks, plan);
+    if (record) writeStored(RUN_HISTORY_KEY, replaceRun(parseRunHistory(readStored<unknown>(RUN_HISTORY_KEY)), record));
+    setPlayed({ ...played, result, decided: true });
+  }
 
   function handleResim() {
     setShowFinal(false);
@@ -286,7 +341,14 @@ export default function ResultsPage() {
 
         {/* Live GW simulation */}
         {liveSim && (
-          <LiveSimulation simResult={simResult} onDone={() => setShowFinal(true)} />
+          <LiveSimulation
+            simResult={simResult}
+            decided={played?.decided ?? true}
+            records={records}
+            expectedPoints={odds.expectedPoints}
+            onHalfTime={handleHalfTime}
+            onDone={() => setShowFinal(true)}
+          />
         )}
 
         {/* Final season report */}
@@ -296,7 +358,6 @@ export default function ResultsPage() {
             seed={played.seed}
             picks={picks}
             odds={odds}
-            style={plan?.style ?? 'balanced'}
             league={opponent ? `${opponent.leagueName} ${opponent.seasonLabel}` : 'Premier League'}
             records={records}
             onResim={handleResim}
@@ -314,7 +375,9 @@ export default function ResultsPage() {
           <div className="min-w-0">
             <div className="text-[11px] text-subtle uppercase tracking-widest font-bold mb-1">Tactic</div>
             <div className="font-black text-sm truncate">
-              {tactic?.label ?? 'Balanced'}
+              {simResult
+                ? simResult.styles.map(st => styleLabel(st.style)).join(' → ')
+                : tactic?.label ?? 'Balanced'}
             </div>
           </div>
           <Link
@@ -400,9 +463,14 @@ function SquadPanel({ formation, picks, overall }: {
 // ── Live GW Animation ────────────────────────────────────────────────────────
 
 function LiveSimulation({
-  simResult, onDone,
+  simResult, decided, records, expectedPoints, onHalfTime, onDone,
 }: {
   simResult: SimulationResult;
+  /** Whether the half-time choice of style has been made. */
+  decided: boolean;
+  records: StyleRecord[];
+  expectedPoints: number;
+  onHalfTime: (style: PlaystyleName) => void;
   onDone: () => void;
 }) {
   const [gw, setGw]           = useState(1);
@@ -413,15 +481,28 @@ function LiveSimulation({
   // result rather than assume it, so a shorter field cannot leave the controls
   // stuck one gameweek from the end.
   const lastGw = simResult.gameweeks.length;
+  const half   = halfwayWeek(simResult);
+  // The season stops at halfway until the player has decided whether to
+  // change style, then runs to the end.
+  const stopAt = decided ? lastGw : half;
+  const atHalfTime = !decided && gw >= half;
 
-  // Auto-advance. Stops at the last gameweek, at which point the play/pause
-  // control is replaced by the season report button.
+  // Auto-advance. Stops at halfway for the decision, and at the last
+  // gameweek, where the play/pause control is replaced by the report button.
   useEffect(() => {
-    if (!playing || gw >= lastGw) return;
+    if (!playing || gw >= stopAt) return;
     const delay = speed === 'fast' ? 300 : 1100;
     const t = setTimeout(() => setGw(g => g + 1), delay);
     return () => clearTimeout(t);
-  }, [playing, gw, speed, lastGw]);
+  }, [playing, gw, speed, stopAt]);
+
+  // Every moment so far, newest first. The first half's moments do not change
+  // when the style does, because the first half does not.
+  const moments = useMemo(() => keyMoments(simResult), [simResult]);
+  const shown = useMemo(
+    () => moments.filter(m => m.week <= gw).sort((a, b) => b.week - a.week || b.weight - a.weight).slice(0, 5),
+    [moments, gw],
+  );
 
   const gwData        = simResult.gameweeks[gw - 1];
   const table         = gwData?.tableSnapshot ?? [];
@@ -451,7 +532,9 @@ function LiveSimulation({
             <span className="text-muted text-sm whitespace-nowrap">/ {lastGw}</span>
           </div>
           <div className="flex items-center gap-2">
-            {!seasonDone ? (
+            {atHalfTime ? (
+              <span className="text-[11px] text-accent uppercase tracking-widest font-bold">Half-time</span>
+            ) : !seasonDone ? (
               <>
                 <button
                   onClick={() => setPlaying(p => !p)}
@@ -468,7 +551,7 @@ function LiveSimulation({
                   {speed === 'fast' ? '3×' : '1×'}
                 </button>
                 <button
-                  onClick={() => { setGw(lastGw); setPlaying(false); }}
+                  onClick={() => { setGw(stopAt); setPlaying(false); }}
                   className="px-3 py-2.5 rounded-lg text-xs font-bold bg-raised text-muted hover:text-fg transition-colors touch-manipulation whitespace-nowrap"
                 >
                   Skip ⏭
@@ -488,6 +571,18 @@ function LiveSimulation({
           <div className="h-1.5 rounded-full transition-all duration-500" style={{ width: `${(gw / lastGw) * 100}%`, background: '#00c896' }} />
         </div>
       </div>
+
+      {atHalfTime && (
+        <HalfTime
+          table={simResult.gameweeks[half - 1].tableSnapshot}
+          half={half}
+          lastGw={lastGw}
+          current={simResult.styles[0].style}
+          records={records}
+          expectedPoints={expectedPoints}
+          onDecide={style => { onHalfTime(style); setPlaying(true); }}
+        />
+      )}
 
       {/* Body: fixtures + table.
           The table goes beside the match from 768px up, not 1024px: at 820px
@@ -516,6 +611,8 @@ function LiveSimulation({
               <MatchDetail fixture={userFixture} />
             </div>
           )}
+
+          {shown.length > 0 && <MomentsFeed moments={shown} week={gw} />}
 
           {/* Other fixtures */}
           <div className="bg-card rounded-2xl p-4">
@@ -593,20 +690,152 @@ function LiveSimulation({
   );
 }
 
+// ── Half-time of the season ──────────────────────────────────────────────────
+
+/**
+ * The one decision made after kick-off. At halfway the season stops on the
+ * table, and the player keeps their style or changes it for the second half.
+ * The first half stands either way; the record each style has with this XI
+ * comes from the tactics board's history.
+ */
+function HalfTime({ table, half, lastGw, current, records, expectedPoints, onDecide }: {
+  table: TeamStanding[];
+  half: number;
+  lastGw: number;
+  current: PlaystyleName;
+  records: StyleRecord[];
+  expectedPoints: number;
+  onDecide: (style: PlaystyleName) => void;
+}) {
+  const [choice, setChoice] = useState<PlaystyleName>(current);
+  const me = table.find(t => t.isUser);
+  const byStyle = new Map(records.map(r => [r.style, r]));
+  if (!me) return null;
+  const pace = Math.round((me.points * lastGw) / Math.max(1, me.played));
+  const keep = choice === current;
+  return (
+    <section className="bg-card rounded-2xl p-5 border border-[#00c896]/50" aria-labelledby="half-time-heading">
+      <div className="text-[11px] text-accent uppercase tracking-widest font-bold mb-1">
+        Halfway · {half} games played
+      </div>
+      <h2 id="half-time-heading" className="font-black text-2xl leading-tight">
+        {ordinal(me.position)}, {me.points} pts
+      </h2>
+      <p className="text-sm text-muted mt-1 max-w-2xl">
+        {me.won}-{me.drawn}-{me.lost}, {me.goalsFor} scored and {me.goalsAgainst} conceded. On this form the
+        season ends on <span className="font-bold text-fg">{pace} points</span>; the bookmakers had you
+        on {expectedPoints}.
+      </p>
+      <p className="text-xs text-muted mt-3 mb-3">
+        Keep playing {styleLabel(current)}, or change how the side plays for the last {lastGw - half} games.
+        The first half stands either way.
+      </p>
+      <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-2" role="group" aria-label="Style for the second half">
+        {(Object.keys(PLAYSTYLES) as PlaystyleName[]).map(style => {
+          const record = byStyle.get(style);
+          const selected = choice === style;
+          return (
+            <button
+              key={style}
+              type="button"
+              aria-pressed={selected}
+              onClick={() => setChoice(style)}
+              className={`text-left rounded-xl px-3 py-2.5 border transition-colors touch-manipulation ${selected ? 'border-[#00c896] bg-[#00c896]/10' : 'border-line bg-raised hover:border-line-hover'}`}
+            >
+              <div className={`text-xs font-black truncate ${selected ? 'text-accent' : 'text-fg'}`}>{styleLabel(style)}</div>
+              <div className="text-[11px] text-muted truncate">
+                {style === current
+                  ? 'Playing now'
+                  : record
+                    ? `Avg ${Math.round(record.averagePoints)} pts · ×${record.played}`
+                    : 'Untried'}
+              </div>
+            </button>
+          );
+        })}
+      </div>
+      {/* Sticks to the bottom on a phone, where the fourteen styles run past it. */}
+      <div className="sticky bottom-3 mt-4 sm:static">
+        <button
+          type="button"
+          onClick={() => onDecide(choice)}
+          className="w-full sm:w-auto px-6 py-3 rounded-xl font-black text-sm bg-[#00c896] text-black hover:bg-[#00b385] transition-colors touch-manipulation shadow-lg sm:shadow-none"
+        >
+          {keep ? `Keep ${styleLabel(current)} →` : `Switch to ${styleLabel(choice)} →`}
+        </button>
+      </div>
+    </section>
+  );
+}
+
+// ── Key moments ──────────────────────────────────────────────────────────────
+
+const MOMENT_COLOUR: Record<KeyMoment['tone'], string> = {
+  good: 'var(--c-accent)',
+  bad: 'var(--c-red)',
+  neutral: 'var(--t-muted)',
+};
+
+/** One moment: the gameweek, a mark for whether it was good news, and what happened. */
+function MomentLine({ moment, now }: { moment: KeyMoment; now?: boolean }) {
+  return (
+    <li className="flex items-baseline gap-2.5 text-xs">
+      <span className="w-9 shrink-0 text-right text-[11px] text-muted font-bold">GW{moment.week}</span>
+      <span className="w-1.5 h-1.5 rounded-full shrink-0 self-center" style={{ background: MOMENT_COLOUR[moment.tone] }} aria-hidden="true" />
+      <span className={`min-w-0 ${now ? 'font-bold text-fg' : 'text-fg-soft'}`}>{moment.text}</span>
+    </li>
+  );
+}
+
+/**
+ * The season so far, in the moments that made it: the newest few, with this
+ * gameweek's in bold. It sits under the XI's match, so a late winner is read
+ * beside the score it produced.
+ */
+function MomentsFeed({ moments, week }: { moments: KeyMoment[]; week: number }) {
+  return (
+    <div className="bg-card rounded-2xl p-4">
+      <div className="text-[11px] text-subtle uppercase tracking-widest font-bold mb-3">Key moments</div>
+      <ul className="space-y-1.5">
+        {moments.map((m, i) => <MomentLine key={`${m.week}-${m.kind}-${i}`} moment={m} now={m.week === week} />)}
+      </ul>
+    </div>
+  );
+}
+
+/** The season told in its biggest moments, in order, on the final report. */
+function SeasonStory({ result }: { result: SimulationResult }) {
+  const story = useMemo(() => seasonStory(keyMoments(result), 8), [result]);
+  if (story.length === 0) return null;
+  return (
+    <div className="bg-card rounded-2xl p-4 sm:p-6">
+      <div className="text-xs text-muted uppercase tracking-widest font-bold mb-3">The season in moments</div>
+      <ul className="space-y-2 max-w-xl">
+        {story.map((m, i) => <MomentLine key={`${m.week}-${m.kind}-${i}`} moment={m} />)}
+      </ul>
+    </div>
+  );
+}
+
 // ── Final Summary ─────────────────────────────────────────────────────────────
 
-function FinalSummary({ result, seed, picks, odds, style, league, records, onResim }: {
+function FinalSummary({ result, seed, picks, odds, league, records, onResim }: {
   result: SimulationResult;
   seed: number;
   picks: SquadPick[];
   odds: ReturnType<typeof preSeasonOdds>;
-  style: string;
   league: string;
   records: StyleRecord[];
   onResim: () => void;
 }) {
   const [copied, setCopied] = useState(false);
-  const styleLabel = PLAYSTYLES[style as keyof typeof PLAYSTYLES]?.label ?? 'Balanced';
+  const style = result.styles[0].style;
+  const change = result.styles[1];
+  // How the season was played: one style, or one and then another from
+  // halfway.
+  const playedAs = change
+    ? `${styleLabel(style)}, then ${styleLabel(change.style)} from gameweek ${change.fromWeek},`
+    : styleLabel(style);
   // The bookmakers priced this XI playing Balanced. The margin against their
   // line is what the season, and the style it was played in, was worth.
   const margin = result.points - odds.expectedPoints;
@@ -616,7 +845,7 @@ function FinalSummary({ result, seed, picks, odds, style, league, records, onRes
     const text = [
       `38-0 · ${league}`,
       `${ordinal(result.finalPosition)} · ${result.points} pts · ${result.wins}-${result.draws}-${result.losses} · ${result.goalsFor} scored, ${result.goalsAgainst} conceded`,
-      `XI rated ${overall}, playing ${styleLabel} (${margin >= 0 ? '+' : ''}${margin} on the bookmakers' ${odds.expectedPoints})`,
+      `XI rated ${overall}, playing ${change ? `${styleLabel(style)} then ${styleLabel(change.style)}` : styleLabel(style)} (${margin >= 0 ? '+' : ''}${margin} on the bookmakers' ${odds.expectedPoints})`,
       `Top scorer: ${result.awards.goldenBoot.name}, ${result.awards.goldenBoot.goals}`,
       `Season #${seed}`,
     ].join('\n');
@@ -665,7 +894,7 @@ function FinalSummary({ result, seed, picks, odds, style, league, records, onRes
 
         <p className="text-sm text-muted max-w-2xl mx-auto mt-5">
           The bookmakers had this XI on <span className="font-bold text-fg">{odds.expectedPoints} points</span> playing
-          Balanced. Playing {styleLabel} it took{' '}
+          Balanced. Playing {playedAs} it took{' '}
           <span className={`font-black ${margin >= 0 ? 'text-accent' : 'text-red-400'}`}>
             {margin >= 0 ? '+' : ''}{margin}
           </span>{' '}
@@ -697,7 +926,9 @@ function FinalSummary({ result, seed, picks, odds, style, league, records, onRes
         <div className="text-[11px] text-subtle mt-3">Season #{seed}</div>
       </div>
 
-      <TacticsBoard records={records} current={style} expected={odds.expectedPoints} />
+      <SeasonStory result={result} />
+
+      <TacticsBoard records={records} current={change ? null : style} expected={odds.expectedPoints} />
 
       {/* Season stats. Six numbers on one row once there is room for them. */}
       <div className="grid grid-cols-3 gap-3 md:grid-cols-6">
@@ -816,7 +1047,8 @@ function FinalSummary({ result, seed, picks, odds, style, league, records, onRes
  */
 function TacticsBoard({ records, current, expected }: {
   records: StyleRecord[];
-  current: string;
+  /** The style this season was played in, or null when it changed at halfway. */
+  current: string | null;
   expected: number;
 }) {
   const total = Object.keys(PLAYSTYLES).length;
@@ -830,6 +1062,7 @@ function TacticsBoard({ records, current, expected }: {
       <p className="text-xs text-muted mb-4 max-w-2xl">
         Average points by style, against the bookmakers&apos; Balanced line of {expected}. A single season can
         land six points either side of a style&apos;s true level, so play one again before trusting it.
+        {current === null && ' This season changed style at halfway, so it measures neither and is not on the board.'}
       </p>
       <div className="space-y-2">
         {records.map(r => {

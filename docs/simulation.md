@@ -5,6 +5,11 @@ season. Every fixture is played out by `simulateMatch` in
 `src/lib/matchEngine.ts`, possession by possession, and the season adds up what
 happened. It is pure: same inputs and seed, same season.
 
+An optional `change` switches the XI's style from a given round. The rounds
+before it are identical to a season without one on the same seed, which is
+what lets the results page offer a change at halfway after showing the first
+half; see *After kick-off* in [pre-season.md](pre-season.md#after-kick-off).
+
 ## The pipeline
 
 ```

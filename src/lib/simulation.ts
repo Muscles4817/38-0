@@ -219,8 +219,19 @@ export interface LeagueEntry {
   isUser: boolean;
 }
 
+/** A change of style during the season: `style` from gameweek `afterWeek + 1`. */
+export interface StyleChange {
+  afterWeek: number;
+  style: PlaystyleName;
+}
+
 export interface SimulationResult {
   gameweeks: Gameweek[];
+  /**
+   * The styles the XI played, in order, each from the gameweek it started.
+   * One entry unless the style was changed during the season.
+   */
+  styles: { fromWeek: number; style: PlaystyleName }[];
   finalTable: TeamStanding[];
   finalPosition: number;
   points: number;
@@ -722,6 +733,16 @@ export function simulateSeason(
   roleConfig?: RoleConfig,
   /** The style the player chose before kick-off. */
   tactic: PlaystyleName = 'balanced',
+  /**
+   * A change of style made during the season, played from the gameweek after
+   * `afterWeek`. Every match before it is played exactly as it would have been
+   * without the change, because the matches draw from one random stream in
+   * order and nothing before the change differs: the same seed with and
+   * without a change shares its first `afterWeek` gameweeks. The results page
+   * relies on that to offer the change at the halfway point of a season it
+   * has already shown.
+   */
+  change?: StyleChange,
 ): SimulationResult {
   const rand = rng(seed ?? Date.now() % 999983);
   const USER = 'Your XI';
@@ -788,9 +809,16 @@ export function simulateSeason(
   // ── The season ──────────────────────────────────────────────────────────────
   const schedule = buildSchedule(sides.length);
   const gameweeks: Gameweek[] = [];
+  const startStyle = sides[0].setup.style;
+  const styles: SimulationResult['styles'] = [{ fromWeek: 1, style: startStyle }];
 
   for (let r = 0; r < schedule.length; r++) {
     const fixtures: FixtureResult[] = [];
+
+    if (change && r === change.afterWeek && PLAYSTYLES[change.style] && change.style !== startStyle) {
+      sides[0].setup = { ...sides[0].setup, style: change.style };
+      styles.push({ fromWeek: r + 1, style: change.style });
+    }
 
     for (const [hi, ai] of schedule[r]) {
       const home = sides[hi];
@@ -934,6 +962,7 @@ export function simulateSeason(
 
   return {
     gameweeks,
+    styles,
     finalTable,
     finalPosition,
     points:       userRow.points,

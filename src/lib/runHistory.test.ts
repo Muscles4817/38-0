@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import {
-  bestRuns, parseRunHistory, styleRecords, withRun, xiKey, type RunRecord,
+  bestRuns, parseRunHistory, replaceRun, styleRecords, withRun, xiKey, type RunRecord,
 } from './runHistory';
 
 function run(over: Partial<RunRecord>): RunRecord {
@@ -79,5 +79,25 @@ describe('bestRuns', () => {
       run({ position: 1, points: 91, seed: 3 }),
     ];
     expect(bestRuns(list, 2).map(r => r.seed)).toEqual([3, 2]);
+  });
+});
+
+describe('a season whose style changed at halfway', () => {
+  it('replaces the record first written for it, rather than adding a second', () => {
+    const first = run({ seed: 5, playedAt: 100, points: 60 });
+    const list = [run({ seed: 1, playedAt: 1 }), first];
+    const changed = replaceRun(list, { ...first, points: 70, changedTo: 'gegenpress' });
+    expect(changed).toHaveLength(2);
+    expect(changed[1]).toMatchObject({ points: 70, changedTo: 'gegenpress' });
+    expect(changed[0]).toBe(list[0]);
+  });
+
+  it('adds the season when the first record has gone', () => {
+    expect(replaceRun([], run({ seed: 5 }))).toHaveLength(1);
+  });
+
+  it('is left off the tactics board, since it measures neither style', () => {
+    const list = [run({ style: 'balanced', points: 60 }), run({ style: 'balanced', points: 90, changedTo: 'gegenpress' })];
+    expect(styleRecords(list, 'A', 1)).toEqual([expect.objectContaining({ style: 'balanced', played: 1, averagePoints: 60 })]);
   });
 });

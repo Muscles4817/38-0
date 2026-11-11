@@ -30,7 +30,7 @@ the codebase already works.
 | [data-model.md](data-model.md) | Before touching squads, lineups, roles or the JSON snapshot. |
 | [simulation.md](simulation.md) | Before changing anything that affects match results, ratings or awards. |
 | [draft-pool.md](draft-pool.md) | Before changing what the draft can offer: challenge modes, Prime mode, and the check that stops a filtered draft getting stuck. |
-| [pre-season.md](pre-season.md) | Before touching the screen between the draft and the season: choosing a tactic, choosing a season, and how both reach the simulation. |
+| [pre-season.md](pre-season.md) | Before touching the screen between the draft and the season: choosing a tactic, choosing a season, and how both reach the simulation. Also the half-time change of style and the key moments on the results page. |
 | [desktop-ux.md](desktop-ux.md) | Before changing a layout. What a wide screen is for, what was wrong above 640px, and the measurements to take before and after. |
 | [ci-and-deployment.md](ci-and-deployment.md) | Before changing the build, the workflows, or how the site is published. |
 | [squad-data-pipeline.md](squad-data-pipeline.md) | Before adding squad data. How the 680 club-seasons get collected, rated and imported. |
