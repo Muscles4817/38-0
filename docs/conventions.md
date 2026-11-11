@@ -147,6 +147,12 @@ Rules that the current layouts hold to:
   used as *text* needs a light value too, because `#00c896` or `#fbbf24` on
   white is under 2.5:1. Check a change in both themes (Playwright's
   `colorScheme: 'light'`).
+- **No text below 11px.** `text-[11px]` is the floor for a label and `text-xs`
+  (12px) for anything that is a sentence. The game once had a hundred labels at
+  9px and 10px; on a phone held at arm's length those are decoration.
+- **Name what a control is.** A button whose text is two initials or an icon
+  takes an `aria-label`; a toggle takes `aria-pressed` or `aria-expanded`; a
+  pitch nobody can act on is out of the tab order (`PitchView`).
 - **Text is `text-muted` or stronger.** In the dark theme `text-muted` is `#888`,
   5.6:1 against the `#0a0a0a` ground, and `text-subtle` (`#666`) is 3.8:1;
   `text-faint` (`#555`) is 2.7:1 and fails, and `text-ghost` is invisible. The

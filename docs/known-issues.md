@@ -192,6 +192,12 @@ What is left:
   their high line concedes through balls. Their real success came from
   coaching the data does not record.
 
+### The season has no absences
+
+The same eleven play all 38 games: no suspensions, injuries, fatigue or form,
+and no decisions after kick-off. What adding them would take is written up in
+[season-depth.md](season-depth.md).
+
 ## 1. The draft pool is still lopsided
 
 307 draftable club-seasons across five leagues, but 2025/26 is still the
