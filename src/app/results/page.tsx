@@ -289,7 +289,7 @@ export default function ResultsPage() {
           <button
             type="button"
             onClick={() => {
-              clearStored('38-0-draft', '38-0-squad', SEEN_SQUADS_KEY, '38-0-plan');
+              clearStored('38-0-draft', '38-0-draft-state', '38-0-squad', SEEN_SQUADS_KEY, '38-0-plan');
               router.push('/');
             }}
             className="text-subtle text-xs hover:text-fg transition-colors px-4 py-3 touch-manipulation"

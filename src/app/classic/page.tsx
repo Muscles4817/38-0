@@ -163,7 +163,7 @@ export default function ClassicPage() {
     };
     writeStored('38-0-setup', setup);
     writeStored('38-0-squad', picks);
-    clearStored('38-0-seen-squads', '38-0-plan');
+    clearStored('38-0-seen-squads', '38-0-plan', '38-0-draft-state');
     router.push('/squad');
   }
 
