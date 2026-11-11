@@ -37,6 +37,7 @@ FBref id, which makes player identity exact across thirty years instead of a
 name-matching guess.
 
 ```bash
+node scripts/split-fbref-league.mjs <league.csv> --competition serie-a --season 1997-98
 node scripts/scaffold-fbref-files.mjs            # create the empty files
 node scripts/scaffold-fbref-files.mjs --status   # how much is pasted in
 node scripts/ingest-fbref.mjs                    # exports -> roster files
@@ -47,6 +48,14 @@ one per club-season from 1992/93 to 2025/26. The club list for each season comes
 from that season's real league table, so the 22-club seasons up to 1994/95 and
 every promotion are correct. An empty file means "not collected yet", which is
 what `--status` reports on.
+
+**Paste one league table, not twenty club tables.** A league season's
+*Player Standard Stats* table on FBref holds every player with a `Squad`
+column, and `split-fbref-league.mjs` cuts it into the per-club files, dropping
+the `Rk`, `Squad` and `Born` columns so each is identical to a club-page
+export — checked byte-for-byte against the hand-pasted Inter and Roma 2006/07
+files. It is still a manual export; the script reads a local file and makes
+no requests. Steps are in `data/raw/fbref/README.md`.
 
 `ingest-fbref.mjs` parses those into `data/raw/rosters/<season>/<club>.json`,
 keeping both the squad and everyone excluded, with the reason.

@@ -3,7 +3,39 @@
 686 empty files, one per Premier League club-season from 1992/93 to 2025/26.
 Open one, paste, save. Nothing else to do.
 
-## What to paste
+## The fast way: one paste per league-season
+
+Every league season on FBref has a stats page listing **every player in the
+league** with a `Squad` column — e.g.
+<https://fbref.com/en/comps/11/1997-1998/stats/1997-1998-Serie-A-Stats>
+(Competition page → *Player Stats* → *Standard Stats*).
+
+1. Scroll to the **Player Standard Stats** table (the big one, not *Squad
+   Standard Stats* at the top).
+2. *Share & Export* → *Get table as CSV (for Excel)*, copy it.
+3. Paste into any file, say `~/serie-a-1997-98.csv`, and run:
+
+```bash
+npm run data:split -- ~/serie-a-1997-98.csv --competition serie-a --season 1997-98
+```
+
+That writes one file per club into `data/raw/fbref/serie-a/1997-98/`, in the
+same shape as a club-page export, so `ingest-fbref.mjs` reads it unchanged.
+Players who moved mid-season appear once per club, as they would on the club
+pages. Files that already have content are skipped unless you pass `--force`.
+
+- `--only juventus,internazionale` — just the sides you want in the game.
+- `--dry-run` — show which files would be written.
+
+FBref's club names go through the `_aliases` map in `data/clubs.json`
+(`Manchester Utd` → `manchester-united.csv`, `Inter` → `internazionale.csv`),
+and an existing file's slug wins, so `Dortmund` keeps landing in
+`dortmund.csv`. If a club comes out under a new slug, add an alias.
+
+Competition ids for the URL: Premier League 9, Serie A 11, La Liga 12,
+Bundesliga 20.
+
+## What to paste (one club at a time)
 
 The **Standard Stats** table from that club's FBref season page, exported as
 CSV. Paste it whole — the two header rows and the `Squad Total` /

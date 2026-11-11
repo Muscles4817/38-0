@@ -17,6 +17,7 @@
     "sim:spread": "node --experimental-strip-types --no-warnings --import ./scripts/lib/register-ts.mjs scripts/sim-spread.mjs",
     "data:status": "node scripts/scaffold-fbref-files.mjs --status",
     "data:ingest": "node scripts/ingest-fbref.mjs",
+    "data:split": "node scripts/split-fbref-league.mjs",
     "export:data": "node scripts/export-game-data.mjs",
     "derive:lineups": "node --experimental-strip-types --import ./scripts/lib/register-ts.mjs scripts/derive-lineups.mjs",
     "import:squads": "node scripts/import-squads.mjs",
