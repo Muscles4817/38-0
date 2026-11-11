@@ -73,6 +73,8 @@ const NATIONS = {
   ATG: 'Antigua and Barbuda', ANG: 'Angola',
   HON: 'Honduras', BRB: 'Barbados', BOL: 'Bolivia', SEY: 'Seychelles',
   SUR: 'Suriname',
+  // Added with 2010/11.
+  BEN: 'Benin',
 };
 
 // A handful of FBref exports have an empty nation cell. That is a gap in the
