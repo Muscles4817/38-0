@@ -192,6 +192,12 @@ What is left:
   their high line concedes through balls. Their real success came from
   coaching the data does not record.
 
+### The season has no absences
+
+The same eleven play all 38 games: no suspensions, injuries, fatigue or form,
+and no decisions after kick-off. What adding them would take is written up in
+[season-depth.md](season-depth.md).
+
 ## 1. The draft pool is still lopsided
 
 307 draftable club-seasons across five leagues, but 2025/26 is still the
@@ -255,6 +261,15 @@ changing it moves three things at once and wants measuring on its own.
 ## Fixed, for reference
 
 Do not re-report these:
+
+- **The report hid most of what the engine recorded.** A defeat showed only
+  the XI's scorers, and the squad table only goals, assists and clean sheets.
+  The XI's 38 matches now carry both sides' scorers, assists, cards, shots,
+  expected goals and possession (`FixtureDetail`), shown live and in a
+  match-by-match list, and the squad table has attacking and defending views.
+- **Nothing in the game was smaller than 11px text is now.** A hundred labels
+  were 9px or 10px. Pitch slots have names for a screen reader, and toggles
+  report their state.
 
 - **Every route shipped its own copy of the snapshot.** Five 1.3 MB chunks, one
   per page, so a run from setup to results downloaded the data four times. The

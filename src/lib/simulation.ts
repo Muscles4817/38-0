@@ -1,7 +1,8 @@
 import { type Position, effectiveRating } from './formations';
 import {
-  DEFAULT_COHESION, PLAYSTYLES, fitForStyle, inferStyle, lineRatings, mulberry32, simulateMatch,
-  type MatchPlayer, type PlaystyleName, type RoleMultipliers, type TeamSetup, type Zone,
+  DEFAULT_COHESION, PHASES, PLAYSTYLES, fitForStyle, inferStyle, lineRatings, mulberry32,
+  phaseAbility, simulateMatch,
+  type MatchPlayer, type Phase, type PlaystyleName, type RoleMultipliers, type TeamSetup, type Zone,
 } from './matchEngine';
 
 // ── Player roles ─────────────────────────────────────────────────────────────
@@ -156,6 +157,35 @@ export interface FixtureResult {
   awayGoals: number;
   userInvolved: boolean;
   scorers: { name: string; minute: number }[]; // only populated for user fixtures
+  /** What happened in the match, for the XI's own fixtures only. */
+  detail?: FixtureDetail;
+}
+
+/** One side's numbers in a match the XI played. */
+export interface FixtureSide {
+  shots: number;
+  shotsOnTarget: number;
+  expectedGoals: number;
+  possession: number;
+}
+
+/**
+ * A match the XI played, as the engine recorded it: both sides' numbers and
+ * every goal and card in order. Kept for the XI's 38 matches only; the other
+ * 342 are a scoreline.
+ */
+export interface FixtureDetail {
+  home: FixtureSide;
+  away: FixtureSide;
+  events: {
+    minute: number;
+    type: 'goal' | 'yellow' | 'red';
+    /** True when it was the XI's player. */
+    user: boolean;
+    name: string;
+    assist?: string;
+    penalty?: boolean;
+  }[];
 }
 
 export interface Gameweek {
@@ -462,6 +492,26 @@ export interface TacticEffect {
   tempo: number;
   /** How strongly the side pulls possession its way. 1 is neutral. */
   possessionBias: number;
+  /** The phases the style is played through, heaviest first. */
+  needs: Phase[];
+}
+
+/**
+ * What an eleven is good at, phase by phase, in trait points against an
+ * ordinary side's zero: the same numbers the match engine's contests read.
+ *
+ * This is what the pre-season screen shows in place of a single fit score.
+ * A style leans on some of these, and a player can see which, but what a
+ * style is worth over a season also depends on the nineteen sides it meets,
+ * so the screen describes the XI and leaves the forecast to the season.
+ */
+export function xiProfile(picks: SquadPick[], roleConfig?: RoleConfig): Record<Phase, number> {
+  const validPos = validPositionsFor(roleConfig);
+  const players = picks.map(p => toMatchPlayer(p, validPos));
+  const roles = toRoleMultipliers(roleConfig);
+  return Object.fromEntries(
+    (Object.keys(PHASES) as Phase[]).map(phase => [phase, phaseAbility(players, phase, roles)]),
+  ) as Record<Phase, number>;
 }
 
 /**
@@ -486,6 +536,9 @@ export function tacticEffect(
     buildUp:        chosen.buildUp,
     tempo:          chosen.tempo,
     possessionBias: chosen.possessionBias,
+    needs: (Object.entries(chosen.needs) as [Phase, number][])
+      .sort((a, b) => b[1] - a[1])
+      .map(([phase]) => phase),
   };
 }
 
@@ -781,7 +834,22 @@ export function simulateSeason(
           .filter(e => e.type === 'goal' && e.team === USER)
           .map(e => ({ name: e.playerName.split(' ').pop()!, minute: e.minute }))
         : [];
-      fixtures.push({ home: home.name, away: away.name, homeGoals, awayGoals, userInvolved, scorers });
+      const side = (t: typeof match.home): FixtureSide => ({
+        shots: t.shots, shotsOnTarget: t.shotsOnTarget, expectedGoals: t.expectedGoals, possession: t.possession,
+      });
+      const detail: FixtureDetail | undefined = userInvolved ? {
+        home: side(match.home),
+        away: side(match.away),
+        events: match.events.map(e => ({
+          minute: e.minute,
+          type: e.type,
+          user: e.team === USER,
+          name: e.playerName,
+          ...(e.assistName ? { assist: e.assistName } : {}),
+          ...(e.chanceType === 'penalty' ? { penalty: true } : {}),
+        })),
+      } : undefined;
+      fixtures.push({ home: home.name, away: away.name, homeGoals, awayGoals, userInvolved, scorers, detail });
     }
 
     gameweeks.push({ week: r + 1, fixtures, tableSnapshot: sortedTable(standings) });
@@ -957,6 +1025,7 @@ function buildNarrative(pos: number, pts: number, w: number, d: number, l: numbe
   if (pos <= 4)  return `Top four secured. ${pts} pts, ${pos === 2 ? 'runners-up' : `${pos}${pos === 3 ? 'rd' : 'th'} place`}. Champions League next season.`;
   if (pos <= 6)  return `Europa League qualification. ${pts} pts. A decent season but the title slipped away.`;
   if (pos <= 10) return `Mid-table. ${pts} pts. Moments of brilliance, but too many blank matchdays.`;
-  if (pos <= 17) return `A season to forget. ${pts} pts. The squad had potential — the results didn't show it.`;
+  if (pos <= 14) return `Bottom half. ${pts} pts. Never in trouble, never in the hunt.`;
+  if (pos <= 17) return `Survived. ${pts} pts, ${pos}th place, and a nervous spring.`;
   return `Relegation. ${pts} pts, ${w}W ${d}D ${l}L. A tough campaign. Time to rebuild.`;
 }

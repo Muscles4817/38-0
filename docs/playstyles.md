@@ -122,8 +122,42 @@ Route one 71%. The old measure added up traits over all eleven, scaled by
 rating, against a fixed bar, and read Barcelona 100% for Park the bus.
 
 Fit describes; it does not multiply anything. What a style is worth in a match
-comes from the same phase abilities in the contests below, so the fit shown
-before the season says what the engine will do.
+comes from the same phase abilities in the contests below.
+
+### Fit is not a forecast
+
+It was shown on every tactic card as a coloured percentage, and read as one.
+Measured with `npm run sim:report -- --tactic all`, same seeds for every style:
+
+| Liverpool 2019/20 in 2025/26, 40 seasons | fit | points |
+| --- | ---: | ---: |
+| Tiki-taka | 72% | 89.2 |
+| Direct | 4% | 88.3 |
+| Gegenpress | 41% | 87.9 |
+| Balanced | 100% | 84.7 |
+| Park the bus | 31% | 71.4 |
+
+| Stoke City 2008/09 in its own league, 30 seasons | fit | points |
+| --- | ---: | ---: |
+| Catenaccio | 5% | 47.0 |
+| Direct | 11% | 46.6 |
+| Counter-attack | 9% | 45.9 |
+| Route one | 71% | 43.7 |
+| Balanced | 100% | 42.5 |
+| Positional play | 4% | 36.3 |
+
+A 4% fit out-scores a 100% one for both. Fit measures whether a style is played
+through an XI's strengths; points also depend on the style's own line, tempo and
+share of the ball against the nineteen sides it meets, which fit knows nothing
+about. For a strong XI ten of the fourteen styles sit within about five points;
+for a weak one the choice is worth ten, and slowing the game down is what pays.
+
+So the game no longer shows the number. The pre-season screen shows what fit is
+made of instead: the XI's ability in each phase in words (`xiProfile`), and on
+each style the phases it leans on (`needs`), coloured by how good the XI is at
+them. What a style is *worth* to an XI is left for the player to find out by
+playing it: see [pre-season.md](pre-season.md#finding-the-style). `fitForStyle`
+is still exported and tested, for the reports.
 
 ## What was wrong as football
 

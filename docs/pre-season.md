@@ -30,16 +30,34 @@ press against a side playing out, a deep block against a patient one, runners
 against a high line, recovery pace covering the space. Nobody writes down that a
 counter-attacking side punishes a possession side; it falls out of those rules.
 
-`fit` is `fitForStyle`, 0–1: whether the style is played through what the
-eleven is good at, and how much of its best the style leaves unused — a
-profile, not a total (see [playstyles.md](playstyles.md#style-fit-a-profile-not-a-total)).
-It describes; it scales nothing. What a style is worth comes from the same
-phase abilities in the match: how high a press goes is the style's line, and
-whether it wins the ball is the pressers against the other side's passers —
-see [simulation.md](simulation.md#on-the-ball-by-phase).
+### Finding the style
+
+The screen does not say which style is best, because nothing short of playing
+the seasons can: see *Fit is not a forecast* in
+[playstyles.md](playstyles.md#fit-is-not-a-forecast). That is the design, not a
+gap in it. The loop is:
+
+1. **The odds are priced for a Balanced side.** `preSeasonOdds` never sees the
+   tactic, and the screen says so: it is the bookmakers' line for this XI.
+2. **The screen describes, it does not forecast.** *What your XI is good at*
+   lists the engine's nine phases in words (`getXiProfile`; Strong from 0.6
+   trait points above an ordinary side, Good from 0.2, Weak below −0.2). Each
+   style card lists the phases it leans on (`TacticEffect.needs`), coloured by
+   the XI's level in them.
+3. **Every season played is written down.** The results page records it in
+   `38-0-history` (`src/lib/runHistory.ts`) against the XI (`xiKey`: who plays
+   in which slot) and the league-season.
+4. **The record comes back.** A style card reads *Untried* or
+   *Best 2nd · 78 pts · ×3*; the final report says what the season took on the
+   bookmakers' line and shows a tactics board of every style tried with this
+   XI, with a *Try another style* button back to this screen.
+
+A season lands about six points either side of a style's true level
+(`SEASON_SD`), so the board shows how many seasons each average rests on.
 
 `tacticEffect` in `src/lib/simulation.ts` only describes a style for this
-screen: its line, build-up, tempo, possession bias and fit. Tempo is a property
+screen: its line, build-up, tempo, possession bias, fit and needs. `fit` is no
+longer displayed. Tempo is a property
 of the match, the geometric mean of both sides' styles, so the screen says a
 style moves the number of chances by about half its own tempo against an
 ordinary side.

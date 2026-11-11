@@ -5,13 +5,17 @@ import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { getFormation, canFillSlot, Formation } from '@/lib/formations';
 import { describeCompetition, getTeamStrengths, runSeasonSimulation, type DataPlayer } from '@/lib/gameData';
-import { useStoredJson, clearStored } from '@/lib/clientStorage';
+import { useStoredJson, clearStored, readStored, writeStored } from '@/lib/clientStorage';
+import {
+  parseRunHistory, RUN_HISTORY_KEY, styleRecords, withRun, xiKey, type StyleRecord,
+} from '@/lib/runHistory';
+import { PLAYSTYLES } from '@/lib/matchEngine';
 import { parseSeenSquads, resolveSeenSquads, SEEN_SQUADS_KEY, type SeenSquad } from '@/lib/seenSquads';
 import { applyRules, type DraftFilter, type PoolRules } from '@/lib/draftPool';
 import { getTacticEffect } from '@/lib/gameData';
 import type { StoredPlan } from '@/app/squad/page';
 import {
-  SquadPick, SimulationResult, TeamStanding, LeagueEntry,
+  SquadPick, SimulationResult, TeamStanding, LeagueEntry, FixtureResult, PlayerStats,
   computeOverall, preSeasonOdds,
 } from '@/lib/simulation';
 import PitchView from '@/components/PitchView';
@@ -99,7 +103,7 @@ function WhatCouldHaveBeen({ formation, actualPicks, rules }: {
   const actualMap = new Map(actualPicks.map(p => [p.slotIndex, p]));
   return (
     <div className="bg-card rounded-2xl p-6">
-      <button onClick={() => setShow(s => !s)} className="w-full flex items-center justify-between">
+      <button type="button" aria-expanded={show} onClick={() => setShow(s => !s)} className="w-full flex items-center justify-between touch-manipulation">
         <div className="text-left">
           <div className="text-xs text-muted uppercase tracking-widest font-bold mb-1">What Could Have Been</div>
           <div className="text-sm text-muted">
@@ -123,12 +127,12 @@ function WhatCouldHaveBeen({ formation, actualPicks, rules }: {
                 <span className={`font-bold text-sm flex-1 ${isPicked ? 'text-accent' : ''}`}>{p.playerName}</span>
                 <span className="text-subtle text-xs">{p.clubName.slice(0, 3).toUpperCase()} {p.seasonLabel}</span>
                 <span className="text-accent font-black text-sm w-6 text-right">{p.rating}</span>
-                {!isPicked && rDiff > 0 && <span className="text-amber-400 text-[10px] w-8 text-right">+{rDiff}</span>}
-                {isPicked && <span className="text-accent text-[10px] w-8 text-right">✓</span>}
+                {!isPicked && rDiff > 0 && <span className="text-amber-400 text-[11px] w-8 text-right">+{rDiff}</span>}
+                {isPicked && <span className="text-accent text-[11px] w-8 text-right">✓</span>}
               </div>
             );
           })}
-          <p className="text-subtle text-[10px] mt-3 text-center">✓ = player you actually picked · numbers show rating advantage missed</p>
+          <p className="text-subtle text-[11px] mt-3 text-center">✓ = player you actually picked · numbers show rating advantage missed</p>
         </div>
       )}
     </div>
@@ -156,7 +160,10 @@ export default function ResultsPage() {
     filter:       setup?.filter ?? null,
   }), [setup]);
 
-  const [simResult, setSimResult] = useState<SimulationResult | null>(null);
+  // The season and the seed it was played on, kept together so the report can
+  // name the one that produced it.
+  const [played, setPlayed] = useState<{ result: SimulationResult; seed: number } | null>(null);
+  const simResult = played?.result ?? null;
   const [showFinal, setShowFinal] = useState(false);
   // Bumping this re-runs the season with the same squad and plan.
   const [run, setRun]             = useState(0);
@@ -188,19 +195,55 @@ export default function ResultsPage() {
     if (!picks.length) return;
     let cancelled = false;
     const t = setTimeout(() => {
-      const result = runSeasonSimulation(picks, undefined, {
+      const seed = Math.floor(Math.random() * 2_000_000_000);
+      const result = runSeasonSimulation(picks, seed, {
         seasonId: plan?.seasonId,
         league:   plan?.league,
         style:    plan?.style,
       });
-      if (!cancelled) setSimResult(result);
+      if (cancelled) return;
+      // Written down as it is played, here rather than in an effect on the
+      // result, so that a season is recorded exactly once however often this
+      // page re-renders. The tactics board and the home page read it.
+      const competition = describeCompetition(plan?.seasonId, plan?.league);
+      if (competition) {
+        const fieldOveralls = getTeamStrengths(plan?.seasonId, plan?.league).map(t => t.overall);
+        const top = result.playerStats.reduce((a, b) => (b.goals > a.goals ? b : a));
+        writeStored(RUN_HISTORY_KEY, withRun(parseRunHistory(readStored<unknown>(RUN_HISTORY_KEY)), {
+          xi: xiKey(picks),
+          seasonId: competition.seasonId,
+          seasonLabel: competition.seasonLabel,
+          style: plan?.style ?? 'balanced',
+          formation: readStored<{ formation?: string }>('38-0-setup')?.formation ?? '',
+          overall: computeOverall(picks),
+          position: result.finalPosition,
+          points: result.points,
+          wins: result.wins,
+          draws: result.draws,
+          losses: result.losses,
+          goalsFor: result.goalsFor,
+          goalsAgainst: result.goalsAgainst,
+          expectedPoints: preSeasonOdds(computeOverall(picks), fieldOveralls).expectedPoints,
+          topScorer: top.playerName,
+          topScorerGoals: top.goals,
+          seed,
+          playedAt: Date.now(),
+        }));
+      }
+      setPlayed({ result, seed });
     }, 0);
     return () => { cancelled = true; clearTimeout(t); };
   }, [picks, plan?.seasonId, plan?.league, plan?.style, run]);
 
+  const history = useStoredJson<unknown>(RUN_HISTORY_KEY);
+  const records = useMemo(
+    () => (opponent ? styleRecords(parseRunHistory(history), xiKey(picks), opponent.seasonId) : []),
+    [history, picks, opponent],
+  );
+
   function handleResim() {
     setShowFinal(false);
-    setSimResult(null);
+    setPlayed(null);
     setRun(n => n + 1);
   }
 
@@ -247,23 +290,31 @@ export default function ResultsPage() {
         )}
 
         {/* Final season report */}
-        {simResult && showFinal && (
-          <FinalSummary result={simResult} picks={picks} odds={odds} onResim={handleResim} />
+        {played && showFinal && (
+          <FinalSummary
+            result={played.result}
+            seed={played.seed}
+            picks={picks}
+            odds={odds}
+            style={plan?.style ?? 'balanced'}
+            league={opponent ? `${opponent.leagueName} ${opponent.seasonLabel}` : 'Premier League'}
+            records={records}
+            onResim={handleResim}
+          />
         )}
 
         {/* The plan this season is being played under. */}
         <div className="bg-card rounded-2xl px-5 py-4 flex items-center gap-4 flex-wrap">
           <div className="min-w-0">
-            <div className="text-[10px] text-subtle uppercase tracking-widest font-bold mb-1">Playing</div>
+            <div className="text-[11px] text-subtle uppercase tracking-widest font-bold mb-1">Playing</div>
             <div className="font-black text-sm truncate">
               {opponent ? `${opponent.leagueName} ${opponent.seasonLabel}` : 'Premier League'}
             </div>
           </div>
           <div className="min-w-0">
-            <div className="text-[10px] text-subtle uppercase tracking-widest font-bold mb-1">Tactic</div>
+            <div className="text-[11px] text-subtle uppercase tracking-widest font-bold mb-1">Tactic</div>
             <div className="font-black text-sm truncate">
               {tactic?.label ?? 'Balanced'}
-              {tactic && <span className="text-muted font-bold ml-2">fit {Math.round(tactic.fit * 100)}%</span>}
             </div>
           </div>
           <Link
@@ -314,7 +365,7 @@ function SquadPanel({ formation, picks, overall }: {
     <details className="group bg-card rounded-2xl">
       <summary className="cursor-pointer list-none px-5 py-4 flex items-center gap-3 touch-manipulation">
         <span className="text-subtle transition-transform group-open:rotate-90">▶</span>
-        <span className="text-[10px] text-subtle uppercase tracking-widest font-bold">Your XI</span>
+        <span className="text-[11px] text-subtle uppercase tracking-widest font-bold">Your XI</span>
         <span className="text-sm text-muted">{formation.name}</span>
         <span className="ml-auto font-black text-xl leading-none" style={{ color: ratingColor(overall) }}>
           {overall}
@@ -392,20 +443,25 @@ function LiveSimulation({
       <div className="bg-card rounded-2xl p-4">
         <div className="flex items-center justify-between mb-3">
           <div className="flex items-center gap-3">
-            <span className="text-muted text-[10px] uppercase tracking-widest font-bold">Gameweek</span>
+            <span className="text-muted text-[11px] uppercase tracking-widest font-bold">
+              <span className="sm:hidden" aria-hidden="true">GW</span>
+              <span className="hidden sm:inline">Gameweek</span>
+            </span>
             <span className="text-3xl font-black leading-none">{gw}</span>
-            <span className="text-muted text-sm">/ {lastGw}</span>
+            <span className="text-muted text-sm whitespace-nowrap">/ {lastGw}</span>
           </div>
           <div className="flex items-center gap-2">
             {!seasonDone ? (
               <>
                 <button
                   onClick={() => setPlaying(p => !p)}
-                  className="px-3 py-2.5 rounded-lg text-xs font-bold bg-raised text-muted hover:text-fg transition-colors touch-manipulation"
+                  className="px-3 py-2.5 rounded-lg text-xs font-bold bg-raised text-muted hover:text-fg transition-colors touch-manipulation whitespace-nowrap"
                 >
                   {playing ? '⏸ Pause' : '▶ Play'}
                 </button>
                 <button
+                  aria-label={speed === 'fast' ? 'Playing at three times speed' : 'Playing at normal speed'}
+                  aria-pressed={speed === 'fast'}
                   onClick={() => setSpeed(s => s === 'normal' ? 'fast' : 'normal')}
                   className={`px-3 py-2.5 rounded-lg text-xs font-bold transition-colors touch-manipulation ${speed === 'fast' ? 'bg-[#00c896] text-black' : 'bg-raised text-muted hover:text-fg'}`}
                 >
@@ -413,7 +469,7 @@ function LiveSimulation({
                 </button>
                 <button
                   onClick={() => { setGw(lastGw); setPlaying(false); }}
-                  className="px-3 py-2.5 rounded-lg text-xs font-bold bg-raised text-muted hover:text-fg transition-colors touch-manipulation"
+                  className="px-3 py-2.5 rounded-lg text-xs font-bold bg-raised text-muted hover:text-fg transition-colors touch-manipulation whitespace-nowrap"
                 >
                   Skip ⏭
                 </button>
@@ -444,7 +500,8 @@ function LiveSimulation({
 
           {/* User's match – re-mounts each GW for the snap-in feel */}
           {userFixture && (
-            <div key={gw} className="bg-card rounded-2xl p-5 border" style={{ borderColor: `${rCol}50` }}>
+            <div key={gw} className="bg-card rounded-2xl p-5 border" style={{ borderColor: `${rCol}50` }}
+              aria-live="polite" aria-label={`Gameweek ${gw}: ${isHome ? 'home to' : 'away at'} ${opponent}, ${userGoals} ${oppGoals}`}>
               <div className="flex items-center gap-3 mb-3">
                 <span className="text-xs font-black px-2 py-0.5 rounded" style={{ background: rCol, color: result === 'L' ? 'white' : 'black' }}>
                   {result}
@@ -456,17 +513,13 @@ function LiveSimulation({
                 <span className="text-2xl text-subtle font-black">–</span>
                 <span className={`text-5xl font-black ${result === 'L' ? 'text-fg' : 'text-muted'}`}>{oppGoals}</span>
               </div>
-              {userFixture.scorers.length > 0 && (
-                <div className="text-[11px] text-muted text-center mt-1">
-                  {userFixture.scorers.map(s => `${s.name} ${s.minute}′`).join(' · ')}
-                </div>
-              )}
+              <MatchDetail fixture={userFixture} />
             </div>
           )}
 
           {/* Other fixtures */}
           <div className="bg-card rounded-2xl p-4">
-            <div className="text-[9px] text-subtle uppercase tracking-widest font-bold mb-3">Other Results</div>
+            <div className="text-[11px] text-subtle uppercase tracking-widest font-bold mb-3">Other Results</div>
             <div className="space-y-1.5">
               {otherFixtures.map((f, i) => (
                 <div key={i} className="flex items-center gap-2 text-[11px]">
@@ -496,8 +549,8 @@ function LiveSimulation({
         {/* Right: live table */}
         <div className="bg-card rounded-2xl p-4 flex flex-col">
           <div className="flex items-center justify-between mb-3">
-            <div className="text-[9px] text-subtle uppercase tracking-widest font-bold">Table</div>
-            <div className="text-[9px] text-subtle uppercase tracking-widest">Pts</div>
+            <div className="text-[11px] text-subtle uppercase tracking-widest font-bold">Table</div>
+            <div className="text-[11px] text-subtle uppercase tracking-widest">Pts</div>
           </div>
           <div className="flex-1 space-y-0.5">
             {table.map(row => {
@@ -517,7 +570,7 @@ function LiveSimulation({
             {[['#fbbf24','1st'],['#3b82f6','UCL'],['#8b5cf6','UEL'],['#ef4444','REL']].map(([c,l]) => (
               <div key={l} className="flex items-center gap-1">
                 <div className="w-1.5 h-1.5 rounded-full" style={{ background: c }} />
-                <span className="text-[9px] text-muted">{l}</span>
+                <span className="text-[11px] text-muted">{l}</span>
               </div>
             ))}
           </div>
@@ -528,7 +581,7 @@ function LiveSimulation({
               <div className="font-black text-base mb-1" style={{ color: simResult.finalPosition === 1 ? 'var(--c-accent)' : simResult.finalPosition <= 4 ? 'var(--c-blue)' : simResult.finalPosition >= 18 ? 'var(--c-red)' : 'var(--t-fg-soft)' }}>
                 {simResult.finalPosition === 1 ? '🏆 CHAMPIONS!' : `${ordinal(simResult.finalPosition)} Place`}
               </div>
-              <div className="text-[10px] text-muted mb-3">{simResult.points} pts · {simResult.wins}W {simResult.draws}D {simResult.losses}L</div>
+              <div className="text-[11px] text-muted mb-3">{simResult.points} pts · {simResult.wins}W {simResult.draws}D {simResult.losses}L</div>
               <button onClick={onDone} className="w-full py-2.5 rounded-xl text-sm font-black bg-[#00c896] text-black hover:bg-[#00b385] transition-colors">
                 Full Report →
               </button>
@@ -542,12 +595,36 @@ function LiveSimulation({
 
 // ── Final Summary ─────────────────────────────────────────────────────────────
 
-function FinalSummary({ result, picks, odds, onResim }: {
+function FinalSummary({ result, seed, picks, odds, style, league, records, onResim }: {
   result: SimulationResult;
+  seed: number;
   picks: SquadPick[];
   odds: ReturnType<typeof preSeasonOdds>;
+  style: string;
+  league: string;
+  records: StyleRecord[];
   onResim: () => void;
 }) {
+  const [copied, setCopied] = useState(false);
+  const styleLabel = PLAYSTYLES[style as keyof typeof PLAYSTYLES]?.label ?? 'Balanced';
+  // The bookmakers priced this XI playing Balanced. The margin against their
+  // line is what the season, and the style it was played in, was worth.
+  const margin = result.points - odds.expectedPoints;
+  const overall = computeOverall(picks);
+
+  function share() {
+    const text = [
+      `38-0 · ${league}`,
+      `${ordinal(result.finalPosition)} · ${result.points} pts · ${result.wins}-${result.draws}-${result.losses} · ${result.goalsFor} scored, ${result.goalsAgainst} conceded`,
+      `XI rated ${overall}, playing ${styleLabel} (${margin >= 0 ? '+' : ''}${margin} on the bookmakers' ${odds.expectedPoints})`,
+      `Top scorer: ${result.awards.goldenBoot.name}, ${result.awards.goldenBoot.goals}`,
+      `Season #${seed}`,
+    ].join('\n');
+    const done = () => { setCopied(true); setTimeout(() => setCopied(false), 2000); };
+    if (navigator.share) navigator.share({ text }).then(done, () => undefined);
+    else navigator.clipboard?.writeText(text).then(done, () => undefined);
+  }
+
   const perf =
     result.finalPosition < odds.projectedPosition ? 'OVERPERFORMED' :
     result.finalPosition > odds.projectedPosition ? 'UNDERPERFORMED' : 'AS EXPECTED';
@@ -581,18 +658,46 @@ function FinalSummary({ result, picks, odds, onResim }: {
           <HeroStat label="Points"    value={String(result.points)} accent />
           <HeroStat label="Record"    value={`${result.wins}-${result.draws}-${result.losses}`} />
           <div className="bg-raised rounded-xl p-3 flex flex-col items-center justify-center gap-1">
-            <div className={`text-[10px] font-black border rounded px-2 py-1 ${perfColor}`}>{perf}</div>
-            <div className="text-[10px] text-subtle uppercase tracking-widest">vs {ordinal(odds.projectedPosition)}</div>
+            <div className={`text-[11px] font-black border rounded px-2 py-1 ${perfColor}`}>{perf}</div>
+            <div className="text-[11px] text-muted uppercase tracking-widest">priced {ordinal(odds.projectedPosition)}</div>
           </div>
         </div>
 
-        <button
-          onClick={onResim}
-          className="mt-6 px-6 py-3 rounded-xl font-black text-sm bg-raised text-muted hover:bg-raised-max hover:text-fg transition-colors border border-line-strong touch-manipulation"
-        >
-          ↺ Play it again
-        </button>
+        <p className="text-sm text-muted max-w-2xl mx-auto mt-5">
+          The bookmakers had this XI on <span className="font-bold text-fg">{odds.expectedPoints} points</span> playing
+          Balanced. Playing {styleLabel} it took{' '}
+          <span className={`font-black ${margin >= 0 ? 'text-accent' : 'text-red-400'}`}>
+            {margin >= 0 ? '+' : ''}{margin}
+          </span>{' '}
+          on that line.
+        </p>
+
+        <div className="mt-6 flex flex-wrap justify-center gap-3">
+          <Link
+            href="/squad"
+            className="px-6 py-3 rounded-xl font-black text-sm bg-[#00c896] text-black hover:bg-[#00b385] transition-colors touch-manipulation"
+          >
+            Try another style →
+          </Link>
+          <button
+            type="button"
+            onClick={onResim}
+            className="px-6 py-3 rounded-xl font-black text-sm bg-raised text-muted hover:bg-raised-max hover:text-fg transition-colors border border-line-strong touch-manipulation"
+          >
+            ↺ Play it again
+          </button>
+          <button
+            type="button"
+            onClick={share}
+            className="px-6 py-3 rounded-xl font-black text-sm bg-raised text-muted hover:bg-raised-max hover:text-fg transition-colors border border-line-strong touch-manipulation"
+          >
+            {copied ? 'Copied ✓' : 'Share'}
+          </button>
+        </div>
+        <div className="text-[11px] text-subtle mt-3">Season #{seed}</div>
       </div>
+
+      <TacticsBoard records={records} current={style} expected={odds.expectedPoints} />
 
       {/* Season stats. Six numbers on one row once there is room for them. */}
       <div className="grid grid-cols-3 gap-3 md:grid-cols-6">
@@ -606,7 +711,7 @@ function FinalSummary({ result, picks, odds, onResim }: {
         ] as [number, string][]).map(([v, l]) => (
           <div key={l} className="bg-card rounded-xl p-4 text-center">
             <div className="text-2xl font-black">{v}</div>
-            <div className="text-[10px] text-subtle uppercase tracking-widest">{l}</div>
+            <div className="text-[11px] text-subtle uppercase tracking-widest">{l}</div>
           </div>
         ))}
       </div>
@@ -617,40 +722,7 @@ function FinalSummary({ result, picks, odds, onResim }: {
       */}
       <div className="grid gap-6 min-w-0 lg:grid-cols-2 lg:items-start [&>*]:min-w-0">
 
-        {/* Your XI stats */}
-        <div className="bg-card rounded-2xl p-4 sm:p-6 min-w-0">
-          <div className="flex items-center gap-2 sm:gap-3 mb-3">
-            <div className="text-xs text-muted uppercase tracking-widest font-bold flex-1 min-w-0">Your XI</div>
-            <span className="text-[10px] text-subtle w-4 text-center">G</span>
-            <span className="text-[10px] text-subtle w-4 text-center">A</span>
-            <span className="text-[10px] text-subtle w-4 text-center">CS</span>
-            <span className="text-[10px] text-subtle w-6 text-right">OVR</span>
-            <span className="text-[10px] text-subtle w-7 text-right">RTG</span>
-          </div>
-          <div className="space-y-2">
-            {[...picks].sort((a, b) => b.slotIndex - a.slotIndex).map((p, i) => {
-              const stat = result.playerStats.find(s => s.playerId === p.playerId);
-              const rtg  = stat?.avgMatchRating ?? 0;
-              // Bands from the match engine's measured spread of season
-              // averages (660 player-seasons across 60 real XIs): about the
-              // top 5%, the top quarter, above the median, and the rest.
-              const rtgColor = rtg >= 6.7 ? 'text-accent' : rtg >= 6.5 ? 'text-sky' : rtg >= 6.4 ? 'text-fg' : 'text-muted';
-              const isDefender = p.position === 'GK' || ['CB','LB','RB','LWB','RWB'].includes(p.position);
-              return (
-                <div key={i} className="flex items-center gap-2 sm:gap-3">
-                  <PositionBadge pos={p.position} size="xs" />
-                  <span className="font-bold text-sm flex-1 min-w-0 truncate">{p.playerName}</span>
-                  <span className="text-subtle text-xs shrink-0 hidden sm:inline">{p.clubName.slice(0, 3).toUpperCase()}</span>
-                  <span className="text-muted text-xs font-bold w-4 text-center">{stat?.goals ?? 0}</span>
-                  <span className="text-muted text-xs font-bold w-4 text-center">{stat?.assists ?? 0}</span>
-                  <span className="text-muted text-xs font-bold w-4 text-center">{isDefender ? (stat?.cleanSheets ?? 0) : '-'}</span>
-                  <span className="font-black text-sm w-6 text-right" style={{ color: ratingColor(p.rating) }}>{p.rating}</span>
-                  <span className={`font-black text-xs w-7 text-right ${rtgColor}`}>{rtg > 0 ? rtg.toFixed(1) : '-'}</span>
-                </div>
-              );
-            })}
-          </div>
-        </div>
+        <XiStats picks={picks} stats={result.playerStats} />
 
         <div className="space-y-6">
           {/*
@@ -714,6 +786,8 @@ function FinalSummary({ result, picks, odds, onResim }: {
         </div>
       </div>
 
+      <SeasonResults result={result} />
+
       {/* Full league table. Fourteen columns: it earns the full width. */}
       {result.finalTable?.length > 0 && (
         <LeagueTable table={result.finalTable} />
@@ -731,11 +805,258 @@ function FinalSummary({ result, picks, odds, onResim }: {
   );
 }
 
+/**
+ * What each style has done with this eleven in this league.
+ *
+ * The pre-season odds are priced for a Balanced side and never learn the
+ * tactic, so this is where a player finds out what a style is worth to their
+ * XI: by playing it, and seeing it against the others they have played. One
+ * season is a noisy measure (about six points either way), which is why the
+ * board shows how many seasons each average rests on.
+ */
+function TacticsBoard({ records, current, expected }: {
+  records: StyleRecord[];
+  current: string;
+  expected: number;
+}) {
+  const total = Object.keys(PLAYSTYLES).length;
+  const best = Math.max(expected, ...records.map(r => r.averagePoints));
+  return (
+    <div className="bg-card rounded-2xl p-4 sm:p-6">
+      <div className="flex items-baseline gap-3 mb-1">
+        <div className="text-xs text-muted uppercase tracking-widest font-bold">Tactics Board</div>
+        <div className="text-[11px] text-muted">{records.length} of {total} styles tried with this XI</div>
+      </div>
+      <p className="text-xs text-muted mb-4 max-w-2xl">
+        Average points by style, against the bookmakers&apos; Balanced line of {expected}. A single season can
+        land six points either side of a style&apos;s true level, so play one again before trusting it.
+      </p>
+      <div className="space-y-2">
+        {records.map(r => {
+          const diff = Math.round(r.averagePoints) - expected;
+          return (
+            <div key={r.style} className="flex items-center gap-3 text-xs">
+              <span className={`w-28 shrink-0 truncate font-bold ${r.style === current ? 'text-accent' : 'text-fg'}`}>
+                {PLAYSTYLES[r.style as keyof typeof PLAYSTYLES]?.label ?? r.style}
+              </span>
+              <div className="flex-1 h-2 rounded-full bg-raised relative overflow-hidden">
+                <div
+                  className="h-2 rounded-full"
+                  style={{ width: `${(r.averagePoints / best) * 100}%`, background: 'var(--c-accent)', opacity: r.style === current ? 1 : 0.55 }}
+                />
+                {/* The bookmakers' line. */}
+                <div className="absolute inset-y-0 w-0.5 bg-fg" style={{ left: `${(expected / best) * 100}%` }} />
+              </div>
+              <span className="w-10 text-right font-black text-fg">{Math.round(r.averagePoints)}</span>
+              <span className={`w-9 text-right font-bold ${diff >= 0 ? 'text-accent' : 'text-red-400'}`}>
+                {diff >= 0 ? '+' : ''}{diff}
+              </span>
+              <span className="w-8 text-right text-muted">×{r.played}</span>
+            </div>
+          );
+        })}
+      </div>
+    </div>
+  );
+}
+
+// ── What happened in a match ─────────────────────────────────────────────────
+
+const lastName = (name: string) => name.split(' ').pop() ?? name;
+
+/**
+ * Both sides of one of the XI's matches: who scored and who set it up, the
+ * cards, and the numbers underneath the scoreline. The engine has always
+ * recorded all of it; the screen used to show the XI's scorers and nothing
+ * else, so a 1-2 defeat never said who had scored the two.
+ */
+function MatchDetail({ fixture }: { fixture: FixtureResult }) {
+  const detail = fixture.detail;
+  if (!detail) return null;
+  const userIsHome = fixture.home === 'Your XI';
+  const mine = userIsHome ? detail.home : detail.away;
+  const theirs = userIsHome ? detail.away : detail.home;
+  const line = (e: typeof detail.events[number]) => {
+    const mark = e.type === 'goal' ? '⚽' : e.type === 'yellow' ? '🟨' : '🟥';
+    const extra = e.type === 'goal' ? (e.penalty ? ' (pen)' : e.assist ? ` (${lastName(e.assist)})` : '') : '';
+    return `${mark} ${lastName(e.name)} ${e.minute}′${extra}`;
+  };
+  const column = (user: boolean) => detail.events.filter(e => e.user === user);
+  return (
+    <div className="mt-3 space-y-3">
+      {detail.events.length > 0 && (
+        <div className="grid grid-cols-2 gap-4 text-xs">
+          <ul className="space-y-0.5 text-right text-fg-soft" aria-label="Your XI">
+            {column(true).map((e, i) => <li key={i}>{line(e)}</li>)}
+          </ul>
+          <ul className="space-y-0.5 text-muted" aria-label="Opponent">
+            {column(false).map((e, i) => <li key={i}>{line(e)}</li>)}
+          </ul>
+        </div>
+      )}
+      <dl className="grid grid-cols-[1fr_auto_1fr] gap-x-3 gap-y-0.5 text-xs border-t border-line pt-3">
+        {([
+          ['Shots (on target)', `${mine.shots} (${mine.shotsOnTarget})`, `${theirs.shots} (${theirs.shotsOnTarget})`],
+          ['Expected goals', mine.expectedGoals.toFixed(1), theirs.expectedGoals.toFixed(1)],
+          ['Possession', `${Math.round(mine.possession)}%`, `${Math.round(theirs.possession)}%`],
+        ] as const).map(([label, a, b]) => (
+          <div key={label} className="contents">
+            <dd className="text-right font-bold text-fg">{a}</dd>
+            <dt className="text-center text-muted">{label}</dt>
+            <dd className="font-bold text-muted">{b}</dd>
+          </div>
+        ))}
+      </dl>
+    </div>
+  );
+}
+
+/** All 38 of the XI's matches, each opening to what happened in it. */
+function SeasonResults({ result }: { result: SimulationResult }) {
+  const [open, setOpen] = useState<number | null>(null);
+  const fixtures = result.gameweeks.flatMap(gw => gw.fixtures.filter(f => f.userInvolved).map(f => ({ week: gw.week, f })));
+  return (
+    <details className="group bg-card rounded-2xl">
+      <summary className="cursor-pointer list-none px-6 py-4 flex items-center gap-3 touch-manipulation">
+        <span className="text-subtle transition-transform group-open:rotate-90">▶</span>
+        <span className="text-xs text-muted uppercase tracking-widest font-bold">Match by match</span>
+        <span className="ml-auto flex gap-0.5" aria-hidden="true">
+          {fixtures.map(({ week, f }) => {
+            const home = f.home === 'Your XI';
+            const gf = home ? f.homeGoals : f.awayGoals;
+            const ga = home ? f.awayGoals : f.homeGoals;
+            return (
+              <span key={week} className="w-1 h-4 rounded-sm hidden sm:block"
+                style={{ background: gf > ga ? '#00c896' : gf === ga ? '#f59e0b' : '#ef4444' }} />
+            );
+          })}
+        </span>
+      </summary>
+      <div className="px-3 pb-4 sm:px-5 grid gap-x-6 lg:grid-cols-2">
+        {fixtures.map(({ week, f }) => {
+          const home = f.home === 'Your XI';
+          const gf = home ? f.homeGoals : f.awayGoals;
+          const ga = home ? f.awayGoals : f.homeGoals;
+          const res = gf > ga ? 'W' : gf === ga ? 'D' : 'L';
+          const col = res === 'W' ? '#00c896' : res === 'D' ? '#f59e0b' : '#ef4444';
+          const isOpen = open === week;
+          return (
+            <div key={week} className="border-b border-line last:border-b-0">
+              <button
+                type="button"
+                onClick={() => setOpen(isOpen ? null : week)}
+                aria-expanded={isOpen}
+                className="w-full flex items-center gap-3 px-2 py-2.5 text-sm text-left touch-manipulation hover:bg-card-hi rounded"
+              >
+                <span className="w-6 text-xs text-muted text-right shrink-0">{week}</span>
+                <span className="w-5 h-5 rounded text-[11px] font-black flex items-center justify-center shrink-0"
+                  style={{ background: col, color: res === 'L' ? 'white' : 'black' }}>{res}</span>
+                <span className="flex-1 min-w-0 truncate text-fg-soft">
+                  <span className="text-muted">{home ? 'H' : 'A'}</span> {home ? f.away : f.home}
+                </span>
+                <span className="font-black shrink-0">{gf}–{ga}</span>
+              </button>
+              {isOpen && <div className="px-2 pb-3"><MatchDetail fixture={f} /></div>}
+            </div>
+          );
+        })}
+      </div>
+    </details>
+  );
+}
+
+// ── The XI's season, player by player ────────────────────────────────────────
+
+type StatView = 'summary' | 'attack' | 'defence';
+
+const STAT_VIEWS: { key: StatView; label: string }[] = [
+  { key: 'summary', label: 'Summary' },
+  { key: 'attack',  label: 'Attacking' },
+  { key: 'defence', label: 'Defending' },
+];
+
+/** The columns of each view: a heading, what it means, and the number. */
+const STAT_COLUMNS: Record<StatView, { head: string; title: string; value: (s: PlayerStats) => number | string }[]> = {
+  summary: [
+    { head: 'G',  title: 'Goals',        value: s => s.goals },
+    { head: 'A',  title: 'Assists',      value: s => s.assists },
+    { head: 'CS', title: 'Clean sheets', value: s => (['GK', 'CB', 'LB', 'RB', 'LWB', 'RWB'].includes(s.position) ? s.cleanSheets : '-') },
+  ],
+  attack: [
+    { head: 'Sh',  title: 'Shots',           value: s => s.shots },
+    { head: 'SoT', title: 'Shots on target', value: s => s.shotsOnTarget },
+    { head: 'KP',  title: 'Key passes',      value: s => s.chancesCreated },
+  ],
+  defence: [
+    { head: 'Tkl', title: 'Tackles',                value: s => s.tackles },
+    { head: 'Int', title: 'Interceptions',          value: s => s.interceptions },
+    { head: 'Clr', title: 'Clearances',             value: s => s.clearances },
+    { head: 'Sv',  title: 'Saves (goalkeeper)',     value: s => (s.position === 'GK' ? s.saves : '-') },
+  ],
+};
+
+/**
+ * The XI's season in numbers. Three views of the same eleven rows, because a
+ * phone has room for three or four number columns beside a name and the
+ * engine records a dozen: the tackles, key passes and saves were always
+ * counted and never shown.
+ */
+function XiStats({ picks, stats }: { picks: SquadPick[]; stats: PlayerStats[] }) {
+  const [view, setView] = useState<StatView>('summary');
+  const columns = STAT_COLUMNS[view];
+  return (
+    <div className="bg-card rounded-2xl p-4 sm:p-6 min-w-0">
+      <div className="flex items-center gap-2 mb-3 flex-wrap">
+        <div className="text-xs text-muted uppercase tracking-widest font-bold flex-1 min-w-0">Your XI</div>
+        <div className="flex gap-1" role="group" aria-label="Which statistics to show">
+          {STAT_VIEWS.map(v => (
+            <button key={v.key} type="button" onClick={() => setView(v.key)} aria-pressed={view === v.key}
+              className={`px-2.5 py-2 rounded-lg text-[11px] font-bold transition-colors touch-manipulation ${view === v.key ? 'bg-[#00c896] text-black' : 'bg-raised text-muted hover:text-fg'}`}>
+              {v.label}
+            </button>
+          ))}
+        </div>
+      </div>
+      <div className="flex items-center gap-2 sm:gap-3 mb-2 text-[11px] text-muted">
+        <span className="flex-1" />
+        {columns.map(c => <abbr key={c.head} title={c.title} className="w-7 text-center no-underline">{c.head}</abbr>)}
+        <abbr title="Overall rating" className="w-6 text-right no-underline">OVR</abbr>
+        <abbr title="Average match rating" className="w-7 text-right no-underline">RTG</abbr>
+      </div>
+      <div className="space-y-2">
+        {[...picks].sort((a, b) => b.slotIndex - a.slotIndex).map(p => {
+          const stat = stats.find(s => s.playerId === p.playerId && s.position === p.position)
+            ?? stats.find(s => s.playerId === p.playerId);
+          const rtg  = stat?.avgMatchRating ?? 0;
+          // Bands from the match engine's measured spread of season
+          // averages (660 player-seasons across 60 real XIs): about the
+          // top 5%, the top quarter, above the median, and the rest.
+          const rtgColor = rtg >= 6.7 ? 'text-accent' : rtg >= 6.5 ? 'text-sky' : rtg >= 6.4 ? 'text-fg' : 'text-muted';
+          return (
+            <div key={p.slotIndex} className="flex items-center gap-2 sm:gap-3">
+              <PositionBadge pos={p.position} size="xs" />
+              <span className="font-bold text-sm flex-1 min-w-0 truncate">{p.playerName}</span>
+              {columns.map(c => (
+                <span key={c.head} className="text-muted text-xs font-bold w-7 text-center">{stat ? c.value(stat) : 0}</span>
+              ))}
+              <span className="font-black text-sm w-6 text-right" style={{ color: ratingColor(p.rating) }}>{p.rating}</span>
+              <span className={`font-black text-xs w-7 text-right ${rtgColor}`}>{rtg > 0 ? rtg.toFixed(1) : '-'}</span>
+            </div>
+          );
+        })}
+      </div>
+      <p className="text-[11px] text-muted mt-3">
+        {columns.map(c => `${c.head} ${c.title.toLowerCase()}`).join(' · ')} · RTG average match rating, 6.5 is an ordinary game
+      </p>
+    </div>
+  );
+}
+
 function HeroStat({ label, value, accent }: { label: string; value: string; accent?: boolean }) {
   return (
     <div className="bg-raised rounded-xl p-3 text-center">
       <div className={`text-2xl font-black ${accent ? 'text-accent' : ''}`}>{value}</div>
-      <div className="text-[10px] text-subtle uppercase tracking-widest">{label}</div>
+      <div className="text-[11px] text-subtle uppercase tracking-widest">{label}</div>
     </div>
   );
 }
@@ -749,7 +1070,7 @@ function LeagueTable({ table }: { table: TeamStanding[] }) {
 
   return (
     <div className="bg-card rounded-2xl overflow-hidden">
-      <button onClick={() => setShow(s => !s)} className="w-full flex items-center justify-between px-6 py-4 hover:bg-card-hi transition-colors">
+      <button type="button" aria-expanded={show} onClick={() => setShow(s => !s)} className="w-full flex items-center justify-between px-6 py-4 hover:bg-card-hi transition-colors touch-manipulation">
         <div className="text-xs text-muted uppercase tracking-widest font-bold">Final League Table</div>
         <span className="text-subtle text-xs">{show ? '▲' : '▼'}</span>
       </button>
@@ -760,7 +1081,7 @@ function LeagueTable({ table }: { table: TeamStanding[] }) {
             the name column was squeezed to nothing at 360px. P (always 38 in a
             final table) and GF/GA (GD carries them) are the ones a phone drops.
           */}
-          <div className="flex items-center gap-1.5 sm:gap-2 px-2 pb-1 text-[9px] text-subtle uppercase tracking-widest border-b border-line">
+          <div className="flex items-center gap-1.5 sm:gap-2 px-2 pb-1 text-[11px] text-subtle uppercase tracking-widest border-b border-line">
             <span className="shrink-0 w-5 text-center">#</span>
             <span className="flex-1 min-w-0">Club</span>
             <span className="shrink-0 w-5 text-center hidden sm:block">P</span>
@@ -800,7 +1121,7 @@ function LeagueTable({ table }: { table: TeamStanding[] }) {
             {[['#fbbf24','Champions'],['#3b82f6','Top 4 (UCL)'],['#8b5cf6','6th (UEL)'],['#ef4444','Relegation']].map(([c,l]) => (
               <div key={l} className="flex items-center gap-1.5">
                 <div className="w-2 h-2 rounded-full" style={{ background: c }} />
-                <span className="text-[9px] text-subtle">{l}</span>
+                <span className="text-[11px] text-subtle">{l}</span>
               </div>
             ))}
           </div>
@@ -835,7 +1156,7 @@ function LeagueLeaderboards({ scorers, assisters, keepers }: { scorers: LeagueEn
       <div className="text-xs text-muted uppercase tracking-widest font-bold mb-4">League Leaderboards</div>
       <div className="flex gap-2 mb-4 flex-wrap lg:hidden">
         {BOARDS.map(b => (
-          <button key={b.key} type="button" onClick={() => setTab(b.key)}
+          <button key={b.key} type="button" aria-pressed={tab === b.key} onClick={() => setTab(b.key)}
             className={`px-3 py-2.5 rounded-lg text-xs font-bold transition-colors touch-manipulation ${tab === b.key ? 'bg-[#00c896] text-black' : 'bg-raised text-muted hover:text-fg'}`}>
             {b.tab}
           </button>
@@ -844,11 +1165,11 @@ function LeagueLeaderboards({ scorers, assisters, keepers }: { scorers: LeagueEn
       <div className="lg:grid lg:grid-cols-3 lg:gap-6">
         {BOARDS.map(b => (
           <div key={b.key} className={`${tab === b.key ? 'block' : 'hidden'} lg:block`}>
-            <div className="hidden lg:block text-[10px] text-muted uppercase tracking-widest font-bold mb-2">{b.title}</div>
-            <div className="flex items-center gap-3 px-2 pb-1.5 text-[9px] text-subtle uppercase tracking-widest border-b border-line">
+            <div className="hidden lg:block text-[11px] text-muted uppercase tracking-widest font-bold mb-2">{b.title}</div>
+            <div className="flex items-center gap-3 px-2 pb-1.5 text-[11px] text-subtle uppercase tracking-widest border-b border-line">
               <span className="w-5 text-center">#</span>
               <span className="flex-1">Player</span>
-              <span className="w-24 text-right text-[10px] lg:hidden xl:block">Club</span>
+              <span className="w-24 text-right text-[11px] lg:hidden xl:block">Club</span>
               <span className="w-8 text-right">{b.unit}</span>
             </div>
             <div className="space-y-0.5 mt-1">
@@ -856,7 +1177,7 @@ function LeagueLeaderboards({ scorers, assisters, keepers }: { scorers: LeagueEn
                 <div key={i} className={`flex items-center gap-3 px-2 py-1.5 rounded text-xs ${e.isUser ? 'bg-[#00c896]/10' : ''}`}>
                   <span className="w-5 text-center text-subtle font-bold">{i + 1}</span>
                   <span className={`flex-1 min-w-0 truncate font-bold ${e.isUser ? 'text-accent' : 'text-fg-soft'}`}>{e.playerName}</span>
-                  <span className={`w-24 text-right text-[10px] truncate lg:hidden xl:block ${e.isUser ? 'text-accent/60' : 'text-subtle'}`}>{e.clubName}</span>
+                  <span className={`w-24 text-right text-[11px] truncate lg:hidden xl:block ${e.isUser ? 'text-accent/60' : 'text-subtle'}`}>{e.clubName}</span>
                   <span className={`w-8 text-right font-black ${e.isUser ? 'text-accent' : 'text-fg'}`}>{e.value}</span>
                 </div>
               ))}

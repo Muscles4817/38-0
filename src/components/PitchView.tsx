@@ -84,6 +84,12 @@ export default function PitchView({
             key={i}
             type="button"
             onClick={() => onSlotClick?.(i)}
+            // Without a name a screen reader announced eleven buttons called
+            // "CB" or "JH". A pitch nobody can act on is not in the tab order.
+            aria-label={pick
+              ? `${slot.label} (${slot.position}): ${pick.playerName}`
+              : `${slot.label} (${slot.position}), ${isEligible ? 'place here' : 'empty'}`}
+            tabIndex={onSlotClick ? 0 : -1}
             className="touch-manipulation"
             style={{
               position: 'absolute',

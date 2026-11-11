@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import { FORMATIONS, canFillSlot, getFormation, type Position } from './formations';
-import { PLAYSTYLES } from './matchEngine';
+import { PHASES, PLAYSTYLES } from './matchEngine';
 import {
   SIMULATED_LEAGUE,
   SIMULATED_SEASON_START,
@@ -13,6 +13,7 @@ import {
   getSquad,
   getTacticEffect,
   getTacticOptions,
+  getXiProfile,
   getTraits,
   getTeamStrengths,
   describeCompetition,
@@ -725,5 +726,19 @@ describe('tactic fit for a saved XI', () => {
 
   it('gives a side built for tiki-taka a real fit for it', () => {
     expect(getTacticEffect(saved, 'tikiTaka').fit).toBeGreaterThan(0.5);
+  });
+
+  it('says what each style leans on, heaviest first, and Balanced on nothing', () => {
+    expect(getTacticEffect(saved, 'balanced').needs).toEqual([]);
+    expect(getTacticEffect(saved, 'gegenpress').needs).toEqual(['press', 'break']);
+    expect(getTacticEffect(saved, 'parkTheBus').needs[0]).toBe('block');
+  });
+
+  it('describes what the XI is good at in every phase, from the same roles', () => {
+    const profile = getXiProfile(saved);
+    expect(Object.keys(profile).sort()).toEqual(Object.keys(PHASES).sort());
+    for (const value of Object.values(profile)) expect(Number.isFinite(value)).toBe(true);
+    // Barcelona 2009/10 play out from the back better than an ordinary side.
+    expect(profile.build).toBeGreaterThan(0.2);
   });
 });

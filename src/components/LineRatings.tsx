@@ -38,7 +38,7 @@ export default function LineRatings({ formation, picks }: Props) {
 
         return (
           <div key={line.key} className="flex items-center gap-3">
-            <span className="text-[10px] font-black tracking-widest w-7 flex-shrink-0"
+            <span className="text-[11px] font-black tracking-widest w-7 flex-shrink-0"
               style={{ color: line.color }}>
               {line.label}
             </span>
@@ -58,7 +58,7 @@ export default function LineRatings({ formation, picks }: Props) {
             </span>
 
             {/* Fill count */}
-            <span className="text-[10px] text-muted w-6 text-right flex-shrink-0">
+            <span className="text-[11px] text-muted w-6 text-right flex-shrink-0">
               {filled}/{totalSlots}
             </span>
           </div>

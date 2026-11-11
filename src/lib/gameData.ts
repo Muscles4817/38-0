@@ -13,6 +13,7 @@ import { bestFormation } from './lineupFit';
 import {
   simulateSeason,
   tacticEffect,
+  xiProfile,
   type PlayerRole,
   type SquadPick,
   type OpponentPlayer,
@@ -21,7 +22,7 @@ import {
   type SimulationResult,
   type TacticEffect,
 } from './simulation';
-import { PLAYSTYLES, type PlaystyleName } from './matchEngine';
+import { PLAYSTYLES, type Phase, type PlaystyleName } from './matchEngine';
 
 // ── Snapshot types ───────────────────────────────────────────────────────────
 
@@ -604,6 +605,11 @@ export function getTacticOptions(picks: SquadPick[]): TacticEffect[] {
   const withRoles = withSeasonRoles(picks);
   return (Object.keys(PLAYSTYLES) as PlaystyleName[])
     .map(style => tacticEffect(withRoles, style, roleConfig));
+}
+
+/** What this XI is good at, phase by phase, as the match engine reads it. */
+export function getXiProfile(picks: SquadPick[]): Record<Phase, number> {
+  return xiProfile(withSeasonRoles(picks), getRoleConfig());
 }
 
 /** What one style would do to this XI. */

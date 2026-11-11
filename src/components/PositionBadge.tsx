@@ -26,7 +26,7 @@ const COLOR: Partial<Record<Position, string>> = {
  */
 export default function PositionBadge({ pos, size = 'sm' }: { pos: Position; size?: 'xs' | 'sm' }) {
   const cls = COLOR[pos] ?? 'bg-gray-600 text-white';
-  const sz = size === 'xs' ? 'text-[9px] px-1 py-0' : 'text-[10px] px-1.5 py-0.5';
+  const sz = size === 'xs' ? 'text-[11px] px-1 py-0' : 'text-[11px] px-1.5 py-0.5';
   return (
     <span className={`rounded font-bold uppercase pointer-events-none ${cls} ${sz}`}>{pos}</span>
   );

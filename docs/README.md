@@ -36,6 +36,7 @@ the codebase already works.
 | [squad-data-pipeline.md](squad-data-pipeline.md) | Before adding squad data. How the 680 club-seasons get collected, rated and imported. |
 | [positions-lookup.md](positions-lookup.md) | Before assigning positions. Why it is lookup work and what the rules are. |
 | [ratings.md](ratings.md) | Before rating any player. The absolute scale, the bands and the anchors. |
+| [season-depth.md](season-depth.md) | Before adding suspensions, injuries, a bench, fatigue or form. A proposal with what each would touch; none of it is built. |
 | [known-issues.md](known-issues.md) | Before starting work — the thing you are about to fix may already be recorded, measured and prioritised here. |
 
 ## The one rule that matters most
