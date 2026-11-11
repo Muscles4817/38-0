@@ -118,6 +118,15 @@ script deletes that directory, so `npm run build` and `npm run check` work
 whether or not the dev server has been running. If you ever see that error,
 something has bypassed `prebuild`; remove `.next` and try again.
 
+## The snapshot is bundled once
+
+`src/data/game-data.json` is 2.6 MB and every screen reads it. A bundler gives a
+module to a chunk every route shares only when the root layout imports it, so
+`src/components/GameDataRoot.tsx`, the one client component the layout renders,
+imports `gameData.ts` for that reason alone. Without it each route carries a
+full copy. After a build, exactly one file over 1 MB should be in
+`out/_next/static/chunks`.
+
 ## State and navigation
 
 A run is five screens, and each hands the next one its state through

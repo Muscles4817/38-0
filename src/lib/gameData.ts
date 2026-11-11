@@ -1,8 +1,7 @@
 // Read-only access to the bundled game data.
 //
 // The game runs entirely on the client: this module is the only source of
-// clubs, squads, lineups and role tuning, and it replaces what used to be the
-// /api/spin, /api/simulate, /api/strengths and /api/classic-teams routes.
+// clubs, squads, lineups and role tuning.
 //
 // The snapshot is generated from the local SQLite database by
 // `npm run export:data`. SQLite and the editor UI are authoring tools that
@@ -582,11 +581,6 @@ export function getRoleConfig(): RoleConfig {
       gameData.roles
         .filter(r => r.validPositions.length > 0)
         .map(r => [r.name, r.validPositions]),
-    ),
-    teamContrib: Object.fromEntries(
-      gameData.roles
-        .filter(r => r.attContrib !== 0 || r.midContrib !== 0 || r.defContrib !== 0)
-        .map(r => [r.name, { att: r.attContrib, mid: r.midContrib, def: r.defContrib }]),
     ),
     qualities: Object.fromEntries(
       gameData.roles

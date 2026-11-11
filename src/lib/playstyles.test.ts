@@ -159,14 +159,6 @@ const SQUAD_FOR: Partial<Record<PlaystyleName, string[][]>> = {
 const built = (name: string, style: PlaystyleName, idBase: number) =>
   team(name, style, idBase, SQUAD_FOR[style] ?? MIXED);
 
-/** Shots per match for the first side. Far less noisy than points. */
-function shotsFor(att: TeamSetup, def: TeamSetup, seed: number, matches = 500): number {
-  const rand = rng(seed);
-  let shots = 0;
-  for (let i = 0; i < matches; i++) shots += simulateMatch(att, def, rand, roles).home.shots;
-  return shots / matches;
-}
-
 describe('the interaction rules', () => {
   // Tested for what they claim. Every attempt to read them off shot counts got
   // confounded: a pressing side and a low block differ in tempo by half again,

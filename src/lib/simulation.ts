@@ -1,28 +1,20 @@
 import { type Position, effectiveRating } from './formations';
 import {
-  DEFAULT_COHESION, PLAYSTYLES, fitForStyle, inferStyle, lineRatings, simulateMatch,
+  DEFAULT_COHESION, PLAYSTYLES, fitForStyle, inferStyle, lineRatings, mulberry32, simulateMatch,
   type MatchPlayer, type PlaystyleName, type RoleMultipliers, type TeamSetup, type Zone,
 } from './matchEngine';
 
-// ── Player roles (weight modifiers) ──────────────────────────────────────────
-// Roles tweak per-player goal/assist probability during attribution.
-// Traits (match-level strength modifiers, e.g. Hardman) are a separate future system.
+// ── Player roles ─────────────────────────────────────────────────────────────
+// A role says how likely a player is to be the one who shoots or makes the
+// pass (the multipliers below) and, through its qualities, what he is good at.
+// The match engine reads both; these are the defaults for a caller with no
+// tuned values, and the snapshot's `roles` override them (getRoleConfig).
 
-export const PLAYER_ROLES = [
-  'InsideForward', 'Winger',
-  'Poacher', 'TargetMan', 'CompleteForward', 'Trequartista', 'FalseNine', 'DeepLyingForward',
-  'ChanceCreator', 'DeepLyingPlaymaker', 'Regista', 'Mezzala', 'LateRunner', 'BoxToBox', 'Anchor', 'Enforcer',
-  'AttackingFullback', 'CrossingSpecialist', 'InvertedWingback',
-  'BallPlayingDefender',
-  'SetPieceDeliverer', 'AerialThreat',
-] as const;
 // String alias so DB-created roles work without a code change.
 export type PlayerRole = string;
 
-// Goal/assist multipliers per role.
-// Stacking rule: suppressors (<1) multiply together; boosters (>1) compete — highest wins.
-// This prevents two scoring roles from compounding absurdly while preserving
-// valid combos (Anchor×DLP = genuinely low scorer who occasionally creates).
+// Goal/assist multipliers per role. How several roles on one player combine is
+// the engine's business: see combineRoleMults in matchEngine.ts.
 const ROLE_GOAL_MULT: Record<PlayerRole, number> = {
   InsideForward:       1.4,  // cuts inside to score
   Winger:              0.5,  // stays wide, crosses instead
@@ -99,16 +91,14 @@ export const ROLE_VALID_POSITIONS: Partial<Record<PlayerRole, Position[]>> = {
   // AerialThreat: unrestricted — heading ability spans all outfield positions
 };
 
-// Caller (e.g. /api/simulate) may pass DB-stored overrides to replace any defaults above.
+// The tuned values from the snapshot, which replace any of the defaults above.
 export interface RoleConfig {
   goalMult?:       Partial<Record<string, number>>;
   assistMult?:     Partial<Record<string, number>>;
   validPositions?: Partial<Record<string, Position[]>>;
-  teamContrib?:    Partial<Record<string, { att: number; mid: number; def: number }>>;
   /**
    * What each role says a player is GOOD AT, as opposed to what he produces.
-   * Only the tactics below read it: a style's demands are expressed in these
-   * names, so without them every style fits every side equally.
+   * The engine's phases and contests read it; see docs/abilities.md.
    */
   qualities?:      Partial<Record<string, Partial<Record<string, number>>>>;
 }
@@ -272,20 +262,11 @@ const INITIALS = ['A','B','C','D','E','F','G','H','I','J','K','L','M','N','O','P
 
 // ── RNG helpers ───────────────────────────────────────────────────────────────
 
-// mulberry32, the generator the engine's calibration tests already use. The
-// linear congruential generator it replaces had a period of 233,280, and a
-// season played through the match engine draws a few hundred numbers per match
-// across 380 matches — about one full period. The season would have started
-// repeating itself.
-function rng(seed: number): () => number {
-  let a = seed >>> 0;
-  return () => {
-    a = (a + 0x6d2b79f5) >>> 0;
-    let t = Math.imul(a ^ (a >>> 15), 1 | a);
-    t = (t + Math.imul(t ^ (t >>> 7), 61 | t)) ^ t;
-    return ((t ^ (t >>> 14)) >>> 0) / 4294967296;
-  };
-}
+// The linear congruential generator this replaced had a period of 233,280, and
+// a season played through the match engine draws a few hundred numbers per
+// match across 380 matches — about one full period. The season would have
+// started repeating itself.
+const rng = mulberry32;
 
 function genName(rand: () => number): string {
   return `${INITIALS[Math.floor(rand() * INITIALS.length)]}. ${SURNAMES[Math.floor(rand() * SURNAMES.length)]}`;
@@ -356,35 +337,6 @@ function sortedTable(standings: Map<string, MutableStanding>): TeamStanding[] {
 // show them: the engine's own line qualities (`lineRatings`), in rating points.
 // They are a summary for the player to read, not an input: the match engine
 // reads the eleven itself, zone by zone.
-
-// How sharply a rating compounds into effectiveness. Each 5-point band is worth
-// about 17% more than the one below, so 85→90 matters more than 75→80. The
-// match engine uses the same constant for the same reason.
-//
-// ratingScale and scaledAvgRating are inverses and MUST share this constant.
-// They previously did not — 0.032 out, 0.055 back — which silently dragged
-// every squad 58% of the way toward 80. See simulation.test.ts for the round
-// trip that now guards it.
-const RATING_CURVE = 0.032;
-
-// Maps a rating onto the curve.
-function ratingScale(rating: number): number {
-  return Math.exp(RATING_CURVE * (rating - 80));
-}
-
-// Averages ratings in curve space, then maps back to rating units.
-//
-// Not a plain mean: a 90-rated player raises the effective average more than a
-// 70-rated one lowers it, so a side is carried by its best players rather than
-// dragged to the middle by its worst.
-function scaledAvgRating(players: { rating: number }[]): number {
-  if (players.length === 0) return 70;
-  const avgScale = players.reduce((s, p) => s + ratingScale(p.rating), 0) / players.length;
-  return Math.log(avgScale) / RATING_CURVE + 80;
-}
-
-// Exported for the round-trip test; not part of the simulation's public API.
-export const __ratingCurve = { RATING_CURVE, ratingScale, scaledAvgRating };
 
 function lineStrengths(players: { position: Position; rating: number }[]): { att: number; mid: number; def: number } {
   const lines = lineRatings(players);
@@ -496,8 +448,10 @@ export interface TacticEffect {
   style: PlaystyleName;
   label: string;
   /**
-   * 0-1: how well this eleven can execute the style. The engine scales what a
-   * style's demands buy — its press, its runners in behind — by this.
+   * 0-1: how far the phases this style is played through are the ones this
+   * eleven is best at. A description of the XI, not an input to the match:
+   * the engine plays the style through the same phase abilities directly, and
+   * a high fit does not promise more points. See docs/playstyles.md.
    */
   fit: number;
   /** Deep at 0, high at 1. */
@@ -892,10 +846,9 @@ export function simulateSeason(
   // ── Awards ──────────────────────────────────────────────────────────────────
   //
   // Player of the Season goes to the best average match rating: the engine's
-  // rating of what each player did, match by match. Goals and assists count
-  // toward it, as do shots on target, chances created, saves, clean sheets,
-  // the result and the goals conceded — which is what gives a defender any
-  // chance at all. It is exactly as good as those ratings are.
+  // rating of what each player did, match by match, valued in goals against an
+  // ordinary player in his position (see *What an event is worth* in
+  // matchEngine.ts). It is exactly as good as those ratings are.
   const topScorer = statsArr.reduce((a, b) => a.goals > b.goals ? a : b);
   const topAssist = statsArr.reduce((a, b) => a.assists > b.assists ? a : b);
   const topGKs    = statsArr.filter(s => s.position === 'GK');

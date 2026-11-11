@@ -842,7 +842,7 @@ export interface MatchPlayer {
   position: Position;
   rating: number;
   roles?: PlayerRole[];
-  /** Every position he genuinely plays. Only total football reads it. */
+  /** Every position he genuinely plays. Carried for the screens; the match reads only `position`. */
   positions?: Position[];
 }
 
@@ -993,9 +993,6 @@ interface TeamModel {
   /** Recovery: getting back to cover the space behind. */
   cover: number;
   creation: number;
-  versatility: number;
-  /** 0-1: how well this eleven can play the style it has been given. */
-  fit: number;
 }
 
 const ZONES: Zone[] = ['L', 'C', 'R'];
@@ -1113,11 +1110,13 @@ export function phaseAbility(players: MatchPlayer[], phase: Phase, roles: RoleMu
 }
 
 /**
- * How well an eleven can execute the style it has been given, 0 to 1.
+ * How far a style is played through what an eleven is good at, 0 to 1.
  *
- * A style with no demands fits everybody, which is what makes `balanced` a safe
- * choice rather than a weak one. The cost of a style is paid regardless; only
- * the benefit is scaled by this.
+ * A style with no demands fits everybody. This describes the XI for the
+ * pre-season screen and nothing in a match reads it: the contests in
+ * `simulateMatch` read the same phase abilities directly, so what a style is
+ * worth also depends on the opponent, and a high fit is not a promise of
+ * points (measured: docs/playstyles.md, *Fit is not a forecast*).
  */
 function styleFit(players: MatchPlayer[], style: Playstyle, roles: RoleMultipliers): number {
   const demands = Object.entries(style.needs) as [Phase, number][];
@@ -1144,11 +1143,8 @@ function styleFit(players: MatchPlayer[], style: Playstyle, roles: RoleMultiplie
 }
 
 /**
- * How well an eleven could play a style it has not been given yet, 0 to 1.
- *
- * The same measure `buildTeam` applies to a side that is already set up,
- * exposed so a player can be shown what his XI is equipped to do before he
- * commits to it, and so the season model can scale a style's benefit by it.
+ * `styleFit` by style name, for the pre-season screen: what an XI is equipped
+ * to do, shown before the player commits to a style.
  */
 export function fitForStyle(
   players: MatchPlayer[], style: PlaystyleName, roles: RoleMultipliers,
@@ -1184,16 +1180,12 @@ function buildTeam(setup: TeamSetup, roles: RoleMultipliers): TeamModel {
     runningThreat: phaseAbility(players, 'break', roles),
     cover: phaseAbility(players, 'cover', roles),
     creation: phaseAbility(players, 'create', roles),
-    versatility: players.filter(p => (p.positions?.length ?? 1) > 1).length
-      / Math.max(1, players.length),
     focus: {
       L: Math.max(0, setup.focus.L ?? 0) / focusTotal,
       C: Math.max(0, setup.focus.C ?? 0) / focusTotal,
       R: Math.max(0, setup.focus.R ?? 0) / focusTotal,
     },
-    fit: 1,
   };
-  model.fit = styleFit(players, style, roles);
   return model;
 }
 
@@ -1376,9 +1368,7 @@ function pickWeighted<T>(rand: () => number, items: T[], weights: number[]): T |
  * distance, came out at 0.33; Reece James, who scores free kicks, at 0.17; and
  * Declan Rice at 0.24 from four separate true statements about him.
  *
- * The old engine already did half of this — applyRoleMults in simulation.ts
- * takes the strongest booster rather than their product — but took the product
- * of the suppressors, which is the same mistake in the other direction.
+ * The strongest booster and the strongest suppressor each count once.
  */
 function combineRoleMults(mults: number[], power: number): number {
   if (mults.length === 0) return 1;
@@ -1688,8 +1678,12 @@ function pickPresser(
   return pickWeighted(rand, candidates, weights);
 }
 
-/** A second, independent stream, so crediting defenders never shifts the match. */
-function creditStream(seed: number): () => number {
+/**
+ * mulberry32: the generator a season is played on, and the one behind the
+ * second, independent stream that credits defenders, so that crediting a
+ * tackle never shifts the match.
+ */
+export function mulberry32(seed: number): () => number {
   let a = seed >>> 0;
   return () => {
     a = (a + 0x6d2b79f5) >>> 0;
@@ -1747,7 +1741,7 @@ export function simulateMatch(
   const stats = new Map<number, MatchPlayerStats>();
   for (const p of [...home.players, ...away.players]) stats.set(p.playerId, blankStats(p));
   const sent = new Set<number>();
-  const credit = creditStream(Math.floor(rand() * 4294967296));
+  const credit = mulberry32(Math.floor(rand() * 4294967296));
   // Who could make a given action depends only on the eleven, the zone and who
   // is still on the pitch. Rebuilding the weights for each of a hundred actions
   // a match took the season from 73 to 150 ms; see DEFENDER_CACHE.
@@ -1963,8 +1957,6 @@ export function simulateMatch(
           -KEEPING_EXPONENT * carry)
           : 1;
 
-        // A style's demands are a cost paid up front; what it gives back is
-        // collected only in proportion to whether the eleven can play it.
         let xg = CHANCE_QUALITY[type] * (isHome ? HOME_CHANCE_QUALITY : 1);
         if (type === 'aerial' || type === 'cross') {
           xg *= Math.pow(att.aerial / def.aerial, AERIAL_EXPONENT * 0.7)

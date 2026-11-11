@@ -256,6 +256,11 @@ changing it moves three things at once and wants measuring on its own.
 
 Do not re-report these:
 
+- **Every route shipped its own copy of the snapshot.** Five 1.3 MB chunks, one
+  per page, so a run from setup to results downloaded the data four times. The
+  root layout now imports it once (`GameDataRoot`), and `./out` went from
+  7.7 MB to 2.8 MB.
+
 - **A sent-off player went on scoring.** `pickShooter` and `pickCreator` chose
   from the whole eleven, and only the defending side paid for a red card. A
   dismissed player is now out of both, and ten men create less as well as

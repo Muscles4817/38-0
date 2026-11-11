@@ -334,6 +334,21 @@ describe('the lines the screens show', () => {
     expect(lines.def).toBeCloseTo(83, 6);
   });
 
+  // The rating curve goes out through exp and comes back through log. The two
+  // once used different constants (0.032 out, 0.055 back), which pulled every
+  // squad 58% of the way toward 80 and made the league close to a coin toss.
+  it('preserves the gap between two sides rather than compressing it', () => {
+    const of = (rating: number) => SHAPE.map(position => ({ position, rating }));
+    for (const line of ['att', 'mid', 'def'] as const) {
+      expect(lineRatings(of(77))[line] - lineRatings(of(71))[line]).toBeCloseTo(6, 6);
+    }
+  });
+
+  it('lets the best players carry a line, so it sits above the plain mean', () => {
+    const squad = SHAPE.map((position, i) => ({ position, rating: i >= 9 ? 95 : 75 }));
+    expect(lineRatings(squad).att).toBeGreaterThan(75 + (2 * 20) / 11);
+  });
+
   it('lets a better attack raise the attack line most', () => {
     const shape: Position[] = ['GK', 'LB', 'CB', 'CB', 'RB', 'CDM', 'CM', 'CM', 'LW', 'RW', 'ST'];
     const lines = lineRatings(shape.map(position => ({ position, rating: ['LW', 'RW', 'ST'].includes(position) ? 90 : 78 })));
