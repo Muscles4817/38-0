@@ -27,10 +27,25 @@ pages. Files that already have content are skipped unless you pass `--force`.
 - `--only juventus,internazionale` — just the sides you want in the game.
 - `--dry-run` — show which files would be written.
 
-FBref's club names go through the `_aliases` map in `data/clubs.json`
-(`Manchester Utd` → `manchester-united.csv`, `Inter` → `internazionale.csv`),
-and an existing file's slug wins, so `Dortmund` keeps landing in
-`dortmund.csv`. If a club comes out under a new slug, add an alias.
+- `--rename "Milan=ac-milan"` — force a club into a given file.
+
+**How clubs are matched to files.** The league table uses FBref's short names
+("Tottenham", "Manchester Utd", "Milan"). Each goes, in order, to: a
+`--rename`; an exact existing file via the `_aliases` map in `data/clubs.json`;
+then the one existing file the short name sits inside (`Tottenham` →
+`tottenham-hotspur.csv`, `Bournemouth` → `afc-bournemouth.csv`). For Serie A,
+La Liga and the rest, files from *other seasons* of that competition count too,
+so `Milan` lands in `ac-milan.csv` if that is the slug already in use.
+
+The script writes nothing for a club that is ambiguous, or that would share a
+file with another club, and lists it under *not written* with a non-zero exit.
+For the Premier League it also never creates a file: every club-season is
+already scaffolded, so a club with no match means the name is wrong. Outside
+the Premier League an unknown club gets a new file, marked `written (new
+club)` — check that slug title-cases into the right name, or add an alias.
+
+The FBref id stays in the last column, which is what positions and ratings are
+carried forward by.
 
 Competition ids for the URL: Premier League 9, Serie A 11, La Liga 12,
 Bundesliga 20.
