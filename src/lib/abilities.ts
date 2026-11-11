@@ -41,6 +41,8 @@ export const ABILITIES = {
   holdingWidth: { family: 'movement', kind: 'skill', description: 'Stays wide to stretch the defence. Negative: drifts inside' },
   overlapping: { family: 'movement', kind: 'skill', description: 'A full-back who goes outside or beyond the wide man' },
   inverting: { family: 'movement', kind: 'skill', description: 'A full-back who moves into midfield when his side has the ball' },
+  droppingDeep: { family: 'movement', kind: 'skill', description: 'A forward who comes short between the lines' },
+  showingForBall: { family: 'movement', kind: 'skill', description: 'Always available to the man on the ball. Negative: hides' },
 
   // On the ball
   pressResist: { family: 'onTheBall', kind: 'skill', description: 'Keeps the ball under pressure' },

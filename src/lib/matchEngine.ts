@@ -190,7 +190,7 @@ const ROLE_SELECTION_POWER = 0.5;
  */
 const MOVEMENT_TO_SHOTS = 0.25;
 type ShooterChance = ChanceType | 'setPieceScramble';
-const MOVEMENT_REACH: Record<'boxMovement' | 'attackingTheBox' | 'lateRuns' | 'runsInBehind' | 'channelRuns', Partial<Record<ShooterChance, number>>> = {
+const MOVEMENT_REACH: Record<'boxMovement' | 'attackingTheBox' | 'lateRuns' | 'runsInBehind' | 'channelRuns' | 'droppingDeep', Partial<Record<ShooterChance, number>>> = {
   boxMovement: { cross: 1, aerial: 1, throughBall: 1, setPieceScramble: 1 },
   attackingTheBox: { cross: 1, aerial: 1 },
   lateRuns: { cross: 1, throughBall: 0.5, setPieceScramble: 1 },
@@ -199,6 +199,8 @@ const MOVEMENT_REACH: Record<'boxMovement' | 'attackingTheBox' | 'lateRuns' | 'r
   // Into the gap between full-back and centre-back: the ball slipped into the
   // channel, or the cut inside and the shot.
   channelRuns: { throughBall: 1, individual: 1 },
+  // Between the lines rather than in the box: less often on the end of a cross.
+  droppingDeep: { cross: -0.5, aerial: -0.5 },
 };
 
 /**
@@ -249,6 +251,28 @@ const INVERT_PROTECTS_CENTRE = 0.05;
  */
 const MIDFIELD_NUMBERS_TO_POSSESSION = 0.015;
 const MIDFIELD_NUMBERS_TO_PRESS = 0.05;
+
+// ── Between the lines (docs/movement.md, step 4) ──
+
+/**
+ * A side whose players always show for the ball keeps it longer. Per point of
+ * `showingForBall` across the eleven, the same pull on possession as a point
+ * of an extra man in midfield. (Against a press it counts through the build
+ * phase instead, alongside press resistance.)
+ */
+const SHOWING_TO_POSSESSION = MIDFIELD_NUMBERS_TO_POSSESSION;
+/**
+ * A forward who drops deep drags a centre-back out of the line. Per point of
+ * `droppingDeep` across the side, how much more the space in behind is worth
+ * to whoever runs into it. Multiplies the space; with nobody running there is
+ * none to multiply.
+ */
+const DROP_OPENS_SPACE = 0.1;
+/**
+ * The forward who drops deep is the one who plays the runner in: per point of
+ * `droppingDeep`, how much likelier he is to supply the through ball.
+ */
+const DROP_TO_PASSER = 0.15;
 
 /**
  * How much more of a side's wide attacks become crosses, per point of
@@ -889,12 +913,17 @@ interface PhaseSpec {
 }
 
 const PHASE_SPECS: Record<Phase, PhaseSpec> = {
-  build:  { weight: BUILD_UP_WEIGHT, ability: { pressResist: 1 }, appetite: ['pressResist'], side: null },
+  // Keeping the ball under pressure, and being an option before the pressure
+  // arrives: both, added, so a side with neither is where it was. Showing
+  // counts for less than keeping it: being on offer does not beat a press
+  // that has arrived.
+  build:  { weight: BUILD_UP_WEIGHT, ability: { pressResist: 1, showingForBall: 0.4 }, appetite: ['pressResist', 'showingForBall'], side: null, combine: 'sum' },
   press:  { weight: PRESS_WEIGHT,    ability: { pressing: 1 },    appetite: ['pressing'],    side: 'attack' },
   // Work rate is part of defending: a winger who presses and tracks back adds
   // a defender to the block, not just a body.
   block:  { weight: BLOCK_WEIGHT,    ability: { defending: 1, pressing: 0.5 }, appetite: ['defending', 'pressing'], side: 'defence' },
-  create: { weight: CREATE_WEIGHT,   ability: { creation: 1 },    appetite: ['creation'],    side: 'attack' },
+  // A forward who drops between the lines takes his part in unpicking a block.
+  create: { weight: CREATE_WEIGHT,   ability: { creation: 1 },    appetite: ['creation', 'droppingDeep'], side: 'attack' },
   // The threat in behind is the run and the speed of it, added: a slow man who
   // times his run threatens the space, a quick one who never runs does not,
   // and one who does both is worth more than either. Summed rather than
@@ -1136,8 +1165,12 @@ interface TeamModel {
   width: Record<Zone, number>;
   /** `overlapping` on each flank: the space left behind when the ball is lost. */
   exposure: Record<Zone, number>;
-  /** Extra men in midfield when the side has the ball: `inverting`, summed. */
+  /** Extra men in midfield when the side has the ball: `inverting` and `droppingDeep`, summed. */
   midfieldNumbers: number;
+  /** `showingForBall`, summed: how available the side is to the man on the ball. */
+  showing: number;
+  /** `droppingDeep`, summed: how far its forwards pull the defence out of shape. */
+  droppers: number;
   versatility: number;
   /** 0-1: how well this eleven can play the style it has been given. */
   fit: number;
@@ -1330,13 +1363,18 @@ function buildTeam(setup: TeamSetup, roles: RoleMultipliers): TeamModel {
     runningThreat: phaseAbility(players, 'break', roles),
     cover: phaseAbility(players, 'cover', roles),
     creation: phaseAbility(players, 'create', roles),
-    boxCommit: players.reduce((s, p) => s + readChanceType(p, 'attackingTheBox', roles), 0),
+    // A forward who has dropped deep is not in the box to aim at.
+    boxCommit: players.reduce((s, p) => s + readChanceType(p, 'attackingTheBox', roles)
+      - readChanceType(p, 'droppingDeep', roles), 0),
     runners: players.reduce((s, p) => s + readChanceType(p, 'runsInBehind', roles), 0),
     movement: new Map(players.map(p => [p.playerId, movementFactors(p, roles)])),
     width: byFlank(players, p => readShape(p, 'holdingWidth', roles)
       + OVERLAP_WIDTH_SHARE * readShape(p, 'overlapping', roles) - readShape(p, 'inverting', roles)),
     exposure: byFlank(players, p => readShape(p, 'overlapping', roles)),
-    midfieldNumbers: players.reduce((s, p) => s + readShape(p, 'inverting', roles), 0),
+    midfieldNumbers: players.reduce((s, p) => s + readShape(p, 'inverting', roles)
+      + readShape(p, 'droppingDeep', roles), 0),
+    showing: players.reduce((s, p) => s + readShape(p, 'showingForBall', roles), 0),
+    droppers: players.reduce((s, p) => s + readShape(p, 'droppingDeep', roles), 0),
     channelRunners: Object.fromEntries(ZONES.map(z => [z, players
       .filter(p => positionZone(p.position) === z)
       .reduce((s, p) => s + readChanceType(p, 'channelRuns', roles), 0)])) as Record<Zone, number>,
@@ -1415,13 +1453,15 @@ const readPressCredit = reader('pressCredit', ['pressResist', 'pressing']);
 /** The keeper: saving, sweeping behind a high line, and claiming crosses. */
 const readKeeper = reader('keeper', ['shotStopping', 'reflexes', 'claiming', 'recovery']);
 /** Who is on the end of a chance: movement in and around the box. */
-const readShooterMovement = reader('shooter', ['boxMovement', 'attackingTheBox', 'lateRuns', 'runsInBehind', 'channelRuns']);
+const readShooterMovement = reader('shooter', ['boxMovement', 'attackingTheBox', 'lateRuns', 'runsInBehind', 'channelRuns', 'droppingDeep']);
 /** What kind of chance an attack becomes: whether there is anyone to cross to. */
-const readChanceType = reader('chanceType', ['attackingTheBox', 'runsInBehind', 'channelRuns']);
+const readChanceType = reader('chanceType', ['attackingTheBox', 'runsInBehind', 'channelRuns', 'droppingDeep']);
 /** A side's shape with the ball: its width, the space its full-backs leave, its numbers in midfield. */
-const readShape = reader('teamShape', ['holdingWidth', 'overlapping', 'inverting']);
+const readShape = reader('teamShape', ['holdingWidth', 'overlapping', 'inverting', 'droppingDeep', 'showingForBall']);
 /** Who puts the cross in, beyond his position and delivery. */
 const readCrosser = reader('crosser', ['overlapping']);
+/** Who plays the through ball, beyond his position and his creation. */
+const readPasser = reader('throughBallPasser', ['droppingDeep']);
 
 // ── The interaction rules, as functions ──────────────────────────────────────
 //
@@ -1477,10 +1517,11 @@ function contest(gap: number): number {
  */
 export function spaceFactor(
   buildUp: number, runningThreat: number,
-  opponentLine: number, opponentRecovery: number,
+  opponentLine: number, opponentRecovery: number, droppers = 0,
 ): number {
   const directness = 1 - buildUp;
-  const space = directness * opponentLine * Math.max(0, runningThreat - opponentRecovery);
+  const space = directness * opponentLine * Math.max(0, runningThreat - opponentRecovery)
+    * (1 + DROP_OPENS_SPACE * Math.max(0, droppers));
   return 1 + SPACE_EFFECT * space;
 }
 
@@ -1733,7 +1774,8 @@ function pickCreator(
         + OVERLAP_TO_CROSSER * readCrosser(p, 'overlapping', roles));
     } else if (type === 'throughBall') {
       w = (THROUGH_WEIGHT[p.position] ?? 0.3) * (pz === zone ? 1.5 : pz === 'C' || zone === 'C' ? 1 : 0.5);
-      return w * Math.exp(CREATOR_ABILITY_WEIGHT * readCreator(p, 'creation', roles));
+      return w * Math.exp(CREATOR_ABILITY_WEIGHT * readCreator(p, 'creation', roles)
+        + DROP_TO_PASSER * readPasser(p, 'droppingDeep', roles));
     }
     // A lay-off for a dribble or a shot from distance: no one skill makes
     // it, so the role's general assist tendency stands in. For a cross or a
@@ -1976,9 +2018,9 @@ export function simulateMatch(
   // home side sees a little more of it.
   const midEdge = Math.log(home.midfield / away.midfield) / RATING_CURVE / 10;
   const homeWeight = home.style.possessionBias * Math.exp(0.22 * midEdge) * HOME_POSSESSION
-    * Math.exp(MIDFIELD_NUMBERS_TO_POSSESSION * home.midfieldNumbers);
+    * Math.exp(MIDFIELD_NUMBERS_TO_POSSESSION * home.midfieldNumbers + SHOWING_TO_POSSESSION * home.showing);
   const awayWeight = away.style.possessionBias
-    * Math.exp(MIDFIELD_NUMBERS_TO_POSSESSION * away.midfieldNumbers);
+    * Math.exp(MIDFIELD_NUMBERS_TO_POSSESSION * away.midfieldNumbers + SHOWING_TO_POSSESSION * away.showing);
   const homeShare = homeWeight / (homeWeight + awayWeight);
 
   for (let i = 0; i < POSSESSIONS; i++) {
@@ -2154,7 +2196,7 @@ export function simulateMatch(
           // 3. Space in behind. A direct side with runners punishes a high
           //    line; a patient one gains nothing from it. Recovery pace in the
           //    defence is what covers the gap.
-          const inBehind = spaceFactor(att.style.buildUp, att.runningThreat, def.style.line, def.cover);
+          const inBehind = spaceFactor(att.style.buildUp, att.runningThreat, def.style.line, def.cover, att.droppers);
 
           xg *= inBehind
             * Math.pow(finishing, FINISHING_EXPONENT * carry)

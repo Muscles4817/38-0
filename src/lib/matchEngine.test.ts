@@ -1,6 +1,6 @@
 import { describe, it, expect } from 'vitest';
 import {
-  congestionFactor, lineRatings, phaseAbility, positionLine, simulateMatch, inferStyle, PLAYSTYLES,
+  congestionFactor, lineRatings, phaseAbility, positionLine, simulateMatch, spaceFactor, inferStyle, PLAYSTYLES,
   type TeamSetup, type MatchPlayer, type PlaystyleName,
 } from './matchEngine';
 import type { Position } from './formations';
@@ -703,5 +703,71 @@ describe('width: holding it, overlapping, inverting', () => {
     const invert = play({ 1: ['Invert'], 4: ['Invert'] });
     expect(invert.possession).toBeGreaterThan(plain.possession + 1);
     expect(crossShare(invert)).toBeLessThan(crossShare(plain));
+  });
+});
+
+describe('between the lines: showing for the ball, dropping deep', () => {
+  // docs/movement.md, step 4. Measured over 20,000 matches between identical
+  // 4-4-2s:
+  // - both central midfielders showing for the ball (3): about two points
+  //   more of the ball and a third fewer lost to a press; hiding (−2) the
+  //   other way;
+  // - a striker dropping deep (3): a point more of the ball and a little less
+  //   conceded on his own; with a runner beside him, 2% more goals than the
+  //   runner alone against a balanced side, almost nothing against a parked
+  //   bus, where there is no space behind to open.
+  const QUALITIES = {
+    goalMult: {}, assistMult: {},
+    qualities: { Show: { showingForBall: 3 }, Hide: { showingForBall: -2 }, Drop: { droppingDeep: 3 } },
+  };
+  const shape: Position[] = ['GK', 'LB', 'CB', 'CB', 'RB', 'LM', 'CM', 'CM', 'RM', 'ST', 'ST'];
+  const side = (name: string, base: number, roleAt: Record<number, string[]>): TeamSetup => ({
+    name, formation: '4-4-2', style: 'balanced', focus: { L: 1, C: 1, R: 1 },
+    players: shape.map((position, i) => ({
+      playerId: base + i, name: `${name} ${i}`, position, rating: 78, roles: roleAt[i] ?? [],
+    })),
+  });
+  const played = new Map<string, { possession: number; lostToPress: number; throughBallsSupplied: Record<number, number> }>();
+  const play = (roleAt: Record<number, string[]>) => {
+    const key = JSON.stringify(roleAt);
+    if (played.has(key)) return played.get(key)!;
+    const rand = rng(9);
+    const matches = 4000;
+    let possession = 0, lostToPress = 0;
+    const throughBallsSupplied: Record<number, number> = {};
+    for (let i = 0; i < matches; i++) {
+      const m = simulateMatch(side('Us', 100, roleAt), side('Them', 200, {}), rand, QUALITIES);
+      possession += m.home.possession / matches;
+      for (const p of m.home.players) lostToPress += p.lostToPress;
+      for (const e of m.events) {
+        if (e.type === 'goal' && e.team === 'Us' && e.chanceType === 'throughBall' && e.assistId != null) {
+          throughBallsSupplied[e.assistId - 100] = (throughBallsSupplied[e.assistId - 100] ?? 0) + 1;
+        }
+      }
+    }
+    const r = { possession, lostToPress, throughBallsSupplied };
+    played.set(key, r);
+    return r;
+  };
+
+  it('keeps the ball with midfielders who show for it, and loses it with ones who hide', { timeout: 60_000 }, () => {
+    const plain = play({});
+    const show = play({ 6: ['Show'], 7: ['Show'] });
+    const hide = play({ 6: ['Hide'], 7: ['Hide'] });
+    expect(show.possession).toBeGreaterThan(plain.possession + 1);
+    expect(show.lostToPress).toBeLessThan(plain.lostToPress * 0.8);
+    expect(hide.possession).toBeLessThan(plain.possession);
+    expect(hide.lostToPress).toBeGreaterThan(plain.lostToPress);
+  });
+
+  it('opens space behind for a runner, and makes none where there is no runner', () => {
+    // buildUp, running threat, the other side's line, its recovery, the droppers.
+    expect(spaceFactor(0.4, 1.5, 0.8, 0.5, 3)).toBeGreaterThan(spaceFactor(0.4, 1.5, 0.8, 0.5, 0));
+    expect(spaceFactor(0.4, 0, 0.8, 0.5, 3)).toBe(1);
+  });
+
+  it('makes the forward who drops deep the one who plays the through ball', { timeout: 60_000 }, () => {
+    const r = play({ 9: ['Drop'] });
+    expect(r.throughBallsSupplied[9] ?? 0).toBeGreaterThan(r.throughBallsSupplied[10] ?? 0);
   });
 });

@@ -93,7 +93,9 @@ are built in: [movement.md](movement.md).
   give it to.
 - **Does:** build-up. Keeping the ball against a press, and possession share.
   A side full of it beats a press without needing anyone to dribble out.
-- **Status:** new. Today press resistance does this job alone.
+- **Status:** built (`showingForBall`), added to press resistance in the build
+  phase and to possession. *Deep-Lying Playmaker* and *Regista* give it. See
+  [movement.md](movement.md).
 
 ### Runs in behind
 - **+** Plays on the last defender's shoulder and goes beyond him.
@@ -150,7 +152,8 @@ are built in: [movement.md](movement.md).
 - **Does:** build-up and chance creation: an extra man in midfield, and it
   drags a centre-back out of the line, which opens space for runs in behind.
   The cost: fewer bodies in the box.
-- **Status:** new.
+- **Status:** built (`droppingDeep`). *False Nine*, *Deep-Lying Forward* and
+  *Complete Forward* give it. See [movement.md](movement.md).
 
 ### Holding width
 - **+** Stays wide, touchline to touchline, to stretch the defence. The

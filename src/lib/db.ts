@@ -1931,13 +1931,13 @@ const ROLE_QUALITIES: Record<string, Partial<Record<Quality, number>>> = {
   BoxToBox:            { pressing: 2, lateRuns: 1 },
   ChanceCreator:       { creation: 3 },
   // "Complete" is the one trait that genuinely asserts everything.
-  CompleteForward:     { aerial: 1, pace: 1, pressing: 1, dribble: 1, boxMovement: 1, runsInBehind: 1 },
+  CompleteForward:     { aerial: 1, pace: 1, pressing: 1, dribble: 1, boxMovement: 1, runsInBehind: 1, droppingDeep: 1 },
   CrossingSpecialist:  { setPiece: 3 },
-  DeepLyingForward:    { creation: 2, pressResist: 1 },
-  DeepLyingPlaymaker:  { pressResist: 3, creation: 2 },
+  DeepLyingForward:    { creation: 2, pressResist: 1, droppingDeep: 2 },
+  DeepLyingPlaymaker:  { pressResist: 3, creation: 2, showingForBall: 2 },
   // An enforcer commits fouls. That is what the word means.
   Enforcer:            { pressing: 2, discipline: -1 },
-  FalseNine:           { creation: 2, pressResist: 2 },
+  FalseNine:           { creation: 2, pressResist: 2, droppingDeep: 3 },
   // An inside forward is defined by his run into the channel. He may or may
   // not be a good dribbler; an inverted winger has to be.
   InsideForward:       { channelRuns: 3, longShot: 1 },
@@ -1950,7 +1950,7 @@ const ROLE_QUALITIES: Record<string, Partial<Record<Quality, number>>> = {
   // A poacher is the man in the right place in the box. How well he finishes
   // waits for the finishing ability; nothing else about him is definitional.
   Poacher:             { boxMovement: 3 },
-  Regista:             { pressResist: 3, creation: 3, setPiece: 1 },
+  Regista:             { pressResist: 3, creation: 3, setPiece: 1, showingForBall: 2 },
   SetPieceDeliverer:   { setPiece: 3, penalty: 1 },
   // A sweeper keeper is the last man behind a high line: coming off it to
   // clear the ball played in behind is what the name means.

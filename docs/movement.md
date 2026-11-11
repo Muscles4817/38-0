@@ -419,6 +419,66 @@ winning the ball. "When his side loses the ball, a counter down his flank" is
 modelled for that case alone; an attack that simply breaks down does not start
 a counter in this engine.
 
+## Step 4, as built: between the lines
+
+**Showing for the ball** enters in two places:
+- **The build phase.** It is added to press resistance, at 0.4 of its weight
+  (`combine: 'sum'`). Keeping the ball when the press arrives still counts for
+  more than being on offer before it does. A side without it is where it was.
+- **Possession** (`SHOWING_TO_POSSESSION`).
+
+The negative end, hiding, works the other way in both.
+
+**Dropping deep** enters in five places:
+- **Midfield numbers.** It joins inverting as an extra man in midfield, for
+  possession and the press.
+- **The creation phase.** He takes his part in unpicking a block.
+- **Space in behind.** He opens it for a runner (`DROP_OPENS_SPACE`). It
+  multiplies the space, so with nobody running it opens none.
+- **The through ball.** He is likelier to be the one who plays it
+  (`DROP_TO_PASSER`): the forward who drops in and plays the runner through.
+- **The cost.** He is less often on the end of a cross himself, and his side
+  puts fewer in, because he is not in the box to aim at.
+
+**Recipes.**
+- Deep-Lying Playmaker and Regista: showing for the ball +2.
+- False Nine: dropping deep +3.
+- Deep-Lying Forward: dropping deep +2.
+- Complete Forward: dropping deep +1.
+
+**Controlled duel** (20,000 matches, identical 4-4-2s):
+- **Both central midfielders showing for the ball (+3):**
+  - about 2.2 points more of the ball, and a third fewer lost to a press,
+    against any opponent;
+  - +1.5% to +2.9% goals, and 1.5% to 7% fewer conceded, most against a
+    gegenpress.
+- **Hiding (−2):** 1.5 points less of the ball, 12% more lost to a press, and
+  more conceded.
+- **A striker dropping deep (+3), on his own:** a point more of the ball and a
+  little less conceded. His own share of the goals falls, as do the side's
+  crosses.
+- **The same, with a runner (runs in behind +3) beside him:**
+
+| Against | The runner alone | Runner with a man dropping deep |
+| --- | --- | --- |
+| a balanced side | +3.4% goals | +5.4% |
+| a gegenpress (possession side) | +4.1% | +6.0% |
+| a gegenpress (direct side) | +10.9% | +14.6% |
+| a parked bus | +0.9% | +1.1% |
+
+**Against the real numbers** (FBref, 19 seasons):
+- Deep-Lying Forward: 21.6% of his club's goals (was 22.4%, real 24.1%), and
+  9.1% assists (was 8.1%, real 16.6%).
+- Complete Forward: 31.6% (real 31.0%).
+- Strikers are under-credited with assists generally (6.2% against a real
+  10.5% for plain strikers). That is not this step, and the through-ball
+  passer only narrows it for the forward who drops.
+
+**League calibration unchanged.**
+- +3.35 points per strength point (real +3.41); draws 25.5% (real 26.5%).
+- Possession by style moves by half a point at most.
+- The Golden Boot averages 31.5.
+
 ## Build order
 
 One step at a time. Each step is measured, committed, and reviewed before the
@@ -439,6 +499,7 @@ next.
    FBref. **Done** — see above.
 4. **Between the lines:** dropping deep and showing for the ball. *Measured
    by:* possession share by style, and how often a press wins the ball.
+   **Done** — see above.
 5. **Shape:** positional discipline and stepping out. *Measured by:* goals
    conceded on the counter, and back-three sides against back-four sides with
    the same players.

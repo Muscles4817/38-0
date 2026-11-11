@@ -77,6 +77,8 @@ read yet, the trait is decorative in a match, whatever it says.
 | `holdingWidth` | how a wide attack ends (`WIDTH_TO_CROSSES`); how much a deep block congests (`WIDTH_STRETCHES_BLOCK`) | more crosses on his flank, and a deep block stretched; negative is narrow |
 | `overlapping` | width (half), who crosses (`OVERLAP_TO_CROSSER`), his flank on a counter (`OVERLAP_EXPOSURE`) | the full-back as the width, paid for in the space behind him |
 | `inverting` | possession and the press (`MIDFIELD_NUMBERS_TO_*`), the middle on a counter (`INVERT_PROTECTS_CENTRE`), less width and no flank duty | an extra man in midfield, at the cost of the flank |
+| `droppingDeep` | midfield numbers; the `create` phase; space in behind for a runner (`DROP_OPENS_SPACE`); who plays the through ball (`DROP_TO_PASSER`); fewer bodies in the box | the forward between the lines: more of the ball, the runner played in, fewer crosses |
+| `showingForBall` | the `build` phase, added to press resistance at 0.4; possession (`SHOWING_TO_POSSESSION`) | always an option: about a third fewer balls lost to a press for two midfielders with it; negative hides |
 
 ## The traits added for the playstyle work
 

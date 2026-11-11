@@ -164,7 +164,8 @@ Measured between identical, traitless squads, where only the style differs:
    your `create`, eased by width on both flanks and worsened by a narrow side
    (`WIDTH_STRETCHES_BLOCK`).
 5. **Space in behind** — a direct side's runners (`break`) against the
-   defence's `cover`, scaled by the opponent's line height.
+   defence's `cover`, scaled by the opponent's line height, and opened further
+   by a forward who drops deep (`DROP_OPENS_SPACE`).
 6. **Aerial route** — route one and wing play resolve chance quality as an
    aerial contest, as set pieces do.
 

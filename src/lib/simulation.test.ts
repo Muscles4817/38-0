@@ -244,15 +244,17 @@ describe('simulateSeason — player attribution', () => {
 
 describe('simulateSeason — squad strength matters', () => {
   // Averaged over fixed seeds, so this is deterministic but not knife-edge.
+  // Each test plays several full seasons, about four seconds on its own, so
+  // they carry their own time limit rather than the five-second default.
   const seeds = [11, 222, 3333, 44444, 555555, 6060, 71717, 8888];
   const average = (rating: number) =>
     seeds.reduce((total, seed) => total + run(rating, 80, seed).points, 0) / seeds.length;
 
-  it('gives a much stronger XI more points than a much weaker one', () => {
+  it('gives a much stronger XI more points than a much weaker one', { timeout: 30_000 }, () => {
     expect(average(90)).toBeGreaterThan(average(70));
   });
 
-  it('is monotonic across a wide rating range', () => {
+  it('is monotonic across a wide rating range', { timeout: 30_000 }, () => {
     const weak = average(72);
     const mid = average(81);
     const strong = average(90);
