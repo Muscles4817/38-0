@@ -148,4 +148,23 @@ describe(`drafting and playing a ${SEASON} XI`, () => {
     const same = JSON.stringify(different.gameweeks) === JSON.stringify(a.gameweeks);
     expect(same).toBe(false);
   });
+
+  it('plays a change of style at halfway without touching the first half', () => {
+    const before = runSeasonSimulation(picks, 1993, { style: 'balanced' });
+    const after = runSeasonSimulation(picks, 1993, {
+      style: 'balanced', change: { afterWeek: 19, style: 'gegenpress' },
+    });
+    // The results page has already shown nineteen gameweeks when the change is
+    // made; they must not rewrite themselves.
+    expect(JSON.stringify(after.gameweeks.slice(0, 19))).toBe(JSON.stringify(before.gameweeks.slice(0, 19)));
+    expect(JSON.stringify(after.gameweeks.slice(19))).not.toBe(JSON.stringify(before.gameweeks.slice(19)));
+    expect(before.styles).toEqual([{ fromWeek: 1, style: 'balanced' }]);
+    expect(after.styles).toEqual([{ fromWeek: 1, style: 'balanced' }, { fromWeek: 20, style: 'gegenpress' }]);
+  });
+
+  it('treats a change to the same style as no change', () => {
+    const plain = runSeasonSimulation(picks, 1993, { style: 'balanced' });
+    const same = runSeasonSimulation(picks, 1993, { style: 'balanced', change: { afterWeek: 19, style: 'balanced' } });
+    expect(same).toEqual(plain);
+  });
 });
