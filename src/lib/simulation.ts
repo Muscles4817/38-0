@@ -1025,6 +1025,7 @@ function buildNarrative(pos: number, pts: number, w: number, d: number, l: numbe
   if (pos <= 4)  return `Top four secured. ${pts} pts, ${pos === 2 ? 'runners-up' : `${pos}${pos === 3 ? 'rd' : 'th'} place`}. Champions League next season.`;
   if (pos <= 6)  return `Europa League qualification. ${pts} pts. A decent season but the title slipped away.`;
   if (pos <= 10) return `Mid-table. ${pts} pts. Moments of brilliance, but too many blank matchdays.`;
-  if (pos <= 17) return `A season to forget. ${pts} pts. The squad had potential — the results didn't show it.`;
+  if (pos <= 14) return `Bottom half. ${pts} pts. Never in trouble, never in the hunt.`;
+  if (pos <= 17) return `Survived. ${pts} pts, ${pos}th place, and a nervous spring.`;
   return `Relegation. ${pts} pts, ${w}W ${d}D ${l}L. A tough campaign. Time to rebuild.`;
 }
