@@ -256,6 +256,32 @@ changing it moves three things at once and wants measuring on its own.
 
 Do not re-report these:
 
+- **Every route shipped its own copy of the snapshot.** Five 1.3 MB chunks, one
+  per page, so a run from setup to results downloaded the data four times. The
+  root layout now imports it once (`GameDataRoot`), and `./out` went from
+  7.7 MB to 2.8 MB.
+
+- **A sent-off player went on scoring.** `pickShooter` and `pickCreator` chose
+  from the whole eleven, and only the defending side paid for a red card. A
+  dismissed player is now out of both, and ten men create less as well as
+  defend less (`attPenalty` in matchEngine.ts). Reds run at about one every
+  ten matches, so league totals do not move.
+- **A reload was a free reroll.** The spun squad and the rerolls spent were
+  component state on the draft page, so refreshing threw the squad away and
+  handed every reroll back. Both live in `38-0-draft-state` now.
+- **The era sliders could cross.** From 2020, To 2000 read "-20 of 34 seasons"
+  and started a draft with an empty pool. Moving one end past the other now
+  pushes it along.
+- **Hard left "Show Ratings: On" selected and ignored it.** Choosing Hard turns
+  the setting off, and turning it on leaves Hard.
+- **"or tap anywhere to spin" did nothing.** The line is gone. The wheel itself
+  can be tapped to skip its animation, and a pick can be undone until the next
+  spin (when ratings are visible: with them hidden, placing a player is what
+  reveals his rating).
+- **The setup screen said the draft pool was the Premier League only**, with
+  Serie A, La Liga and the Bundesliga "coming soon", while their iconic sides
+  were already being spun.
+
 - **Line ratings disagreed with the simulation.** The draft bars put wingers in
   midfield and the league table counted a CM in all three lines, while the
   engine counts every player toward each line by his position's weight. Both

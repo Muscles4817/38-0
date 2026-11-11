@@ -54,7 +54,25 @@ export default function SetupPage() {
 
   function chooseDifficulty(d: string) {
     setDifficulty(d);
+    // Hard hides ratings. Say so by moving the setting, rather than leaving
+    // "On" selected and ignoring it in the draft.
+    if (d === 'hard') setShowRatings(false);
     if (d !== 'hard') leaveChallengeIf(['pure-chaos']);
+  }
+
+  // The two ends of the era cannot cross: dragging one past the other pushes
+  // it along, so the range always holds at least one season. They used to move
+  // freely, and "From 2020, To 2000" read "-20 of 34 seasons" and started a
+  // draft with nothing in it.
+  function changeEra(start: number, end: number, moved: 'start' | 'end') {
+    if (start >= end) {
+      if (moved === 'start') end = start + 1;
+      else start = end - 1;
+    }
+    setYearStart(start);
+    setYearEnd(end);
+    setEraPreset('');
+    leaveChallengeIf(['golden-era', 'modern-masters']);
   }
 
   function chooseChallenge(id: ChallengeId) {
@@ -125,6 +143,7 @@ export default function SetupPage() {
     // Clear the previous run before saving this one, so a browser whose storage
     // is full frees space before the one write that has to succeed.
     localStorage.removeItem('38-0-draft');
+    localStorage.removeItem('38-0-draft-state');
     // A tactic and a season chosen for a previous XI mean nothing to this one.
     localStorage.removeItem('38-0-plan');
     // Nor do the squads it was offered. Without this the list outlived every
@@ -145,7 +164,7 @@ export default function SetupPage() {
             <span className="text-fg">38</span>
             <span className="text-accent">-0</span>
           </h1>
-          <p className="text-muted text-sm">Draft your greatest all-time English top-flight XI</p>
+          <p className="text-muted text-sm">Draft an all-time XI and send it out for 38 games</p>
         </header>
 
         {/*
@@ -192,9 +211,19 @@ export default function SetupPage() {
           <section>
             <Label>Show Ratings</Label>
             <div className="grid grid-cols-2 gap-3">
-              <OptionCard label="On"  description="Player overalls visible"      selected={showRatings}  onClick={() => setShowRatings(true)} />
+              <OptionCard
+                label="On" description="Player overalls visible" selected={showRatings}
+                onClick={() => {
+                  setShowRatings(true);
+                  // Asking to see ratings is leaving Hard, which hides them.
+                  if (difficulty === 'hard') chooseDifficulty('normal');
+                }}
+              />
               <OptionCard label="Off" description="Blind mode — trust your gut"  selected={!showRatings} onClick={() => setShowRatings(false)} />
             </div>
+            {difficulty === 'hard' && (
+              <p className="text-muted text-[11px] mt-2">Hard always hides ratings. Turning them on drops to Normal.</p>
+            )}
           </section>
 
           <section>
@@ -248,13 +277,15 @@ export default function SetupPage() {
               <div className="flex-1">
                 <div className="text-[10px] text-muted mb-1">From</div>
                 <input type="range" min={1992} max={2025} value={yearStart}
-                  onChange={e => { setYearStart(+e.target.value); setEraPreset(''); leaveChallengeIf(['golden-era', 'modern-masters']); }}
+                  aria-label="First season of the era"
+                  onChange={e => changeEra(+e.target.value, yearEnd, 'start')}
                   className="w-full h-8 accent-[#00c896] touch-manipulation" />
               </div>
               <div className="flex-1">
                 <div className="text-[10px] text-muted mb-1">To</div>
                 <input type="range" min={1993} max={2026} value={yearEnd}
-                  onChange={e => { setYearEnd(+e.target.value); setEraPreset(''); leaveChallengeIf(['golden-era', 'modern-masters']); }}
+                  aria-label="Last season of the era"
+                  onChange={e => changeEra(yearStart, +e.target.value, 'end')}
                   className="w-full h-8 accent-[#00c896] touch-manipulation" />
               </div>
             </div>
@@ -275,18 +306,21 @@ export default function SetupPage() {
           <div className="rounded-lg border border-[#00c896]/30 bg-inset px-4 py-3 flex items-center gap-3 select-none">
             <span className="text-lg">🏴󠁧󠁢󠁥󠁮󠁧󠁿</span>
             <div className="flex-1 min-w-0">
-              <div className="font-bold text-sm text-fg">Premier League</div>
-              <div className="text-muted text-[11px]">English top flight</div>
+              <div className="font-bold text-sm text-fg">Premier League, plus the icons</div>
+              <div className="text-muted text-[11px]">
+                Every English top-flight season in the era, and a handful of famous sides from
+                Serie A, La Liga, the Bundesliga and the World Cup
+              </div>
             </div>
             <span className="text-[9px] text-accent font-bold uppercase tracking-widest bg-[#00c896]/10 px-1.5 py-0.5 rounded shrink-0">
               Active
             </span>
           </div>
-          <ComingSoon summary="More leagues coming soon">
+          <ComingSoon summary="Full leagues coming soon">
             {[
-              { flag: '🇮🇹', name: 'Serie A',    desc: 'Italian top flight' },
-              { flag: '🇪🇸', name: 'La Liga',    desc: 'Spanish top flight' },
-              { flag: '🇩🇪', name: 'Bundesliga', desc: 'German top flight' },
+              { flag: '🇮🇹', name: 'Serie A',    desc: 'Every club, not only the icons' },
+              { flag: '🇪🇸', name: 'La Liga',    desc: 'Every club, not only the icons' },
+              { flag: '🇩🇪', name: 'Bundesliga', desc: 'Every club, not only the icons' },
               { flag: '🌍', name: 'Multi-League', desc: 'Mix all four leagues' },
               { flag: '🏆', name: 'Champions League', desc: 'European elite only' },
             ].map(l => (

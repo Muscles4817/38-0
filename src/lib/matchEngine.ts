@@ -842,7 +842,7 @@ export interface MatchPlayer {
   position: Position;
   rating: number;
   roles?: PlayerRole[];
-  /** Every position he genuinely plays. Only total football reads it. */
+  /** Every position he genuinely plays. Carried for the screens; the match reads only `position`. */
   positions?: Position[];
 }
 
@@ -993,9 +993,6 @@ interface TeamModel {
   /** Recovery: getting back to cover the space behind. */
   cover: number;
   creation: number;
-  versatility: number;
-  /** 0-1: how well this eleven can play the style it has been given. */
-  fit: number;
 }
 
 const ZONES: Zone[] = ['L', 'C', 'R'];
@@ -1113,11 +1110,13 @@ export function phaseAbility(players: MatchPlayer[], phase: Phase, roles: RoleMu
 }
 
 /**
- * How well an eleven can execute the style it has been given, 0 to 1.
+ * How far a style is played through what an eleven is good at, 0 to 1.
  *
- * A style with no demands fits everybody, which is what makes `balanced` a safe
- * choice rather than a weak one. The cost of a style is paid regardless; only
- * the benefit is scaled by this.
+ * A style with no demands fits everybody. This describes the XI for the
+ * pre-season screen and nothing in a match reads it: the contests in
+ * `simulateMatch` read the same phase abilities directly, so what a style is
+ * worth also depends on the opponent, and a high fit is not a promise of
+ * points (measured: docs/playstyles.md, *Fit is not a forecast*).
  */
 function styleFit(players: MatchPlayer[], style: Playstyle, roles: RoleMultipliers): number {
   const demands = Object.entries(style.needs) as [Phase, number][];
@@ -1144,11 +1143,8 @@ function styleFit(players: MatchPlayer[], style: Playstyle, roles: RoleMultiplie
 }
 
 /**
- * How well an eleven could play a style it has not been given yet, 0 to 1.
- *
- * The same measure `buildTeam` applies to a side that is already set up,
- * exposed so a player can be shown what his XI is equipped to do before he
- * commits to it, and so the season model can scale a style's benefit by it.
+ * `styleFit` by style name, for the pre-season screen: what an XI is equipped
+ * to do, shown before the player commits to a style.
  */
 export function fitForStyle(
   players: MatchPlayer[], style: PlaystyleName, roles: RoleMultipliers,
@@ -1184,16 +1180,12 @@ function buildTeam(setup: TeamSetup, roles: RoleMultipliers): TeamModel {
     runningThreat: phaseAbility(players, 'break', roles),
     cover: phaseAbility(players, 'cover', roles),
     creation: phaseAbility(players, 'create', roles),
-    versatility: players.filter(p => (p.positions?.length ?? 1) > 1).length
-      / Math.max(1, players.length),
     focus: {
       L: Math.max(0, setup.focus.L ?? 0) / focusTotal,
       C: Math.max(0, setup.focus.C ?? 0) / focusTotal,
       R: Math.max(0, setup.focus.R ?? 0) / focusTotal,
     },
-    fit: 1,
   };
-  model.fit = styleFit(players, style, roles);
   return model;
 }
 
@@ -1376,9 +1368,7 @@ function pickWeighted<T>(rand: () => number, items: T[], weights: number[]): T |
  * distance, came out at 0.33; Reece James, who scores free kicks, at 0.17; and
  * Declan Rice at 0.24 from four separate true statements about him.
  *
- * The old engine already did half of this — applyRoleMults in simulation.ts
- * takes the strongest booster rather than their product — but took the product
- * of the suppressors, which is the same mistake in the other direction.
+ * The strongest booster and the strongest suppressor each count once.
  */
 function combineRoleMults(mults: number[], power: number): number {
   if (mults.length === 0) return 1;
@@ -1442,9 +1432,12 @@ function pickShooter(
   zone: Zone,
   type: ChanceType,
   roles: RoleMultipliers,
+  sent: ReadonlySet<number>,
 ): MatchPlayer | null {
   const affinity = ROLE_CHANCE_AFFINITY[type];
-  const candidates = team.players.filter(p => p.position !== 'GK');
+  // A man who has been sent off takes no further part: he used to go on
+  // shooting, scoring and assisting from the dressing room.
+  const candidates = team.players.filter(p => p.position !== 'GK' && !sent.has(p.playerId));
   // At a corner the whole side is in the box, and it is usually a centre-half
   // who gets on the end of it. Open-play weighting would all but exclude them.
   // A penalty is taken by whoever is on them, almost always one of the side's
@@ -1541,8 +1534,10 @@ function pickCreator(
   shooterId: number,
   type: ChanceType,
   roles: RoleMultipliers,
+  sent: ReadonlySet<number>,
 ): MatchPlayer | null {
-  const candidates = team.players.filter(p => p.position !== 'GK' && p.playerId !== shooterId);
+  const candidates = team.players.filter(p =>
+    p.position !== 'GK' && p.playerId !== shooterId && !sent.has(p.playerId));
   const weights = candidates.map(p => {
     const pz = positionZone(p.position);
     let w: number;
@@ -1683,8 +1678,12 @@ function pickPresser(
   return pickWeighted(rand, candidates, weights);
 }
 
-/** A second, independent stream, so crediting defenders never shifts the match. */
-function creditStream(seed: number): () => number {
+/**
+ * mulberry32: the generator a season is played on, and the one behind the
+ * second, independent stream that credits defenders, so that crediting a
+ * tackle never shifts the match.
+ */
+export function mulberry32(seed: number): () => number {
   let a = seed >>> 0;
   return () => {
     a = (a + 0x6d2b79f5) >>> 0;
@@ -1742,7 +1741,7 @@ export function simulateMatch(
   const stats = new Map<number, MatchPlayerStats>();
   for (const p of [...home.players, ...away.players]) stats.set(p.playerId, blankStats(p));
   const sent = new Set<number>();
-  const credit = creditStream(Math.floor(rand() * 4294967296));
+  const credit = mulberry32(Math.floor(rand() * 4294967296));
   // Who could make a given action depends only on the eleven, the zone and who
   // is still on the pitch. Rebuilding the weights for each of a hundred actions
   // a match took the season from 73 to 150 ms; see DEFENDER_CACHE.
@@ -1845,11 +1844,15 @@ export function simulateMatch(
     // Playing a man short tells in both boxes.
     const shortHanded = def.players.filter(p => sent.has(p.playerId)).length;
     const defPenalty = Math.pow(0.86, shortHanded);
+    // And going forward: ten men create less than eleven. Only the defending
+    // side used to pay for a red card, so a side a man down attacked as well
+    // as it had with eleven.
+    const attPenalty = Math.pow(0.86, att.players.filter(p => sent.has(p.playerId)).length);
 
     // Does this possession become a chance? Attacking quality in the zone,
     // against defensive quality in the zone it arrives at.
     const edge =
-      Math.log(att.attackZone[zone] / (def.defendZone[defZone] * defPenalty)) / RATING_CURVE / 10;
+      Math.log((att.attackZone[zone] * attPenalty) / (def.defendZone[defZone] * defPenalty)) / RATING_CURVE / 10;
     // Both sides' organisation decides how far the gap between them tells: a
     // drilled side exploits its superiority, and a drilled one resists it.
     const carry = (expression(att.setup.cohesion ?? DEFAULT_COHESION)
@@ -1928,7 +1931,7 @@ export function simulateMatch(
       const claim = CLAIM_PER_POINT * CLAIM_REACH[type] * claiming;
       const claimed = claim > 0 && rand() < claim;
       if (claimed) stats.get(def.keeper!.playerId)!.value += CHANCE_QUALITY[type];
-      const shooter = sweptUp || claimed ? undefined : pickShooter(rand, att, zone, type, roles);
+      const shooter = sweptUp || claimed ? undefined : pickShooter(rand, att, zone, type, roles, sent);
       // A possession that ended in a shot got through any press that met it.
       if (pressEngaged && !turnover) creditOnBall(att, def, true, threat);
       if (shooter) {
@@ -1954,8 +1957,6 @@ export function simulateMatch(
           -KEEPING_EXPONENT * carry)
           : 1;
 
-        // A style's demands are a cost paid up front; what it gives back is
-        // collected only in proportion to whether the eleven can play it.
         let xg = CHANCE_QUALITY[type] * (isHome ? HOME_CHANCE_QUALITY : 1);
         if (type === 'aerial' || type === 'cross') {
           xg *= Math.pow(att.aerial / def.aerial, AERIAL_EXPONENT * 0.7)
@@ -1999,7 +2000,7 @@ export function simulateMatch(
           // The pass behind a shot that did not go in. A scored one is an
           // assist, chosen below, and counts as a key pass there.
           if (type !== 'penalty' && credit() < KEY_PASS_RATE) {
-            const passer = pickCreator(credit, att, zone, shooter.playerId, type, roles);
+            const passer = pickCreator(credit, att, zone, shooter.playerId, type, roles, sent);
             if (passer) {
               const ps = stats.get(passer.playerId)!;
               ps.chancesCreated++;
@@ -2021,7 +2022,7 @@ export function simulateMatch(
           const creator =
             type === 'penalty' || rand() >= ASSIST_RATE[type]
               ? null
-              : pickCreator(rand, att, zone, shooter.playerId, type, roles);
+              : pickCreator(rand, att, zone, shooter.playerId, type, roles, sent);
           if (creator) {
             const cs = stats.get(creator.playerId)!;
             cs.assists++;

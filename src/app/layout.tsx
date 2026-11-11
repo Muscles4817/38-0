@@ -1,10 +1,11 @@
 import type { Metadata, Viewport } from 'next';
 import { THEME_GROUND, THEME_SCRIPT } from '@/lib/theme';
+import GameDataRoot from '@/components/GameDataRoot';
 import './globals.css';
 
 export const metadata: Metadata = {
   title: '38-0 · Draft your greatest XI',
-  description: 'Draft your greatest all-time English top-flight XI',
+  description: 'Draft an all-time XI and send it out for a 38-game league season',
 };
 
 export const viewport: Viewport = {
@@ -28,7 +29,9 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
       <head>
         <script dangerouslySetInnerHTML={{ __html: THEME_SCRIPT }} />
       </head>
-      <body className="min-h-full bg-ground text-fg antialiased">{children}</body>
+      <body className="min-h-full bg-ground text-fg antialiased">
+        <GameDataRoot>{children}</GameDataRoot>
+      </body>
     </html>
   );
 }

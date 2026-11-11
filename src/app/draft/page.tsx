@@ -7,7 +7,7 @@ import { SquadPick, computeOverall } from '@/lib/simulation';
 import { getClub, type DataPlayer, type SpunSquad } from '@/lib/gameData';
 import { draftPool, feasibility, type DraftFilter, type Feasibility } from '@/lib/draftPool';
 import { CHALLENGES, describeFilter, type ChallengeId } from '@/lib/challenges';
-import { useStoredJson, readStored, writeStored } from '@/lib/clientStorage';
+import { useStoredJson, readStored, writeStored, clearStored } from '@/lib/clientStorage';
 import { parseSeenSquads, SEEN_SQUADS_KEY, withSeenSquad } from '@/lib/seenSquads';
 import PitchView from '@/components/PitchView';
 import PositionBadge from '@/components/PositionBadge';
@@ -29,6 +29,24 @@ interface Setup {
 }
 
 type SpinPhase = 'idle' | 'spinning' | 'reveal';
+
+/**
+ * Where a draft is between picks: the squad on the table, the rerolls spent
+ * and, in position-first mode, the slot being filled. Stored with the rest of
+ * the run. It used to be component state, so a reload threw the spun squad
+ * away and handed the rerolls back: a free reroll on every refresh, whatever
+ * the difficulty.
+ */
+interface DraftProgress {
+  rerollsUsed: number;
+  spun: { clubId: number; seasonId: number } | null;
+  slot: number | null;
+  /** The squad the last pick came from, while that pick can still be taken back. */
+  undo: { clubId: number; seasonId: number } | null;
+}
+
+const PROGRESS_KEY = '38-0-draft-state';
+const NO_PROGRESS: DraftProgress = { rerollsUsed: 0, spun: null, slot: null, undo: null };
 
 const REROLLS_BY_DIFFICULTY = { easy: 3, normal: 1, hard: 0 };
 // Stable empty array so an unstarted draft does not hand out a new reference
@@ -58,9 +76,10 @@ export default function DraftPage() {
   }) : NO_POOL), [setup]);
   const feasible = useMemo(() => (formation ? feasibility(pool, formation) : null), [pool, formation]);
 
+  const progress = useStoredJson<DraftProgress>(PROGRESS_KEY) ?? NO_PROGRESS;
   // Counting rerolls used rather than remaining keeps this independent of when
   // setup finishes loading.
-  const [rerollsUsed, setRerollsUsed] = useState(0);
+  const rerollsUsed = progress.rerollsUsed ?? 0;
   const rerollsTotal = setup ? REROLLS_BY_DIFFICULTY[setup.difficulty] ?? 1 : 0;
   const rerollsLeft  = Math.max(0, rerollsTotal - rerollsUsed);
 
@@ -71,11 +90,16 @@ export default function DraftPage() {
   const [spinFlash, setSpinFlash]     = useState(false);
   const spinTimer                     = useRef<ReturnType<typeof setTimeout> | null>(null);
 
-  const [spinResult, setSpinResult]   = useState<SpunSquad | null>(null);
+  // The squad on the table is whichever one the stored progress points at.
+  const spinResult = useMemo(() => {
+    const spun = progress.spun;
+    if (!spun) return null;
+    return pool.find(s => s.clubId === spun.clubId && s.seasonId === spun.seasonId) ?? null;
+  }, [pool, progress.spun]);
+  const positionFirst = spinResult ? progress.slot ?? null : null;
+  const highlightSlot = positionFirst ?? undefined;
   const [spinNotice, setSpinNotice]   = useState<string | null>(null);
   const [selectedPlayer, setSelectedPlayer] = useState<DataPlayer | null>(null);
-  const [highlightSlot, setHighlightSlot]   = useState<number | undefined>();
-  const [positionFirst, setPositionFirst]   = useState<number | null>(null);
 
   // Rating reveal toast (when showRatings is off)
   const [reveal, setReveal]           = useState<{ name: string; rating: number } | null>(null);
@@ -104,6 +128,10 @@ export default function DraftPage() {
 
   function saveDraft(next: SquadPick[]) {
     writeStored('38-0-draft', next);
+  }
+
+  function saveProgress(patch: Partial<DraftProgress>) {
+    writeStored(PROGRESS_KEY, { ...NO_PROGRESS, ...progress, ...patch });
   }
 
   // ── Spinning ───────────────────────────────────────────────────────────────
@@ -163,17 +191,26 @@ export default function DraftPage() {
       setSpinDisplay(result.clubName);
       setSpinSeason(result.seasonLabel);
       setSpinFlash(true);
-      spinTimer.current = setTimeout(() => {
-        setSpinFlash(false);
-        setSpinResult(result);
-        setSpinPhase('idle');
-      }, REVEAL_HOLD);
+      spinTimer.current = setTimeout(finishSpin, REVEAL_HOLD);
     }
 
     tick();
   }
 
-  function spin(reroll = false) {
+  /**
+   * Ends the animation and shows the squad. The squad was chosen and stored
+   * before the wheel started, so this is also what a tap on the wheel does:
+   * eleven spins at three seconds each is half a minute of waiting that a
+   * player on their fifth draft should not have to sit through.
+   */
+  function finishSpin() {
+    if (spinTimer.current) clearTimeout(spinTimer.current);
+    spinTimer.current = null;
+    setSpinFlash(false);
+    setSpinPhase('idle');
+  }
+
+  function spin(reroll = false, slot: number | null = null) {
     if (!setup || !formation) return;
     if (reroll && rerollsLeft <= 0) return;
 
@@ -185,10 +222,16 @@ export default function DraftPage() {
         : 'No club-season in this era can fill an open position. Widen the era and start again.');
       return;
     }
-    if (reroll) setRerollsUsed(n => n + 1);
+    // Stored before the wheel turns: the squad is decided here, and a reload
+    // during or after the animation comes back to the same one.
+    saveProgress({
+      rerollsUsed: rerollsUsed + (reroll ? 1 : 0),
+      spun: { clubId: found.clubId, seasonId: found.seasonId },
+      slot: reroll ? progress.slot ?? null : slot,
+      undo: null,
+    });
 
     setSpinNotice(null);
-    setSpinResult(null);
     setSelectedPlayer(null);
 
     runSpinAnimation(found);
@@ -237,9 +280,14 @@ export default function DraftPage() {
     const next = [...picks, pick];
     saveDraft(next);
     setSelectedPlayer(null);
-    setSpinResult(null);
-    setHighlightSlot(undefined);
-    setPositionFirst(null);
+    // A pick can be taken back until the next spin, but only when ratings are
+    // on show: with them hidden, placing a player is what reveals his rating,
+    // and undoing it would be a way to peek.
+    saveProgress({
+      spun: null,
+      slot: null,
+      undo: showRatings ? { clubId: spinResult.clubId, seasonId: spinResult.seasonId } : null,
+    });
 
     if (next.length === 11) {
       writeStored('38-0-squad', next);
@@ -247,6 +295,16 @@ export default function DraftPage() {
       // play it in are still to be chosen. See src/app/squad.
       router.push('/squad');
     }
+  }
+
+  /** Takes the last pick back and puts the squad it came from back on the table. */
+  function undoLastPick() {
+    if (!progress.undo || picks.length === 0) return;
+    saveDraft(picks.slice(0, -1));
+    clearStored('38-0-squad');
+    setSelectedPlayer(null);
+    setSpinNotice(null);
+    saveProgress({ spun: progress.undo, slot: null, undo: null });
   }
 
   // The slots the selected player could fill, so the pitch shows the targets
@@ -264,9 +322,8 @@ export default function DraftPage() {
     if (selectedPlayer) {
       placePlayer(slotIndex);
     } else if (setup?.draftMode === 'position-first') {
-      setPositionFirst(slotIndex);
-      setHighlightSlot(slotIndex);
-      spin();
+      if (spinResult || spinPhase !== 'idle') return;
+      spin(false, slotIndex);
     }
   }
 
@@ -354,21 +411,41 @@ export default function DraftPage() {
         {!spinResult && !isSpinning && (
           <div className="flex flex-col items-center gap-6 mt-8">
             <div className="text-muted text-sm uppercase tracking-widest font-bold">Spin for a Squad</div>
-            <div className="text-3xl font-black text-subtle">
-              {openSlots.length} position{openSlots.length !== 1 ? 's' : ''} left to fill
+            <div className="text-3xl font-black text-subtle text-center">
+              {openSlots.length === 0
+                ? 'Your XI is complete'
+                : `${openSlots.length} position${openSlots.length !== 1 ? 's' : ''} left to fill`}
             </div>
-            {setup.draftMode === 'position-first' && (
-              <div className="text-muted text-sm">Click a slot on the pitch to begin</div>
-            )}
-            {setup.draftMode === 'squad-first' && (
+            {openSlots.length === 0 && (
               <button
+                type="button"
+                onClick={() => { writeStored('38-0-squad', picks); router.push('/squad'); }}
+                className="px-8 py-4 rounded-xl bg-[#00c896] text-black font-black text-lg hover:bg-[#00b385] transition-colors touch-manipulation"
+              >
+                Team Talk →
+              </button>
+            )}
+            {openSlots.length > 0 && setup.draftMode === 'position-first' && (
+              <div className="text-muted text-sm">Tap an open position on the pitch to spin for it</div>
+            )}
+            {openSlots.length > 0 && setup.draftMode === 'squad-first' && (
+              <button
+                type="button"
                 onClick={() => spin()}
-                className="flex items-center gap-2 px-8 py-4 rounded-xl bg-[#00c896] text-black font-black text-lg hover:bg-[#00b385] transition-colors"
+                className="flex items-center gap-2 px-8 py-4 rounded-xl bg-[#00c896] text-black font-black text-lg hover:bg-[#00b385] transition-colors touch-manipulation"
               >
                 🎰 Spin the Wheel
               </button>
             )}
-            <div className="text-muted text-xs">or tap anywhere to spin</div>
+            {progress.undo && picks.length > 0 && (
+              <button
+                type="button"
+                onClick={undoLastPick}
+                className="px-4 py-2.5 rounded-lg border border-line-strong text-muted text-xs font-bold hover:border-line-hover hover:text-fg transition-colors touch-manipulation"
+              >
+                ↩ Undo {picks[picks.length - 1].playerName.split(' ').pop()}
+              </button>
+            )}
             {spinNotice && (
               <div className="max-w-sm text-center rounded-xl border border-amber-500/40 bg-amber-500/10 px-4 py-3 text-amber-300 text-sm">
                 {spinNotice}
@@ -379,7 +456,12 @@ export default function DraftPage() {
 
         {/* Spin animation */}
         {isSpinning && (
-          <div className="flex flex-col items-center gap-6 mt-16 select-none">
+          <button
+            type="button"
+            onClick={finishSpin}
+            aria-label="Skip the spin"
+            className="flex flex-col items-center gap-6 mt-16 select-none touch-manipulation"
+          >
             <div className="text-muted text-xs uppercase tracking-widest font-bold">
               {spinPhase === 'reveal' ? 'Squad Landed' : 'Spinning…'}
             </div>
@@ -409,10 +491,10 @@ export default function DraftPage() {
               </div>
             </div>
 
-            {spinPhase === 'reveal' && (
-              <div className="text-accent text-sm font-bold animate-pulse">Opening the squad…</div>
-            )}
-          </div>
+            <div className={`text-sm font-bold ${spinPhase === 'reveal' ? 'text-accent animate-pulse' : 'text-muted'}`}>
+              {spinPhase === 'reveal' ? 'Opening the squad…' : 'Tap to skip'}
+            </div>
+          </button>
         )}
 
         {/* Squad list */}

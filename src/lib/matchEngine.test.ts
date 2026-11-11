@@ -178,6 +178,26 @@ describe('discipline', () => {
       expect(new Set(ids).size).toBe(ids.length);
     }
   });
+
+  it('takes a sent-off player out of the match: he neither scores nor assists afterwards', { timeout: 60_000 }, () => {
+    const rand = rng(405);
+    let redCards = 0;
+    for (let i = 0; i < 2500; i++) {
+      // Strikers who foul a great deal, so that the men most likely to score
+      // are also the ones being sent off.
+      const rash = { 9: ['Rash'], 10: ['Rash'] };
+      const m = simulateMatch(
+        team('H', 84, 'parkTheBus', 0, rash), team('A', 84, 'parkTheBus', 100, rash), rand,
+        { goalMult: {}, assistMult: {}, qualities: { Rash: { discipline: -4 } } });
+      for (const red of m.events.filter(e => e.type === 'red')) {
+        redCards++;
+        const after = m.events.filter(e => e.type === 'goal' && e.minute > red.minute);
+        expect(after.filter(e => e.playerId === red.playerId || e.assistId === red.playerId)).toEqual([]);
+      }
+    }
+    // Otherwise the loop above asserted nothing.
+    expect(redCards).toBeGreaterThan(50);
+  });
 });
 
 describe('inferStyle', () => {
@@ -312,6 +332,21 @@ describe('the lines the screens show', () => {
     expect(lines.att).toBeCloseTo(83, 6);
     expect(lines.mid).toBeCloseTo(83, 6);
     expect(lines.def).toBeCloseTo(83, 6);
+  });
+
+  // The rating curve goes out through exp and comes back through log. The two
+  // once used different constants (0.032 out, 0.055 back), which pulled every
+  // squad 58% of the way toward 80 and made the league close to a coin toss.
+  it('preserves the gap between two sides rather than compressing it', () => {
+    const of = (rating: number) => SHAPE.map(position => ({ position, rating }));
+    for (const line of ['att', 'mid', 'def'] as const) {
+      expect(lineRatings(of(77))[line] - lineRatings(of(71))[line]).toBeCloseTo(6, 6);
+    }
+  });
+
+  it('lets the best players carry a line, so it sits above the plain mean', () => {
+    const squad = SHAPE.map((position, i) => ({ position, rating: i >= 9 ? 95 : 75 }));
+    expect(lineRatings(squad).att).toBeGreaterThan(75 + (2 * 20) / 11);
   });
 
   it('lets a better attack raise the attack line most', () => {

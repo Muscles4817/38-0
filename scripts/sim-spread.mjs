@@ -29,7 +29,7 @@
 import fs from 'node:fs';
 import path from 'node:path';
 import process from 'node:process';
-import { gameData, getClub, getOpponentSquads, getRoleConfig, listCompetitions } from '../src/lib/gameData.ts';
+import { getOpponentSquads, getRoleConfig, listCompetitions } from '../src/lib/gameData.ts';
 import { simulateMatch } from '../src/lib/matchEngine.ts';
 import { engineRoles, leagueSetups } from '../src/lib/simulation.ts';
 import { parseFbrefCsv } from './lib/fbref-csv.mjs';
@@ -141,7 +141,7 @@ for (let pass = 0; pass < PASSES; pass++) {
       if (us.goals - them.goals >= 3) a.margin3++;
     }
   }
-  for (const [club, ps] of seasonScorers) {
+  for (const ps of seasonScorers.values()) {
     const goals = [...ps.values()].reduce((s, p) => s + p.g, 0);
     const shots = [...ps.values()].reduce((s, p) => s + p.s, 0);
     const top = [...ps.values()].sort((x, y) => y.g - x.g)[0];

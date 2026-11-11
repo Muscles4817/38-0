@@ -118,6 +118,15 @@ script deletes that directory, so `npm run build` and `npm run check` work
 whether or not the dev server has been running. If you ever see that error,
 something has bypassed `prebuild`; remove `.next` and try again.
 
+## The snapshot is bundled once
+
+`src/data/game-data.json` is 2.6 MB and every screen reads it. A bundler gives a
+module to a chunk every route shares only when the root layout imports it, so
+`src/components/GameDataRoot.tsx`, the one client component the layout renders,
+imports `gameData.ts` for that reason alone. Without it each route carries a
+full copy. After a build, exactly one file over 1 MB should be in
+`out/_next/static/chunks`.
+
 ## State and navigation
 
 A run is five screens, and each hands the next one its state through
@@ -137,6 +146,7 @@ See [pre-season.md](pre-season.md).
 | --- | --- | --- |
 | `38-0-setup` | setup page, classic page | draft, squad, results; includes the challenge `filter`, see [draft-pool.md](draft-pool.md) |
 | `38-0-draft` | draft page | draft |
+| `38-0-draft-state` | draft page | draft; the squad on the table, rerolls spent and the pick that can still be undone, so a reload cannot be used as a free reroll |
 | `38-0-squad` | draft page, classic page | squad, results |
 | `38-0-plan` | squad page | squad, results |
 | `38-0-seen-squads` | draft page | results ("What Could Have Been"); `{ clubId, seasonId }` references only, see `src/lib/seenSquads.ts` |
