@@ -51,7 +51,27 @@ what `--status` reports on.
 `ingest-fbref.mjs` parses those into `data/raw/rosters/<season>/<club>.json`,
 keeping both the squad and everyone excluded, with the reason.
 
-One hazard is worth knowing about before it eats an afternoon. FBref writes its
+Two things it refuses to do quietly.
+
+**The same export in two club-seasons.** Pasting one club's table into the next
+club's file is the obvious slip, and nothing downstream can tell: both files
+parse, both validate, and the squad looks reasonable because it *is* a real
+squad, just the wrong club's. It is also destructive — the two clubs then share
+every player at identical minutes, and `build-squad-files` gives a player to
+whoever played him more, so a tie hands all of them to whichever file sorts
+first and leaves the other club with nobody. 1991/92 Juventus arrived as a
+byte-for-byte copy of that season's AC Milan. Identical files are now detected
+by content, **all** of them skipped — only one can be right and nothing here can
+tell which — and reported, while the rest of the collection still ingests.
+
+**A roster whose export has gone.** The roster directory is derived, so it
+should say exactly what the CSVs say. It did not: emptying a source file left
+the roster from an earlier run in place, and `build-player-list.mjs` kept
+reading it, so a withdrawn club-season went on existing. Each roster records the
+file it came from, and one whose source is now empty, missing or skipped is
+removed.
+
+One more hazard is worth knowing about before it eats an afternoon. FBref writes its
 sort-direction arrow into the header cell of whichever column the table is
 sorted by, so an export copied while sorted by name has `Player▲` where the
 parser looks for `Player` — and the whole club-season fails with the rows

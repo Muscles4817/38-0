@@ -1,25 +1,590 @@
 {
   "batch": 48,
-  "of": 66,
+  "of": 72,
   "instructions": "See docs/ratings.md. Give every season a rating on the absolute scale. Rate the player that season, never their career.",
   "players": [
     {
-      "fbrefId": "1bfb6fef",
-      "name": "Bafodé Diakité",
-      "nation": "FRA",
+      "fbrefId": "6d3e0d09",
+      "name": "Antonio Conte",
+      "nation": "ITA",
       "positions": [
-        "CB",
-        "RB"
+        "CM",
+        "CDM"
+      ],
+      "confidence": "medium",
+      "seasons": [
+        {
+          "season": "1991/92",
+          "club": "Juventus",
+          "age": 22,
+          "minutes": 560,
+          "starts": 7,
+          "goals": 0,
+          "assists": null,
+          "rating": 73,
+          "roles": [
+            "Workhorse"
+          ],
+          "note": "Twenty-two, his first season at Juventus, seven starts."
+        },
+        {
+          "season": "2003/04",
+          "club": "Juventus",
+          "age": 34,
+          "minutes": 1033,
+          "starts": 11,
+          "goals": 1,
+          "assists": 0,
+          "rating": 77,
+          "roles": [
+            "Workhorse"
+          ],
+          "note": "Thirty-four and in his final season, running on the engine rather than anything new."
+        }
+      ]
+    },
+    {
+      "fbrefId": "7c9385a5",
+      "name": "Paul Heald",
+      "nation": "ENG",
+      "positions": [
+        "GK"
+      ],
+      "confidence": "low",
+      "seasons": [
+        {
+          "season": "1995/96",
+          "club": "Wimbledon",
+          "age": 26,
+          "minutes": 1590,
+          "starts": 18,
+          "goals": 0,
+          "assists": 0,
+          "rating": 68,
+          "roles": [],
+          "note": null
+        }
+      ]
+    },
+    {
+      "fbrefId": "ecf1642b",
+      "name": "Rui Costa",
+      "nation": "POR",
+      "positions": [
+        "CAM",
+        "CM"
+      ],
+      "confidence": "high",
+      "seasons": [
+        {
+          "season": "2003/04",
+          "club": "AC Milan",
+          "age": 31,
+          "minutes": 1590,
+          "starts": 19,
+          "goals": 3,
+          "assists": 7,
+          "rating": 83,
+          "roles": [
+            "Trequartista"
+          ],
+          "note": null
+        }
+      ]
+    },
+    {
+      "fbrefId": "9f472354",
+      "name": "Shane Long",
+      "nation": "IRL",
+      "positions": [
+        "ST",
+        "CF"
+      ],
+      "confidence": "medium",
+      "seasons": [
+        {
+          "season": "2006/07",
+          "club": "Reading",
+          "age": 19,
+          "minutes": 815,
+          "starts": 9,
+          "goals": 2,
+          "assists": 0,
+          "rating": 72,
+          "roles": [
+            "PressingForward"
+          ],
+          "note": null
+        },
+        {
+          "season": "2007/08",
+          "club": "Reading",
+          "age": 20,
+          "minutes": 775,
+          "starts": 7,
+          "goals": 3,
+          "assists": 2,
+          "rating": 73,
+          "roles": [
+            "PressingForward"
+          ],
+          "note": null
+        }
+      ]
+    },
+    {
+      "fbrefId": "246d153b",
+      "name": "Ola Aina",
+      "nation": "NGA",
+      "positions": [
+        "RB",
+        "LB"
       ],
       "confidence": "medium",
       "seasons": [
         {
           "season": "2025/26",
-          "club": "Bournemouth",
-          "age": 24,
-          "minutes": 1277,
-          "starts": 15,
+          "club": "Nottingham Forest",
+          "age": 28,
+          "minutes": 1588,
+          "starts": 18,
           "goals": 0,
+          "assists": 0,
+          "rating": 77,
+          "roles": [],
+          "note": null
+        }
+      ]
+    },
+    {
+      "fbrefId": "21512407",
+      "name": "Kieran Trippier",
+      "nation": "ENG",
+      "positions": [
+        "RB",
+        "RWB"
+      ],
+      "confidence": "medium",
+      "seasons": [
+        {
+          "season": "2025/26",
+          "club": "Newcastle United",
+          "age": 34,
+          "minutes": 1586,
+          "starts": 18,
+          "goals": 0,
+          "assists": 1,
+          "rating": 76,
+          "roles": [
+            "SetPieceDeliverer"
+          ],
+          "note": "Thirty-four: the delivery is still among the best in the league, the legs that made him a two-way full-back are not."
+        }
+      ]
+    },
+    {
+      "fbrefId": "ad340e17",
+      "name": "Alberto Aquilani",
+      "nation": "ITA",
+      "positions": [
+        "CM",
+        "CAM"
+      ],
+      "confidence": "medium",
+      "seasons": [
+        {
+          "season": "2006/07",
+          "club": "Roma",
+          "age": 22,
+          "minutes": 763,
+          "starts": 9,
+          "goals": 1,
+          "assists": 0,
+          "rating": 75,
+          "roles": [],
+          "note": null
+        },
+        {
+          "season": "2009/10",
+          "club": "Liverpool",
+          "age": 25,
+          "minutes": 817,
+          "starts": 9,
+          "goals": 1,
+          "assists": 6,
+          "rating": 76,
+          "roles": [],
+          "note": null
+        }
+      ]
+    },
+    {
+      "fbrefId": "21dd8591",
+      "name": "Cristiano Zanetti",
+      "nation": "ITA",
+      "positions": [
+        "CDM",
+        "CM"
+      ],
+      "confidence": "medium",
+      "seasons": [
+        {
+          "season": "2003/04",
+          "club": "Internazionale",
+          "age": 26,
+          "minutes": 1580,
+          "starts": 19,
+          "goals": 1,
+          "assists": 1,
+          "rating": 79,
+          "roles": [
+            "Anchor"
+          ],
+          "note": null
+        }
+      ]
+    },
+    {
+      "fbrefId": "c666c11f",
+      "name": "Daniel Cousin",
+      "nation": "GAB",
+      "positions": [
+        "ST",
+        "CF"
+      ],
+      "confidence": "medium",
+      "seasons": [
+        {
+          "season": "2008/09",
+          "club": "Hull City",
+          "age": 31,
+          "minutes": 1580,
+          "starts": 18,
+          "goals": 4,
+          "assists": 1,
+          "rating": 71,
+          "roles": [],
+          "note": null
+        }
+      ]
+    },
+    {
+      "fbrefId": "d2b32e91",
+      "name": "Bashir Humphreys",
+      "nation": "ENG",
+      "positions": [
+        "CB",
+        "LB"
+      ],
+      "confidence": "low",
+      "seasons": [
+        {
+          "season": "2025/26",
+          "club": "Burnley",
+          "age": 22,
+          "minutes": 1578,
+          "starts": 17,
+          "goals": 0,
+          "assists": 0,
+          "rating": 74,
+          "roles": [],
+          "note": null
+        }
+      ]
+    },
+    {
+      "fbrefId": "eb383c11",
+      "name": "Ronnie Stam",
+      "nation": "NED",
+      "positions": [
+        "RB",
+        "RWB",
+        "RM"
+      ],
+      "confidence": "low",
+      "seasons": [
+        {
+          "season": "2010/11",
+          "club": "Wigan Athletic",
+          "age": 26,
+          "minutes": 1577,
+          "starts": 17,
+          "goals": 1,
+          "assists": 0,
+          "rating": 72,
+          "roles": [],
+          "note": null
+        }
+      ]
+    },
+    {
+      "fbrefId": "2b5b82c1",
+      "name": "Craig Liddle",
+      "nation": "ENG",
+      "positions": [
+        "CB"
+      ],
+      "confidence": "low",
+      "seasons": [
+        {
+          "season": "1995/96",
+          "club": "Middlesbrough",
+          "age": 23,
+          "minutes": 1125,
+          "starts": 12,
+          "goals": 0,
+          "assists": 0,
+          "rating": 65,
+          "roles": [],
+          "note": null
+        },
+        {
+          "season": "1996/97",
+          "club": "Middlesbrough",
+          "age": 24,
+          "minutes": 450,
+          "starts": 5,
+          "goals": 0,
+          "assists": 0,
+          "rating": 65,
+          "roles": [],
+          "note": null
+        }
+      ]
+    },
+    {
+      "fbrefId": "49b8c292",
+      "name": "Matt Gilks",
+      "nation": "SCO",
+      "positions": [
+        "GK"
+      ],
+      "confidence": "medium",
+      "seasons": [
+        {
+          "season": "2010/11",
+          "club": "Blackpool",
+          "age": 28,
+          "minutes": 1575,
+          "starts": 18,
+          "goals": 0,
+          "assists": 0,
+          "rating": 70,
+          "roles": [],
+          "note": null
+        }
+      ]
+    },
+    {
+      "fbrefId": "c21b9d9d",
+      "name": "Victor Obinna",
+      "nation": "NGA",
+      "positions": [
+        "LW",
+        "ST"
+      ],
+      "confidence": "low",
+      "seasons": [
+        {
+          "season": "2010/11",
+          "club": "West Ham United",
+          "age": 23,
+          "minutes": 1575,
+          "starts": 17,
+          "goals": 3,
+          "assists": 3,
+          "rating": 72,
+          "roles": [],
+          "note": null
+        }
+      ]
+    },
+    {
+      "fbrefId": "06d45e81",
+      "name": "Greg Halford",
+      "nation": "ENG",
+      "positions": [
+        "RB",
+        "CB"
+      ],
+      "confidence": "medium",
+      "seasons": [
+        {
+          "season": "2007/08",
+          "club": "Sunderland",
+          "age": 22,
+          "minutes": 676,
+          "starts": 8,
+          "goals": 0,
+          "assists": 0,
+          "rating": 68,
+          "roles": [],
+          "note": null
+        },
+        {
+          "season": "2009/10",
+          "club": "Wolverhampton Wanderers",
+          "age": 24,
+          "minutes": 895,
+          "starts": 12,
+          "goals": 0,
+          "assists": 0,
+          "rating": 68,
+          "roles": [],
+          "note": null
+        }
+      ]
+    },
+    {
+      "fbrefId": "a0666d3e",
+      "name": "Will Hughes",
+      "nation": "ENG",
+      "positions": [
+        "CM",
+        "CDM"
+      ],
+      "confidence": "medium",
+      "seasons": [
+        {
+          "season": "2025/26",
+          "club": "Crystal Palace",
+          "age": 30,
+          "minutes": 1571,
+          "starts": 19,
+          "goals": 0,
+          "assists": 0,
+          "rating": 75,
+          "roles": [],
+          "note": null
+        }
+      ]
+    },
+    {
+      "fbrefId": "2b91cf8e",
+      "name": "Ciaran Clark",
+      "nation": "IRL",
+      "positions": [
+        "CB",
+        "CDM",
+        "CM"
+      ],
+      "confidence": "medium",
+      "seasons": [
+        {
+          "season": "2010/11",
+          "club": "Aston Villa",
+          "age": 20,
+          "minutes": 1569,
+          "starts": 16,
+          "goals": 3,
+          "assists": 0,
+          "rating": 73,
+          "roles": [],
+          "note": null
+        }
+      ]
+    },
+    {
+      "fbrefId": "4745cfd0",
+      "name": "Émile Mpenza",
+      "nation": "BEL",
+      "positions": [
+        "ST",
+        "CF"
+      ],
+      "confidence": "medium",
+      "seasons": [
+        {
+          "season": "2006/07",
+          "club": "Manchester City",
+          "age": 28,
+          "minutes": 826,
+          "starts": 9,
+          "goals": 3,
+          "assists": 1,
+          "rating": 74,
+          "roles": [],
+          "note": null
+        },
+        {
+          "season": "2007/08",
+          "club": "Manchester City",
+          "age": 29,
+          "minutes": 743,
+          "starts": 8,
+          "goals": 2,
+          "assists": 0,
+          "rating": 73,
+          "roles": [],
+          "note": null
+        }
+      ]
+    },
+    {
+      "fbrefId": "c0b1df23",
+      "name": "Mike Williams",
+      "nation": "ENG",
+      "positions": [
+        "ST",
+        "CF"
+      ],
+      "confidence": "low",
+      "seasons": [
+        {
+          "season": "1992/93",
+          "club": "Sheffield Wednesday",
+          "age": 22,
+          "minutes": 510,
+          "starts": 7,
+          "goals": 1,
+          "assists": 1,
+          "rating": 63,
+          "roles": [],
+          "note": null
+        },
+        {
+          "season": "1993/94",
+          "club": "Sheffield Wednesday",
+          "age": 23,
+          "minutes": 280,
+          "starts": 4,
+          "goals": 0,
+          "assists": 0,
+          "rating": 63,
+          "roles": [],
+          "note": null
+        },
+        {
+          "season": "1994/95",
+          "club": "Sheffield Wednesday",
+          "age": 24,
+          "minutes": 779,
+          "starts": 8,
+          "goals": 1,
+          "assists": 0,
+          "rating": 63,
+          "roles": [],
+          "note": null
+        }
+      ]
+    },
+    {
+      "fbrefId": "2c56a792",
+      "name": "Nicolás González",
+      "nation": "ESP",
+      "positions": [
+        "CDM",
+        "CM"
+      ],
+      "confidence": "low",
+      "seasons": [
+        {
+          "season": "2025/26",
+          "club": "Manchester City",
+          "age": 23,
+          "minutes": 1569,
+          "starts": 17,
+          "goals": 1,
           "assists": 0,
           "rating": 78,
           "roles": [],
@@ -28,94 +593,404 @@
       ]
     },
     {
-      "fbrefId": "4907d688",
-      "name": "Hassan Yebda",
-      "nation": "ALG",
+      "fbrefId": "ed5c0319",
+      "name": "Beto",
+      "nation": "GNB",
       "positions": [
-        "CDM",
-        "CM"
+        "ST",
+        "CF"
+      ],
+      "confidence": "medium",
+      "seasons": [
+        {
+          "season": "2025/26",
+          "club": "Everton",
+          "age": 27,
+          "minutes": 1568,
+          "starts": 17,
+          "goals": 9,
+          "assists": 1,
+          "rating": 75,
+          "roles": [
+            "TargetMan"
+          ],
+          "note": null
+        }
+      ]
+    },
+    {
+      "fbrefId": "21c083bf",
+      "name": "Nelson Vivas",
+      "nation": "ARG",
+      "positions": [
+        "RB",
+        "LB"
+      ],
+      "confidence": "medium",
+      "seasons": [
+        {
+          "season": "1998/99",
+          "club": "Arsenal",
+          "age": 28,
+          "minutes": 1144,
+          "starts": 10,
+          "goals": 0,
+          "assists": 0,
+          "rating": 74,
+          "roles": [],
+          "note": "A 1998 World Cup squad full-back for Argentina used as a utility substitute; the low minutes reflect Arsenal's first-choice back four, not his level."
+        },
+        {
+          "season": "2000/01",
+          "club": "Arsenal",
+          "age": 30,
+          "minutes": 421,
+          "starts": 3,
+          "goals": 0,
+          "assists": 1,
+          "rating": 73,
+          "roles": [],
+          "note": null
+        }
+      ]
+    },
+    {
+      "fbrefId": "804dd34f",
+      "name": "Giuseppe Pancaro",
+      "nation": "ITA",
+      "positions": [
+        "LB",
+        "CB"
+      ],
+      "confidence": "medium",
+      "seasons": [
+        {
+          "season": "2003/04",
+          "club": "AC Milan",
+          "age": 31,
+          "minutes": 1564,
+          "starts": 17,
+          "goals": 1,
+          "assists": 3,
+          "rating": 78,
+          "roles": [],
+          "note": null
+        }
+      ]
+    },
+    {
+      "fbrefId": "9d311ed4",
+      "name": "David O'Leary",
+      "nation": "IRL",
+      "positions": [
+        "CB"
+      ],
+      "confidence": "medium",
+      "seasons": [
+        {
+          "season": "1992/93",
+          "club": "Arsenal",
+          "age": 34,
+          "minutes": 787,
+          "starts": 6,
+          "goals": 0,
+          "assists": 0,
+          "rating": 75,
+          "roles": [
+            "BallPlayingDefender"
+          ],
+          "note": null
+        },
+        {
+          "season": "1993/94",
+          "club": "Leeds United",
+          "age": 35,
+          "minutes": 776,
+          "starts": 10,
+          "goals": 0,
+          "assists": 0,
+          "rating": 73,
+          "roles": [
+            "BallPlayingDefender"
+          ],
+          "note": "Released by Arsenal at 34; a veteran squad centre-half at Leeds."
+        }
+      ]
+    },
+    {
+      "fbrefId": "ed2b33cb",
+      "name": "Yuri Zhirkov",
+      "nation": "RUS",
+      "positions": [
+        "LB",
+        "LWB",
+        "LM"
       ],
       "confidence": "medium",
       "seasons": [
         {
           "season": "2009/10",
-          "club": "Portsmouth",
+          "club": "Chelsea",
           "age": 25,
-          "minutes": 1275,
-          "starts": 15,
-          "goals": 2,
-          "assists": 0,
-          "rating": 73,
-          "roles": [],
+          "minutes": 954,
+          "starts": 10,
+          "goals": 0,
+          "assists": 2,
+          "rating": 75,
+          "roles": [
+            "Winger"
+          ],
+          "note": null
+        },
+        {
+          "season": "2010/11",
+          "club": "Chelsea",
+          "age": 26,
+          "minutes": 608,
+          "starts": 6,
+          "goals": 0,
+          "assists": 2,
+          "rating": 74,
+          "roles": [
+            "Winger"
+          ],
           "note": null
         }
       ]
     },
     {
-      "fbrefId": "a3c8b4d3",
-      "name": "Loum Tchaouna",
-      "nation": "FRA",
+      "fbrefId": "47ce793b",
+      "name": "Chemsdine Talbi",
+      "nation": "MAR",
       "positions": [
         "RM",
-        "RW",
-        "LM"
+        "RW"
       ],
       "confidence": "low",
       "seasons": [
         {
           "season": "2025/26",
-          "club": "Burnley",
-          "age": 21,
-          "minutes": 1272,
-          "starts": 14,
-          "goals": 2,
+          "club": "Sunderland",
+          "age": 20,
+          "minutes": 1561,
+          "starts": 16,
+          "goals": 4,
           "assists": 1,
-          "rating": 73,
+          "rating": 75,
           "roles": [],
           "note": null
         }
       ]
     },
     {
-      "fbrefId": "3611e81e",
-      "name": "Wayne Quinn",
-      "nation": "ENG",
+      "fbrefId": "07c4ef8b",
+      "name": "Jason Scotland",
+      "nation": "TRI",
       "positions": [
-        "LB"
-      ],
-      "confidence": "low",
-      "seasons": [
-        {
-          "season": "2000/01",
-          "club": "Newcastle United",
-          "age": 23,
-          "minutes": 1272,
-          "starts": 14,
-          "goals": 0,
-          "assists": 1,
-          "rating": 69,
-          "roles": [],
-          "note": null
-        }
-      ]
-    },
-    {
-      "fbrefId": "d92b0327",
-      "name": "Jordi Gómez",
-      "nation": "ESP",
-      "positions": [
-        "CAM",
-        "CM"
+        "ST",
+        "CF"
       ],
       "confidence": "medium",
       "seasons": [
         {
           "season": "2009/10",
           "club": "Wigan Athletic",
-          "age": 24,
-          "minutes": 1271,
-          "starts": 11,
+          "age": 30,
+          "minutes": 1561,
+          "starts": 14,
           "goals": 1,
+          "assists": 2,
+          "rating": 70,
+          "roles": [],
+          "note": null
+        }
+      ]
+    },
+    {
+      "fbrefId": "d0f72bf1",
+      "name": "Max Kilman",
+      "nation": "ENG",
+      "positions": [
+        "CB"
+      ],
+      "confidence": "medium",
+      "seasons": [
+        {
+          "season": "2025/26",
+          "club": "West Ham United",
+          "age": 28,
+          "minutes": 1561,
+          "starts": 17,
+          "goals": 0,
+          "assists": 0,
+          "rating": 77,
+          "roles": [],
+          "note": null
+        }
+      ]
+    },
+    {
+      "fbrefId": "ca607d59",
+      "name": "Noah Okafor",
+      "nation": "SUI",
+      "positions": [
+        "LW",
+        "ST"
+      ],
+      "confidence": "medium",
+      "seasons": [
+        {
+          "season": "2025/26",
+          "club": "Leeds United",
+          "age": 25,
+          "minutes": 1561,
+          "starts": 19,
+          "goals": 8,
+          "assists": 1,
+          "rating": 75,
+          "roles": [
+            "Pacey"
+          ],
+          "note": null
+        }
+      ]
+    },
+    {
+      "fbrefId": "7476f53d",
+      "name": "Tore Pedersen",
+      "nation": "NOR",
+      "positions": [
+        "CB"
+      ],
+      "confidence": "low",
+      "seasons": [
+        {
+          "season": "1993/94",
+          "club": "Oldham Athletic",
+          "age": 23,
+          "minutes": 685,
+          "starts": 7,
+          "goals": 0,
+          "assists": 0,
+          "rating": 70,
+          "roles": [],
+          "note": null
+        },
+        {
+          "season": "1997/98",
+          "club": "Blackburn Rovers",
+          "age": 27,
+          "minutes": 379,
+          "starts": 3,
+          "goals": 0,
+          "assists": 1,
+          "rating": 71,
+          "roles": [],
+          "note": null
+        },
+        {
+          "season": "1999/00",
+          "club": "Wimbledon",
+          "age": 29,
+          "minutes": 496,
+          "starts": 6,
+          "goals": 0,
+          "assists": 0,
+          "rating": 70,
+          "roles": [],
+          "note": null
+        }
+      ]
+    },
+    {
+      "fbrefId": "b79e0fde",
+      "name": "Joey Guðjónsson",
+      "nation": "ISL",
+      "positions": [
+        "CM",
+        "CAM"
+      ],
+      "confidence": "low",
+      "seasons": [
+        {
+          "season": "2002/03",
+          "club": "Aston Villa",
+          "age": 22,
+          "minutes": 783,
+          "starts": 9,
+          "goals": 2,
+          "assists": 2,
+          "rating": 70,
+          "roles": [],
+          "note": null
+        },
+        {
+          "season": "2003/04",
+          "club": "Wolverhampton Wanderers",
+          "age": 23,
+          "minutes": 454,
+          "starts": 5,
+          "goals": 0,
+          "assists": 0,
+          "rating": 69,
+          "roles": [],
+          "note": null
+        },
+        {
+          "season": "2009/10",
+          "club": "Burnley",
+          "age": 29,
+          "minutes": 322,
+          "starts": 1,
+          "goals": 0,
+          "assists": 0,
+          "rating": 68,
+          "roles": [],
+          "note": null
+        }
+      ]
+    },
+    {
+      "fbrefId": "25b379f2",
+      "name": "Steven Pressley",
+      "nation": "SCO",
+      "positions": [
+        "CB",
+        "RB"
+      ],
+      "confidence": "low",
+      "seasons": [
+        {
+          "season": "1994/95",
+          "club": "Coventry City",
+          "age": 20,
+          "minutes": 1558,
+          "starts": 18,
+          "goals": 1,
+          "assists": 0,
+          "rating": 68,
+          "roles": [],
+          "note": "A 20-year-old regular for a lower-half side; rated as the young defender he was, not the long Hearts career."
+        }
+      ]
+    },
+    {
+      "fbrefId": "8aa5f52c",
+      "name": "Adrian Mariappa",
+      "nation": "JAM",
+      "positions": [
+        "CB",
+        "RB"
+      ],
+      "confidence": "medium",
+      "seasons": [
+        {
+          "season": "2006/07",
+          "club": "Watford",
+          "age": 19,
+          "minutes": 1557,
+          "starts": 17,
+          "goals": 0,
           "assists": 0,
           "rating": 71,
           "roles": [],
@@ -124,183 +999,70 @@
       ]
     },
     {
-      "fbrefId": "7aa8adfe",
-      "name": "Alejandro Garnacho",
-      "nation": "ARG",
-      "positions": [
-        "LM",
-        "RM"
-      ],
-      "confidence": "medium",
-      "seasons": [
-        {
-          "season": "2025/26",
-          "club": "Chelsea",
-          "age": 21,
-          "minutes": 1268,
-          "starts": 14,
-          "goals": 1,
-          "assists": 4,
-          "rating": 79,
-          "roles": [
-            "Dribbler",
-            "Pacey"
-          ],
-          "note": null
-        }
-      ]
-    },
-    {
-      "fbrefId": "74b2cd7e",
-      "name": "Angelo Ogbonna",
-      "nation": "ITA",
-      "positions": [
-        "CB",
-        "LB"
-      ],
-      "confidence": "medium",
-      "seasons": [
-        {
-          "season": "2013/14",
-          "club": "Juventus",
-          "age": 25,
-          "minutes": 1261,
-          "starts": 14,
-          "goals": 0,
-          "assists": 0,
-          "rating": 77,
-          "roles": [],
-          "note": null
-        }
-      ]
-    },
-    {
-      "fbrefId": "dd745366",
-      "name": "Andrey Santos",
-      "nation": "BRA",
-      "positions": [
-        "CM",
-        "CDM"
-      ],
-      "confidence": "medium",
-      "seasons": [
-        {
-          "season": "2025/26",
-          "club": "Chelsea",
-          "age": 21,
-          "minutes": 1260,
-          "starts": 13,
-          "goals": 1,
-          "assists": 0,
-          "rating": 78,
-          "roles": [],
-          "note": null
-        }
-      ]
-    },
-    {
-      "fbrefId": "98366a26",
-      "name": "Ronnie Ekelund",
-      "nation": "DEN",
-      "positions": [
-        "CF",
-        "CAM"
-      ],
-      "confidence": "medium",
-      "seasons": [
-        {
-          "season": "1994/95",
-          "club": "Southampton",
-          "age": 21,
-          "minutes": 1260,
-          "starts": 15,
-          "goals": 5,
-          "assists": 1,
-          "rating": 70,
-          "roles": [],
-          "note": "A Barcelona youth product on loan — more technique than most of this tier, but slight and never established himself anywhere."
-        }
-      ]
-    },
-    {
-      "fbrefId": "f7ec06db",
-      "name": "Sébastien Squillaci",
+      "fbrefId": "6d7ac11b",
+      "name": "Pierre Ducrocq",
       "nation": "FRA",
       "positions": [
-        "CB",
-        "RB"
+        "RB",
+        "CDM",
+        "CM"
       ],
       "confidence": "medium",
       "seasons": [
         {
-          "season": "2009/10",
-          "club": "Sevilla",
-          "age": 28,
-          "minutes": 1259,
-          "starts": 14,
-          "goals": 1,
-          "assists": 1,
-          "rating": 77,
+          "season": "2001/02",
+          "club": "Derby County",
+          "age": 24,
+          "minutes": 1557,
+          "starts": 19,
+          "goals": 0,
+          "assists": 0,
+          "rating": 70,
           "roles": [],
           "note": null
         }
       ]
     },
     {
-      "fbrefId": "d072a976",
-      "name": "Ryan Donk",
-      "nation": "SUR",
+      "fbrefId": "4261b6d5",
+      "name": "Marek Čech",
+      "nation": "SVK",
       "positions": [
-        "CB",
-        "RB",
-        "CDM"
+        "LB",
+        "LWB"
       ],
-      "confidence": "low",
+      "confidence": "medium",
       "seasons": [
         {
           "season": "2008/09",
           "club": "West Bromwich Albion",
-          "age": 22,
-          "minutes": 1255,
+          "age": 25,
+          "minutes": 340,
+          "starts": 3,
+          "goals": 0,
+          "assists": 1,
+          "rating": 70,
+          "roles": [],
+          "note": null
+        },
+        {
+          "season": "2010/11",
+          "club": "West Bromwich Albion",
+          "age": 27,
+          "minutes": 1216,
           "starts": 14,
           "goals": 0,
-          "assists": 0,
-          "rating": 70,
+          "assists": 1,
+          "rating": 71,
           "roles": [],
           "note": null
         }
       ]
     },
     {
-      "fbrefId": "ad82197c",
-      "name": "Axel Disasi",
-      "nation": "FRA",
-      "positions": [
-        "CB",
-        "RB"
-      ],
-      "confidence": "medium",
-      "seasons": [
-        {
-          "season": "2025/26",
-          "club": "West Ham United",
-          "age": 27,
-          "minutes": 1254,
-          "starts": 14,
-          "goals": 0,
-          "assists": 0,
-          "rating": 79,
-          "roles": [
-            "LooseInPossession"
-          ],
-          "note": null
-        }
-      ]
-    },
-    {
-      "fbrefId": "287a3e9e",
-      "name": "Keith Jones",
-      "nation": "ENG",
+      "fbrefId": "f23bcfa3",
+      "name": "Mark van Bommel",
+      "nation": "NED",
       "positions": [
         "CDM",
         "CM"
@@ -308,412 +1070,24 @@
       "confidence": "medium",
       "seasons": [
         {
-          "season": "1998/99",
-          "club": "Charlton Athletic",
-          "age": 32,
-          "minutes": 1254,
-          "starts": 13,
-          "goals": 1,
-          "assists": 0,
-          "rating": 67,
-          "roles": [],
-          "note": null
-        }
-      ]
-    },
-    {
-      "fbrefId": "c596fcb0",
-      "name": "Callum Wilson",
-      "nation": "ENG",
-      "positions": [
-        "ST",
-        "CF"
-      ],
-      "confidence": "medium",
-      "seasons": [
-        {
-          "season": "2025/26",
-          "club": "West Ham United",
-          "age": 33,
-          "minutes": 1251,
-          "starts": 11,
-          "goals": 7,
-          "assists": 1,
-          "rating": 76,
-          "roles": [
-            "Poacher"
-          ],
-          "note": "At 33 the movement in the box and the finishing are still the best things about him; everything around them has gone."
-        }
-      ]
-    },
-    {
-      "fbrefId": "c5328061",
-      "name": "Trevor Benjamin",
-      "nation": "JAM",
-      "positions": [
-        "ST"
-      ],
-      "confidence": "low",
-      "seasons": [
-        {
-          "season": "2000/01",
-          "club": "Leicester City",
-          "age": 21,
-          "minutes": 775,
-          "starts": 7,
-          "goals": 1,
-          "assists": 0,
-          "rating": 66,
-          "roles": [],
-          "note": null
-        },
-        {
-          "season": "2001/02",
-          "club": "Leicester City",
-          "age": 22,
-          "minutes": 474,
-          "starts": 4,
-          "goals": 0,
-          "assists": 0,
-          "rating": 65,
-          "roles": [],
-          "note": null
-        }
-      ]
-    },
-    {
-      "fbrefId": "10f0fdd3",
-      "name": "Jean-Ricner Bellegarde",
-      "nation": "HAI",
-      "positions": [
-        "CAM",
-        "RM",
-        "CM"
-      ],
-      "confidence": "medium",
-      "seasons": [
-        {
-          "season": "2025/26",
-          "club": "Wolverhampton Wanderers",
-          "age": 27,
-          "minutes": 1248,
-          "starts": 15,
-          "goals": 1,
-          "assists": 1,
-          "rating": 75,
-          "roles": [],
-          "note": null
-        }
-      ]
-    },
-    {
-      "fbrefId": "0c8e813b",
-      "name": "Stewart Robson",
-      "nation": "ENG",
-      "positions": [
-        "CM",
-        "CDM"
-      ],
-      "confidence": "medium",
-      "seasons": [
-        {
-          "season": "1992/93",
-          "club": "Coventry City",
-          "age": 27,
-          "minutes": 1245,
-          "starts": 14,
-          "goals": 0,
-          "assists": 2,
-          "rating": 70,
-          "roles": [],
-          "note": "Was an England-level prospect before injuries took the running out of his game."
-        }
-      ]
-    },
-    {
-      "fbrefId": "7c3a4a58",
-      "name": "Marius Stankevičius",
-      "nation": "LTU",
-      "positions": [
-        "RB",
-        "CB",
-        "CDM"
-      ],
-      "confidence": "medium",
-      "seasons": [
-        {
-          "season": "2009/10",
-          "club": "Sevilla",
-          "age": 28,
-          "minutes": 1244,
-          "starts": 14,
-          "goals": 0,
-          "assists": 0,
-          "rating": 73,
-          "roles": [],
-          "note": null
-        }
-      ]
-    },
-    {
-      "fbrefId": "bccd4c3e",
-      "name": "Tony Dobson",
-      "nation": "ENG",
-      "positions": [
-        "CB",
-        "LB"
-      ],
-      "confidence": "low",
-      "seasons": [
-        {
-          "season": "1992/93",
-          "club": "Blackburn Rovers",
-          "age": 23,
-          "minutes": 1244,
-          "starts": 14,
-          "goals": 0,
-          "assists": 1,
-          "rating": 67,
-          "roles": [],
-          "note": null
-        }
-      ]
-    },
-    {
-      "fbrefId": "bac46a10",
-      "name": "Lisandro Martínez",
-      "nation": "ARG",
-      "positions": [
-        "CB",
-        "LB"
-      ],
-      "confidence": "high",
-      "seasons": [
-        {
-          "season": "2025/26",
-          "club": "Manchester United",
-          "age": 27,
-          "minutes": 1233,
-          "starts": 13,
-          "goals": 0,
-          "assists": 0,
-          "rating": 82,
-          "roles": [
-            "BallPlayingDefender"
-          ],
-          "note": null
-        }
-      ]
-    },
-    {
-      "fbrefId": "fbe1f1d0",
-      "name": "Alan Mahon",
-      "nation": "IRL",
-      "positions": [
-        "RM",
-        "CM",
-        "LM"
-      ],
-      "confidence": "medium",
-      "seasons": [
-        {
-          "season": "2001/02",
-          "club": "Blackburn Rovers",
-          "age": 23,
-          "minutes": 851,
-          "starts": 10,
-          "goals": 1,
-          "assists": 0,
-          "rating": 69,
-          "roles": [],
-          "note": "A Republic of Ireland squad wide midfielder; useful cover, never a starter of quality."
-        },
-        {
           "season": "2005/06",
-          "club": "Wigan Athletic",
-          "age": 27,
-          "minutes": 381,
-          "starts": 5,
-          "goals": 1,
-          "assists": 0,
-          "rating": 70,
-          "roles": [],
-          "note": null
-        }
-      ]
-    },
-    {
-      "fbrefId": "2ef93bb4",
-      "name": "Jason Cundy",
-      "nation": "ENG",
-      "positions": [
-        "CB"
-      ],
-      "confidence": "medium",
-      "seasons": [
-        {
-          "season": "1992/93",
-          "club": "Tottenham Hotspur",
-          "age": 22,
-          "minutes": 1232,
-          "starts": 13,
-          "goals": 1,
-          "assists": 0,
-          "rating": 67,
-          "roles": [],
-          "note": null
-        }
-      ]
-    },
-    {
-      "fbrefId": "ca22ccb0",
-      "name": "Hannibal Mejbri",
-      "nation": "TUN",
-      "positions": [
-        "CAM",
-        "CM"
-      ],
-      "confidence": "medium",
-      "seasons": [
-        {
-          "season": "2025/26",
-          "club": "Burnley",
-          "age": 22,
-          "minutes": 1229,
-          "starts": 15,
-          "goals": 1,
-          "assists": 4,
-          "rating": 73,
-          "roles": [],
-          "note": null
-        }
-      ]
-    },
-    {
-      "fbrefId": "5b887c7a",
-      "name": "Jérémy Mathieu",
-      "nation": "FRA",
-      "positions": [
-        "LB",
-        "CB"
-      ],
-      "confidence": "medium",
-      "seasons": [
-        {
-          "season": "2009/10",
-          "club": "Valencia",
-          "age": 25,
-          "minutes": 1227,
-          "starts": 14,
-          "goals": 1,
-          "assists": 0,
-          "rating": 78,
-          "roles": [],
-          "note": null
-        }
-      ]
-    },
-    {
-      "fbrefId": "fb6f16c0",
-      "name": "Craig Russell",
-      "nation": "ENG",
-      "positions": [
-        "ST",
-        "LW",
-        "LB"
-      ],
-      "confidence": "medium",
-      "seasons": [
-        {
-          "season": "1996/97",
-          "club": "Sunderland",
-          "age": 22,
-          "minutes": 1222,
-          "starts": 10,
-          "goals": 5,
-          "assists": 1,
-          "rating": 67,
-          "roles": [],
-          "note": null
-        }
-      ]
-    },
-    {
-      "fbrefId": "beb6023f",
-      "name": "Gerald Sibon",
-      "nation": "NED",
-      "positions": [
-        "ST",
-        "CF"
-      ],
-      "confidence": "medium",
-      "seasons": [
-        {
-          "season": "1999/00",
-          "club": "Sheffield Wednesday",
-          "age": 25,
-          "minutes": 1219,
-          "starts": 12,
-          "goals": 5,
-          "assists": 1,
-          "rating": 70,
-          "roles": [],
-          "note": null
-        }
-      ]
-    },
-    {
-      "fbrefId": "d8c62450",
-      "name": "Mark González",
-      "nation": "CHI",
-      "positions": [
-        "LW",
-        "LM"
-      ],
-      "confidence": "medium",
-      "seasons": [
-        {
-          "season": "2006/07",
-          "club": "Liverpool",
-          "age": 22,
-          "minutes": 1216,
-          "starts": 14,
+          "club": "Barcelona",
+          "age": 28,
+          "minutes": 1555,
+          "starts": 17,
           "goals": 2,
-          "assists": 0,
-          "rating": 74,
-          "roles": [],
+          "assists": 2,
+          "rating": 80,
+          "roles": [
+            "Enforcer"
+          ],
           "note": null
         }
       ]
     },
     {
-      "fbrefId": "d59e4a0e",
-      "name": "Pat Van Den Hauwe",
-      "nation": "WAL",
-      "positions": [
-        "LB",
-        "CB"
-      ],
-      "confidence": "medium",
-      "seasons": [
-        {
-          "season": "1992/93",
-          "club": "Tottenham Hotspur",
-          "age": 31,
-          "minutes": 1214,
-          "starts": 13,
-          "goals": 0,
-          "assists": 0,
-          "rating": 72,
-          "roles": [],
-          "note": "Wales international and former title winner, now 31 and declining."
-        }
-      ]
-    },
-    {
-      "fbrefId": "214ed478",
-      "name": "Ivan Klasnić",
+      "fbrefId": "f3580cae",
+      "name": "Davor Šuker",
       "nation": "CRO",
       "positions": [
         "ST",
@@ -722,398 +1096,95 @@
       "confidence": "medium",
       "seasons": [
         {
-          "season": "2009/10",
-          "club": "Bolton Wanderers",
-          "age": 29,
-          "minutes": 1212,
-          "starts": 12,
+          "season": "1999/00",
+          "club": "Arsenal",
+          "age": 31,
+          "minutes": 967,
+          "starts": 8,
           "goals": 8,
           "assists": 1,
-          "rating": 76,
-          "roles": [
-            "Poacher"
-          ],
-          "note": null
-        }
-      ]
-    },
-    {
-      "fbrefId": "bf34eebd",
-      "name": "Noni Madueke",
-      "nation": "ENG",
-      "positions": [
-        "RW",
-        "LW"
-      ],
-      "confidence": "medium",
-      "seasons": [
-        {
-          "season": "2025/26",
-          "club": "Arsenal",
-          "age": 23,
-          "minutes": 1211,
-          "starts": 16,
-          "goals": 3,
-          "assists": 1,
-          "rating": 78,
-          "roles": [
-            "InsideForward",
-            "Dribbler",
-            "Pacey"
-          ],
-          "note": null
-        }
-      ]
-    },
-    {
-      "fbrefId": "b28bbd58",
-      "name": "Andros Townsend",
-      "nation": "ENG",
-      "positions": [
-        "RM",
-        "RW"
-      ],
-      "confidence": "medium",
-      "seasons": [
-        {
-          "season": "2023/24",
-          "club": "Luton Town",
-          "age": 32,
-          "minutes": 1210,
-          "starts": 14,
-          "goals": 1,
-          "assists": 3,
-          "rating": 72,
-          "roles": [
-            "Winger"
-          ],
-          "note": "A modern-era player rated below the modern floor on purpose: 32, a year out with a serious knee injury, and a fraction of the player of 2016."
-        }
-      ]
-    },
-    {
-      "fbrefId": "3d58e4b8",
-      "name": "Andy Liddell",
-      "nation": "SCO",
-      "positions": [
-        "ST"
-      ],
-      "confidence": "medium",
-      "seasons": [
-        {
-          "season": "1997/98",
-          "club": "Barnsley",
-          "age": 24,
-          "minutes": 1207,
-          "starts": 13,
-          "goals": 1,
-          "assists": 0,
-          "rating": 66,
+          "rating": 82,
           "roles": [],
-          "note": null
-        }
-      ]
-    },
-    {
-      "fbrefId": "4f06b1e0",
-      "name": "Maxi Rodríguez",
-      "nation": "ARG",
-      "positions": [
-        "RW",
-        "RM",
-        "LW"
-      ],
-      "confidence": "medium",
-      "seasons": [
-        {
-          "season": "2009/10",
-          "club": "Liverpool",
-          "age": 28,
-          "minutes": 1207,
-          "starts": 14,
-          "goals": 1,
-          "assists": 3,
-          "rating": 78,
-          "roles": [],
-          "note": null
-        }
-      ]
-    },
-    {
-      "fbrefId": "9ff17f6f",
-      "name": "Stephen Quinn",
-      "nation": "IRL",
-      "positions": [
-        "LW",
-        "LM"
-      ],
-      "confidence": "low",
-      "seasons": [
-        {
-          "season": "2006/07",
-          "club": "Sheffield United",
-          "age": 20,
-          "minutes": 1207,
-          "starts": 15,
-          "goals": 2,
-          "assists": 2,
-          "rating": 69,
-          "roles": [],
-          "note": null
-        }
-      ]
-    },
-    {
-      "fbrefId": "dc4cae05",
-      "name": "David Brooks",
-      "nation": "WAL",
-      "positions": [
-        "RM",
-        "CAM"
-      ],
-      "confidence": "medium",
-      "seasons": [
-        {
-          "season": "2025/26",
-          "club": "Bournemouth",
-          "age": 28,
-          "minutes": 1204,
-          "starts": 13,
-          "goals": 1,
-          "assists": 3,
-          "rating": 75,
-          "roles": [
-            "Dribbler",
-            "Lightweight"
-          ],
-          "note": null
-        }
-      ]
-    },
-    {
-      "fbrefId": "2255df73",
-      "name": "Klas Ingesson",
-      "nation": "SWE",
-      "positions": [
-        "CM",
-        "CDM"
-      ],
-      "confidence": "medium",
-      "seasons": [
-        {
-          "season": "1994/95",
-          "club": "Sheffield Wednesday",
-          "age": 25,
-          "minutes": 883,
-          "starts": 9,
-          "goals": 2,
-          "assists": 0,
-          "rating": 75,
-          "roles": [],
-          "note": "Rated well above the rest of this chunk: a starting midfielder for Sweden's 1994 World Cup semi-finalists with PSV and Serie A years either side of Hillsborough."
+          "note": "The highest rating in this chunk by a distance. A World Cup Golden Boot winner and Real Madrid forward, 31 and used as a squad striker, but still an elite penalty-box finisher — eight goals in eight starts."
         },
         {
-          "season": "1995/96",
-          "club": "Sheffield Wednesday",
-          "age": 26,
-          "minutes": 321,
-          "starts": 3,
-          "goals": 0,
-          "assists": 0,
-          "rating": 73,
-          "roles": [],
-          "note": "Back and knee trouble reduced him to three starts before he left for Bari."
-        }
-      ]
-    },
-    {
-      "fbrefId": "23d28571",
-      "name": "Alton Thelwell",
-      "nation": "ENG",
-      "positions": [
-        "CB",
-        "RB"
-      ],
-      "confidence": "low",
-      "seasons": [
-        {
           "season": "2000/01",
-          "club": "Tottenham Hotspur",
-          "age": 19,
-          "minutes": 1201,
-          "starts": 13,
+          "club": "West Ham United",
+          "age": 32,
+          "minutes": 587,
+          "starts": 7,
+          "goals": 2,
+          "assists": 0,
+          "rating": 76,
+          "roles": [],
+          "note": "Six points below the rated Arsenal season: at 32 the sharpness in the box had gone, and two goals in seven starts for West Ham was the honest measure of it."
+        }
+      ]
+    },
+    {
+      "fbrefId": "4fe329a7",
+      "name": "Édouard Cissé",
+      "nation": "FRA",
+      "positions": [
+        "CDM",
+        "CM"
+      ],
+      "confidence": "medium",
+      "seasons": [
+        {
+          "season": "2002/03",
+          "club": "West Ham United",
+          "age": 24,
+          "minutes": 1553,
+          "starts": 18,
           "goals": 0,
           "assists": 0,
-          "rating": 68,
+          "rating": 72,
           "roles": [],
           "note": null
         }
       ]
     },
     {
-      "fbrefId": "2baec6ce",
-      "name": "Axel Tuanzebe",
-      "nation": "COD",
-      "positions": [
-        "CB",
-        "RB"
-      ],
-      "confidence": "medium",
-      "seasons": [
-        {
-          "season": "2025/26",
-          "club": "Burnley",
-          "age": 27,
-          "minutes": 1201,
-          "starts": 14,
-          "goals": 1,
-          "assists": 0,
-          "rating": 75,
-          "roles": [],
-          "note": null
-        }
-      ]
-    },
-    {
-      "fbrefId": "41473b67",
-      "name": "Rafael van der Vaart",
-      "nation": "NED",
-      "positions": [
-        "CAM",
-        "CM",
-        "LM"
-      ],
-      "confidence": "high",
-      "seasons": [
-        {
-          "season": "2009/10",
-          "club": "Real Madrid",
-          "age": 26,
-          "minutes": 1198,
-          "starts": 16,
-          "goals": 6,
-          "assists": 6,
-          "rating": 82,
-          "roles": [
-            "ChanceCreator",
-            "LongShot"
-          ],
-          "note": null
-        }
-      ]
-    },
-    {
-      "fbrefId": "a6979454",
-      "name": "Roman Bednář",
-      "nation": "CZE",
-      "positions": [
-        "ST",
-        "CF"
-      ],
-      "confidence": "medium",
-      "seasons": [
-        {
-          "season": "2008/09",
-          "club": "West Bromwich Albion",
-          "age": 25,
-          "minutes": 1197,
-          "starts": 12,
-          "goals": 6,
-          "assists": 1,
-          "rating": 73,
-          "roles": [],
-          "note": null
-        }
-      ]
-    },
-    {
-      "fbrefId": "5b1e1fe8",
-      "name": "Darren Holloway",
+      "fbrefId": "2e3ab301",
+      "name": "Kenny Brown",
       "nation": "ENG",
       "positions": [
         "RB",
-        "CB"
-      ],
-      "confidence": "low",
-      "seasons": [
-        {
-          "season": "1999/00",
-          "club": "Sunderland",
-          "age": 21,
-          "minutes": 794,
-          "starts": 8,
-          "goals": 0,
-          "assists": 1,
-          "rating": 67,
-          "roles": [],
-          "note": null
-        },
-        {
-          "season": "2000/01",
-          "club": "Sunderland",
-          "age": 22,
-          "minutes": 400,
-          "starts": 5,
-          "goals": 0,
-          "assists": 0,
-          "rating": 67,
-          "roles": [],
-          "note": null
-        }
-      ]
-    },
-    {
-      "fbrefId": "2bc82fdc",
-      "name": "Sotirios Kyrgiakos",
-      "nation": "GRE",
-      "positions": [
-        "CB"
-      ],
-      "confidence": "medium",
-      "seasons": [
-        {
-          "season": "2009/10",
-          "club": "Liverpool",
-          "age": 30,
-          "minutes": 1194,
-          "starts": 13,
-          "goals": 1,
-          "assists": 0,
-          "rating": 74,
-          "roles": [
-            "NoNonsenseDefender"
-          ],
-          "note": null
-        }
-      ]
-    },
-    {
-      "fbrefId": "defda41a",
-      "name": "Gary Blissett",
-      "nation": "ENG",
-      "positions": [
-        "ST"
+        "LB"
       ],
       "confidence": "low",
       "seasons": [
         {
           "season": "1993/94",
-          "club": "Wimbledon",
-          "age": 29,
-          "minutes": 793,
+          "club": "West Ham United",
+          "age": 26,
+          "minutes": 555,
           "starts": 6,
-          "goals": 3,
-          "assists": 2,
+          "goals": 0,
+          "assists": 0,
           "rating": 66,
           "roles": [],
           "note": null
         },
         {
           "season": "1994/95",
-          "club": "Wimbledon",
-          "age": 30,
-          "minutes": 399,
-          "starts": 4,
+          "club": "West Ham United",
+          "age": 27,
+          "minutes": 728,
+          "starts": 8,
+          "goals": 0,
+          "assists": 0,
+          "rating": 66,
+          "roles": [],
+          "note": null
+        },
+        {
+          "season": "1995/96",
+          "club": "West Ham United",
+          "age": 28,
+          "minutes": 270,
+          "starts": 3,
           "goals": 0,
           "assists": 0,
           "rating": 65,
@@ -1123,47 +1194,156 @@
       ]
     },
     {
-      "fbrefId": "e5932d17",
-      "name": "Jovo Bosančić",
-      "nation": "SRB",
+      "fbrefId": "5bfd087e",
+      "name": "Mazinho",
+      "nation": "BRA",
       "positions": [
-        "CM",
-        "CAM"
+        "LB",
+        "CDM",
+        "CM"
       ],
-      "confidence": "low",
+      "confidence": "medium",
       "seasons": [
         {
-          "season": "1997/98",
-          "club": "Barnsley",
-          "age": 26,
-          "minutes": 1192,
-          "starts": 13,
-          "goals": 2,
-          "assists": 0,
-          "rating": 66,
+          "season": "1991/92",
+          "club": "Fiorentina",
+          "age": 25,
+          "minutes": 1552,
+          "starts": 18,
+          "goals": 0,
+          "assists": null,
+          "rating": 76,
           "roles": [],
           "note": null
         }
       ]
     },
     {
-      "fbrefId": "64640563",
-      "name": "Scott Dobie",
-      "nation": "SCO",
+      "fbrefId": "2ea4e6b1",
+      "name": "Sixto Peralta",
+      "nation": "ARG",
       "positions": [
-        "ST"
+        "CAM",
+        "CM"
       ],
-      "confidence": "low",
+      "confidence": "medium",
+      "seasons": [
+        {
+          "season": "2001/02",
+          "club": "Ipswich Town",
+          "age": 22,
+          "minutes": 1552,
+          "starts": 16,
+          "goals": 3,
+          "assists": 2,
+          "rating": 72,
+          "roles": [],
+          "note": null
+        }
+      ]
+    },
+    {
+      "fbrefId": "ae61cc61",
+      "name": "Enrique de Lucas",
+      "nation": "ESP",
+      "positions": [
+        "LW",
+        "LM"
+      ],
+      "confidence": "medium",
       "seasons": [
         {
           "season": "2002/03",
-          "club": "West Bromwich Albion",
+          "club": "Chelsea",
           "age": 23,
-          "minutes": 1191,
-          "starts": 10,
-          "goals": 5,
+          "minutes": 1550,
+          "starts": 17,
+          "goals": 0,
           "assists": 0,
-          "rating": 68,
+          "rating": 71,
+          "roles": [],
+          "note": null
+        }
+      ]
+    },
+    {
+      "fbrefId": "bcde5b12",
+      "name": "Stanislav Varga",
+      "nation": "SVK",
+      "positions": [
+        "CB"
+      ],
+      "confidence": "medium",
+      "seasons": [
+        {
+          "season": "2000/01",
+          "club": "Sunderland",
+          "age": 27,
+          "minutes": 811,
+          "starts": 9,
+          "goals": 1,
+          "assists": 0,
+          "rating": 71,
+          "roles": [],
+          "note": null
+        },
+        {
+          "season": "2001/02",
+          "club": "Sunderland",
+          "age": 28,
+          "minutes": 739,
+          "starts": 9,
+          "goals": 0,
+          "assists": 0,
+          "rating": 70,
+          "roles": [],
+          "note": null
+        }
+      ]
+    },
+    {
+      "fbrefId": "a0d7482c",
+      "name": "Shabani Nonda",
+      "nation": "COD",
+      "positions": [
+        "ST",
+        "CF"
+      ],
+      "confidence": "medium",
+      "seasons": [
+        {
+          "season": "2006/07",
+          "club": "Blackburn Rovers",
+          "age": 29,
+          "minutes": 1549,
+          "starts": 17,
+          "goals": 7,
+          "assists": 2,
+          "rating": 75,
+          "roles": [],
+          "note": "A Ligue 1 top scorer and Champions League finalist with Monaco before a cruciate injury; still a good forward at Blackburn, no longer that one."
+        }
+      ]
+    },
+    {
+      "fbrefId": "adeca4c0",
+      "name": "Éric Roy",
+      "nation": "FRA",
+      "positions": [
+        "CDM",
+        "CM"
+      ],
+      "confidence": "medium",
+      "seasons": [
+        {
+          "season": "1999/00",
+          "club": "Sunderland",
+          "age": 31,
+          "minutes": 1548,
+          "starts": 19,
+          "goals": 0,
+          "assists": 2,
+          "rating": 74,
           "roles": [],
           "note": null
         }
