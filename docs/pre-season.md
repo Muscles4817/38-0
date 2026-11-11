@@ -13,8 +13,9 @@ stored, both reach the simulation, and both change the table at the end.
 ```
 
 The results page no longer has a button of its own. Everything the season needs
-was decided here, so a second confirmation between the decision and the result
-would only be a step to click through.
+to kick off was decided here, so a second confirmation between the decision and
+the result would only be a step to click through. One more decision comes later,
+at halfway: see [After kick-off](#after-kick-off).
 
 ## The tactic
 
@@ -46,7 +47,9 @@ gap in it. The loop is:
    the XI's level in them.
 3. **Every season played is written down.** The results page records it in
    `38-0-history` (`src/lib/runHistory.ts`) against the XI (`xiKey`: who plays
-   in which slot) and the league-season.
+   in which slot) and the league-season. A season whose style was changed at
+   halfway is recorded with `changedTo` and left off the board, since half a
+   season of each style measures neither.
 4. **The record comes back.** A style card reads *Untried* or
    *Best 2nd · 78 pts · ×3*; the final report says what the season took on the
    bookmakers' line and shows a tactics board of every style tried with this
@@ -118,3 +121,53 @@ against when the report calls a run over- or underperforming.
 - **Competitions other than a league.** The rule is deliberately about fielding
   a full league; a cup would be a different schedule, not a different opponent
   list.
+
+## After kick-off
+
+The results page plays the season back a gameweek at a time. Two things make
+that more than a list of scorelines.
+
+### Half-time of the season
+
+After gameweek 19 (`halfwayWeek`: half the rounds, rounded down) the live view
+stops on the table and asks once: keep the style, or change it for the second
+half. The panel shows the position, the record, the points pace against the
+bookmakers' line, and for each style what it has averaged with this XI in this
+league (the same history the style cards read). Keeping it is one tap.
+
+The season was already played in full on arrival, so a change replays it:
+`runSeasonSimulation` with `change: { afterWeek: 19, style }` on the **same
+seed**. `simulateSeason` swaps the XI's style at the top of round 20 and touches
+nothing else, and the matches draw from one random stream in order, so the
+first nineteen gameweeks come out identical to the ones already shown; only the
+unseen half is new. `seasonEndToEnd.test.ts` holds that to the byte. A full
+season takes about 200ms in Node, so the replay is done on the click.
+
+`SimulationResult.styles` lists what was played and from when. The final report
+says "Balanced, then Gegenpress from gameweek 20", the share text names both,
+and the season is recorded once: written on arrival as before, so leaving at
+halfway cannot erase a bad first half, then rewritten in place by `replaceRun`
+(matched on seed and `playedAt`) if the style changes. Skip goes to halfway
+first, then to the end.
+
+### Key moments
+
+`keyMoments` in `src/lib/keyMoments.ts` reads a finished result — the events of
+the XI's 38 matches and the table after every round — and picks out what a
+commentator would mention: late winners and equalisers either way (from the
+85th minute, `LATE_MINUTE`), comebacks, hat-tricks, the XI's red cards, wins and
+defeats by four or more, going top and being knocked off it (not before round
+4), dropping into and out of the bottom three (not before round 7), the week
+the title is mathematically settled, relegation or safety confirmed, winning
+streaks and players' 10/20/30-goal marks, and a perfect or unbeaten season.
+
+Each kind has a weight. The live view shows the newest five under the XI's
+match, this gameweek's in bold; the final report shows the eight heaviest in
+order as *The season in moments* (`seasonStory`). It is pure and reads only the
+result, so it cannot change one.
+
+Measured on fifteen seasons of a strong 1992/93 XI in the 2025/26 field: about
+13 moments a season, landing in 11 of the 38 gameweeks. Comebacks from a goal
+down came up more than twice a season and crowded out everything else in the
+story, so they carry a lower weight than a comeback from two down, and a win by
+four or more is told as a thrashing, not a comeback.
