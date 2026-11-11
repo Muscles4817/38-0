@@ -1,7 +1,8 @@
 import { type Position, effectiveRating } from './formations';
 import {
-  DEFAULT_COHESION, PLAYSTYLES, fitForStyle, inferStyle, lineRatings, mulberry32, simulateMatch,
-  type MatchPlayer, type PlaystyleName, type RoleMultipliers, type TeamSetup, type Zone,
+  DEFAULT_COHESION, PHASES, PLAYSTYLES, fitForStyle, inferStyle, lineRatings, mulberry32,
+  phaseAbility, simulateMatch,
+  type MatchPlayer, type Phase, type PlaystyleName, type RoleMultipliers, type TeamSetup, type Zone,
 } from './matchEngine';
 
 // ── Player roles ─────────────────────────────────────────────────────────────
@@ -462,6 +463,26 @@ export interface TacticEffect {
   tempo: number;
   /** How strongly the side pulls possession its way. 1 is neutral. */
   possessionBias: number;
+  /** The phases the style is played through, heaviest first. */
+  needs: Phase[];
+}
+
+/**
+ * What an eleven is good at, phase by phase, in trait points against an
+ * ordinary side's zero: the same numbers the match engine's contests read.
+ *
+ * This is what the pre-season screen shows in place of a single fit score.
+ * A style leans on some of these, and a player can see which, but what a
+ * style is worth over a season also depends on the nineteen sides it meets,
+ * so the screen describes the XI and leaves the forecast to the season.
+ */
+export function xiProfile(picks: SquadPick[], roleConfig?: RoleConfig): Record<Phase, number> {
+  const validPos = validPositionsFor(roleConfig);
+  const players = picks.map(p => toMatchPlayer(p, validPos));
+  const roles = toRoleMultipliers(roleConfig);
+  return Object.fromEntries(
+    (Object.keys(PHASES) as Phase[]).map(phase => [phase, phaseAbility(players, phase, roles)]),
+  ) as Record<Phase, number>;
 }
 
 /**
@@ -486,6 +507,9 @@ export function tacticEffect(
     buildUp:        chosen.buildUp,
     tempo:          chosen.tempo,
     possessionBias: chosen.possessionBias,
+    needs: (Object.entries(chosen.needs) as [Phase, number][])
+      .sort((a, b) => b[1] - a[1])
+      .map(([phase]) => phase),
   };
 }
 

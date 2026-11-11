@@ -5,7 +5,11 @@ import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { getFormation, canFillSlot, Formation } from '@/lib/formations';
 import { describeCompetition, getTeamStrengths, runSeasonSimulation, type DataPlayer } from '@/lib/gameData';
-import { useStoredJson, clearStored } from '@/lib/clientStorage';
+import { useStoredJson, clearStored, readStored, writeStored } from '@/lib/clientStorage';
+import {
+  parseRunHistory, RUN_HISTORY_KEY, styleRecords, withRun, xiKey, type StyleRecord,
+} from '@/lib/runHistory';
+import { PLAYSTYLES } from '@/lib/matchEngine';
 import { parseSeenSquads, resolveSeenSquads, SEEN_SQUADS_KEY, type SeenSquad } from '@/lib/seenSquads';
 import { applyRules, type DraftFilter, type PoolRules } from '@/lib/draftPool';
 import { getTacticEffect } from '@/lib/gameData';
@@ -156,7 +160,10 @@ export default function ResultsPage() {
     filter:       setup?.filter ?? null,
   }), [setup]);
 
-  const [simResult, setSimResult] = useState<SimulationResult | null>(null);
+  // The season and the seed it was played on, kept together so the report can
+  // name the one that produced it.
+  const [played, setPlayed] = useState<{ result: SimulationResult; seed: number } | null>(null);
+  const simResult = played?.result ?? null;
   const [showFinal, setShowFinal] = useState(false);
   // Bumping this re-runs the season with the same squad and plan.
   const [run, setRun]             = useState(0);
@@ -188,19 +195,55 @@ export default function ResultsPage() {
     if (!picks.length) return;
     let cancelled = false;
     const t = setTimeout(() => {
-      const result = runSeasonSimulation(picks, undefined, {
+      const seed = Math.floor(Math.random() * 2_000_000_000);
+      const result = runSeasonSimulation(picks, seed, {
         seasonId: plan?.seasonId,
         league:   plan?.league,
         style:    plan?.style,
       });
-      if (!cancelled) setSimResult(result);
+      if (cancelled) return;
+      // Written down as it is played, here rather than in an effect on the
+      // result, so that a season is recorded exactly once however often this
+      // page re-renders. The tactics board and the home page read it.
+      const competition = describeCompetition(plan?.seasonId, plan?.league);
+      if (competition) {
+        const fieldOveralls = getTeamStrengths(plan?.seasonId, plan?.league).map(t => t.overall);
+        const top = result.playerStats.reduce((a, b) => (b.goals > a.goals ? b : a));
+        writeStored(RUN_HISTORY_KEY, withRun(parseRunHistory(readStored<unknown>(RUN_HISTORY_KEY)), {
+          xi: xiKey(picks),
+          seasonId: competition.seasonId,
+          seasonLabel: competition.seasonLabel,
+          style: plan?.style ?? 'balanced',
+          formation: readStored<{ formation?: string }>('38-0-setup')?.formation ?? '',
+          overall: computeOverall(picks),
+          position: result.finalPosition,
+          points: result.points,
+          wins: result.wins,
+          draws: result.draws,
+          losses: result.losses,
+          goalsFor: result.goalsFor,
+          goalsAgainst: result.goalsAgainst,
+          expectedPoints: preSeasonOdds(computeOverall(picks), fieldOveralls).expectedPoints,
+          topScorer: top.playerName,
+          topScorerGoals: top.goals,
+          seed,
+          playedAt: Date.now(),
+        }));
+      }
+      setPlayed({ result, seed });
     }, 0);
     return () => { cancelled = true; clearTimeout(t); };
   }, [picks, plan?.seasonId, plan?.league, plan?.style, run]);
 
+  const history = useStoredJson<unknown>(RUN_HISTORY_KEY);
+  const records = useMemo(
+    () => (opponent ? styleRecords(parseRunHistory(history), xiKey(picks), opponent.seasonId) : []),
+    [history, picks, opponent],
+  );
+
   function handleResim() {
     setShowFinal(false);
-    setSimResult(null);
+    setPlayed(null);
     setRun(n => n + 1);
   }
 
@@ -247,8 +290,17 @@ export default function ResultsPage() {
         )}
 
         {/* Final season report */}
-        {simResult && showFinal && (
-          <FinalSummary result={simResult} picks={picks} odds={odds} onResim={handleResim} />
+        {played && showFinal && (
+          <FinalSummary
+            result={played.result}
+            seed={played.seed}
+            picks={picks}
+            odds={odds}
+            style={plan?.style ?? 'balanced'}
+            league={opponent ? `${opponent.leagueName} ${opponent.seasonLabel}` : 'Premier League'}
+            records={records}
+            onResim={handleResim}
+          />
         )}
 
         {/* The plan this season is being played under. */}
@@ -263,7 +315,6 @@ export default function ResultsPage() {
             <div className="text-[10px] text-subtle uppercase tracking-widest font-bold mb-1">Tactic</div>
             <div className="font-black text-sm truncate">
               {tactic?.label ?? 'Balanced'}
-              {tactic && <span className="text-muted font-bold ml-2">fit {Math.round(tactic.fit * 100)}%</span>}
             </div>
           </div>
           <Link
@@ -542,12 +593,36 @@ function LiveSimulation({
 
 // ── Final Summary ─────────────────────────────────────────────────────────────
 
-function FinalSummary({ result, picks, odds, onResim }: {
+function FinalSummary({ result, seed, picks, odds, style, league, records, onResim }: {
   result: SimulationResult;
+  seed: number;
   picks: SquadPick[];
   odds: ReturnType<typeof preSeasonOdds>;
+  style: string;
+  league: string;
+  records: StyleRecord[];
   onResim: () => void;
 }) {
+  const [copied, setCopied] = useState(false);
+  const styleLabel = PLAYSTYLES[style as keyof typeof PLAYSTYLES]?.label ?? 'Balanced';
+  // The bookmakers priced this XI playing Balanced. The margin against their
+  // line is what the season, and the style it was played in, was worth.
+  const margin = result.points - odds.expectedPoints;
+  const overall = computeOverall(picks);
+
+  function share() {
+    const text = [
+      `38-0 · ${league}`,
+      `${ordinal(result.finalPosition)} · ${result.points} pts · ${result.wins}-${result.draws}-${result.losses} · ${result.goalsFor} scored, ${result.goalsAgainst} conceded`,
+      `XI rated ${overall}, playing ${styleLabel} (${margin >= 0 ? '+' : ''}${margin} on the bookmakers' ${odds.expectedPoints})`,
+      `Top scorer: ${result.awards.goldenBoot.name}, ${result.awards.goldenBoot.goals}`,
+      `Season #${seed}`,
+    ].join('\n');
+    const done = () => { setCopied(true); setTimeout(() => setCopied(false), 2000); };
+    if (navigator.share) navigator.share({ text }).then(done, () => undefined);
+    else navigator.clipboard?.writeText(text).then(done, () => undefined);
+  }
+
   const perf =
     result.finalPosition < odds.projectedPosition ? 'OVERPERFORMED' :
     result.finalPosition > odds.projectedPosition ? 'UNDERPERFORMED' : 'AS EXPECTED';
@@ -581,18 +656,46 @@ function FinalSummary({ result, picks, odds, onResim }: {
           <HeroStat label="Points"    value={String(result.points)} accent />
           <HeroStat label="Record"    value={`${result.wins}-${result.draws}-${result.losses}`} />
           <div className="bg-raised rounded-xl p-3 flex flex-col items-center justify-center gap-1">
-            <div className={`text-[10px] font-black border rounded px-2 py-1 ${perfColor}`}>{perf}</div>
-            <div className="text-[10px] text-subtle uppercase tracking-widest">vs {ordinal(odds.projectedPosition)}</div>
+            <div className={`text-[11px] font-black border rounded px-2 py-1 ${perfColor}`}>{perf}</div>
+            <div className="text-[11px] text-muted uppercase tracking-widest">priced {ordinal(odds.projectedPosition)}</div>
           </div>
         </div>
 
-        <button
-          onClick={onResim}
-          className="mt-6 px-6 py-3 rounded-xl font-black text-sm bg-raised text-muted hover:bg-raised-max hover:text-fg transition-colors border border-line-strong touch-manipulation"
-        >
-          ↺ Play it again
-        </button>
+        <p className="text-sm text-muted max-w-2xl mx-auto mt-5">
+          The bookmakers had this XI on <span className="font-bold text-fg">{odds.expectedPoints} points</span> playing
+          Balanced. Playing {styleLabel} it took{' '}
+          <span className={`font-black ${margin >= 0 ? 'text-accent' : 'text-red-400'}`}>
+            {margin >= 0 ? '+' : ''}{margin}
+          </span>{' '}
+          on that line.
+        </p>
+
+        <div className="mt-6 flex flex-wrap justify-center gap-3">
+          <Link
+            href="/squad"
+            className="px-6 py-3 rounded-xl font-black text-sm bg-[#00c896] text-black hover:bg-[#00b385] transition-colors touch-manipulation"
+          >
+            Try another style →
+          </Link>
+          <button
+            type="button"
+            onClick={onResim}
+            className="px-6 py-3 rounded-xl font-black text-sm bg-raised text-muted hover:bg-raised-max hover:text-fg transition-colors border border-line-strong touch-manipulation"
+          >
+            ↺ Play it again
+          </button>
+          <button
+            type="button"
+            onClick={share}
+            className="px-6 py-3 rounded-xl font-black text-sm bg-raised text-muted hover:bg-raised-max hover:text-fg transition-colors border border-line-strong touch-manipulation"
+          >
+            {copied ? 'Copied ✓' : 'Share'}
+          </button>
+        </div>
+        <div className="text-[11px] text-subtle mt-3">Season #{seed}</div>
       </div>
+
+      <TacticsBoard records={records} current={style} expected={odds.expectedPoints} />
 
       {/* Season stats. Six numbers on one row once there is room for them. */}
       <div className="grid grid-cols-3 gap-3 md:grid-cols-6">
@@ -727,6 +830,61 @@ function FinalSummary({ result, picks, odds, onResim }: {
           keepers={result.topKeepers ?? []}
         />
       )}
+    </div>
+  );
+}
+
+/**
+ * What each style has done with this eleven in this league.
+ *
+ * The pre-season odds are priced for a Balanced side and never learn the
+ * tactic, so this is where a player finds out what a style is worth to their
+ * XI: by playing it, and seeing it against the others they have played. One
+ * season is a noisy measure (about six points either way), which is why the
+ * board shows how many seasons each average rests on.
+ */
+function TacticsBoard({ records, current, expected }: {
+  records: StyleRecord[];
+  current: string;
+  expected: number;
+}) {
+  const total = Object.keys(PLAYSTYLES).length;
+  const best = Math.max(expected, ...records.map(r => r.averagePoints));
+  return (
+    <div className="bg-card rounded-2xl p-4 sm:p-6">
+      <div className="flex items-baseline gap-3 mb-1">
+        <div className="text-xs text-muted uppercase tracking-widest font-bold">Tactics Board</div>
+        <div className="text-[11px] text-muted">{records.length} of {total} styles tried with this XI</div>
+      </div>
+      <p className="text-xs text-muted mb-4 max-w-2xl">
+        Average points by style, against the bookmakers&apos; Balanced line of {expected}. A single season can
+        land six points either side of a style&apos;s true level, so play one again before trusting it.
+      </p>
+      <div className="space-y-2">
+        {records.map(r => {
+          const diff = Math.round(r.averagePoints) - expected;
+          return (
+            <div key={r.style} className="flex items-center gap-3 text-xs">
+              <span className={`w-28 shrink-0 truncate font-bold ${r.style === current ? 'text-accent' : 'text-fg'}`}>
+                {PLAYSTYLES[r.style as keyof typeof PLAYSTYLES]?.label ?? r.style}
+              </span>
+              <div className="flex-1 h-2 rounded-full bg-raised relative overflow-hidden">
+                <div
+                  className="h-2 rounded-full"
+                  style={{ width: `${(r.averagePoints / best) * 100}%`, background: 'var(--c-accent)', opacity: r.style === current ? 1 : 0.55 }}
+                />
+                {/* The bookmakers' line. */}
+                <div className="absolute inset-y-0 w-0.5 bg-fg" style={{ left: `${(expected / best) * 100}%` }} />
+              </div>
+              <span className="w-10 text-right font-black text-fg">{Math.round(r.averagePoints)}</span>
+              <span className={`w-9 text-right font-bold ${diff >= 0 ? 'text-accent' : 'text-red-400'}`}>
+                {diff >= 0 ? '+' : ''}{diff}
+              </span>
+              <span className="w-8 text-right text-muted">×{r.played}</span>
+            </div>
+          );
+        })}
+      </div>
     </div>
   );
 }

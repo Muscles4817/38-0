@@ -7,6 +7,7 @@ import { FORMATIONS, getFormation } from '@/lib/formations';
 import PitchView from '@/components/PitchView';
 import OptionCard from '@/components/OptionCard';
 import SiteNav from '@/components/SiteNav';
+import RunRecordPanel from '@/components/RunRecordPanel';
 import { clubChoices, nationChoices, poolCanFieldXI, type DraftFilter } from '@/lib/draftPool';
 import { BUDGET_MAX_RATING, CHALLENGE_ERAS, CHALLENGES, type ChallengeId } from '@/lib/challenges';
 
@@ -399,7 +400,8 @@ export default function SetupPage() {
           Classic Mode — pick a legendary side
         </Link>
 
-        <div className="lg:hidden">
+        <div className="lg:hidden space-y-6">
+          <RunRecordPanel />
           <SiteNav />
         </div>
         </div>
@@ -446,6 +448,8 @@ export default function SetupPage() {
             >
               Classic Mode
             </Link>
+
+            <RunRecordPanel />
 
             <SiteNav />
           </div>

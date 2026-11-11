@@ -4,11 +4,12 @@ import { useEffect, useMemo } from 'react';
 import { useRouter } from 'next/navigation';
 import { getFormation } from '@/lib/formations';
 import {
-  describeCompetition, getTacticOptions, getTeamStrengths, listCompetitions,
+  describeCompetition, getTacticOptions, getTeamStrengths, getXiProfile, listCompetitions,
   type Competition,
 } from '@/lib/gameData';
+import { parseRunHistory, RUN_HISTORY_KEY, styleRecords, xiKey, type StyleRecord } from '@/lib/runHistory';
 import { computeOverall, preSeasonOdds, type SquadPick, type TacticEffect } from '@/lib/simulation';
-import type { PlaystyleName } from '@/lib/matchEngine';
+import type { Phase, PlaystyleName } from '@/lib/matchEngine';
 import { useStoredJson, writeStored } from '@/lib/clientStorage';
 import PitchView from '@/components/PitchView';
 import PositionBadge from '@/components/PositionBadge';
@@ -63,6 +64,17 @@ export default function SquadPage() {
 
   const tactics  = useMemo(() => getTacticOptions(picks), [picks]);
   const chosen   = tactics.find(t => t.style === style) ?? tactics[0];
+  const profile  = useMemo(() => (picks.length ? getXiProfile(picks) : null), [picks]);
+
+  // What each style has already done with this eleven in this league. The
+  // odds below are priced for a Balanced side on purpose, so this record is
+  // the only place a style's worth to this XI is written down, and it is
+  // written by playing it.
+  const history  = useStoredJson<unknown>(RUN_HISTORY_KEY);
+  const records  = useMemo(
+    () => new Map(styleRecords(parseRunHistory(history), xiKey(picks), seasonId).map(r => [r.style, r])),
+    [history, picks, seasonId],
+  );
   const opponent = useMemo(() => describeCompetition(seasonId, league), [seasonId, league]);
 
   // Seasons this XI was drafted out of, so the screen can say when a player is
@@ -151,10 +163,16 @@ export default function SquadPage() {
 
         {/* ── Tactic ─────────────────────────────────────────────────────── */}
         <section>
-          <Label>Tactic</Label>
-          <p className="text-muted text-[11px] mb-3">
-            A style costs you the same whoever is playing it; what it wins back depends on whether
-            your XI can carry it out. Fit is how much of the benefit these eleven collect.
+          <div className="flex items-baseline gap-3">
+            <Label>Tactic</Label>
+            <span className="text-[11px] text-muted mb-2">
+              {records.size} of {tactics.length} tried with this XI
+            </span>
+          </div>
+          <p className="text-muted text-xs mb-3 max-w-2xl">
+            Nobody can tell you which style is best for these eleven: it depends on what they are
+            good at and on the nineteen sides they meet. Each style shows what it leans on, and what
+            it has done for this XI once you have played it.
           </p>
           <div className="grid gap-4 lg:grid-cols-[1fr_320px] lg:items-start">
             <div className="grid grid-cols-2 gap-2 sm:grid-cols-3 xl:grid-cols-4">
@@ -162,16 +180,17 @@ export default function SquadPage() {
                 <TacticCard
                   key={tactic.style}
                   tactic={tactic}
+                  profile={profile}
+                  record={records.get(tactic.style)}
                   selected={tactic.style === style}
                   onClick={() => choose({ style: tactic.style })}
                 />
               ))}
             </div>
-            {chosen && (
-              <div className="lg:sticky lg:top-6">
-                <TacticSummary tactic={chosen} />
-              </div>
-            )}
+            <div className="space-y-3 lg:sticky lg:top-6">
+              {chosen && <TacticSummary tactic={chosen} record={records.get(chosen.style)} />}
+              {profile && <XiProfile profile={profile} needs={chosen?.needs ?? NO_NEEDS} />}
+            </div>
           </div>
         </section>
 
@@ -202,8 +221,10 @@ export default function SquadPage() {
         <section className="bg-card rounded-2xl p-6 space-y-4">
           <div>
             <Label>Pre-Season Odds</Label>
-            <div className="text-xs text-muted">
-              Measured from this XI against {opponent ? `the ${opponent.seasonLabel} field` : 'the field'}
+            <div className="text-xs text-muted max-w-2xl">
+              What the bookmakers make of this XI against {opponent ? `the ${opponent.seasonLabel} field` : 'the field'},
+              playing a plain Balanced game. They do not know your tactic. Beating their line with
+              a style of your own is the game.
             </div>
           </div>
           <div className="grid grid-cols-2 gap-4">
@@ -256,28 +277,100 @@ export default function SquadPage() {
 
 // ── Tactics ──────────────────────────────────────────────────────────────────
 
-function TacticCard({ tactic, selected, onClick }: {
+const NO_NEEDS: Phase[] = [];
+
+/** The engine's phases, in the words a player would use. */
+const PHASE_LABEL: Record<Phase, string> = {
+  build:         'Playing out',
+  press:         'Pressing',
+  block:         'Defending deep',
+  create:        'Creating',
+  break:         'Pace on the break',
+  cover:         'Covering in behind',
+  delivery:      'Crossing',
+  aerialAttack:  'Attacking headers',
+  aerialDefence: 'Defending headers',
+};
+
+/**
+ * An ability in words. Abilities are in trait points against an ordinary
+ * side's zero, where ten rating points are worth one: so "strong" is an XI
+ * about six rating points better than ordinary at that job, or carrying the
+ * traits for it.
+ */
+function levelOf(ability: number): { word: string; color: string } {
+  if (ability >= 0.6)  return { word: 'Strong',   color: 'var(--c-accent)' };
+  if (ability >= 0.2)  return { word: 'Good',     color: 'var(--c-accent)' };
+  if (ability > -0.2)  return { word: 'Ordinary', color: 'var(--t-muted)' };
+  return { word: 'Weak', color: 'var(--c-red)' };
+}
+
+function TacticCard({ tactic, profile, record, selected, onClick }: {
   tactic: TacticEffect;
+  profile: Record<Phase, number> | null;
+  record: StyleRecord | undefined;
   selected: boolean;
   onClick: () => void;
 }) {
-  const pct = Math.round(tactic.fit * 100);
   return (
     <button
       type="button"
       onClick={onClick}
+      aria-pressed={selected}
       className={`rounded-lg border-2 px-3 py-3 text-left transition-colors bg-card touch-manipulation
-        ${selected ? 'border-[#00c896] text-accent' : 'border-line-strong text-fg hover:border-line-hover'}`}
+        ${selected ? 'border-[#00c896]' : 'border-line-strong hover:border-line-hover'}`}
     >
-      <div className="font-bold text-sm truncate">{tactic.label}</div>
-      <div className="text-[10px] text-muted mt-0.5">{shapeOf(tactic)}</div>
-      <div className="flex items-center gap-2 mt-2">
-        <div className="flex-1 h-1 rounded-full bg-raised-hi overflow-hidden">
-          <div className="h-1 rounded-full" style={{ width: `${pct}%`, background: fitColor(tactic.fit) }} />
-        </div>
-        <span className="text-[10px] font-bold shrink-0" style={{ color: fitColor(tactic.fit) }}>{pct}%</span>
+      <div className={`font-bold text-sm truncate ${selected ? 'text-accent' : 'text-fg'}`}>{tactic.label}</div>
+      <div className="text-[11px] text-muted mt-0.5">{shapeOf(tactic)}</div>
+      {/*
+        What the style is played through, coloured by how good this XI is at
+        it. This replaced a single "fit" percentage, which read as a forecast
+        and was not one: a 4% fit out-scored a 100% fit for the same XI. See
+        docs/playstyles.md, "Fit is not a forecast".
+      */}
+      <div className="text-[11px] mt-1.5 leading-snug">
+        {tactic.needs.length === 0
+          ? <span className="text-muted">Asks for nothing special</span>
+          : tactic.needs.map((phase, i) => (
+            <span key={phase} style={{ color: profile ? levelOf(profile[phase]).color : undefined }}>
+              {i > 0 && <span className="text-muted"> · </span>}
+              {PHASE_LABEL[phase]}
+            </span>
+          ))}
+      </div>
+      <div className={`text-[11px] font-bold mt-1.5 ${record ? 'text-fg' : 'text-subtle'}`}>
+        {record
+          ? `${record.titles > 0 ? '🏆 ' : ''}Best ${ordinal(record.bestPosition)} · ${record.bestPoints} pts${record.played > 1 ? ` · ×${record.played}` : ''}`
+          : 'Untried'}
       </div>
     </button>
+  );
+}
+
+/** What the eleven is good at, with the phases the chosen style leans on marked. */
+function XiProfile({ profile, needs }: { profile: Record<Phase, number>; needs: Phase[] }) {
+  return (
+    <div className="rounded-xl border border-line bg-inset px-4 py-3">
+      <div className="text-[11px] font-bold tracking-widest text-muted uppercase mb-2">What your XI is good at</div>
+      <div className="space-y-1">
+        {(Object.keys(PHASE_LABEL) as Phase[]).map(phase => {
+          const level = levelOf(profile[phase]);
+          const used = needs.includes(phase);
+          return (
+            <div key={phase} className="flex items-center gap-2 text-xs">
+              <span className={`flex-1 ${used ? 'font-bold text-fg' : 'text-muted'}`}>
+                {PHASE_LABEL[phase]}{used && <span className="text-accent"> ●</span>}
+              </span>
+              <span className="font-bold" style={{ color: level.color }}>{level.word}</span>
+            </div>
+          );
+        })}
+      </div>
+      <p className="text-muted text-[11px] mt-2">
+        ● is what the chosen style leans on. Read from ratings and traits, against an ordinary
+        top-flight side.
+      </p>
+    </div>
   );
 }
 
@@ -289,7 +382,7 @@ function TacticCard({ tactic, selected, onClick }: {
  * So this describes the style, and says what fit buys, rather than showing a
  * number of points it cannot honestly promise.
  */
-function TacticSummary({ tactic }: { tactic: TacticEffect }) {
+function TacticSummary({ tactic, record }: { tactic: TacticEffect; record: StyleRecord | undefined }) {
   // A match is played at the average tempo of the two styles in it, so against
   // an ordinary side a style moves the number of chances by about half its own
   // tempo. The engine takes the geometric mean; this is that.
@@ -297,10 +390,14 @@ function TacticSummary({ tactic }: { tactic: TacticEffect }) {
   const possession = tactic.possessionBias > 1.15 ? 'keeps the ball'
     : tactic.possessionBias < 0.85 ? 'lets the opponent have the ball' : 'shares the ball';
   return (
-    <div className="mt-3 rounded-xl border border-line bg-inset px-4 py-3">
+    <div className="rounded-xl border border-line bg-inset px-4 py-3">
       <div className="flex items-baseline gap-2 flex-wrap">
         <span className="font-black text-sm text-accent">{tactic.label}</span>
-        <span className="text-[11px] text-muted">fit {Math.round(tactic.fit * 100)}%</span>
+        <span className="text-[11px] text-muted">
+          {record
+            ? `${record.played} season${record.played === 1 ? '' : 's'} with this XI · averaging ${Math.round(record.averagePoints)} pts`
+            : 'not yet tried with this XI'}
+        </span>
       </div>
       <p className="text-fg-soft text-xs mt-2">
         Plays a {lineOf(tactic)}, moves the ball {buildOf(tactic)} and {possession}.
@@ -311,7 +408,6 @@ function TacticSummary({ tactic }: { tactic: TacticEffect }) {
           : chances > 0
             ? `Its matches produce about ${chances}% more chances, for both sides. A quick game suits the better team.`
             : `Its matches produce about ${-chances}% fewer chances, for both sides. A slow game is how an underdog gets a result.`}
-        {tactic.fit < 1 && ' Fit is how well this style is played through what your XI is good at, and how much of its best it leaves unused. The style is played by whoever does the work, so its pressers, runners or blockers decide how well it goes.'}
       </p>
     </div>
   );
@@ -334,10 +430,6 @@ function buildOf(tactic: TacticEffect): string {
 function shapeOf(tactic: TacticEffect): string {
   const build = tactic.buildUp > 0.65 ? 'patient' : tactic.buildUp < 0.35 ? 'direct' : 'mixed';
   return `${lineOf(tactic)} · ${build}`;
-}
-
-function fitColor(fit: number): string {
-  return fit >= 0.66 ? 'var(--c-accent)' : fit >= 0.33 ? 'var(--c-yellow)' : 'var(--c-red)';
 }
 
 // ── Season ───────────────────────────────────────────────────────────────────
@@ -396,7 +488,7 @@ function CompetitionSummary({ competition, draftedFrom }: {
   draftedFrom: boolean;
 }) {
   return (
-    <div className="mt-3 rounded-xl border border-line bg-inset px-4 py-3">
+    <div className="rounded-xl border border-line bg-inset px-4 py-3">
       <div className="font-black text-sm text-accent">
         {competition.leagueName} {competition.seasonLabel}
       </div>

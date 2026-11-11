@@ -149,6 +149,7 @@ See [pre-season.md](pre-season.md).
 | `38-0-draft-state` | draft page | draft; the squad on the table, rerolls spent and the pick that can still be undone, so a reload cannot be used as a free reroll |
 | `38-0-squad` | draft page, classic page | squad, results |
 | `38-0-plan` | squad page | squad, results |
+| `38-0-history` | results page | squad (what each style has done with this XI), results (tactics board), home (your record); totals only, capped at 200 seasons, and the one key a new run does not clear. See `src/lib/runHistory.ts` |
 | `38-0-seen-squads` | draft page | results ("What Could Have Been"); `{ clubId, seasonId }` references only, see `src/lib/seenSquads.ts` |
 
 Those keys are read through `src/lib/clientStorage.ts`, which wraps them in
