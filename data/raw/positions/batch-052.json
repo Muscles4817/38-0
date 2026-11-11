@@ -1,8 +1,179 @@
 {
   "batch": 52,
-  "of": 129,
+  "of": 130,
   "instructions": "See docs/positions-lookup.md. Fill in \"positions\" for each player, most natural first, using only values from \"allowed\". The first must come from \"primaryMustBeOneOf\". Set confidence to high, medium or low.",
   "players": [
+    {
+      "fbrefId": "74f2e748",
+      "name": "Jeremie Frimpong",
+      "nation": "NED",
+      "fbrefPosition": "MF",
+      "allowed": [
+        "CDM",
+        "CM",
+        "CAM",
+        "LM",
+        "RM"
+      ],
+      "primaryMustBeOneOf": [
+        "CDM",
+        "CM",
+        "CAM",
+        "LM",
+        "RM"
+      ],
+      "choices": 5,
+      "totalMinutes": 3291,
+      "seasons": [
+        {
+          "season": "2023/24",
+          "club": "Bayer Leverkusen",
+          "minutes": 2251,
+          "starts": 27,
+          "goals": 9,
+          "assists": 7,
+          "fbrefPosition": "MF"
+        },
+        {
+          "season": "2025/26",
+          "club": "Liverpool",
+          "minutes": 1040,
+          "starts": 12,
+          "goals": 0,
+          "assists": 1,
+          "fbrefPosition": "DFMF"
+        }
+      ],
+      "positions": [
+        "RWB",
+        "RB",
+        "RM"
+      ],
+      "confidence": "high",
+      "note": "FBref aggregates him to MF because of 2023/24, when Leverkusen played him as the right wing-back of a back three; his 2025/26 Liverpool season is recorded DFMF. He is a right-back/wing-back, so no midfield position is a defensible primary.",
+      "labelDisputed": true
+    },
+    {
+      "fbrefId": "35141f4c",
+      "name": "Marcos Senesi",
+      "nation": "ARG",
+      "fbrefPosition": "DF",
+      "allowed": [
+        "LB",
+        "CB",
+        "RB",
+        "LWB",
+        "RWB"
+      ],
+      "primaryMustBeOneOf": [
+        "LB",
+        "CB",
+        "RB",
+        "LWB",
+        "RWB"
+      ],
+      "choices": 5,
+      "totalMinutes": 3288,
+      "seasons": [
+        {
+          "season": "2025/26",
+          "club": "Bournemouth",
+          "minutes": 3288,
+          "starts": 37,
+          "goals": 0,
+          "assists": 5,
+          "fbrefPosition": "DF"
+        }
+      ],
+      "positions": [
+        "CB"
+      ],
+      "confidence": "high",
+      "note": null
+    },
+    {
+      "fbrefId": "2c7f0e9f",
+      "name": "Karl-Heinz Riedle",
+      "nation": "GER",
+      "fbrefPosition": "FW",
+      "allowed": [
+        "LW",
+        "RW",
+        "ST",
+        "CF"
+      ],
+      "primaryMustBeOneOf": [
+        "LW",
+        "RW",
+        "ST",
+        "CF"
+      ],
+      "choices": 4,
+      "totalMinutes": 3287,
+      "seasons": [
+        {
+          "season": "1997/98",
+          "club": "Liverpool",
+          "minutes": 1541,
+          "starts": 18,
+          "goals": 6,
+          "assists": 0,
+          "fbrefPosition": "FW"
+        },
+        {
+          "season": "1998/99",
+          "club": "Liverpool",
+          "minutes": 1746,
+          "starts": 16,
+          "goals": 5,
+          "assists": 2,
+          "fbrefPosition": "FW"
+        }
+      ],
+      "positions": [
+        "ST",
+        "CF"
+      ],
+      "confidence": "high",
+      "note": null
+    },
+    {
+      "fbrefId": "dc45ac24",
+      "name": "Igor Thiago",
+      "nation": "BRA",
+      "fbrefPosition": "FW",
+      "allowed": [
+        "LW",
+        "RW",
+        "ST",
+        "CF"
+      ],
+      "primaryMustBeOneOf": [
+        "LW",
+        "RW",
+        "ST",
+        "CF"
+      ],
+      "choices": 4,
+      "totalMinutes": 3282,
+      "seasons": [
+        {
+          "season": "2025/26",
+          "club": "Brentford",
+          "minutes": 3282,
+          "starts": 37,
+          "goals": 22,
+          "assists": 1,
+          "fbrefPosition": "FW"
+        }
+      ],
+      "positions": [
+        "ST",
+        "CF"
+      ],
+      "confidence": "high",
+      "note": null
+    },
     {
       "fbrefId": "2f3452eb",
       "name": "Elseid Hysaj",
@@ -989,177 +1160,6 @@
       ],
       "confidence": "high",
       "note": "Left-sided central midfielder in Napoli’s 4-3-3, playing higher in earlier seasons."
-    },
-    {
-      "fbrefId": "9c94165b",
-      "name": "Luke Shaw",
-      "nation": "ENG",
-      "fbrefPosition": "DF",
-      "allowed": [
-        "LB",
-        "CB",
-        "RB",
-        "LWB",
-        "RWB"
-      ],
-      "primaryMustBeOneOf": [
-        "LB",
-        "CB",
-        "RB",
-        "LWB",
-        "RWB"
-      ],
-      "choices": 5,
-      "totalMinutes": 3219,
-      "seasons": [
-        {
-          "season": "2025/26",
-          "club": "Manchester United",
-          "minutes": 3219,
-          "starts": 38,
-          "goals": 1,
-          "assists": 1,
-          "fbrefPosition": "DF"
-        }
-      ],
-      "positions": [
-        "LB",
-        "CB"
-      ],
-      "confidence": "high",
-      "note": "Left-back who also fills the left centre-back slot in a back three."
-    },
-    {
-      "fbrefId": "749bcfb8",
-      "name": "Ian Evatt",
-      "nation": "ENG",
-      "fbrefPosition": "DF",
-      "allowed": [
-        "LB",
-        "CB",
-        "RB",
-        "LWB",
-        "RWB"
-      ],
-      "primaryMustBeOneOf": [
-        "LB",
-        "CB",
-        "RB",
-        "LWB",
-        "RWB"
-      ],
-      "choices": 5,
-      "totalMinutes": 3215,
-      "seasons": [
-        {
-          "season": "2010/11",
-          "club": "Blackpool",
-          "minutes": 3215,
-          "starts": 36,
-          "goals": 1,
-          "assists": 3,
-          "fbrefPosition": "DF"
-        }
-      ],
-      "positions": [
-        "CB"
-      ],
-      "confidence": "high",
-      "note": null
-    },
-    {
-      "fbrefId": "e9c268b6",
-      "name": "Jason Lee",
-      "nation": "ENG",
-      "fbrefPosition": "FW",
-      "allowed": [
-        "LW",
-        "RW",
-        "ST",
-        "CF"
-      ],
-      "primaryMustBeOneOf": [
-        "LW",
-        "RW",
-        "ST",
-        "CF"
-      ],
-      "choices": 4,
-      "totalMinutes": 3215,
-      "seasons": [
-        {
-          "season": "1994/95",
-          "club": "Nottingham Forest",
-          "minutes": 700,
-          "starts": 5,
-          "goals": 3,
-          "assists": 2,
-          "fbrefPosition": "FW"
-        },
-        {
-          "season": "1995/96",
-          "club": "Nottingham Forest",
-          "minutes": 1884,
-          "starts": 21,
-          "goals": 8,
-          "assists": 1,
-          "fbrefPosition": "FW"
-        },
-        {
-          "season": "1996/97",
-          "club": "Nottingham Forest",
-          "minutes": 631,
-          "starts": 5,
-          "goals": 1,
-          "assists": 2,
-          "fbrefPosition": "FW"
-        }
-      ],
-      "positions": [
-        "ST",
-        "CF"
-      ],
-      "confidence": "high",
-      "note": null
-    },
-    {
-      "fbrefId": "eb569ce1",
-      "name": "Lee Naylor",
-      "nation": "ENG",
-      "fbrefPosition": "DF",
-      "allowed": [
-        "LB",
-        "CB",
-        "RB",
-        "LWB",
-        "RWB"
-      ],
-      "primaryMustBeOneOf": [
-        "LB",
-        "CB",
-        "RB",
-        "LWB",
-        "RWB"
-      ],
-      "choices": 5,
-      "totalMinutes": 3213,
-      "seasons": [
-        {
-          "season": "2003/04",
-          "club": "Wolverhampton Wanderers",
-          "minutes": 3213,
-          "starts": 37,
-          "goals": 1,
-          "assists": 0,
-          "fbrefPosition": "DF"
-        }
-      ],
-      "positions": [
-        "LB",
-        "LWB"
-      ],
-      "confidence": "high",
-      "note": null
     }
   ]
 }

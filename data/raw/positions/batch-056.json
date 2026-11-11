@@ -1,8 +1,178 @@
 {
   "batch": 56,
-  "of": 129,
+  "of": 130,
   "instructions": "See docs/positions-lookup.md. Fill in \"positions\" for each player, most natural first, using only values from \"allowed\". The first must come from \"primaryMustBeOneOf\". Set confidence to high, medium or low.",
   "players": [
+    {
+      "fbrefId": "2ec16bbc",
+      "name": "Carl Leaburn",
+      "nation": "ENG",
+      "fbrefPosition": "FW",
+      "allowed": [
+        "LW",
+        "RW",
+        "ST",
+        "CF"
+      ],
+      "primaryMustBeOneOf": [
+        "LW",
+        "RW",
+        "ST",
+        "CF"
+      ],
+      "choices": 4,
+      "totalMinutes": 3022,
+      "seasons": [
+        {
+          "season": "1997/98",
+          "club": "Wimbledon",
+          "minutes": 1296,
+          "starts": 15,
+          "goals": 4,
+          "assists": 2,
+          "fbrefPosition": "FW"
+        },
+        {
+          "season": "1998/99",
+          "club": "Wimbledon",
+          "minutes": 1250,
+          "starts": 14,
+          "goals": 0,
+          "assists": 2,
+          "fbrefPosition": "FW"
+        },
+        {
+          "season": "1999/00",
+          "club": "Wimbledon",
+          "minutes": 476,
+          "starts": 5,
+          "goals": 0,
+          "assists": 0,
+          "fbrefPosition": "FW"
+        }
+      ],
+      "positions": [
+        "ST",
+        "CF"
+      ],
+      "confidence": "high",
+      "note": null
+    },
+    {
+      "fbrefId": "ef491564",
+      "name": "Mateus Fernandes",
+      "nation": "POR",
+      "fbrefPosition": "MF",
+      "allowed": [
+        "CDM",
+        "CM",
+        "CAM",
+        "LM",
+        "RM"
+      ],
+      "primaryMustBeOneOf": [
+        "CDM",
+        "CM",
+        "CAM",
+        "LM",
+        "RM"
+      ],
+      "choices": 5,
+      "totalMinutes": 3016,
+      "seasons": [
+        {
+          "season": "2025/26",
+          "club": "West Ham United",
+          "minutes": 3016,
+          "starts": 35,
+          "goals": 3,
+          "assists": 4,
+          "fbrefPosition": "MF"
+        }
+      ],
+      "positions": [
+        "CM",
+        "CAM"
+      ],
+      "confidence": "medium",
+      "note": "Box-to-box central midfielder at West Ham, signed from Sporting."
+    },
+    {
+      "fbrefId": "06420c93",
+      "name": "Samuel Eto'o",
+      "nation": "CMR",
+      "fbrefPosition": "FW",
+      "allowed": [
+        "LW",
+        "RW",
+        "ST",
+        "CF"
+      ],
+      "primaryMustBeOneOf": [
+        "LW",
+        "RW",
+        "ST",
+        "CF"
+      ],
+      "choices": 4,
+      "totalMinutes": 3015,
+      "seasons": [
+        {
+          "season": "2005/06",
+          "club": "Barcelona",
+          "minutes": 3015,
+          "starts": 34,
+          "goals": 26,
+          "assists": 5,
+          "fbrefPosition": "FW"
+        }
+      ],
+      "positions": [
+        "ST",
+        "CF"
+      ],
+      "confidence": "high",
+      "note": null
+    },
+    {
+      "fbrefId": "2389cdc2",
+      "name": "Matty Cash",
+      "nation": "POL",
+      "fbrefPosition": "DF",
+      "allowed": [
+        "LB",
+        "CB",
+        "RB",
+        "LWB",
+        "RWB"
+      ],
+      "primaryMustBeOneOf": [
+        "LB",
+        "CB",
+        "RB",
+        "LWB",
+        "RWB"
+      ],
+      "choices": 5,
+      "totalMinutes": 3014,
+      "seasons": [
+        {
+          "season": "2025/26",
+          "club": "Aston Villa",
+          "minutes": 3014,
+          "starts": 34,
+          "goals": 3,
+          "assists": 3,
+          "fbrefPosition": "DF"
+        }
+      ],
+      "positions": [
+        "RB",
+        "RWB"
+      ],
+      "confidence": "high",
+      "note": null
+    },
     {
       "fbrefId": "5acd2a69",
       "name": "Mario Faccenda",
@@ -765,6 +935,44 @@
       "note": null
     },
     {
+      "fbrefId": "c45467ac",
+      "name": "Júlio César",
+      "nation": "BRA",
+      "fbrefPosition": "DF",
+      "allowed": [
+        "LB",
+        "CB",
+        "RB",
+        "LWB",
+        "RWB"
+      ],
+      "primaryMustBeOneOf": [
+        "LB",
+        "CB",
+        "RB",
+        "LWB",
+        "RWB"
+      ],
+      "choices": 5,
+      "totalMinutes": 2970,
+      "seasons": [
+        {
+          "season": "1991/92",
+          "club": "Juventus",
+          "minutes": 2970,
+          "starts": 33,
+          "goals": 1,
+          "assists": null,
+          "fbrefPosition": "DF"
+        }
+      ],
+      "positions": [
+        "CB"
+      ],
+      "confidence": "high",
+      "note": "Juventus centre-back Júlio César da Silva, not the Internazionale goalkeeper of the same name."
+    },
+    {
       "fbrefId": "33b6ee02",
       "name": "Kelvin Davis",
       "nation": "ENG",
@@ -825,117 +1033,9 @@
       "note": null
     },
     {
-      "fbrefId": "e1d3c5a8",
-      "name": "Sébastien Frey",
-      "nation": "FRA",
-      "fbrefPosition": "GK",
-      "allowed": [
-        "GK"
-      ],
-      "primaryMustBeOneOf": [
-        "GK"
-      ],
-      "choices": 1,
-      "totalMinutes": 2970,
-      "seasons": [
-        {
-          "season": "2003/04",
-          "club": "Parma",
-          "minutes": 2970,
-          "starts": 33,
-          "goals": 0,
-          "assists": 0,
-          "fbrefPosition": "GK"
-        }
-      ],
-      "positions": [
-        "GK"
-      ],
-      "confidence": "high",
-      "note": null
-    },
-    {
-      "fbrefId": "6ca4e2c5",
-      "name": "Walter Zenga",
+      "fbrefId": "45857333",
+      "name": "Mauro Tassotti",
       "nation": "ITA",
-      "fbrefPosition": "GK",
-      "allowed": [
-        "GK"
-      ],
-      "primaryMustBeOneOf": [
-        "GK"
-      ],
-      "choices": 1,
-      "totalMinutes": 2970,
-      "seasons": [
-        {
-          "season": "1988/89",
-          "club": "Internazionale",
-          "minutes": 2970,
-          "starts": 33,
-          "goals": 0,
-          "assists": null,
-          "fbrefPosition": "GK"
-        }
-      ],
-      "positions": [
-        "GK"
-      ],
-      "confidence": "high",
-      "note": null
-    },
-    {
-      "fbrefId": "638e7441",
-      "name": "Bruno Ribeiro",
-      "nation": "POR",
-      "fbrefPosition": "MF",
-      "allowed": [
-        "CDM",
-        "CM",
-        "CAM",
-        "LM",
-        "RM"
-      ],
-      "primaryMustBeOneOf": [
-        "CDM",
-        "CM",
-        "CAM",
-        "LM",
-        "RM"
-      ],
-      "choices": 5,
-      "totalMinutes": 2969,
-      "seasons": [
-        {
-          "season": "1997/98",
-          "club": "Leeds United",
-          "minutes": 2399,
-          "starts": 28,
-          "goals": 3,
-          "assists": 4,
-          "fbrefPosition": "MF"
-        },
-        {
-          "season": "1998/99",
-          "club": "Leeds United",
-          "minutes": 570,
-          "starts": 7,
-          "goals": 1,
-          "assists": 0,
-          "fbrefPosition": "MF"
-        }
-      ],
-      "positions": [
-        "LM",
-        "CM"
-      ],
-      "confidence": "medium",
-      "note": null
-    },
-    {
-      "fbrefId": "c7c33967",
-      "name": "Phil King",
-      "nation": "ENG",
       "fbrefPosition": "DF",
       "allowed": [
         "LB",
@@ -952,119 +1052,22 @@
         "RWB"
       ],
       "choices": 5,
-      "totalMinutes": 2969,
+      "totalMinutes": 2970,
       "seasons": [
         {
-          "season": "1992/93",
-          "club": "Sheffield Wednesday",
-          "minutes": 1044,
-          "starts": 11,
-          "goals": 1,
-          "assists": 2,
-          "fbrefPosition": "DF"
-        },
-        {
-          "season": "1993/94",
-          "club": "Sheffield Wednesday",
-          "minutes": 723,
-          "starts": 7,
+          "season": "1991/92",
+          "club": "AC Milan",
+          "minutes": 2970,
+          "starts": 33,
           "goals": 0,
-          "assists": 0,
-          "fbrefPosition": "DF"
-        },
-        {
-          "season": "1994/95",
-          "club": "Aston Villa",
-          "minutes": 1202,
-          "starts": 13,
-          "goals": 0,
-          "assists": 1,
+          "assists": null,
           "fbrefPosition": "DF"
         }
       ],
       "positions": [
-        "LB"
+        "RB"
       ],
       "confidence": "high",
-      "note": null
-    },
-    {
-      "fbrefId": "67d57df1",
-      "name": "Emerson",
-      "nation": "BRA",
-      "fbrefPosition": "MF",
-      "allowed": [
-        "CDM",
-        "CM",
-        "CAM",
-        "LM",
-        "RM"
-      ],
-      "primaryMustBeOneOf": [
-        "CDM",
-        "CM",
-        "CAM",
-        "LM",
-        "RM"
-      ],
-      "choices": 5,
-      "totalMinutes": 2966,
-      "seasons": [
-        {
-          "season": "2003/04",
-          "club": "Roma",
-          "minutes": 2966,
-          "starts": 33,
-          "goals": 3,
-          "assists": 1,
-          "fbrefPosition": "MF"
-        }
-      ],
-      "positions": [
-        "CDM",
-        "CM"
-      ],
-      "confidence": "high",
-      "note": "Roma's holding midfielder."
-    },
-    {
-      "fbrefId": "b5980cb9",
-      "name": "Paul Cook",
-      "nation": "ENG",
-      "fbrefPosition": "MF",
-      "allowed": [
-        "CDM",
-        "CM",
-        "CAM",
-        "LM",
-        "RM"
-      ],
-      "primaryMustBeOneOf": [
-        "CDM",
-        "CM",
-        "CAM",
-        "LM",
-        "RM"
-      ],
-      "choices": 5,
-      "totalMinutes": 2966,
-      "seasons": [
-        {
-          "season": "1994/95",
-          "club": "Coventry City",
-          "minutes": 2966,
-          "starts": 33,
-          "goals": 2,
-          "assists": 6,
-          "fbrefPosition": "MF"
-        }
-      ],
-      "positions": [
-        "CM",
-        "LM",
-        "CAM"
-      ],
-      "confidence": "medium",
       "note": null
     }
   ]

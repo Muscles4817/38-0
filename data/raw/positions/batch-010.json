@@ -1,6 +1,6 @@
 {
   "batch": 10,
-  "of": 129,
+  "of": 130,
   "instructions": "See docs/positions-lookup.md. Fill in \"positions\" for each player, most natural first, using only values from \"allowed\". The first must come from \"primaryMustBeOneOf\". Set confidence to high, medium or low.",
   "players": [
     {
@@ -392,6 +392,116 @@
       ],
       "confidence": "high",
       "note": null
+    },
+    {
+      "fbrefId": "9bbe0ecf",
+      "name": "Paolo Di Canio",
+      "nation": "ITA",
+      "fbrefPosition": "FW",
+      "allowed": [
+        "LW",
+        "RW",
+        "ST",
+        "CF"
+      ],
+      "primaryMustBeOneOf": [
+        "LW",
+        "RW",
+        "ST",
+        "CF"
+      ],
+      "choices": 4,
+      "totalMinutes": 16441,
+      "seasons": [
+        {
+          "season": "1991/92",
+          "club": "Juventus",
+          "minutes": 917,
+          "starts": 8,
+          "goals": 0,
+          "assists": null,
+          "fbrefPosition": "FW"
+        },
+        {
+          "season": "1997/98",
+          "club": "Sheffield Wednesday",
+          "minutes": 2960,
+          "starts": 34,
+          "goals": 12,
+          "assists": 6,
+          "fbrefPosition": "FW"
+        },
+        {
+          "season": "1998/99",
+          "club": "West Ham United",
+          "minutes": 1086,
+          "starts": 12,
+          "goals": 4,
+          "assists": 2,
+          "fbrefPosition": "FW"
+        },
+        {
+          "season": "1998/99",
+          "club": "Sheffield Wednesday",
+          "minutes": 440,
+          "starts": 5,
+          "goals": 3,
+          "assists": 0,
+          "fbrefPosition": "FW"
+        },
+        {
+          "season": "1999/00",
+          "club": "West Ham United",
+          "minutes": 2616,
+          "starts": 29,
+          "goals": 16,
+          "assists": 13,
+          "fbrefPosition": "FW"
+        },
+        {
+          "season": "2000/01",
+          "club": "West Ham United",
+          "minutes": 2786,
+          "starts": 31,
+          "goals": 10,
+          "assists": 7,
+          "fbrefPosition": "FW"
+        },
+        {
+          "season": "2001/02",
+          "club": "West Ham United",
+          "minutes": 2254,
+          "starts": 26,
+          "goals": 9,
+          "assists": 6,
+          "fbrefPosition": "FW"
+        },
+        {
+          "season": "2002/03",
+          "club": "West Ham United",
+          "minutes": 1365,
+          "starts": 16,
+          "goals": 9,
+          "assists": 3,
+          "fbrefPosition": "FW"
+        },
+        {
+          "season": "2003/04",
+          "club": "Charlton Athletic",
+          "minutes": 2017,
+          "starts": 23,
+          "goals": 4,
+          "assists": 12,
+          "fbrefPosition": "FW"
+        }
+      ],
+      "positions": [
+        "CF",
+        "ST",
+        "LW"
+      ],
+      "confidence": "medium",
+      "note": "Second striker who dropped off the front man; drifted to the left at West Ham."
     },
     {
       "fbrefId": "42e0fd3a",
@@ -2449,97 +2559,6 @@
       ],
       "confidence": "medium",
       "note": "Newcastle used him wide on the right and in central midfield in 1999/00."
-    },
-    {
-      "fbrefId": "fe97f10b",
-      "name": "Darren Bent",
-      "nation": "ENG",
-      "fbrefPosition": "FW",
-      "allowed": [
-        "LW",
-        "RW",
-        "ST",
-        "CF"
-      ],
-      "primaryMustBeOneOf": [
-        "LW",
-        "RW",
-        "ST",
-        "CF"
-      ],
-      "choices": 4,
-      "totalMinutes": 15874,
-      "seasons": [
-        {
-          "season": "2005/06",
-          "club": "Charlton Athletic",
-          "minutes": 3162,
-          "starts": 36,
-          "goals": 18,
-          "assists": 4,
-          "fbrefPosition": "FW"
-        },
-        {
-          "season": "2006/07",
-          "club": "Charlton Athletic",
-          "minutes": 2865,
-          "starts": 32,
-          "goals": 13,
-          "assists": 1,
-          "fbrefPosition": "FW"
-        },
-        {
-          "season": "2007/08",
-          "club": "Tottenham Hotspur",
-          "minutes": 1149,
-          "starts": 11,
-          "goals": 6,
-          "assists": 3,
-          "fbrefPosition": "FW"
-        },
-        {
-          "season": "2008/09",
-          "club": "Tottenham Hotspur",
-          "minutes": 2174,
-          "starts": 21,
-          "goals": 12,
-          "assists": 2,
-          "fbrefPosition": "FW"
-        },
-        {
-          "season": "2009/10",
-          "club": "Sunderland",
-          "minutes": 3383,
-          "starts": 38,
-          "goals": 24,
-          "assists": 1,
-          "fbrefPosition": "FW"
-        },
-        {
-          "season": "2010/11",
-          "club": "Sunderland",
-          "minutes": 1743,
-          "starts": 20,
-          "goals": 8,
-          "assists": 0,
-          "fbrefPosition": "FW"
-        },
-        {
-          "season": "2010/11",
-          "club": "Aston Villa",
-          "minutes": 1398,
-          "starts": 16,
-          "goals": 9,
-          "assists": 1,
-          "fbrefPosition": "FW"
-        }
-      ],
-      "positions": [
-        "ST",
-        "CF"
-      ],
-      "confidence": "high",
-      "note": null
     }
   ]
 }

@@ -1,8 +1,129 @@
 {
   "batch": 39,
-  "of": 129,
+  "of": 130,
   "instructions": "See docs/positions-lookup.md. Fill in \"positions\" for each player, most natural first, using only values from \"allowed\". The first must come from \"primaryMustBeOneOf\". Set confidence to high, medium or low.",
   "players": [
+    {
+      "fbrefId": "d87a80b2",
+      "name": "Andy Dawson",
+      "nation": "ENG",
+      "fbrefPosition": "DF",
+      "allowed": [
+        "LB",
+        "CB",
+        "RB",
+        "LWB",
+        "RWB"
+      ],
+      "primaryMustBeOneOf": [
+        "LB",
+        "CB",
+        "RB",
+        "LWB",
+        "RWB"
+      ],
+      "choices": 5,
+      "totalMinutes": 5101,
+      "seasons": [
+        {
+          "season": "2008/09",
+          "club": "Hull City",
+          "minutes": 2036,
+          "starts": 25,
+          "goals": 1,
+          "assists": 3,
+          "fbrefPosition": "DF"
+        },
+        {
+          "season": "2009/10",
+          "club": "Hull City",
+          "minutes": 3065,
+          "starts": 35,
+          "goals": 1,
+          "assists": 0,
+          "fbrefPosition": "DF"
+        }
+      ],
+      "positions": [
+        "LB"
+      ],
+      "confidence": "high",
+      "note": null
+    },
+    {
+      "fbrefId": "b1d82fc2",
+      "name": "Philippe Senderos",
+      "nation": "SUI",
+      "fbrefPosition": "DF",
+      "allowed": [
+        "LB",
+        "CB",
+        "RB",
+        "LWB",
+        "RWB"
+      ],
+      "primaryMustBeOneOf": [
+        "LB",
+        "CB",
+        "RB",
+        "LWB",
+        "RWB"
+      ],
+      "choices": 5,
+      "totalMinutes": 5089,
+      "seasons": [
+        {
+          "season": "2004/05",
+          "club": "Arsenal",
+          "minutes": 1088,
+          "starts": 12,
+          "goals": 0,
+          "assists": 0,
+          "fbrefPosition": "DF"
+        },
+        {
+          "season": "2005/06",
+          "club": "Arsenal",
+          "minutes": 1675,
+          "starts": 19,
+          "goals": 2,
+          "assists": 0,
+          "fbrefPosition": "DF"
+        },
+        {
+          "season": "2006/07",
+          "club": "Arsenal",
+          "minutes": 809,
+          "starts": 9,
+          "goals": 0,
+          "assists": 0,
+          "fbrefPosition": "DF"
+        },
+        {
+          "season": "2007/08",
+          "club": "Arsenal",
+          "minutes": 1247,
+          "starts": 14,
+          "goals": 2,
+          "assists": 0,
+          "fbrefPosition": "DF"
+        },
+        {
+          "season": "2010/11",
+          "club": "Fulham",
+          "minutes": 270,
+          "starts": 3,
+          "goals": 0,
+          "assists": 0,
+          "fbrefPosition": "DF"
+        }
+      ],
+      "positions": [
+        "CB"
+      ],
+      "confidence": "high",
+      "note": null
+    },
     {
       "fbrefId": "480438da",
       "name": "Alen Bokšić",
@@ -1305,109 +1426,6 @@
       ],
       "confidence": "medium",
       "note": "Second striker at Bradford; moved into a wide-left role later in his career."
-    },
-    {
-      "fbrefId": "ee2a3876",
-      "name": "Kevin Hitchcock",
-      "nation": null,
-      "fbrefPosition": "GK",
-      "allowed": [
-        "GK"
-      ],
-      "primaryMustBeOneOf": [
-        "GK"
-      ],
-      "choices": 1,
-      "totalMinutes": 4916,
-      "seasons": [
-        {
-          "season": "1992/93",
-          "club": "Chelsea",
-          "minutes": 1800,
-          "starts": 20,
-          "goals": 0,
-          "assists": 0,
-          "fbrefPosition": "GK"
-        },
-        {
-          "season": "1994/95",
-          "club": "Chelsea",
-          "minutes": 1035,
-          "starts": 11,
-          "goals": 0,
-          "assists": 0,
-          "fbrefPosition": "GK"
-        },
-        {
-          "season": "1995/96",
-          "club": "Chelsea",
-          "minutes": 1080,
-          "starts": 12,
-          "goals": 0,
-          "assists": 0,
-          "fbrefPosition": "GK"
-        },
-        {
-          "season": "1996/97",
-          "club": "Chelsea",
-          "minutes": 1001,
-          "starts": 10,
-          "goals": 0,
-          "assists": 0,
-          "fbrefPosition": "GK"
-        }
-      ],
-      "positions": [
-        "GK"
-      ],
-      "confidence": "high",
-      "note": null
-    },
-    {
-      "fbrefId": "7f97bf11",
-      "name": "Jürgen Klinsmann",
-      "nation": "GER",
-      "fbrefPosition": "FW",
-      "allowed": [
-        "LW",
-        "RW",
-        "ST",
-        "CF"
-      ],
-      "primaryMustBeOneOf": [
-        "LW",
-        "RW",
-        "ST",
-        "CF"
-      ],
-      "choices": 4,
-      "totalMinutes": 4906,
-      "seasons": [
-        {
-          "season": "1994/95",
-          "club": "Tottenham Hotspur",
-          "minutes": 3625,
-          "starts": 41,
-          "goals": 20,
-          "assists": 10,
-          "fbrefPosition": "FW"
-        },
-        {
-          "season": "1997/98",
-          "club": "Tottenham Hotspur",
-          "minutes": 1281,
-          "starts": 15,
-          "goals": 9,
-          "assists": 5,
-          "fbrefPosition": "FW"
-        }
-      ],
-      "positions": [
-        "ST",
-        "CF"
-      ],
-      "confidence": "high",
-      "note": null
     }
   ]
 }

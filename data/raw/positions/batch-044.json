@@ -1,8 +1,152 @@
 {
   "batch": 44,
-  "of": 129,
+  "of": 130,
   "instructions": "See docs/positions-lookup.md. Fill in \"positions\" for each player, most natural first, using only values from \"allowed\". The first must come from \"primaryMustBeOneOf\". Set confidence to high, medium or low.",
   "players": [
+    {
+      "fbrefId": "1db88b29",
+      "name": "Elano",
+      "nation": "BRA",
+      "fbrefPosition": "MF",
+      "allowed": [
+        "CDM",
+        "CM",
+        "CAM",
+        "LM",
+        "RM"
+      ],
+      "primaryMustBeOneOf": [
+        "CDM",
+        "CM",
+        "CAM",
+        "LM",
+        "RM"
+      ],
+      "choices": 5,
+      "totalMinutes": 4305,
+      "seasons": [
+        {
+          "season": "2007/08",
+          "club": "Manchester City",
+          "minutes": 2437,
+          "starts": 29,
+          "goals": 8,
+          "assists": 9,
+          "fbrefPosition": "MF"
+        },
+        {
+          "season": "2008/09",
+          "club": "Manchester City",
+          "minutes": 1868,
+          "starts": 21,
+          "goals": 6,
+          "assists": 3,
+          "fbrefPosition": "MF"
+        }
+      ],
+      "positions": [
+        "CAM",
+        "CM",
+        "RM"
+      ],
+      "confidence": "medium",
+      "note": "Attacking midfielder for Manchester City, drifting right; free-kick and assist source."
+    },
+    {
+      "fbrefId": "fd4b4bf4",
+      "name": "John Humphrey",
+      "nation": "ENG",
+      "fbrefPosition": "DF",
+      "allowed": [
+        "LB",
+        "CB",
+        "RB",
+        "LWB",
+        "RWB"
+      ],
+      "primaryMustBeOneOf": [
+        "LB",
+        "CB",
+        "RB",
+        "LWB",
+        "RWB"
+      ],
+      "choices": 5,
+      "totalMinutes": 4300,
+      "seasons": [
+        {
+          "season": "1992/93",
+          "club": "Crystal Palace",
+          "minutes": 2542,
+          "starts": 28,
+          "goals": 0,
+          "assists": 0,
+          "fbrefPosition": "DF"
+        },
+        {
+          "season": "1994/95",
+          "club": "Crystal Palace",
+          "minutes": 1758,
+          "starts": 19,
+          "goals": 0,
+          "assists": 0,
+          "fbrefPosition": "DF"
+        }
+      ],
+      "positions": [
+        "RB"
+      ],
+      "confidence": "high",
+      "note": null
+    },
+    {
+      "fbrefId": "01b2ec2b",
+      "name": "Martin Albrechtsen",
+      "nation": "DEN",
+      "fbrefPosition": "DF",
+      "allowed": [
+        "LB",
+        "CB",
+        "RB",
+        "LWB",
+        "RWB"
+      ],
+      "primaryMustBeOneOf": [
+        "LB",
+        "CB",
+        "RB",
+        "LWB",
+        "RWB"
+      ],
+      "choices": 5,
+      "totalMinutes": 4298,
+      "seasons": [
+        {
+          "season": "2004/05",
+          "club": "West Bromwich Albion",
+          "minutes": 1785,
+          "starts": 20,
+          "goals": 0,
+          "assists": 1,
+          "fbrefPosition": "DF"
+        },
+        {
+          "season": "2005/06",
+          "club": "West Bromwich Albion",
+          "minutes": 2513,
+          "starts": 26,
+          "goals": 1,
+          "assists": 0,
+          "fbrefPosition": "DF"
+        }
+      ],
+      "positions": [
+        "RB",
+        "CB"
+      ],
+      "confidence": "medium",
+      "note": null
+    },
     {
       "fbrefId": "56c33229",
       "name": "Paul Gascoigne",
@@ -1264,165 +1408,6 @@
           "goals": 0,
           "assists": 0,
           "fbrefPosition": "FWMF"
-        }
-      ],
-      "positions": [
-        "ST",
-        "CF"
-      ],
-      "confidence": "high",
-      "note": null
-    },
-    {
-      "fbrefId": "3df79848",
-      "name": "Karl Ready",
-      "nation": "WAL",
-      "fbrefPosition": "DF",
-      "allowed": [
-        "LB",
-        "CB",
-        "RB",
-        "LWB",
-        "RWB"
-      ],
-      "primaryMustBeOneOf": [
-        "LB",
-        "CB",
-        "RB",
-        "LWB",
-        "RWB"
-      ],
-      "choices": 5,
-      "totalMinutes": 4205,
-      "seasons": [
-        {
-          "season": "1993/94",
-          "club": "Queens Park Rangers",
-          "minutes": 1770,
-          "starts": 19,
-          "goals": 1,
-          "assists": 0,
-          "fbrefPosition": "DF"
-        },
-        {
-          "season": "1994/95",
-          "club": "Queens Park Rangers",
-          "minutes": 946,
-          "starts": 11,
-          "goals": 1,
-          "assists": 0,
-          "fbrefPosition": "DF"
-        },
-        {
-          "season": "1995/96",
-          "club": "Queens Park Rangers",
-          "minutes": 1489,
-          "starts": 16,
-          "goals": 1,
-          "assists": 1,
-          "fbrefPosition": "DF"
-        }
-      ],
-      "positions": [
-        "CB"
-      ],
-      "confidence": "high",
-      "note": null
-    },
-    {
-      "fbrefId": "5cff621e",
-      "name": "Martin Allen",
-      "nation": "ENG",
-      "fbrefPosition": "MF",
-      "allowed": [
-        "CDM",
-        "CM",
-        "CAM",
-        "LM",
-        "RM"
-      ],
-      "primaryMustBeOneOf": [
-        "CDM",
-        "CM",
-        "CAM",
-        "LM",
-        "RM"
-      ],
-      "choices": 5,
-      "totalMinutes": 4200,
-      "seasons": [
-        {
-          "season": "1993/94",
-          "club": "West Ham United",
-          "minutes": 1718,
-          "starts": 20,
-          "goals": 6,
-          "assists": 2,
-          "fbrefPosition": "MF"
-        },
-        {
-          "season": "1994/95",
-          "club": "West Ham United",
-          "minutes": 2212,
-          "starts": 26,
-          "goals": 2,
-          "assists": 1,
-          "fbrefPosition": "MF"
-        },
-        {
-          "season": "1995/96",
-          "club": "West Ham United",
-          "minutes": 270,
-          "starts": 3,
-          "goals": 1,
-          "assists": 0,
-          "fbrefPosition": "MF"
-        }
-      ],
-      "positions": [
-        "CM",
-        "CDM"
-      ],
-      "confidence": "medium",
-      "note": "Combative central midfielder who got forward enough to score six in 1993/94."
-    },
-    {
-      "fbrefId": "4cde5509",
-      "name": "Zlatan Ibrahimović",
-      "nation": "SWE",
-      "fbrefPosition": "FW",
-      "allowed": [
-        "LW",
-        "RW",
-        "ST",
-        "CF"
-      ],
-      "primaryMustBeOneOf": [
-        "LW",
-        "RW",
-        "ST",
-        "CF"
-      ],
-      "choices": 4,
-      "totalMinutes": 4196,
-      "seasons": [
-        {
-          "season": "2006/07",
-          "club": "Internazionale",
-          "minutes": 2156,
-          "starts": 25,
-          "goals": 15,
-          "assists": 7,
-          "fbrefPosition": "FW"
-        },
-        {
-          "season": "2009/10",
-          "club": "Barcelona",
-          "minutes": 2040,
-          "starts": 23,
-          "goals": 16,
-          "assists": 6,
-          "fbrefPosition": "FW"
         }
       ],
       "positions": [

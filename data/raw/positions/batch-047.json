@@ -1,8 +1,194 @@
 {
   "batch": 47,
-  "of": 129,
+  "of": 130,
   "instructions": "See docs/positions-lookup.md. Fill in \"positions\" for each player, most natural first, using only values from \"allowed\". The first must come from \"primaryMustBeOneOf\". Set confidence to high, medium or low.",
   "players": [
+    {
+      "fbrefId": "791e2a3b",
+      "name": "Richard Gough",
+      "nation": "SCO",
+      "fbrefPosition": "DF",
+      "allowed": [
+        "LB",
+        "CB",
+        "RB",
+        "LWB",
+        "RWB"
+      ],
+      "primaryMustBeOneOf": [
+        "LB",
+        "CB",
+        "RB",
+        "LWB",
+        "RWB"
+      ],
+      "choices": 5,
+      "totalMinutes": 3834,
+      "seasons": [
+        {
+          "season": "1998/99",
+          "club": "Nottingham Forest",
+          "minutes": 588,
+          "starts": 7,
+          "goals": 0,
+          "assists": 0,
+          "fbrefPosition": "DF"
+        },
+        {
+          "season": "1999/00",
+          "club": "Everton",
+          "minutes": 2582,
+          "starts": 29,
+          "goals": 1,
+          "assists": 1,
+          "fbrefPosition": "DF"
+        },
+        {
+          "season": "2000/01",
+          "club": "Everton",
+          "minutes": 664,
+          "starts": 9,
+          "goals": 0,
+          "assists": 0,
+          "fbrefPosition": "DF"
+        }
+      ],
+      "positions": [
+        "CB"
+      ],
+      "confidence": "high",
+      "note": null
+    },
+    {
+      "fbrefId": "19256324",
+      "name": "Tony Yeboah",
+      "nation": "GHA",
+      "fbrefPosition": "FW",
+      "allowed": [
+        "LW",
+        "RW",
+        "ST",
+        "CF"
+      ],
+      "primaryMustBeOneOf": [
+        "LW",
+        "RW",
+        "ST",
+        "CF"
+      ],
+      "choices": 4,
+      "totalMinutes": 3832,
+      "seasons": [
+        {
+          "season": "1994/95",
+          "club": "Leeds United",
+          "minutes": 1437,
+          "starts": 16,
+          "goals": 12,
+          "assists": 2,
+          "fbrefPosition": "FW"
+        },
+        {
+          "season": "1995/96",
+          "club": "Leeds United",
+          "minutes": 1880,
+          "starts": 21,
+          "goals": 12,
+          "assists": 1,
+          "fbrefPosition": "FW"
+        },
+        {
+          "season": "1996/97",
+          "club": "Leeds United",
+          "minutes": 515,
+          "starts": 6,
+          "goals": 0,
+          "assists": 0,
+          "fbrefPosition": "FW"
+        }
+      ],
+      "positions": [
+        "ST",
+        "CF"
+      ],
+      "confidence": "high",
+      "note": null
+    },
+    {
+      "fbrefId": "d2fd5e70",
+      "name": "Graham Fenton",
+      "nation": "ENG",
+      "fbrefPosition": "MF",
+      "allowed": [
+        "CDM",
+        "CM",
+        "CAM",
+        "LM",
+        "RM"
+      ],
+      "primaryMustBeOneOf": [
+        "CDM",
+        "CM",
+        "CAM",
+        "LM",
+        "RM"
+      ],
+      "choices": 5,
+      "totalMinutes": 3824,
+      "seasons": [
+        {
+          "season": "1993/94",
+          "club": "Aston Villa",
+          "minutes": 847,
+          "starts": 9,
+          "goals": 1,
+          "assists": 0,
+          "fbrefPosition": "MF"
+        },
+        {
+          "season": "1994/95",
+          "club": "Aston Villa",
+          "minutes": 818,
+          "starts": 7,
+          "goals": 2,
+          "assists": 1,
+          "fbrefPosition": "MF"
+        },
+        {
+          "season": "1995/96",
+          "club": "Blackburn Rovers",
+          "minutes": 596,
+          "starts": 4,
+          "goals": 6,
+          "assists": 2,
+          "fbrefPosition": "MF"
+        },
+        {
+          "season": "1996/97",
+          "club": "Blackburn Rovers",
+          "minutes": 585,
+          "starts": 5,
+          "goals": 1,
+          "assists": 2,
+          "fbrefPosition": "MF"
+        },
+        {
+          "season": "1997/98",
+          "club": "Leicester City",
+          "minutes": 978,
+          "starts": 9,
+          "goals": 3,
+          "assists": 1,
+          "fbrefPosition": "MF"
+        }
+      ],
+      "positions": [
+        "CAM",
+        "CM"
+      ],
+      "confidence": "low",
+      "note": "Used both as a forward (the Blackburn substitute who scored twice against Manchester United) and in central midfield at Villa and Leicester; the MF label is defensible across the span but his best moments were further forward."
+    },
     {
       "fbrefId": "70a59026",
       "name": "Samuele Dalla Bona",
@@ -1147,182 +1333,6 @@
       ],
       "confidence": "high",
       "note": null
-    },
-    {
-      "fbrefId": "0f056348",
-      "name": "Jamie Ashdown",
-      "nation": "ENG",
-      "fbrefPosition": "GK",
-      "allowed": [
-        "GK"
-      ],
-      "primaryMustBeOneOf": [
-        "GK"
-      ],
-      "choices": 1,
-      "totalMinutes": 3692,
-      "seasons": [
-        {
-          "season": "2004/05",
-          "club": "Portsmouth",
-          "minutes": 1440,
-          "starts": 16,
-          "goals": 0,
-          "assists": 0,
-          "fbrefPosition": "GK"
-        },
-        {
-          "season": "2005/06",
-          "club": "Portsmouth",
-          "minutes": 1530,
-          "starts": 17,
-          "goals": 0,
-          "assists": 0,
-          "fbrefPosition": "GK"
-        },
-        {
-          "season": "2007/08",
-          "club": "Portsmouth",
-          "minutes": 270,
-          "starts": 3,
-          "goals": 0,
-          "assists": 0,
-          "fbrefPosition": "GK"
-        },
-        {
-          "season": "2009/10",
-          "club": "Portsmouth",
-          "minutes": 452,
-          "starts": 5,
-          "goals": 0,
-          "assists": 0,
-          "fbrefPosition": "GK"
-        }
-      ],
-      "positions": [
-        "GK"
-      ],
-      "confidence": "high",
-      "note": null
-    },
-    {
-      "fbrefId": "98538ebb",
-      "name": "Danny Tiatto",
-      "nation": "AUS",
-      "fbrefPosition": "DFMF",
-      "allowed": [
-        "LB",
-        "CB",
-        "RB",
-        "LWB",
-        "RWB",
-        "CDM",
-        "CM",
-        "CAM",
-        "LM",
-        "RM"
-      ],
-      "primaryMustBeOneOf": [
-        "LB",
-        "CB",
-        "RB",
-        "LWB",
-        "RWB"
-      ],
-      "choices": 10,
-      "totalMinutes": 3681,
-      "seasons": [
-        {
-          "season": "2000/01",
-          "club": "Manchester City",
-          "minutes": 2790,
-          "starts": 31,
-          "goals": 2,
-          "assists": 3,
-          "fbrefPosition": "DFMF"
-        },
-        {
-          "season": "2002/03",
-          "club": "Manchester City",
-          "minutes": 891,
-          "starts": 10,
-          "goals": 0,
-          "assists": 0,
-          "fbrefPosition": "DFMF"
-        }
-      ],
-      "positions": [
-        "LB",
-        "LM"
-      ],
-      "confidence": "high",
-      "note": null
-    },
-    {
-      "fbrefId": "e667189c",
-      "name": "Nicky Marker",
-      "nation": "ENG",
-      "fbrefPosition": "DF",
-      "allowed": [
-        "LB",
-        "CB",
-        "RB",
-        "LWB",
-        "RWB"
-      ],
-      "primaryMustBeOneOf": [
-        "LB",
-        "CB",
-        "RB",
-        "LWB",
-        "RWB"
-      ],
-      "choices": 5,
-      "totalMinutes": 3681,
-      "seasons": [
-        {
-          "season": "1992/93",
-          "club": "Blackburn Rovers",
-          "minutes": 914,
-          "starts": 11,
-          "goals": 0,
-          "assists": 0,
-          "fbrefPosition": "DF"
-        },
-        {
-          "season": "1993/94",
-          "club": "Blackburn Rovers",
-          "minutes": 1599,
-          "starts": 16,
-          "goals": 0,
-          "assists": 0,
-          "fbrefPosition": "DF"
-        },
-        {
-          "season": "1995/96",
-          "club": "Blackburn Rovers",
-          "minutes": 711,
-          "starts": 8,
-          "goals": 1,
-          "assists": 1,
-          "fbrefPosition": "DF"
-        },
-        {
-          "season": "1996/97",
-          "club": "Blackburn Rovers",
-          "minutes": 457,
-          "starts": 5,
-          "goals": 0,
-          "assists": 0,
-          "fbrefPosition": "DF"
-        }
-      ],
-      "positions": [
-        "CB",
-        "RB"
-      ],
-      "confidence": "medium",
-      "note": "Versatile defender; also used in midfield."
     }
   ]
 }

@@ -1,8 +1,340 @@
 {
   "batch": 60,
-  "of": 129,
+  "of": 130,
   "instructions": "See docs/positions-lookup.md. Fill in \"positions\" for each player, most natural first, using only values from \"allowed\". The first must come from \"primaryMustBeOneOf\". Set confidence to high, medium or low.",
   "players": [
+    {
+      "fbrefId": "aed3a70f",
+      "name": "Ollie Watkins",
+      "nation": "ENG",
+      "fbrefPosition": "FW",
+      "allowed": [
+        "LW",
+        "RW",
+        "ST",
+        "CF"
+      ],
+      "primaryMustBeOneOf": [
+        "LW",
+        "RW",
+        "ST",
+        "CF"
+      ],
+      "choices": 4,
+      "totalMinutes": 2839,
+      "seasons": [
+        {
+          "season": "2025/26",
+          "club": "Aston Villa",
+          "minutes": 2839,
+          "starts": 33,
+          "goals": 16,
+          "assists": 3,
+          "fbrefPosition": "FW"
+        }
+      ],
+      "positions": [
+        "ST",
+        "CF"
+      ],
+      "confidence": "high",
+      "note": null
+    },
+    {
+      "fbrefId": "def899bd",
+      "name": "Phil Jones",
+      "nation": "ENG",
+      "fbrefPosition": "DFMF",
+      "allowed": [
+        "LB",
+        "CB",
+        "RB",
+        "LWB",
+        "RWB",
+        "CDM",
+        "CM",
+        "CAM",
+        "LM",
+        "RM"
+      ],
+      "primaryMustBeOneOf": [
+        "LB",
+        "CB",
+        "RB",
+        "LWB",
+        "RWB"
+      ],
+      "choices": 10,
+      "totalMinutes": 2839,
+      "seasons": [
+        {
+          "season": "2009/10",
+          "club": "Blackburn Rovers",
+          "minutes": 664,
+          "starts": 7,
+          "goals": 0,
+          "assists": 0,
+          "fbrefPosition": "DFMF"
+        },
+        {
+          "season": "2010/11",
+          "club": "Blackburn Rovers",
+          "minutes": 2175,
+          "starts": 24,
+          "goals": 0,
+          "assists": 0,
+          "fbrefPosition": "DFMF"
+        }
+      ],
+      "positions": [
+        "CB",
+        "RB",
+        "CDM"
+      ],
+      "confidence": "medium",
+      "note": "A young Blackburn centre-back who also covered right-back and holding midfield, which is why FBref carries the midfield bucket too."
+    },
+    {
+      "fbrefId": "282f75f3",
+      "name": "Lewis Dunk",
+      "nation": "ENG",
+      "fbrefPosition": "DF",
+      "allowed": [
+        "LB",
+        "CB",
+        "RB",
+        "LWB",
+        "RWB"
+      ],
+      "primaryMustBeOneOf": [
+        "LB",
+        "CB",
+        "RB",
+        "LWB",
+        "RWB"
+      ],
+      "choices": 5,
+      "totalMinutes": 2838,
+      "seasons": [
+        {
+          "season": "2025/26",
+          "club": "Brighton",
+          "minutes": 2838,
+          "starts": 31,
+          "goals": 1,
+          "assists": 0,
+          "fbrefPosition": "DF"
+        }
+      ],
+      "positions": [
+        "CB"
+      ],
+      "confidence": "high",
+      "note": null
+    },
+    {
+      "fbrefId": "7956236f",
+      "name": "Emiliano Martínez",
+      "nation": "ARG",
+      "fbrefPosition": "GK",
+      "allowed": [
+        "GK"
+      ],
+      "primaryMustBeOneOf": [
+        "GK"
+      ],
+      "choices": 1,
+      "totalMinutes": 2835,
+      "seasons": [
+        {
+          "season": "2025/26",
+          "club": "Aston Villa",
+          "minutes": 2835,
+          "starts": 32,
+          "goals": 0,
+          "assists": 1,
+          "fbrefPosition": "GK"
+        }
+      ],
+      "positions": [
+        "GK"
+      ],
+      "confidence": "high",
+      "note": null
+    },
+    {
+      "fbrefId": "b44ee3cd",
+      "name": "Michael Johnson",
+      "nation": "ENG",
+      "fbrefPosition": "MF",
+      "allowed": [
+        "CDM",
+        "CM",
+        "CAM",
+        "LM",
+        "RM"
+      ],
+      "primaryMustBeOneOf": [
+        "CDM",
+        "CM",
+        "CAM",
+        "LM",
+        "RM"
+      ],
+      "choices": 5,
+      "totalMinutes": 2830,
+      "seasons": [
+        {
+          "season": "2006/07",
+          "club": "Manchester City",
+          "minutes": 900,
+          "starts": 10,
+          "goals": 0,
+          "assists": 2,
+          "fbrefPosition": "MF"
+        },
+        {
+          "season": "2007/08",
+          "club": "Manchester City",
+          "minutes": 1930,
+          "starts": 23,
+          "goals": 2,
+          "assists": 2,
+          "fbrefPosition": "MF"
+        }
+      ],
+      "positions": [
+        "CM",
+        "CDM"
+      ],
+      "confidence": "medium",
+      "note": "Box-to-box central midfielder at Manchester City before injury ended his career."
+    },
+    {
+      "fbrefId": "8b57ad2c",
+      "name": "João Gomes",
+      "nation": "BRA",
+      "fbrefPosition": "MF",
+      "allowed": [
+        "CDM",
+        "CM",
+        "CAM",
+        "LM",
+        "RM"
+      ],
+      "primaryMustBeOneOf": [
+        "CDM",
+        "CM",
+        "CAM",
+        "LM",
+        "RM"
+      ],
+      "choices": 5,
+      "totalMinutes": 2829,
+      "seasons": [
+        {
+          "season": "2025/26",
+          "club": "Wolverhampton Wanderers",
+          "minutes": 2829,
+          "starts": 32,
+          "goals": 1,
+          "assists": 1,
+          "fbrefPosition": "MF"
+        }
+      ],
+      "positions": [
+        "CDM",
+        "CM"
+      ],
+      "confidence": "high",
+      "note": "Ball-winning holding midfielder."
+    },
+    {
+      "fbrefId": "f197aa41",
+      "name": "Josip Skoko",
+      "nation": "AUS",
+      "fbrefPosition": "MF",
+      "allowed": [
+        "CDM",
+        "CM",
+        "CAM",
+        "LM",
+        "RM"
+      ],
+      "primaryMustBeOneOf": [
+        "CDM",
+        "CM",
+        "CAM",
+        "LM",
+        "RM"
+      ],
+      "choices": 5,
+      "totalMinutes": 2828,
+      "seasons": [
+        {
+          "season": "2006/07",
+          "club": "Wigan Athletic",
+          "minutes": 2160,
+          "starts": 24,
+          "goals": 0,
+          "assists": 1,
+          "fbrefPosition": "MF"
+        },
+        {
+          "season": "2007/08",
+          "club": "Wigan Athletic",
+          "minutes": 668,
+          "starts": 7,
+          "goals": 0,
+          "assists": 0,
+          "fbrefPosition": "MF"
+        }
+      ],
+      "positions": [
+        "CM",
+        "CDM"
+      ],
+      "confidence": "medium",
+      "note": "Deep-lying central midfielder."
+    },
+    {
+      "fbrefId": "0a3d6d2b",
+      "name": "Chris Richards",
+      "nation": "USA",
+      "fbrefPosition": "DF",
+      "allowed": [
+        "LB",
+        "CB",
+        "RB",
+        "LWB",
+        "RWB"
+      ],
+      "primaryMustBeOneOf": [
+        "LB",
+        "CB",
+        "RB",
+        "LWB",
+        "RWB"
+      ],
+      "choices": 5,
+      "totalMinutes": 2827,
+      "seasons": [
+        {
+          "season": "2025/26",
+          "club": "Crystal Palace",
+          "minutes": 2827,
+          "starts": 31,
+          "goals": 1,
+          "assists": 0,
+          "fbrefPosition": "DF"
+        }
+      ],
+      "positions": [
+        "CB"
+      ],
+      "confidence": "high",
+      "note": null
+    },
     {
       "fbrefId": "3f10bd22",
       "name": "Jesús Navas",
@@ -728,307 +1060,6 @@
       ],
       "confidence": "medium",
       "note": "Brazilian holding / box-to-box midfielder at Middlesbrough."
-    },
-    {
-      "fbrefId": "ae5019e6",
-      "name": "Jayden Bogle",
-      "nation": "ENG",
-      "fbrefPosition": "MFDF",
-      "allowed": [
-        "CDM",
-        "CM",
-        "CAM",
-        "LM",
-        "RM",
-        "LB",
-        "CB",
-        "RB",
-        "LWB",
-        "RWB"
-      ],
-      "primaryMustBeOneOf": [
-        "CDM",
-        "CM",
-        "CAM",
-        "LM",
-        "RM"
-      ],
-      "choices": 10,
-      "totalMinutes": 2793,
-      "seasons": [
-        {
-          "season": "2025/26",
-          "club": "Leeds United",
-          "minutes": 2793,
-          "starts": 32,
-          "goals": 1,
-          "assists": 2,
-          "fbrefPosition": "MFDF"
-        }
-      ],
-      "positions": [
-        "RM",
-        "RWB",
-        "RB"
-      ],
-      "confidence": "medium",
-      "note": "A right-back by trade; FBref’s MF-first label reflects his advanced wing-back role."
-    },
-    {
-      "fbrefId": "77d6fd4d",
-      "name": "Guglielmo Vicario",
-      "nation": "ITA",
-      "fbrefPosition": "GK",
-      "allowed": [
-        "GK"
-      ],
-      "primaryMustBeOneOf": [
-        "GK"
-      ],
-      "choices": 1,
-      "totalMinutes": 2790,
-      "seasons": [
-        {
-          "season": "2025/26",
-          "club": "Tottenham Hotspur",
-          "minutes": 2790,
-          "starts": 31,
-          "goals": 0,
-          "assists": 0,
-          "fbrefPosition": "GK"
-        }
-      ],
-      "positions": [
-        "GK"
-      ],
-      "confidence": "high",
-      "note": null
-    },
-    {
-      "fbrefId": "f1679973",
-      "name": "Ivan Pelizzoli",
-      "nation": "ITA",
-      "fbrefPosition": "GK",
-      "allowed": [
-        "GK"
-      ],
-      "primaryMustBeOneOf": [
-        "GK"
-      ],
-      "choices": 1,
-      "totalMinutes": 2790,
-      "seasons": [
-        {
-          "season": "2003/04",
-          "club": "Roma",
-          "minutes": 2790,
-          "starts": 31,
-          "goals": 0,
-          "assists": 0,
-          "fbrefPosition": "GK"
-        }
-      ],
-      "positions": [
-        "GK"
-      ],
-      "confidence": "high",
-      "note": null
-    },
-    {
-      "fbrefId": "55126f3b",
-      "name": "Koke",
-      "nation": "ESP",
-      "fbrefPosition": "MF",
-      "allowed": [
-        "CDM",
-        "CM",
-        "CAM",
-        "LM",
-        "RM"
-      ],
-      "primaryMustBeOneOf": [
-        "CDM",
-        "CM",
-        "CAM",
-        "LM",
-        "RM"
-      ],
-      "choices": 5,
-      "totalMinutes": 2785,
-      "seasons": [
-        {
-          "season": "2013/14",
-          "club": "Atlético Madrid",
-          "minutes": 2785,
-          "starts": 33,
-          "goals": 6,
-          "assists": 14,
-          "fbrefPosition": "MF"
-        }
-      ],
-      "positions": [
-        "CM",
-        "LM",
-        "CAM"
-      ],
-      "confidence": "medium",
-      "note": "Nominally left of midfield in Atlético's 4-4-2, but functioned as the central creator."
-    },
-    {
-      "fbrefId": "b1f4086c",
-      "name": "Álex Grimaldo",
-      "nation": "ESP",
-      "fbrefPosition": "MF",
-      "allowed": [
-        "CDM",
-        "CM",
-        "CAM",
-        "LM",
-        "RM"
-      ],
-      "primaryMustBeOneOf": [
-        "CDM",
-        "CM",
-        "CAM",
-        "LM",
-        "RM"
-      ],
-      "choices": 5,
-      "totalMinutes": 2784,
-      "seasons": [
-        {
-          "season": "2023/24",
-          "club": "Bayer Leverkusen",
-          "minutes": 2784,
-          "starts": 31,
-          "goals": 10,
-          "assists": 13,
-          "fbrefPosition": "MF"
-        }
-      ],
-      "positions": [
-        "LM",
-        "CM"
-      ],
-      "confidence": "medium",
-      "note": "FBref recorded him MF for 2023/24, when he played as Leverkusen's very advanced left wing-back ahead of a back three."
-    },
-    {
-      "fbrefId": "ac73ec79",
-      "name": "Nordi Mukiele",
-      "nation": "FRA",
-      "fbrefPosition": "DF",
-      "allowed": [
-        "LB",
-        "CB",
-        "RB",
-        "LWB",
-        "RWB"
-      ],
-      "primaryMustBeOneOf": [
-        "LB",
-        "CB",
-        "RB",
-        "LWB",
-        "RWB"
-      ],
-      "choices": 5,
-      "totalMinutes": 2784,
-      "seasons": [
-        {
-          "season": "2025/26",
-          "club": "Sunderland",
-          "minutes": 2784,
-          "starts": 32,
-          "goals": 3,
-          "assists": 3,
-          "fbrefPosition": "DF"
-        }
-      ],
-      "positions": [
-        "RB",
-        "CB"
-      ],
-      "confidence": "high",
-      "note": "Right-back who also plays centre-back in a back three."
-    },
-    {
-      "fbrefId": "97cbc169",
-      "name": "Nico Vaesen",
-      "nation": "BEL",
-      "fbrefPosition": "GK",
-      "allowed": [
-        "GK"
-      ],
-      "primaryMustBeOneOf": [
-        "GK"
-      ],
-      "choices": 1,
-      "totalMinutes": 2783,
-      "seasons": [
-        {
-          "season": "2002/03",
-          "club": "Birmingham City",
-          "minutes": 2423,
-          "starts": 27,
-          "goals": 0,
-          "assists": 0,
-          "fbrefPosition": "GK"
-        },
-        {
-          "season": "2005/06",
-          "club": "Birmingham City",
-          "minutes": 360,
-          "starts": 4,
-          "goals": 0,
-          "assists": 0,
-          "fbrefPosition": "GK"
-        }
-      ],
-      "positions": [
-        "GK"
-      ],
-      "confidence": "high",
-      "note": null
-    },
-    {
-      "fbrefId": "5515376c",
-      "name": "Trevoh Chalobah",
-      "nation": "ENG",
-      "fbrefPosition": "DF",
-      "allowed": [
-        "LB",
-        "CB",
-        "RB",
-        "LWB",
-        "RWB"
-      ],
-      "primaryMustBeOneOf": [
-        "LB",
-        "CB",
-        "RB",
-        "LWB",
-        "RWB"
-      ],
-      "choices": 5,
-      "totalMinutes": 2783,
-      "seasons": [
-        {
-          "season": "2025/26",
-          "club": "Chelsea",
-          "minutes": 2783,
-          "starts": 31,
-          "goals": 3,
-          "assists": 0,
-          "fbrefPosition": "DF"
-        }
-      ],
-      "positions": [
-        "CB",
-        "RB"
-      ],
-      "confidence": "high",
-      "note": null
     }
   ]
 }

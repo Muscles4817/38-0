@@ -1,8 +1,184 @@
 {
   "batch": 48,
-  "of": 129,
+  "of": 130,
   "instructions": "See docs/positions-lookup.md. Fill in \"positions\" for each player, most natural first, using only values from \"allowed\". The first must come from \"primaryMustBeOneOf\". Set confidence to high, medium or low.",
   "players": [
+    {
+      "fbrefId": "0f056348",
+      "name": "Jamie Ashdown",
+      "nation": "ENG",
+      "fbrefPosition": "GK",
+      "allowed": [
+        "GK"
+      ],
+      "primaryMustBeOneOf": [
+        "GK"
+      ],
+      "choices": 1,
+      "totalMinutes": 3692,
+      "seasons": [
+        {
+          "season": "2004/05",
+          "club": "Portsmouth",
+          "minutes": 1440,
+          "starts": 16,
+          "goals": 0,
+          "assists": 0,
+          "fbrefPosition": "GK"
+        },
+        {
+          "season": "2005/06",
+          "club": "Portsmouth",
+          "minutes": 1530,
+          "starts": 17,
+          "goals": 0,
+          "assists": 0,
+          "fbrefPosition": "GK"
+        },
+        {
+          "season": "2007/08",
+          "club": "Portsmouth",
+          "minutes": 270,
+          "starts": 3,
+          "goals": 0,
+          "assists": 0,
+          "fbrefPosition": "GK"
+        },
+        {
+          "season": "2009/10",
+          "club": "Portsmouth",
+          "minutes": 452,
+          "starts": 5,
+          "goals": 0,
+          "assists": 0,
+          "fbrefPosition": "GK"
+        }
+      ],
+      "positions": [
+        "GK"
+      ],
+      "confidence": "high",
+      "note": null
+    },
+    {
+      "fbrefId": "98538ebb",
+      "name": "Danny Tiatto",
+      "nation": "AUS",
+      "fbrefPosition": "DFMF",
+      "allowed": [
+        "LB",
+        "CB",
+        "RB",
+        "LWB",
+        "RWB",
+        "CDM",
+        "CM",
+        "CAM",
+        "LM",
+        "RM"
+      ],
+      "primaryMustBeOneOf": [
+        "LB",
+        "CB",
+        "RB",
+        "LWB",
+        "RWB"
+      ],
+      "choices": 10,
+      "totalMinutes": 3681,
+      "seasons": [
+        {
+          "season": "2000/01",
+          "club": "Manchester City",
+          "minutes": 2790,
+          "starts": 31,
+          "goals": 2,
+          "assists": 3,
+          "fbrefPosition": "DFMF"
+        },
+        {
+          "season": "2002/03",
+          "club": "Manchester City",
+          "minutes": 891,
+          "starts": 10,
+          "goals": 0,
+          "assists": 0,
+          "fbrefPosition": "DFMF"
+        }
+      ],
+      "positions": [
+        "LB",
+        "LM"
+      ],
+      "confidence": "high",
+      "note": null
+    },
+    {
+      "fbrefId": "e667189c",
+      "name": "Nicky Marker",
+      "nation": "ENG",
+      "fbrefPosition": "DF",
+      "allowed": [
+        "LB",
+        "CB",
+        "RB",
+        "LWB",
+        "RWB"
+      ],
+      "primaryMustBeOneOf": [
+        "LB",
+        "CB",
+        "RB",
+        "LWB",
+        "RWB"
+      ],
+      "choices": 5,
+      "totalMinutes": 3681,
+      "seasons": [
+        {
+          "season": "1992/93",
+          "club": "Blackburn Rovers",
+          "minutes": 914,
+          "starts": 11,
+          "goals": 0,
+          "assists": 0,
+          "fbrefPosition": "DF"
+        },
+        {
+          "season": "1993/94",
+          "club": "Blackburn Rovers",
+          "minutes": 1599,
+          "starts": 16,
+          "goals": 0,
+          "assists": 0,
+          "fbrefPosition": "DF"
+        },
+        {
+          "season": "1995/96",
+          "club": "Blackburn Rovers",
+          "minutes": 711,
+          "starts": 8,
+          "goals": 1,
+          "assists": 1,
+          "fbrefPosition": "DF"
+        },
+        {
+          "season": "1996/97",
+          "club": "Blackburn Rovers",
+          "minutes": 457,
+          "starts": 5,
+          "goals": 0,
+          "assists": 0,
+          "fbrefPosition": "DF"
+        }
+      ],
+      "positions": [
+        "CB",
+        "RB"
+      ],
+      "confidence": "medium",
+      "note": "Versatile defender; also used in midfield."
+    },
     {
       "fbrefId": "75de93be",
       "name": "Shaun Newton",
@@ -803,6 +979,52 @@
       "note": null
     },
     {
+      "fbrefId": "9cc8d790",
+      "name": "Pierluigi Casiraghi",
+      "nation": "ITA",
+      "fbrefPosition": "FW",
+      "allowed": [
+        "LW",
+        "RW",
+        "ST",
+        "CF"
+      ],
+      "primaryMustBeOneOf": [
+        "LW",
+        "RW",
+        "ST",
+        "CF"
+      ],
+      "choices": 4,
+      "totalMinutes": 3606,
+      "seasons": [
+        {
+          "season": "1991/92",
+          "club": "Juventus",
+          "minutes": 2882,
+          "starts": 33,
+          "goals": 7,
+          "assists": null,
+          "fbrefPosition": "FW"
+        },
+        {
+          "season": "1998/99",
+          "club": "Chelsea",
+          "minutes": 724,
+          "starts": 10,
+          "goals": 1,
+          "assists": 0,
+          "fbrefPosition": "FW"
+        }
+      ],
+      "positions": [
+        "ST",
+        "CF"
+      ],
+      "confidence": "high",
+      "note": "An Italian international centre-forward whose Chelsea career ended with a knee injury in this season."
+    },
+    {
       "fbrefId": "3a0a5056",
       "name": "Albert Riera",
       "nation": "ESP",
@@ -1149,224 +1371,6 @@
       ],
       "confidence": "high",
       "note": null
-    },
-    {
-      "fbrefId": "3201b03d",
-      "name": "Danny Simpson",
-      "nation": "ENG",
-      "fbrefPosition": "DF",
-      "allowed": [
-        "LB",
-        "CB",
-        "RB",
-        "LWB",
-        "RWB"
-      ],
-      "primaryMustBeOneOf": [
-        "LB",
-        "CB",
-        "RB",
-        "LWB",
-        "RWB"
-      ],
-      "choices": 5,
-      "totalMinutes": 3573,
-      "seasons": [
-        {
-          "season": "2008/09",
-          "club": "Blackburn Rovers",
-          "minutes": 888,
-          "starts": 10,
-          "goals": 0,
-          "assists": 0,
-          "fbrefPosition": "DF"
-        },
-        {
-          "season": "2010/11",
-          "club": "Newcastle United",
-          "minutes": 2685,
-          "starts": 30,
-          "goals": 0,
-          "assists": 0,
-          "fbrefPosition": "DF"
-        }
-      ],
-      "positions": [
-        "RB"
-      ],
-      "confidence": "high",
-      "note": null
-    },
-    {
-      "fbrefId": "0717f817",
-      "name": "Aliou Cissé",
-      "nation": "SEN",
-      "fbrefPosition": "DFMF",
-      "allowed": [
-        "LB",
-        "CB",
-        "RB",
-        "LWB",
-        "RWB",
-        "CDM",
-        "CM",
-        "CAM",
-        "LM",
-        "RM"
-      ],
-      "primaryMustBeOneOf": [
-        "LB",
-        "CB",
-        "RB",
-        "LWB",
-        "RWB"
-      ],
-      "choices": 10,
-      "totalMinutes": 3572,
-      "seasons": [
-        {
-          "season": "2002/03",
-          "club": "Birmingham City",
-          "minutes": 1881,
-          "starts": 21,
-          "goals": 1,
-          "assists": 0,
-          "fbrefPosition": "DFMF"
-        },
-        {
-          "season": "2003/04",
-          "club": "Birmingham City",
-          "minutes": 535,
-          "starts": 5,
-          "goals": 0,
-          "assists": 0,
-          "fbrefPosition": "DFMF"
-        },
-        {
-          "season": "2004/05",
-          "club": "Portsmouth",
-          "minutes": 1156,
-          "starts": 12,
-          "goals": 0,
-          "assists": 1,
-          "fbrefPosition": "DFMF"
-        }
-      ],
-      "positions": [
-        "CDM",
-        "CM"
-      ],
-      "confidence": "medium",
-      "note": "FBref putting DF first is wrong: Cissé was bought as the holding midfielder he had been for Senegal and filled that role at Birmingham and Portsmouth.",
-      "labelDisputed": true
-    },
-    {
-      "fbrefId": "f9b5e5bd",
-      "name": "David Nugent",
-      "nation": "ENG",
-      "fbrefPosition": "FW",
-      "allowed": [
-        "LW",
-        "RW",
-        "ST",
-        "CF"
-      ],
-      "primaryMustBeOneOf": [
-        "LW",
-        "RW",
-        "ST",
-        "CF"
-      ],
-      "choices": 4,
-      "totalMinutes": 3558,
-      "seasons": [
-        {
-          "season": "2007/08",
-          "club": "Portsmouth",
-          "minutes": 625,
-          "starts": 5,
-          "goals": 0,
-          "assists": 0,
-          "fbrefPosition": "FW"
-        },
-        {
-          "season": "2008/09",
-          "club": "Portsmouth",
-          "minutes": 1058,
-          "starts": 13,
-          "goals": 3,
-          "assists": 1,
-          "fbrefPosition": "FW"
-        },
-        {
-          "season": "2009/10",
-          "club": "Burnley",
-          "minutes": 1875,
-          "starts": 20,
-          "goals": 6,
-          "assists": 2,
-          "fbrefPosition": "FW"
-        }
-      ],
-      "positions": [
-        "ST",
-        "CF"
-      ],
-      "confidence": "high",
-      "note": null
-    },
-    {
-      "fbrefId": "59a231bb",
-      "name": "Martin Djetou",
-      "nation": "FRA",
-      "fbrefPosition": "DFMF",
-      "allowed": [
-        "LB",
-        "CB",
-        "RB",
-        "LWB",
-        "RWB",
-        "CDM",
-        "CM",
-        "CAM",
-        "LM",
-        "RM"
-      ],
-      "primaryMustBeOneOf": [
-        "LB",
-        "CB",
-        "RB",
-        "LWB",
-        "RWB"
-      ],
-      "choices": 10,
-      "totalMinutes": 3549,
-      "seasons": [
-        {
-          "season": "2002/03",
-          "club": "Fulham",
-          "minutes": 1789,
-          "starts": 22,
-          "goals": 1,
-          "assists": 1,
-          "fbrefPosition": "DFMF"
-        },
-        {
-          "season": "2003/04",
-          "club": "Fulham",
-          "minutes": 1760,
-          "starts": 19,
-          "goals": 0,
-          "assists": 0,
-          "fbrefPosition": "DFMF"
-        }
-      ],
-      "positions": [
-        "CB",
-        "CDM"
-      ],
-      "confidence": "medium",
-      "note": "Alternated between centre-back and the holding role at Fulham."
     }
   ]
 }

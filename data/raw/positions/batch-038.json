@@ -1,8 +1,140 @@
 {
   "batch": 38,
-  "of": 129,
+  "of": 130,
   "instructions": "See docs/positions-lookup.md. Fill in \"positions\" for each player, most natural first, using only values from \"allowed\". The first must come from \"primaryMustBeOneOf\". Set confidence to high, medium or low.",
   "players": [
+    {
+      "fbrefId": "564eb30e",
+      "name": "Pontus Kåmark",
+      "nation": "SWE",
+      "fbrefPosition": "DF",
+      "allowed": [
+        "LB",
+        "CB",
+        "RB",
+        "LWB",
+        "RWB"
+      ],
+      "primaryMustBeOneOf": [
+        "LB",
+        "CB",
+        "RB",
+        "LWB",
+        "RWB"
+      ],
+      "choices": 5,
+      "totalMinutes": 5303,
+      "seasons": [
+        {
+          "season": "1996/97",
+          "club": "Leicester City",
+          "minutes": 765,
+          "starts": 9,
+          "goals": 0,
+          "assists": 0,
+          "fbrefPosition": "DF"
+        },
+        {
+          "season": "1997/98",
+          "club": "Leicester City",
+          "minutes": 3119,
+          "starts": 35,
+          "goals": 0,
+          "assists": 0,
+          "fbrefPosition": "DF"
+        },
+        {
+          "season": "1998/99",
+          "club": "Leicester City",
+          "minutes": 1419,
+          "starts": 15,
+          "goals": 0,
+          "assists": 0,
+          "fbrefPosition": "DF"
+        }
+      ],
+      "positions": [
+        "RB",
+        "CB"
+      ],
+      "confidence": "medium",
+      "note": "Leicester’s man-marker, used at right-back and in central defence."
+    },
+    {
+      "fbrefId": "a924380b",
+      "name": "Tomasz Kuszczak",
+      "nation": "POL",
+      "fbrefPosition": "GK",
+      "allowed": [
+        "GK"
+      ],
+      "primaryMustBeOneOf": [
+        "GK"
+      ],
+      "choices": 1,
+      "totalMinutes": 5295,
+      "seasons": [
+        {
+          "season": "2005/06",
+          "club": "West Bromwich Albion",
+          "minutes": 2491,
+          "starts": 28,
+          "goals": 0,
+          "assists": 0,
+          "fbrefPosition": "GK"
+        },
+        {
+          "season": "2006/07",
+          "club": "Manchester United",
+          "minutes": 540,
+          "starts": 6,
+          "goals": 0,
+          "assists": 0,
+          "fbrefPosition": "GK"
+        },
+        {
+          "season": "2007/08",
+          "club": "Manchester United",
+          "minutes": 765,
+          "starts": 8,
+          "goals": 0,
+          "assists": 0,
+          "fbrefPosition": "GK"
+        },
+        {
+          "season": "2008/09",
+          "club": "Manchester United",
+          "minutes": 329,
+          "starts": 3,
+          "goals": 0,
+          "assists": 0,
+          "fbrefPosition": "GK"
+        },
+        {
+          "season": "2009/10",
+          "club": "Manchester United",
+          "minutes": 720,
+          "starts": 8,
+          "goals": 0,
+          "assists": 0,
+          "fbrefPosition": "GK"
+        },
+        {
+          "season": "2010/11",
+          "club": "Manchester United",
+          "minutes": 450,
+          "starts": 5,
+          "goals": 0,
+          "assists": 0,
+          "fbrefPosition": "GK"
+        }
+      ],
+      "positions": [
+        "GK"
+      ],
+      "confidence": "high",
+      "note": null
+    },
     {
       "fbrefId": "4e9e8915",
       "name": "Mitch Ward",
@@ -1391,127 +1523,6 @@
       ],
       "confidence": "low",
       "note": "Played largely as a right-sided midfielder for Ipswich in these seasons; the right-back appearances are real, but FBref putting DF first is doubtful rather than clearly wrong."
-    },
-    {
-      "fbrefId": "d87a80b2",
-      "name": "Andy Dawson",
-      "nation": "ENG",
-      "fbrefPosition": "DF",
-      "allowed": [
-        "LB",
-        "CB",
-        "RB",
-        "LWB",
-        "RWB"
-      ],
-      "primaryMustBeOneOf": [
-        "LB",
-        "CB",
-        "RB",
-        "LWB",
-        "RWB"
-      ],
-      "choices": 5,
-      "totalMinutes": 5101,
-      "seasons": [
-        {
-          "season": "2008/09",
-          "club": "Hull City",
-          "minutes": 2036,
-          "starts": 25,
-          "goals": 1,
-          "assists": 3,
-          "fbrefPosition": "DF"
-        },
-        {
-          "season": "2009/10",
-          "club": "Hull City",
-          "minutes": 3065,
-          "starts": 35,
-          "goals": 1,
-          "assists": 0,
-          "fbrefPosition": "DF"
-        }
-      ],
-      "positions": [
-        "LB"
-      ],
-      "confidence": "high",
-      "note": null
-    },
-    {
-      "fbrefId": "b1d82fc2",
-      "name": "Philippe Senderos",
-      "nation": "SUI",
-      "fbrefPosition": "DF",
-      "allowed": [
-        "LB",
-        "CB",
-        "RB",
-        "LWB",
-        "RWB"
-      ],
-      "primaryMustBeOneOf": [
-        "LB",
-        "CB",
-        "RB",
-        "LWB",
-        "RWB"
-      ],
-      "choices": 5,
-      "totalMinutes": 5089,
-      "seasons": [
-        {
-          "season": "2004/05",
-          "club": "Arsenal",
-          "minutes": 1088,
-          "starts": 12,
-          "goals": 0,
-          "assists": 0,
-          "fbrefPosition": "DF"
-        },
-        {
-          "season": "2005/06",
-          "club": "Arsenal",
-          "minutes": 1675,
-          "starts": 19,
-          "goals": 2,
-          "assists": 0,
-          "fbrefPosition": "DF"
-        },
-        {
-          "season": "2006/07",
-          "club": "Arsenal",
-          "minutes": 809,
-          "starts": 9,
-          "goals": 0,
-          "assists": 0,
-          "fbrefPosition": "DF"
-        },
-        {
-          "season": "2007/08",
-          "club": "Arsenal",
-          "minutes": 1247,
-          "starts": 14,
-          "goals": 2,
-          "assists": 0,
-          "fbrefPosition": "DF"
-        },
-        {
-          "season": "2010/11",
-          "club": "Fulham",
-          "minutes": 270,
-          "starts": 3,
-          "goals": 0,
-          "assists": 0,
-          "fbrefPosition": "DF"
-        }
-      ],
-      "positions": [
-        "CB"
-      ],
-      "confidence": "high",
-      "note": null
     }
   ]
 }

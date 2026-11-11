@@ -1,8 +1,111 @@
 {
   "batch": 40,
-  "of": 129,
+  "of": 130,
   "instructions": "See docs/positions-lookup.md. Fill in \"positions\" for each player, most natural first, using only values from \"allowed\". The first must come from \"primaryMustBeOneOf\". Set confidence to high, medium or low.",
   "players": [
+    {
+      "fbrefId": "ee2a3876",
+      "name": "Kevin Hitchcock",
+      "nation": null,
+      "fbrefPosition": "GK",
+      "allowed": [
+        "GK"
+      ],
+      "primaryMustBeOneOf": [
+        "GK"
+      ],
+      "choices": 1,
+      "totalMinutes": 4916,
+      "seasons": [
+        {
+          "season": "1992/93",
+          "club": "Chelsea",
+          "minutes": 1800,
+          "starts": 20,
+          "goals": 0,
+          "assists": 0,
+          "fbrefPosition": "GK"
+        },
+        {
+          "season": "1994/95",
+          "club": "Chelsea",
+          "minutes": 1035,
+          "starts": 11,
+          "goals": 0,
+          "assists": 0,
+          "fbrefPosition": "GK"
+        },
+        {
+          "season": "1995/96",
+          "club": "Chelsea",
+          "minutes": 1080,
+          "starts": 12,
+          "goals": 0,
+          "assists": 0,
+          "fbrefPosition": "GK"
+        },
+        {
+          "season": "1996/97",
+          "club": "Chelsea",
+          "minutes": 1001,
+          "starts": 10,
+          "goals": 0,
+          "assists": 0,
+          "fbrefPosition": "GK"
+        }
+      ],
+      "positions": [
+        "GK"
+      ],
+      "confidence": "high",
+      "note": null
+    },
+    {
+      "fbrefId": "7f97bf11",
+      "name": "Jürgen Klinsmann",
+      "nation": "GER",
+      "fbrefPosition": "FW",
+      "allowed": [
+        "LW",
+        "RW",
+        "ST",
+        "CF"
+      ],
+      "primaryMustBeOneOf": [
+        "LW",
+        "RW",
+        "ST",
+        "CF"
+      ],
+      "choices": 4,
+      "totalMinutes": 4906,
+      "seasons": [
+        {
+          "season": "1994/95",
+          "club": "Tottenham Hotspur",
+          "minutes": 3625,
+          "starts": 41,
+          "goals": 20,
+          "assists": 10,
+          "fbrefPosition": "FW"
+        },
+        {
+          "season": "1997/98",
+          "club": "Tottenham Hotspur",
+          "minutes": 1281,
+          "starts": 15,
+          "goals": 9,
+          "assists": 5,
+          "fbrefPosition": "FW"
+        }
+      ],
+      "positions": [
+        "ST",
+        "CF"
+      ],
+      "confidence": "high",
+      "note": null
+    },
     {
       "fbrefId": "066be641",
       "name": "Tommy Smith",
@@ -1345,107 +1448,6 @@
       ],
       "positions": [
         "CDM",
-        "CM"
-      ],
-      "confidence": "high",
-      "note": null
-    },
-    {
-      "fbrefId": "b0782688",
-      "name": "John McGreal",
-      "nation": "ENG",
-      "fbrefPosition": "DF",
-      "allowed": [
-        "LB",
-        "CB",
-        "RB",
-        "LWB",
-        "RWB"
-      ],
-      "primaryMustBeOneOf": [
-        "LB",
-        "CB",
-        "RB",
-        "LWB",
-        "RWB"
-      ],
-      "choices": 5,
-      "totalMinutes": 4705,
-      "seasons": [
-        {
-          "season": "2000/01",
-          "club": "Ipswich Town",
-          "minutes": 2275,
-          "starts": 25,
-          "goals": 1,
-          "assists": 0,
-          "fbrefPosition": "DF"
-        },
-        {
-          "season": "2001/02",
-          "club": "Ipswich Town",
-          "minutes": 2430,
-          "starts": 27,
-          "goals": 1,
-          "assists": 1,
-          "fbrefPosition": "DF"
-        }
-      ],
-      "positions": [
-        "CB"
-      ],
-      "confidence": "high",
-      "note": null
-    },
-    {
-      "fbrefId": "11b3d067",
-      "name": "Kevin Foley",
-      "nation": "IRL",
-      "fbrefPosition": "DFMF",
-      "allowed": [
-        "LB",
-        "CB",
-        "RB",
-        "LWB",
-        "RWB",
-        "CDM",
-        "CM",
-        "CAM",
-        "LM",
-        "RM"
-      ],
-      "primaryMustBeOneOf": [
-        "LB",
-        "CB",
-        "RB",
-        "LWB",
-        "RWB"
-      ],
-      "choices": 10,
-      "totalMinutes": 4701,
-      "seasons": [
-        {
-          "season": "2009/10",
-          "club": "Wolverhampton Wanderers",
-          "minutes": 1973,
-          "starts": 23,
-          "goals": 0,
-          "assists": 0,
-          "fbrefPosition": "DFMF"
-        },
-        {
-          "season": "2010/11",
-          "club": "Wolverhampton Wanderers",
-          "minutes": 2728,
-          "starts": 30,
-          "goals": 2,
-          "assists": 2,
-          "fbrefPosition": "DFMF"
-        }
-      ],
-      "positions": [
-        "RB",
-        "RM",
         "CM"
       ],
       "confidence": "high",

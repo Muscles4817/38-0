@@ -1,8 +1,109 @@
 {
   "batch": 41,
-  "of": 129,
+  "of": 130,
   "instructions": "See docs/positions-lookup.md. Fill in \"positions\" for each player, most natural first, using only values from \"allowed\". The first must come from \"primaryMustBeOneOf\". Set confidence to high, medium or low.",
   "players": [
+    {
+      "fbrefId": "b0782688",
+      "name": "John McGreal",
+      "nation": "ENG",
+      "fbrefPosition": "DF",
+      "allowed": [
+        "LB",
+        "CB",
+        "RB",
+        "LWB",
+        "RWB"
+      ],
+      "primaryMustBeOneOf": [
+        "LB",
+        "CB",
+        "RB",
+        "LWB",
+        "RWB"
+      ],
+      "choices": 5,
+      "totalMinutes": 4705,
+      "seasons": [
+        {
+          "season": "2000/01",
+          "club": "Ipswich Town",
+          "minutes": 2275,
+          "starts": 25,
+          "goals": 1,
+          "assists": 0,
+          "fbrefPosition": "DF"
+        },
+        {
+          "season": "2001/02",
+          "club": "Ipswich Town",
+          "minutes": 2430,
+          "starts": 27,
+          "goals": 1,
+          "assists": 1,
+          "fbrefPosition": "DF"
+        }
+      ],
+      "positions": [
+        "CB"
+      ],
+      "confidence": "high",
+      "note": null
+    },
+    {
+      "fbrefId": "11b3d067",
+      "name": "Kevin Foley",
+      "nation": "IRL",
+      "fbrefPosition": "DFMF",
+      "allowed": [
+        "LB",
+        "CB",
+        "RB",
+        "LWB",
+        "RWB",
+        "CDM",
+        "CM",
+        "CAM",
+        "LM",
+        "RM"
+      ],
+      "primaryMustBeOneOf": [
+        "LB",
+        "CB",
+        "RB",
+        "LWB",
+        "RWB"
+      ],
+      "choices": 10,
+      "totalMinutes": 4701,
+      "seasons": [
+        {
+          "season": "2009/10",
+          "club": "Wolverhampton Wanderers",
+          "minutes": 1973,
+          "starts": 23,
+          "goals": 0,
+          "assists": 0,
+          "fbrefPosition": "DFMF"
+        },
+        {
+          "season": "2010/11",
+          "club": "Wolverhampton Wanderers",
+          "minutes": 2728,
+          "starts": 30,
+          "goals": 2,
+          "assists": 2,
+          "fbrefPosition": "DFMF"
+        }
+      ],
+      "positions": [
+        "RB",
+        "RM",
+        "CM"
+      ],
+      "confidence": "high",
+      "note": null
+    },
     {
       "fbrefId": "1e7c36d0",
       "name": "Ibrahima Sonko",
@@ -1281,147 +1382,6 @@
       ],
       "confidence": "high",
       "note": "Right winger at Bolton."
-    },
-    {
-      "fbrefId": "25117d43",
-      "name": "Jamie Lawrence",
-      "nation": "JAM",
-      "fbrefPosition": "MF",
-      "allowed": [
-        "CDM",
-        "CM",
-        "CAM",
-        "LM",
-        "RM"
-      ],
-      "primaryMustBeOneOf": [
-        "CDM",
-        "CM",
-        "CAM",
-        "LM",
-        "RM"
-      ],
-      "choices": 5,
-      "totalMinutes": 4590,
-      "seasons": [
-        {
-          "season": "1994/95",
-          "club": "Leicester City",
-          "minutes": 1080,
-          "starts": 9,
-          "goals": 1,
-          "assists": 3,
-          "fbrefPosition": "MF"
-        },
-        {
-          "season": "1996/97",
-          "club": "Leicester City",
-          "minutes": 468,
-          "starts": 2,
-          "goals": 0,
-          "assists": 1,
-          "fbrefPosition": "MF"
-        },
-        {
-          "season": "1999/00",
-          "club": "Bradford City",
-          "minutes": 1657,
-          "starts": 19,
-          "goals": 3,
-          "assists": 0,
-          "fbrefPosition": "MF"
-        },
-        {
-          "season": "2000/01",
-          "club": "Bradford City",
-          "minutes": 1385,
-          "starts": 15,
-          "goals": 0,
-          "assists": 1,
-          "fbrefPosition": "MF"
-        }
-      ],
-      "positions": [
-        "RM",
-        "LM"
-      ],
-      "confidence": "medium",
-      "note": "Pacy wide midfielder, mainly right but used on either flank."
-    },
-    {
-      "fbrefId": "584ebbeb",
-      "name": "Peter Fear",
-      "nation": "ENG",
-      "fbrefPosition": "MF",
-      "allowed": [
-        "CDM",
-        "CM",
-        "CAM",
-        "LM",
-        "RM"
-      ],
-      "primaryMustBeOneOf": [
-        "CDM",
-        "CM",
-        "CAM",
-        "LM",
-        "RM"
-      ],
-      "choices": 5,
-      "totalMinutes": 4587,
-      "seasons": [
-        {
-          "season": "1993/94",
-          "club": "Wimbledon",
-          "minutes": 1956,
-          "starts": 23,
-          "goals": 1,
-          "assists": 3,
-          "fbrefPosition": "MF"
-        },
-        {
-          "season": "1994/95",
-          "club": "Wimbledon",
-          "minutes": 789,
-          "starts": 8,
-          "goals": 1,
-          "assists": 1,
-          "fbrefPosition": "MF"
-        },
-        {
-          "season": "1995/96",
-          "club": "Wimbledon",
-          "minutes": 286,
-          "starts": 4,
-          "goals": 0,
-          "assists": 0,
-          "fbrefPosition": "MF"
-        },
-        {
-          "season": "1996/97",
-          "club": "Wimbledon",
-          "minutes": 1069,
-          "starts": 9,
-          "goals": 0,
-          "assists": 0,
-          "fbrefPosition": "MF"
-        },
-        {
-          "season": "1997/98",
-          "club": "Wimbledon",
-          "minutes": 487,
-          "starts": 5,
-          "goals": 2,
-          "assists": 0,
-          "fbrefPosition": "MF"
-        }
-      ],
-      "positions": [
-        "CM",
-        "RM"
-      ],
-      "confidence": "low",
-      "note": "Wimbledon squad midfielder used centrally and wide right; also covered at right-back."
     }
   ]
 }

@@ -1,6 +1,6 @@
 {
   "batch": 37,
-  "of": 129,
+  "of": 130,
   "instructions": "See docs/positions-lookup.md. Fill in \"positions\" for each player, most natural first, using only values from \"allowed\". The first must come from \"primaryMustBeOneOf\". Set confidence to high, medium or low.",
   "players": [
     {
@@ -324,6 +324,67 @@
       ],
       "confidence": "high",
       "note": "Burnley's ever-present right-back in 2009/10."
+    },
+    {
+      "fbrefId": "b616ff71",
+      "name": "Ruud Gullit",
+      "nation": "NED",
+      "fbrefPosition": "FWMF",
+      "allowed": [
+        "LW",
+        "RW",
+        "ST",
+        "CF",
+        "CDM",
+        "CM",
+        "CAM",
+        "LM",
+        "RM"
+      ],
+      "primaryMustBeOneOf": [
+        "LW",
+        "RW",
+        "ST",
+        "CF"
+      ],
+      "choices": 9,
+      "totalMinutes": 5417,
+      "seasons": [
+        {
+          "season": "1991/92",
+          "club": "AC Milan",
+          "minutes": 2001,
+          "starts": 25,
+          "goals": 7,
+          "assists": null,
+          "fbrefPosition": "FWMF"
+        },
+        {
+          "season": "1995/96",
+          "club": "Chelsea",
+          "minutes": 2736,
+          "starts": 31,
+          "goals": 3,
+          "assists": 4,
+          "fbrefPosition": "FWMF"
+        },
+        {
+          "season": "1996/97",
+          "club": "Chelsea",
+          "minutes": 680,
+          "starts": 6,
+          "goals": 1,
+          "assists": 0,
+          "fbrefPosition": "FWMF"
+        }
+      ],
+      "positions": [
+        "CF",
+        "CAM",
+        "CM"
+      ],
+      "confidence": "low",
+      "note": "Played much of 1995/96 at Chelsea as a sweeper/libero before moving into midfield; FBref’s forward-first label reflects his earlier career more than these two seasons, so an attacking free role is the nearest honest fit inside it."
     },
     {
       "fbrefId": "adfc9123",
@@ -773,6 +834,54 @@
       ],
       "confidence": "medium",
       "note": "Deep-lying left-footed playmaker at Newcastle."
+    },
+    {
+      "fbrefId": "14323e81",
+      "name": "Paolo Maldini",
+      "nation": "ITA",
+      "fbrefPosition": "DF",
+      "allowed": [
+        "LB",
+        "CB",
+        "RB",
+        "LWB",
+        "RWB"
+      ],
+      "primaryMustBeOneOf": [
+        "LB",
+        "CB",
+        "RB",
+        "LWB",
+        "RWB"
+      ],
+      "choices": 5,
+      "totalMinutes": 5385,
+      "seasons": [
+        {
+          "season": "1991/92",
+          "club": "AC Milan",
+          "minutes": 2746,
+          "starts": 31,
+          "goals": 3,
+          "assists": null,
+          "fbrefPosition": "DF"
+        },
+        {
+          "season": "2003/04",
+          "club": "AC Milan",
+          "minutes": 2639,
+          "starts": 30,
+          "goals": 0,
+          "assists": 0,
+          "fbrefPosition": "DF"
+        }
+      ],
+      "positions": [
+        "LB",
+        "CB"
+      ],
+      "confidence": "high",
+      "note": "Milan's left-back in 1991/92; a centre-back by 2003/04."
     },
     {
       "fbrefId": "ec7e6ad1",
@@ -1403,138 +1512,6 @@
       "positions": [
         "ST",
         "CF"
-      ],
-      "confidence": "high",
-      "note": null
-    },
-    {
-      "fbrefId": "564eb30e",
-      "name": "Pontus Kåmark",
-      "nation": "SWE",
-      "fbrefPosition": "DF",
-      "allowed": [
-        "LB",
-        "CB",
-        "RB",
-        "LWB",
-        "RWB"
-      ],
-      "primaryMustBeOneOf": [
-        "LB",
-        "CB",
-        "RB",
-        "LWB",
-        "RWB"
-      ],
-      "choices": 5,
-      "totalMinutes": 5303,
-      "seasons": [
-        {
-          "season": "1996/97",
-          "club": "Leicester City",
-          "minutes": 765,
-          "starts": 9,
-          "goals": 0,
-          "assists": 0,
-          "fbrefPosition": "DF"
-        },
-        {
-          "season": "1997/98",
-          "club": "Leicester City",
-          "minutes": 3119,
-          "starts": 35,
-          "goals": 0,
-          "assists": 0,
-          "fbrefPosition": "DF"
-        },
-        {
-          "season": "1998/99",
-          "club": "Leicester City",
-          "minutes": 1419,
-          "starts": 15,
-          "goals": 0,
-          "assists": 0,
-          "fbrefPosition": "DF"
-        }
-      ],
-      "positions": [
-        "RB",
-        "CB"
-      ],
-      "confidence": "medium",
-      "note": "Leicester’s man-marker, used at right-back and in central defence."
-    },
-    {
-      "fbrefId": "a924380b",
-      "name": "Tomasz Kuszczak",
-      "nation": "POL",
-      "fbrefPosition": "GK",
-      "allowed": [
-        "GK"
-      ],
-      "primaryMustBeOneOf": [
-        "GK"
-      ],
-      "choices": 1,
-      "totalMinutes": 5295,
-      "seasons": [
-        {
-          "season": "2005/06",
-          "club": "West Bromwich Albion",
-          "minutes": 2491,
-          "starts": 28,
-          "goals": 0,
-          "assists": 0,
-          "fbrefPosition": "GK"
-        },
-        {
-          "season": "2006/07",
-          "club": "Manchester United",
-          "minutes": 540,
-          "starts": 6,
-          "goals": 0,
-          "assists": 0,
-          "fbrefPosition": "GK"
-        },
-        {
-          "season": "2007/08",
-          "club": "Manchester United",
-          "minutes": 765,
-          "starts": 8,
-          "goals": 0,
-          "assists": 0,
-          "fbrefPosition": "GK"
-        },
-        {
-          "season": "2008/09",
-          "club": "Manchester United",
-          "minutes": 329,
-          "starts": 3,
-          "goals": 0,
-          "assists": 0,
-          "fbrefPosition": "GK"
-        },
-        {
-          "season": "2009/10",
-          "club": "Manchester United",
-          "minutes": 720,
-          "starts": 8,
-          "goals": 0,
-          "assists": 0,
-          "fbrefPosition": "GK"
-        },
-        {
-          "season": "2010/11",
-          "club": "Manchester United",
-          "minutes": 450,
-          "starts": 5,
-          "goals": 0,
-          "assists": 0,
-          "fbrefPosition": "GK"
-        }
-      ],
-      "positions": [
-        "GK"
       ],
       "confidence": "high",
       "note": null

@@ -1,8 +1,143 @@
 {
   "batch": 51,
-  "of": 129,
+  "of": 130,
   "instructions": "See docs/positions-lookup.md. Fill in \"positions\" for each player, most natural first, using only values from \"allowed\". The first must come from \"primaryMustBeOneOf\". Set confidence to high, medium or low.",
   "players": [
+    {
+      "fbrefId": "d6a6a1f4",
+      "name": "Brian Jensen",
+      "nation": "DEN",
+      "fbrefPosition": "GK",
+      "allowed": [
+        "GK"
+      ],
+      "primaryMustBeOneOf": [
+        "GK"
+      ],
+      "choices": 1,
+      "totalMinutes": 3344,
+      "seasons": [
+        {
+          "season": "2009/10",
+          "club": "Burnley",
+          "minutes": 3344,
+          "starts": 38,
+          "goals": 0,
+          "assists": 0,
+          "fbrefPosition": "GK"
+        }
+      ],
+      "positions": [
+        "GK"
+      ],
+      "confidence": "high",
+      "note": null
+    },
+    {
+      "fbrefId": "ca07d0a8",
+      "name": "Ryan Jones",
+      "nation": "WAL",
+      "fbrefPosition": "MF",
+      "allowed": [
+        "CDM",
+        "CM",
+        "CAM",
+        "LM",
+        "RM"
+      ],
+      "primaryMustBeOneOf": [
+        "CDM",
+        "CM",
+        "CAM",
+        "LM",
+        "RM"
+      ],
+      "choices": 5,
+      "totalMinutes": 3340,
+      "seasons": [
+        {
+          "season": "1992/93",
+          "club": "Sheffield Wednesday",
+          "minutes": 802,
+          "starts": 9,
+          "goals": 0,
+          "assists": 1,
+          "fbrefPosition": "MF"
+        },
+        {
+          "season": "1993/94",
+          "club": "Sheffield Wednesday",
+          "minutes": 2181,
+          "starts": 24,
+          "goals": 6,
+          "assists": 6,
+          "fbrefPosition": "MF"
+        },
+        {
+          "season": "1994/95",
+          "club": "Sheffield Wednesday",
+          "minutes": 357,
+          "starts": 3,
+          "goals": 0,
+          "assists": 0,
+          "fbrefPosition": "MF"
+        }
+      ],
+      "positions": [
+        "CM",
+        "CAM"
+      ],
+      "confidence": "medium",
+      "note": null
+    },
+    {
+      "fbrefId": "5b887c7a",
+      "name": "Jérémy Mathieu",
+      "nation": "FRA",
+      "fbrefPosition": "DF",
+      "allowed": [
+        "LB",
+        "CB",
+        "RB",
+        "LWB",
+        "RWB"
+      ],
+      "primaryMustBeOneOf": [
+        "LB",
+        "CB",
+        "RB",
+        "LWB",
+        "RWB"
+      ],
+      "choices": 5,
+      "totalMinutes": 3333,
+      "seasons": [
+        {
+          "season": "2009/10",
+          "club": "Valencia",
+          "minutes": 1227,
+          "starts": 14,
+          "goals": 1,
+          "assists": 0,
+          "fbrefPosition": "DF"
+        },
+        {
+          "season": "2014/15",
+          "club": "Barcelona",
+          "minutes": 2106,
+          "starts": 23,
+          "goals": 2,
+          "assists": 0,
+          "fbrefPosition": "DF"
+        }
+      ],
+      "positions": [
+        "LB",
+        "CB"
+      ],
+      "confidence": "high",
+      "note": "Left-back at Valencia before converting to centre-back later."
+    },
     {
       "fbrefId": "8a1a3cf0",
       "name": "Gareth Farrelly",
@@ -941,11 +1076,15 @@
       "note": "Sunderland captain who played both centre-back and a combative holding midfield role across these seasons."
     },
     {
-      "fbrefId": "74f2e748",
-      "name": "Jeremie Frimpong",
-      "nation": "NED",
-      "fbrefPosition": "MF",
+      "fbrefId": "91a9535a",
+      "name": "Demetrio Albertini",
+      "nation": "ITA",
+      "fbrefPosition": "FWMF",
       "allowed": [
+        "LW",
+        "RW",
+        "ST",
+        "CF",
         "CDM",
         "CM",
         "CAM",
@@ -953,163 +1092,40 @@
         "RM"
       ],
       "primaryMustBeOneOf": [
-        "CDM",
-        "CM",
-        "CAM",
-        "LM",
-        "RM"
+        "LW",
+        "RW",
+        "ST",
+        "CF"
       ],
-      "choices": 5,
-      "totalMinutes": 3291,
+      "choices": 9,
+      "totalMinutes": 3297,
       "seasons": [
         {
-          "season": "2023/24",
-          "club": "Bayer Leverkusen",
-          "minutes": 2251,
-          "starts": 27,
-          "goals": 9,
-          "assists": 7,
-          "fbrefPosition": "MF"
+          "season": "1991/92",
+          "club": "AC Milan",
+          "minutes": 2062,
+          "starts": 22,
+          "goals": 3,
+          "assists": null,
+          "fbrefPosition": "FWMF"
         },
         {
-          "season": "2025/26",
-          "club": "Liverpool",
-          "minutes": 1040,
-          "starts": 12,
-          "goals": 0,
-          "assists": 1,
-          "fbrefPosition": "DFMF"
-        }
-      ],
-      "positions": [
-        "RWB",
-        "RB",
-        "RM"
-      ],
-      "confidence": "high",
-      "note": "FBref aggregates him to MF because of 2023/24, when Leverkusen played him as the right wing-back of a back three; his 2025/26 Liverpool season is recorded DFMF. He is a right-back/wing-back, so no midfield position is a defensible primary.",
-      "labelDisputed": true
-    },
-    {
-      "fbrefId": "35141f4c",
-      "name": "Marcos Senesi",
-      "nation": "ARG",
-      "fbrefPosition": "DF",
-      "allowed": [
-        "LB",
-        "CB",
-        "RB",
-        "LWB",
-        "RWB"
-      ],
-      "primaryMustBeOneOf": [
-        "LB",
-        "CB",
-        "RB",
-        "LWB",
-        "RWB"
-      ],
-      "choices": 5,
-      "totalMinutes": 3288,
-      "seasons": [
-        {
-          "season": "2025/26",
-          "club": "Bournemouth",
-          "minutes": 3288,
-          "starts": 37,
-          "goals": 0,
-          "assists": 5,
-          "fbrefPosition": "DF"
-        }
-      ],
-      "positions": [
-        "CB"
-      ],
-      "confidence": "high",
-      "note": null
-    },
-    {
-      "fbrefId": "2c7f0e9f",
-      "name": "Karl-Heinz Riedle",
-      "nation": "GER",
-      "fbrefPosition": "FW",
-      "allowed": [
-        "LW",
-        "RW",
-        "ST",
-        "CF"
-      ],
-      "primaryMustBeOneOf": [
-        "LW",
-        "RW",
-        "ST",
-        "CF"
-      ],
-      "choices": 4,
-      "totalMinutes": 3287,
-      "seasons": [
-        {
-          "season": "1997/98",
-          "club": "Liverpool",
-          "minutes": 1541,
-          "starts": 18,
-          "goals": 6,
+          "season": "2003/04",
+          "club": "Lazio",
+          "minutes": 1235,
+          "starts": 15,
+          "goals": 2,
           "assists": 0,
-          "fbrefPosition": "FW"
-        },
-        {
-          "season": "1998/99",
-          "club": "Liverpool",
-          "minutes": 1746,
-          "starts": 16,
-          "goals": 5,
-          "assists": 2,
-          "fbrefPosition": "FW"
+          "fbrefPosition": "FWMF"
         }
       ],
       "positions": [
-        "ST",
-        "CF"
+        "CM",
+        "CDM"
       ],
       "confidence": "high",
-      "note": null
-    },
-    {
-      "fbrefId": "dc45ac24",
-      "name": "Igor Thiago",
-      "nation": "BRA",
-      "fbrefPosition": "FW",
-      "allowed": [
-        "LW",
-        "RW",
-        "ST",
-        "CF"
-      ],
-      "primaryMustBeOneOf": [
-        "LW",
-        "RW",
-        "ST",
-        "CF"
-      ],
-      "choices": 4,
-      "totalMinutes": 3282,
-      "seasons": [
-        {
-          "season": "2025/26",
-          "club": "Brentford",
-          "minutes": 3282,
-          "starts": 37,
-          "goals": 22,
-          "assists": 1,
-          "fbrefPosition": "FW"
-        }
-      ],
-      "positions": [
-        "ST",
-        "CF"
-      ],
-      "confidence": "high",
-      "note": null
+      "note": "FBref records him forward-first for these very seasons, which permits no truthful primary: Albertini was Milan's deep-lying playmaker in 1991/92 and a central midfielder at Lazio in 2003/04.",
+      "labelDisputed": true
     }
   ]
 }

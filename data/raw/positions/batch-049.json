@@ -1,8 +1,226 @@
 {
   "batch": 49,
-  "of": 129,
+  "of": 130,
   "instructions": "See docs/positions-lookup.md. Fill in \"positions\" for each player, most natural first, using only values from \"allowed\". The first must come from \"primaryMustBeOneOf\". Set confidence to high, medium or low.",
   "players": [
+    {
+      "fbrefId": "3201b03d",
+      "name": "Danny Simpson",
+      "nation": "ENG",
+      "fbrefPosition": "DF",
+      "allowed": [
+        "LB",
+        "CB",
+        "RB",
+        "LWB",
+        "RWB"
+      ],
+      "primaryMustBeOneOf": [
+        "LB",
+        "CB",
+        "RB",
+        "LWB",
+        "RWB"
+      ],
+      "choices": 5,
+      "totalMinutes": 3573,
+      "seasons": [
+        {
+          "season": "2008/09",
+          "club": "Blackburn Rovers",
+          "minutes": 888,
+          "starts": 10,
+          "goals": 0,
+          "assists": 0,
+          "fbrefPosition": "DF"
+        },
+        {
+          "season": "2010/11",
+          "club": "Newcastle United",
+          "minutes": 2685,
+          "starts": 30,
+          "goals": 0,
+          "assists": 0,
+          "fbrefPosition": "DF"
+        }
+      ],
+      "positions": [
+        "RB"
+      ],
+      "confidence": "high",
+      "note": null
+    },
+    {
+      "fbrefId": "0717f817",
+      "name": "Aliou Cissé",
+      "nation": "SEN",
+      "fbrefPosition": "DFMF",
+      "allowed": [
+        "LB",
+        "CB",
+        "RB",
+        "LWB",
+        "RWB",
+        "CDM",
+        "CM",
+        "CAM",
+        "LM",
+        "RM"
+      ],
+      "primaryMustBeOneOf": [
+        "LB",
+        "CB",
+        "RB",
+        "LWB",
+        "RWB"
+      ],
+      "choices": 10,
+      "totalMinutes": 3572,
+      "seasons": [
+        {
+          "season": "2002/03",
+          "club": "Birmingham City",
+          "minutes": 1881,
+          "starts": 21,
+          "goals": 1,
+          "assists": 0,
+          "fbrefPosition": "DFMF"
+        },
+        {
+          "season": "2003/04",
+          "club": "Birmingham City",
+          "minutes": 535,
+          "starts": 5,
+          "goals": 0,
+          "assists": 0,
+          "fbrefPosition": "DFMF"
+        },
+        {
+          "season": "2004/05",
+          "club": "Portsmouth",
+          "minutes": 1156,
+          "starts": 12,
+          "goals": 0,
+          "assists": 1,
+          "fbrefPosition": "DFMF"
+        }
+      ],
+      "positions": [
+        "CDM",
+        "CM"
+      ],
+      "confidence": "medium",
+      "note": "FBref putting DF first is wrong: Cissé was bought as the holding midfielder he had been for Senegal and filled that role at Birmingham and Portsmouth.",
+      "labelDisputed": true
+    },
+    {
+      "fbrefId": "f9b5e5bd",
+      "name": "David Nugent",
+      "nation": "ENG",
+      "fbrefPosition": "FW",
+      "allowed": [
+        "LW",
+        "RW",
+        "ST",
+        "CF"
+      ],
+      "primaryMustBeOneOf": [
+        "LW",
+        "RW",
+        "ST",
+        "CF"
+      ],
+      "choices": 4,
+      "totalMinutes": 3558,
+      "seasons": [
+        {
+          "season": "2007/08",
+          "club": "Portsmouth",
+          "minutes": 625,
+          "starts": 5,
+          "goals": 0,
+          "assists": 0,
+          "fbrefPosition": "FW"
+        },
+        {
+          "season": "2008/09",
+          "club": "Portsmouth",
+          "minutes": 1058,
+          "starts": 13,
+          "goals": 3,
+          "assists": 1,
+          "fbrefPosition": "FW"
+        },
+        {
+          "season": "2009/10",
+          "club": "Burnley",
+          "minutes": 1875,
+          "starts": 20,
+          "goals": 6,
+          "assists": 2,
+          "fbrefPosition": "FW"
+        }
+      ],
+      "positions": [
+        "ST",
+        "CF"
+      ],
+      "confidence": "high",
+      "note": null
+    },
+    {
+      "fbrefId": "59a231bb",
+      "name": "Martin Djetou",
+      "nation": "FRA",
+      "fbrefPosition": "DFMF",
+      "allowed": [
+        "LB",
+        "CB",
+        "RB",
+        "LWB",
+        "RWB",
+        "CDM",
+        "CM",
+        "CAM",
+        "LM",
+        "RM"
+      ],
+      "primaryMustBeOneOf": [
+        "LB",
+        "CB",
+        "RB",
+        "LWB",
+        "RWB"
+      ],
+      "choices": 10,
+      "totalMinutes": 3549,
+      "seasons": [
+        {
+          "season": "2002/03",
+          "club": "Fulham",
+          "minutes": 1789,
+          "starts": 22,
+          "goals": 1,
+          "assists": 1,
+          "fbrefPosition": "DFMF"
+        },
+        {
+          "season": "2003/04",
+          "club": "Fulham",
+          "minutes": 1760,
+          "starts": 19,
+          "goals": 0,
+          "assists": 0,
+          "fbrefPosition": "DFMF"
+        }
+      ],
+      "positions": [
+        "CB",
+        "CDM"
+      ],
+      "confidence": "medium",
+      "note": "Alternated between centre-back and the holding role at Fulham."
+    },
     {
       "fbrefId": "baca4d08",
       "name": "Hameur Bouazza",
@@ -1066,135 +1284,6 @@
         {
           "season": "2025/26",
           "club": "Fulham",
-          "minutes": 3420,
-          "starts": 38,
-          "goals": 0,
-          "assists": 0,
-          "fbrefPosition": "GK"
-        }
-      ],
-      "positions": [
-        "GK"
-      ],
-      "confidence": "high",
-      "note": null
-    },
-    {
-      "fbrefId": "0cf321c8",
-      "name": "Đorđe Petrović",
-      "nation": "SRB",
-      "fbrefPosition": "GK",
-      "allowed": [
-        "GK"
-      ],
-      "primaryMustBeOneOf": [
-        "GK"
-      ],
-      "choices": 1,
-      "totalMinutes": 3420,
-      "seasons": [
-        {
-          "season": "2025/26",
-          "club": "Bournemouth",
-          "minutes": 3420,
-          "starts": 38,
-          "goals": 0,
-          "assists": 0,
-          "fbrefPosition": "GK"
-        }
-      ],
-      "positions": [
-        "GK"
-      ],
-      "confidence": "high",
-      "note": null
-    },
-    {
-      "fbrefId": "5ed1b0a9",
-      "name": "Eike Immel",
-      "nation": "GER",
-      "fbrefPosition": "GK",
-      "allowed": [
-        "GK"
-      ],
-      "primaryMustBeOneOf": [
-        "GK"
-      ],
-      "choices": 1,
-      "totalMinutes": 3420,
-      "seasons": [
-        {
-          "season": "1995/96",
-          "club": "Manchester City",
-          "minutes": 3420,
-          "starts": 38,
-          "goals": 0,
-          "assists": 0,
-          "fbrefPosition": "GK"
-        }
-      ],
-      "positions": [
-        "GK"
-      ],
-      "confidence": "high",
-      "note": null
-    },
-    {
-      "fbrefId": "9a71df39",
-      "name": "Francesco Toldo",
-      "nation": "ITA",
-      "fbrefPosition": "GK",
-      "allowed": [
-        "GK"
-      ],
-      "primaryMustBeOneOf": [
-        "GK"
-      ],
-      "choices": 1,
-      "totalMinutes": 3420,
-      "seasons": [
-        {
-          "season": "2003/04",
-          "club": "Internazionale",
-          "minutes": 2880,
-          "starts": 32,
-          "goals": 0,
-          "assists": 0,
-          "fbrefPosition": "GK"
-        },
-        {
-          "season": "2006/07",
-          "club": "Internazionale",
-          "minutes": 540,
-          "starts": 6,
-          "goals": 0,
-          "assists": 0,
-          "fbrefPosition": "GK"
-        }
-      ],
-      "positions": [
-        "GK"
-      ],
-      "confidence": "high",
-      "note": null
-    },
-    {
-      "fbrefId": "4806ec67",
-      "name": "Jordan Pickford",
-      "nation": "ENG",
-      "fbrefPosition": "GK",
-      "allowed": [
-        "GK"
-      ],
-      "primaryMustBeOneOf": [
-        "GK"
-      ],
-      "choices": 1,
-      "totalMinutes": 3420,
-      "seasons": [
-        {
-          "season": "2025/26",
-          "club": "Everton",
           "minutes": 3420,
           "starts": 38,
           "goals": 0,

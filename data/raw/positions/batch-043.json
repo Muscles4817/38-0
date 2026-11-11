@@ -1,8 +1,146 @@
 {
   "batch": 43,
-  "of": 129,
+  "of": 130,
   "instructions": "See docs/positions-lookup.md. Fill in \"positions\" for each player, most natural first, using only values from \"allowed\". The first must come from \"primaryMustBeOneOf\". Set confidence to high, medium or low.",
   "players": [
+    {
+      "fbrefId": "c204f844",
+      "name": "Yaya Touré",
+      "nation": "CIV",
+      "fbrefPosition": "MF",
+      "allowed": [
+        "CDM",
+        "CM",
+        "CAM",
+        "LM",
+        "RM"
+      ],
+      "primaryMustBeOneOf": [
+        "CDM",
+        "CM",
+        "CAM",
+        "LM",
+        "RM"
+      ],
+      "choices": 5,
+      "totalMinutes": 4450,
+      "seasons": [
+        {
+          "season": "2009/10",
+          "club": "Barcelona",
+          "minutes": 1485,
+          "starts": 18,
+          "goals": 1,
+          "assists": 3,
+          "fbrefPosition": "MF"
+        },
+        {
+          "season": "2010/11",
+          "club": "Manchester City",
+          "minutes": 2965,
+          "starts": 35,
+          "goals": 8,
+          "assists": 4,
+          "fbrefPosition": "MF"
+        }
+      ],
+      "positions": [
+        "CDM",
+        "CM"
+      ],
+      "confidence": "high",
+      "note": "Holding midfielder at Barcelona, before the box-to-box role at City."
+    },
+    {
+      "fbrefId": "49c0435b",
+      "name": "Lee Briscoe",
+      "nation": "ENG",
+      "fbrefPosition": "DFMF",
+      "allowed": [
+        "LB",
+        "CB",
+        "RB",
+        "LWB",
+        "RWB",
+        "CDM",
+        "CM",
+        "CAM",
+        "LM",
+        "RM"
+      ],
+      "primaryMustBeOneOf": [
+        "LB",
+        "CB",
+        "RB",
+        "LWB",
+        "RWB"
+      ],
+      "choices": 10,
+      "totalMinutes": 4449,
+      "seasons": [
+        {
+          "season": "1994/95",
+          "club": "Sheffield Wednesday",
+          "minutes": 440,
+          "starts": 6,
+          "goals": 0,
+          "assists": 0,
+          "fbrefPosition": "DFMF"
+        },
+        {
+          "season": "1995/96",
+          "club": "Sheffield Wednesday",
+          "minutes": 1858,
+          "starts": 22,
+          "goals": 0,
+          "assists": 3,
+          "fbrefPosition": "DFMF"
+        },
+        {
+          "season": "1996/97",
+          "club": "Sheffield Wednesday",
+          "minutes": 427,
+          "starts": 5,
+          "goals": 0,
+          "assists": 0,
+          "fbrefPosition": "DFMF"
+        },
+        {
+          "season": "1997/98",
+          "club": "Sheffield Wednesday",
+          "minutes": 314,
+          "starts": 3,
+          "goals": 0,
+          "assists": 2,
+          "fbrefPosition": "DFMF"
+        },
+        {
+          "season": "1998/99",
+          "club": "Sheffield Wednesday",
+          "minutes": 683,
+          "starts": 5,
+          "goals": 1,
+          "assists": 0,
+          "fbrefPosition": "DFMF"
+        },
+        {
+          "season": "1999/00",
+          "club": "Sheffield Wednesday",
+          "minutes": 727,
+          "starts": 7,
+          "goals": 0,
+          "assists": 1,
+          "fbrefPosition": "DFMF"
+        }
+      ],
+      "positions": [
+        "LB",
+        "LWB",
+        "LM"
+      ],
+      "confidence": "medium",
+      "note": null
+    },
     {
       "fbrefId": "31388b4f",
       "name": "Tahar El Khalej",
@@ -1043,6 +1181,53 @@
       "labelDisputed": true
     },
     {
+      "fbrefId": "69f22898",
+      "name": "Alessandro Costacurta",
+      "nation": "ITA",
+      "fbrefPosition": "DF",
+      "allowed": [
+        "LB",
+        "CB",
+        "RB",
+        "LWB",
+        "RWB"
+      ],
+      "primaryMustBeOneOf": [
+        "LB",
+        "CB",
+        "RB",
+        "LWB",
+        "RWB"
+      ],
+      "choices": 5,
+      "totalMinutes": 4343,
+      "seasons": [
+        {
+          "season": "1991/92",
+          "club": "AC Milan",
+          "minutes": 2616,
+          "starts": 29,
+          "goals": 1,
+          "assists": null,
+          "fbrefPosition": "DF"
+        },
+        {
+          "season": "2003/04",
+          "club": "AC Milan",
+          "minutes": 1727,
+          "starts": 18,
+          "goals": 0,
+          "assists": 1,
+          "fbrefPosition": "DF"
+        }
+      ],
+      "positions": [
+        "CB"
+      ],
+      "confidence": "high",
+      "note": null
+    },
+    {
       "fbrefId": "e318bc09",
       "name": "Ian Butterworth",
       "nation": "ENG",
@@ -1259,150 +1444,6 @@
       ],
       "confidence": "high",
       "note": "Sheffield United left-sided midfielder who pushed on into an advanced role, with 10 league goals over the two seasons."
-    },
-    {
-      "fbrefId": "1db88b29",
-      "name": "Elano",
-      "nation": "BRA",
-      "fbrefPosition": "MF",
-      "allowed": [
-        "CDM",
-        "CM",
-        "CAM",
-        "LM",
-        "RM"
-      ],
-      "primaryMustBeOneOf": [
-        "CDM",
-        "CM",
-        "CAM",
-        "LM",
-        "RM"
-      ],
-      "choices": 5,
-      "totalMinutes": 4305,
-      "seasons": [
-        {
-          "season": "2007/08",
-          "club": "Manchester City",
-          "minutes": 2437,
-          "starts": 29,
-          "goals": 8,
-          "assists": 9,
-          "fbrefPosition": "MF"
-        },
-        {
-          "season": "2008/09",
-          "club": "Manchester City",
-          "minutes": 1868,
-          "starts": 21,
-          "goals": 6,
-          "assists": 3,
-          "fbrefPosition": "MF"
-        }
-      ],
-      "positions": [
-        "CAM",
-        "CM",
-        "RM"
-      ],
-      "confidence": "medium",
-      "note": "Attacking midfielder for Manchester City, drifting right; free-kick and assist source."
-    },
-    {
-      "fbrefId": "fd4b4bf4",
-      "name": "John Humphrey",
-      "nation": "ENG",
-      "fbrefPosition": "DF",
-      "allowed": [
-        "LB",
-        "CB",
-        "RB",
-        "LWB",
-        "RWB"
-      ],
-      "primaryMustBeOneOf": [
-        "LB",
-        "CB",
-        "RB",
-        "LWB",
-        "RWB"
-      ],
-      "choices": 5,
-      "totalMinutes": 4300,
-      "seasons": [
-        {
-          "season": "1992/93",
-          "club": "Crystal Palace",
-          "minutes": 2542,
-          "starts": 28,
-          "goals": 0,
-          "assists": 0,
-          "fbrefPosition": "DF"
-        },
-        {
-          "season": "1994/95",
-          "club": "Crystal Palace",
-          "minutes": 1758,
-          "starts": 19,
-          "goals": 0,
-          "assists": 0,
-          "fbrefPosition": "DF"
-        }
-      ],
-      "positions": [
-        "RB"
-      ],
-      "confidence": "high",
-      "note": null
-    },
-    {
-      "fbrefId": "01b2ec2b",
-      "name": "Martin Albrechtsen",
-      "nation": "DEN",
-      "fbrefPosition": "DF",
-      "allowed": [
-        "LB",
-        "CB",
-        "RB",
-        "LWB",
-        "RWB"
-      ],
-      "primaryMustBeOneOf": [
-        "LB",
-        "CB",
-        "RB",
-        "LWB",
-        "RWB"
-      ],
-      "choices": 5,
-      "totalMinutes": 4298,
-      "seasons": [
-        {
-          "season": "2004/05",
-          "club": "West Bromwich Albion",
-          "minutes": 1785,
-          "starts": 20,
-          "goals": 0,
-          "assists": 1,
-          "fbrefPosition": "DF"
-        },
-        {
-          "season": "2005/06",
-          "club": "West Bromwich Albion",
-          "minutes": 2513,
-          "starts": 26,
-          "goals": 1,
-          "assists": 0,
-          "fbrefPosition": "DF"
-        }
-      ],
-      "positions": [
-        "RB",
-        "CB"
-      ],
-      "confidence": "medium",
-      "note": null
     }
   ]
 }
