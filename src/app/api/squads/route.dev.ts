@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server';
 import { getDb } from '@/lib/db';
+import { refuseBlockedTraits } from '@/lib/traitGuard.dev';
 
 export const runtime = 'nodejs';
 
@@ -53,6 +54,8 @@ export async function GET(req: Request) {
 export async function POST(req: Request) {
   const db = getDb();
   const { club_id, season_id, player_id, rating, positions, roles, version_label } = await req.json();
+  const refused = refuseBlockedTraits(db, roles, positions);
+  if (refused) return refused;
   try {
     const existing = db.prepare(`
       SELECT se.id FROM squad_entries se

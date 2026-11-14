@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server';
 import { getDb } from '@/lib/db';
+import { refuseBlockedTraits } from '@/lib/traitGuard.dev';
 
 export const runtime = 'nodejs';
 
@@ -7,6 +8,8 @@ export async function PUT(req: Request, { params }: { params: Promise<{ id: stri
   const db = getDb();
   const { id } = await params;
   const { label, rating, positions, roles } = await req.json();
+  const refused = refuseBlockedTraits(db, roles, positions);
+  if (refused) return refused;
   db.prepare('UPDATE player_versions SET label=?, rating=?, positions=?, roles=? WHERE id=?')
     .run(label, rating, JSON.stringify(positions), JSON.stringify(roles ?? []), id);
   return NextResponse.json({ ok: true });

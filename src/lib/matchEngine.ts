@@ -474,7 +474,7 @@ const CHANCE_QUALITY: Record<ChanceType, number> = {
 };
 
 /** Roles that are better than average at converting a given kind of chance. */
-const ROLE_CHANCE_AFFINITY: Record<ChanceType, Partial<Record<PlayerRole, number>>> = {
+export const ROLE_CHANCE_AFFINITY: Record<ChanceType, Partial<Record<PlayerRole, number>>> = {
   aerial: { AerialThreat: 2.6, TargetMan: 1.9, NoNonsenseDefender: 1.3 },
   cross: { AerialThreat: 2.2, TargetMan: 1.7, Poacher: 1.3 },
   throughBall: { Poacher: 1.8, LateRunner: 1.6, InsideForward: 1.4, DeepLyingForward: 1.3 },

@@ -175,9 +175,41 @@ it gets worse: `Poacher` + `AerialThreat` is 7.7x.
 says the same thing about the player without handing him the whole season. Ibra
 went to 48 goals and 49%, in line with Henry's 45% for Arsenal 2003/04.
 
-The general form: **a forward should carry at most one big scoring role.** The
-multipliers compound, and the engine's square-root damping is not enough to
-absorb two of them on the player who already receives most of the chances.
+That rule used to be more general — "a forward should carry at most one big
+scoring role" — because the multipliers compounded. They no longer do where it
+mattered: choosing who takes a chance uses only a player's strongest boost and
+his strongest drag (`combineRoleMults`). Two traits still multiply when he
+finishes a kind of chance they both favour, by the square root of each
+(`ROLE_CHANCE_AFFINITY`), which the editor warns about (W3 below).
+
+## The rules the editor enforces
+
+`src/lib/traitRules.ts` checks a player-season's traits against his positions.
+The squad and player editors show the result under the trait picker; the API
+refuses a blocked save; and `traitRules.test.ts` fails CI if any player in the
+shipped snapshot breaks a block rule, so data that arrives by `import:squads`
+is held to the same rules. Rules that depend on what a trait does read its
+definition, so changing a trait's positions or abilities changes what they
+say.
+
+| | Level | Rule |
+| --- | --- | --- |
+| B1 | block | Only traits the game defines. |
+| B2 | block | No trait twice. |
+| B3 | block | Goalkeeper traits (positions exactly `GK`) only on a player who plays in goal: keeping is read only for the keeper. |
+| B4 | block | No trait that has no abilities and whose positions include none of his: it does nothing wherever he plays. |
+| B5 | warn | A strength and the weakness that cancels it (`CONTRADICTIONS`): Pacey + Ponderous, Lightweight + an aerial trait, and so on. The numbers still add up, so it is allowed. |
+| W1 | warn | AerialThreat on a player who plays ST or CF: TargetMan says the same without taking his side's chances. |
+| W2 | warn | A trait with abilities whose positions include none of his: the abilities apply, the goal and assist weights never will. |
+| W3 | warn | Two traits favouring the same kind of chance, which multiply when he finishes one. |
+
+Deliberately not a rule: a player's traits may differ from one season to the
+next. Players gain and lose abilities.
+
+On the snapshot when the rules went in: no blocks (two Crystal Palace 2025/26
+players were fixed first: Muñoz AttackingFullback → Winger, Nketiah Poacher →
+LateRunner, since FBref has both as midfielders), one W1 (Tim Cahill), eight
+W2 and twenty W3.
 
 ## A failure worth remembering
 
