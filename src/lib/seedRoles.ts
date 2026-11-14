@@ -72,7 +72,7 @@ export const SEED_ROLES: Record<string, Record<string, string[]>> = {
   'Leicester City 2015/16': {
     "N'Golo Kante": ['Enforcer', 'Workhorse'],
     'Riyad Mahrez': ['InsideForward', 'Dribbler'],
-    'Jamie Vardy': ['Poacher', 'Pacey'],
+    'Jamie Vardy': ['Poacher', 'Pacey', 'PressingForward'],
   },
   'Liverpool 2013/14': {
     'Luis Suarez': ['CompleteForward', 'Dribbler'],
