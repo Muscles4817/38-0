@@ -14,18 +14,19 @@
 
 export const SEED_ROLES: Record<string, Record<string, string[]>> = {
   'AC Milan 1994/95': {
-    'Paolo Maldini': ['BallPlayingDefender'],
+    'Paolo Maldini': ['BallPlayingDefender', 'Pacey'],
   },
   'AC Milan 2002/03': {
     'Clarence Seedorf': ['Mezzala', 'Carrier', 'LongShot'],
   },
   'AC Milan 2004/05': {
-    'Paolo Maldini': ['BallPlayingDefender'],
+    'Paolo Maldini': ['BallPlayingDefender', 'Sweeper'],
   },
   'AC Milan 2006/07': {
     'Alessandro Nesta': ['Sweeper'],
     'Kaká': ['LateRunner', 'Carrier', 'ChanceCreator', 'Pacey'],
     'Clarence Seedorf': ['Mezzala', 'Carrier', 'LongShot'],
+    'Paolo Maldini': ['BallPlayingDefender', 'Sweeper'],
   },
   'Arsenal 2024/25': {
     'Bukayo Saka': ['InsideForward', 'SetPieceDeliverer', 'Dribbler', 'PenaltyTaker'],
@@ -38,8 +39,10 @@ export const SEED_ROLES: Record<string, Record<string, string[]>> = {
   },
   'Chelsea 2013/14': {
     'Eden Hazard': ['Trequartista', 'Dribbler'],
-    'John Terry': ['AerialThreat'],
+    'John Terry': ['AerialThreat', 'Ponderous'],
     'Petr Čech': ['ShotStopper', 'CommandingKeeper'],
+    'Frank Lampard': ['LateRunner', 'LongShot', 'PenaltyTaker'],
+    'Ashley Cole': ['AttackingFullback'],
   },
   'Chelsea 2014/15': {
     'Eden Hazard': ['Trequartista', 'Dribbler'],
@@ -52,15 +55,16 @@ export const SEED_ROLES: Record<string, Record<string, string[]>> = {
     'Ramires': ['BoxToBox'],
     'Loic Remy': ['Poacher', 'InsideForward'],
     'Thibaut Courtois': ['ShotStopper'],
-    'John Terry': ['AerialThreat'],
+    'John Terry': ['AerialThreat', 'Ponderous'],
     'Petr Čech': ['ShotStopper', 'CommandingKeeper'],
   },
   'Chelsea 2016/17': {
     "N'Golo Kante": ['Enforcer', 'Workhorse'],
     'Eden Hazard': ['Trequartista', 'Dribbler'],
     'Thibaut Courtois': ['ShotStopper'],
-    'John Terry': ['AerialThreat'],
+    'John Terry': ['AerialThreat', 'Ponderous'],
     'Cesc Fàbregas': ['DeepLyingPlaymaker', 'ChanceCreator'],
+    'Diego Costa': ['TargetMan', 'PressingForward', 'RashInTheTackle'],
   },
   'Chelsea 2024/25': {
     'Cole Palmer': ['ChanceCreator', 'LongShot', 'PenaltyTaker'],
@@ -73,7 +77,7 @@ export const SEED_ROLES: Record<string, Record<string, string[]>> = {
   'Liverpool 2013/14': {
     'Luis Suarez': ['CompleteForward', 'Dribbler'],
     'Daniel Sturridge': ['Poacher', 'Pacey'],
-    'Steven Gerrard': ['SetPieceDeliverer', 'Regista'],
+    'Steven Gerrard': ['Regista', 'SetPieceDeliverer', 'PenaltyTaker'],
     'Philippe Coutinho': ['ChanceCreator', 'Mezzala'],
     'Martin Skrtel': ['AerialThreat', 'NoNonsenseDefender'],
     'Raheem Sterling': ['LateRunner', 'Pacey'],
@@ -106,11 +110,12 @@ export const SEED_ROLES: Record<string, Record<string, string[]>> = {
     'Alisson': ['SweeperKeeper'],
     'Virgil van Dijk': ['AerialThreat'],
     'Trent Alexander-Arnold': ['ChanceCreator', 'CrossingSpecialist', 'SetPieceDeliverer'],
+    'Andy Robertson': ['CrossingSpecialist', 'AttackingFullback'],
   },
   'Manchester City 2011/12': {
     'David Silva': ['ChanceCreator', 'Carrier', 'Mezzala'],
     'Sergio Aguero': ['Poacher'],
-    'Yaya Touré': ['BoxToBox', 'DeepLyingPlaymaker'],
+    'Yaya Touré': ['BoxToBox', 'Carrier', 'LongShot'],
     'Carlos Tevez': ['CompleteForward', 'PressingForward'],
     'Vincent Kompany': ['BallPlayingDefender'],
     'Samir Nasri': ['ChanceCreator'],
