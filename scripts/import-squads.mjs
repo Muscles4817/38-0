@@ -304,4 +304,61 @@ console.log(
 if (pruned.length) {
   console.log(`Pruned ${pruned.length} club-season(s) the import does not cover: ${pruned.join(', ')}.`);
 }
+
+// ── Verify the write landed ──────────────────────────────────────────────────
+//
+// The import is meant to be idempotent and the files are the reviewable source
+// of truth, so the database should agree with them exactly the moment this
+// finishes. It did not, once: after a large import, six Arsenal 2008/09 players
+// and Anelka's 2009/10 row still carried roles their files did not, and a
+// corrected `AerialThreat` had not moved. Re-running the same command on the
+// same files fixed all of them, so a single pass had quietly left club-seasons
+// stale — and nothing downstream would have noticed, because the snapshot is
+// exported from the database rather than from the files.
+//
+// Reading it back costs a fraction of the write and turns that into a failure.
+
+const verifyRows = db.prepare(`
+  SELECT c.name AS club, s.label AS season, p.name AS name,
+         pv.rating AS rating, pv.roles AS roles
+  FROM squad_entries se
+  JOIN clubs c            ON c.id  = se.club_id
+  JOIN seasons s          ON s.id  = se.season_id
+  JOIN player_versions pv ON pv.id = se.player_version_id
+  JOIN players p          ON p.id  = pv.player_id
+`).all();
+
+// Keyed the same way the importer matches people, so an accent is not a miss.
+const inDb = new Map();
+for (const r of verifyRows) {
+  inDb.set(`${r.club}|${r.season}|${playerKey(r.name)}`, {
+    rating: r.rating,
+    roles: JSON.parse(r.roles).slice().sort().join(','),
+  });
+}
+
+const drifted = [];
+for (const { data } of files) {
+  for (const p of data.players) {
+    const hit = inDb.get(`${data.club}|${data.season}|${playerKey(p.name)}`);
+    if (!hit) { drifted.push(`${data.season} ${data.club} ${p.name}: not in the database`); continue; }
+    if (hit.rating !== p.rating) {
+      drifted.push(`${data.season} ${data.club} ${p.name}: rating ${p.rating} in the file, ${hit.rating} in the database`);
+    }
+    const fileRoles = (p.roles ?? []).slice().sort().join(',');
+    if (fileRoles !== hit.roles) {
+      drifted.push(`${data.season} ${data.club} ${p.name}: roles [${fileRoles}] in the file, [${hit.roles}] in the database`);
+    }
+  }
+}
+
+if (drifted.length) {
+  console.error(`\n${drifted.length} row(s) did not land. The database disagrees with the files it was just given:`);
+  for (const d of drifted.slice(0, 20)) console.error(`  ${d}`);
+  if (drifted.length > 20) console.error(`  … +${drifted.length - 20}`);
+  console.error('\nRe-run this command. If it persists, the import is wrong, not the files.');
+  process.exit(1);
+}
+console.log(`Verified: all ${playerSeasons} row(s) in the database match the files.`);
+
 console.log('Run "npm run export:data" to refresh the snapshot the game ships with.');

@@ -243,7 +243,36 @@ a constant to re-fit: `strength` also decides which clubs make way when a season
 had more than twenty, and it is the number the pre-season screen shows, so
 changing it moves three things at once and wants measuring on its own.
 
-## 3. Smaller things
+## 3. A player's allowed positions come from one season's label
+
+`plan-position-batches.mjs` builds each stub's `fbrefPosition` from
+`p.seasons[0].fbrefPosition` — one season — and `checkAssignment` then enforces
+it against the player's whole career. So **collecting a new season can
+retroactively invalidate a reviewed assignment**, with no edit to that
+assignment at all.
+
+Jeremie Frimpong is the worked example. His only season was 2025/26 Liverpool,
+recorded `DFMF`, and he was assigned `RWB/RB/RM` — legal, since `DFMF` permits a
+defensive primary. Adding 2023/24 Leverkusen, which FBref records as `MF`, moved
+his `seasons[0]` to the earlier row, narrowed `allowed` to `CDM CM CAM LM RM`,
+and turned three correct positions into three validation failures.
+
+It was caught, but only because the checker runs over every batch rather than
+the ones being edited. Nothing says *why* a passing assignment started failing,
+and the obvious reading — that whoever last touched it got it wrong — is the
+wrong one.
+
+The escape hatch works: Frimpong carries `labelDisputed` with a note saying
+FBref records him `MF` for 2023/24 while Leverkusen played him as the right
+wing-back of a back three. But a dispute should record a disagreement with the
+source, not absorb an artefact of which season happens to sort first.
+
+The fix is for the constraint to be the union of the labels across a player's
+seasons, or to be applied per season rather than per player. Either is a change
+to how `allowed` is derived, so it wants doing deliberately rather than as part
+of a collection pass.
+
+## 4. Smaller things
 
 - **Four club-seasons ship with a single player.** 2017/18 Liverpool holds only
   Adam Lallana, and AC Milan 1994/95, 2002/03 and 2004/05 hold one man each
