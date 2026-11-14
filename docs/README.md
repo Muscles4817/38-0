@@ -61,6 +61,7 @@ npm run lint         # eslint
 npm run typecheck    # tsc --noEmit
 npm run export:data  # regenerate src/data/game-data.json from the database
 npm run derive:lineups  # most-used XI and formation for every club-season
+npm run sync:seed-roles # write src/lib/seedRoles.ts into an existing database
 ```
 
 `npm run lint`, `npm run typecheck`, `npm test` and `npm run build` are exactly
