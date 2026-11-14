@@ -240,7 +240,7 @@ function seedData(db: Database.Database): void {
   ];
   for (const [name, nat, rating, pos] of arsPlayers) {
     const pid = ip.run(name, nat).lastInsertRowid as number;
-    ise.run(ars, ars0304, ipv.run(pid, '2003/04', rating, pos, '[]').lastInsertRowid as number);
+    ise.run(ars, ars0304, ipv.run(pid, '2003/04', rating, pos, seedRoles('Arsenal', '2003/04', name)).lastInsertRowid as number);
   }
 
   // ── Manchester United 1998/99 (Treble) ────────────────────────────────────
@@ -266,7 +266,7 @@ function seedData(db: Database.Database): void {
   ];
   for (const [name, nat, rating, pos] of munPlayers) {
     const pid = ip.run(name, nat).lastInsertRowid as number;
-    ise.run(mun, mun9899, ipv.run(pid, '1998/99', rating, pos, '[]').lastInsertRowid as number);
+    ise.run(mun, mun9899, ipv.run(pid, '1998/99', rating, pos, seedRoles('Manchester United', '1998/99', name)).lastInsertRowid as number);
   }
 
   // ── Chelsea 2004/05 ────────────────────────────────────────────────────────
@@ -291,7 +291,7 @@ function seedData(db: Database.Database): void {
   ];
   for (const [name, nat, rating, pos] of chePlayers) {
     const pid = ip.run(name, nat).lastInsertRowid as number;
-    ise.run(che, che0405, ipv.run(pid, '2004/05', rating, pos, '[]').lastInsertRowid as number);
+    ise.run(che, che0405, ipv.run(pid, '2004/05', rating, pos, seedRoles('Chelsea', '2004/05', name)).lastInsertRowid as number);
   }
 
   // ── Manchester City 2011/12 ────────────────────────────────────────────────
@@ -339,7 +339,7 @@ function seedData(db: Database.Database): void {
   ];
   for (const [name, nat, rating, pos] of leiPlayers) {
     const pid = ip.run(name, nat).lastInsertRowid as number;
-    ise.run(lei, lei1516, ipv.run(pid, '2015/16', rating, pos, '[]').lastInsertRowid as number);
+    ise.run(lei, lei1516, ipv.run(pid, '2015/16', rating, pos, seedRoles('Leicester City', '2015/16', name)).lastInsertRowid as number);
   }
 
   // ── Liverpool 2019/20 ─────────────────────────────────────────────────────
@@ -387,7 +387,7 @@ function seedData(db: Database.Database): void {
   ];
   for (const [name, nat, rating, pos] of blkPlayers) {
     const pid = ip.run(name, nat).lastInsertRowid as number;
-    ise.run(blk, blk9495, ipv.run(pid, '1994/95', rating, pos, '[]').lastInsertRowid as number);
+    ise.run(blk, blk9495, ipv.run(pid, '1994/95', rating, pos, seedRoles('Blackburn Rovers', '1994/95', name)).lastInsertRowid as number);
   }
 
   // ── Chelsea 2013/14 (from screenshots) ────────────────────────────────────
@@ -413,7 +413,7 @@ function seedData(db: Database.Database): void {
   for (const [name, nat, rating, pos] of che1314Players) {
     const pidRow = db.prepare('SELECT id FROM players WHERE name = ?').get(name) as { id: number } | undefined;
     const pid = pidRow ? pidRow.id : (ip.run(name, nat).lastInsertRowid as number);
-    ise.run(cheId, che1314, ipv.run(pid, '2013/14', rating, pos, '[]').lastInsertRowid as number);
+    ise.run(cheId, che1314, ipv.run(pid, '2013/14', rating, pos, seedRoles('Chelsea', '2013/14', name)).lastInsertRowid as number);
   }
 
   // ── Tottenham 2018/19 ─────────────────────────────────────────────────────
@@ -485,7 +485,7 @@ function seedData(db: Database.Database): void {
   for (const [name, nat, rating, pos] of avlPlayers) {
     if (name === 'Unai Emery') continue; // skip manager
     const pid = ip.run(name, nat).lastInsertRowid as number;
-    ise.run(avl, avl2425, ipv.run(pid, '2024/25', rating, pos, '[]').lastInsertRowid as number);
+    ise.run(avl, avl2425, ipv.run(pid, '2024/25', rating, pos, seedRoles('Aston Villa', '2024/25', name)).lastInsertRowid as number);
   }
 }
 
@@ -950,7 +950,7 @@ function seedPL2526(db: Database.Database, seasonId: number): void {
       const cid = getOrCreateClub(clubName, short, color);
       for (const [name, nat, rating, pos] of players) {
         const pid = getOrCreatePlayer(name, nat);
-        const pvId = ipv.run(pid, '2025/26', rating, pos, '[]').lastInsertRowid as number;
+        const pvId = ipv.run(pid, '2025/26', rating, pos, seedRoles(clubName, '2025/26', name)).lastInsertRowid as number;
         ise.run(cid, seasonId, pvId);
       }
     }
@@ -1298,7 +1298,7 @@ function seedNonPLClassicsIfNeeded(db: Database.Database) {
         if (seen.has(key)) continue;
         seen.add(key);
         const pid = findOrCreatePlayer(name, nat);
-        milIse.run(milId, s2006.id, milIpv.run(pid, '2006/07', rating, pos, '[]').lastInsertRowid as number);
+        milIse.run(milId, s2006.id, milIpv.run(pid, '2006/07', rating, pos, seedRoles('AC Milan', '2006/07', name)).lastInsertRowid as number);
       }
 
       // Save the UCL final XI as the default lineup (4-3-2-1 Christmas tree)
@@ -1398,7 +1398,7 @@ function seedArsenal2425IfNeeded(db: Database.Database): void {
   db.transaction(() => {
     for (const [name, nat, rating, pos] of squad) {
       const pid = findOrCreatePlayer(name, nat);
-      ise.run(arsClub.id, season.id, ipv.run(pid, '2024/25', rating, pos, '[]').lastInsertRowid as number);
+      ise.run(arsClub.id, season.id, ipv.run(pid, '2024/25', rating, pos, seedRoles('Arsenal', '2024/25', name)).lastInsertRowid as number);
     }
 
     // Save Arteta's most-used XI: 4-3-3 (CDM)
@@ -1489,7 +1489,7 @@ function seedChelsea2425IfNeeded(db: Database.Database): void {
   db.transaction(() => {
     for (const [name, nat, rating, pos] of squad) {
       const pid = findOrCreatePlayer(name, nat);
-      ise.run(cheClub.id, season.id, ipv.run(pid, '2024/25', rating, pos, '[]').lastInsertRowid as number);
+      ise.run(cheClub.id, season.id, ipv.run(pid, '2024/25', rating, pos, seedRoles('Chelsea', '2024/25', name)).lastInsertRowid as number);
     }
 
     // Maresca's preferred XI: 4-2-3-1
@@ -1581,7 +1581,7 @@ function seedLiverpool2425IfNeeded(db: Database.Database): void {
   db.transaction(() => {
     for (const [name, nat, rating, pos] of squad) {
       const pid = findOrCreatePlayer(name, nat);
-      ise.run(livClub.id, season.id, ipv.run(pid, '2024/25', rating, pos, '[]').lastInsertRowid as number);
+      ise.run(livClub.id, season.id, ipv.run(pid, '2024/25', rating, pos, seedRoles('Liverpool', '2024/25', name)).lastInsertRowid as number);
     }
 
     // Slot's most-used XI: 4-3-3 (CDM)
@@ -1672,7 +1672,7 @@ function seedBrighton2425IfNeeded(db: Database.Database): void {
   db.transaction(() => {
     for (const [name, nat, rating, pos] of squad) {
       const pid = findOrCreatePlayer(name, nat);
-      ise.run(club.id, season.id, ipv.run(pid, '2024/25', rating, pos, '[]').lastInsertRowid as number);
+      ise.run(club.id, season.id, ipv.run(pid, '2024/25', rating, pos, seedRoles('Brighton', '2024/25', name)).lastInsertRowid as number);
     }
 
     // Hürzeler's most-used XI: 4-2-3-1
@@ -1761,7 +1761,7 @@ function seedWestHam2425IfNeeded(db: Database.Database): void {
   db.transaction(() => {
     for (const [name, nat, rating, pos] of squad) {
       const pid = findOrCreatePlayer(name, nat);
-      ise.run(club.id, season.id, ipv.run(pid, '2024/25', rating, pos, '[]').lastInsertRowid as number);
+      ise.run(club.id, season.id, ipv.run(pid, '2024/25', rating, pos, seedRoles('West Ham United', '2024/25', name)).lastInsertRowid as number);
     }
 
     // Lopetegui/Potter 4-2-3-1

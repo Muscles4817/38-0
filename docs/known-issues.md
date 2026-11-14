@@ -59,10 +59,12 @@ What is left is in the data, not the engine:
   trait that fits the slot (False nine for Firmino), or the role's positions.
   The commonest: Anchor at CM (17), No-nonsense defender at RB (9),
   Attacking full-back at LM (8).
-- **Stars with no traits.** 75 of the 219 stored-XI players rated 88 or more
-  have none, Gerrard, Fàbregas, Ødegaard and Pirès among them. The rating
-  baseline keeps them creative, but a 79-rated Winger (Riera) still out-delivers
-  an untraited 92 at set pieces and crosses.
+- **Stars with no traits: fixed.** 92 of the 273 players rated 88 or more had
+  none — Gerrard, Fàbregas, Rooney, Terry, Schmeichel, Pirès, Ødegaard among
+  them — and none of 273 do now. They were given the traits that plainly fit,
+  consistent with their other seasons where they had any, along with the rest
+  of each player's seasons; 194 assignments in all. A rebuilt database
+  reproduces them (see *A failure worth remembering* in [roles.md](roles.md)).
 - A side's full-backs make fewer than Liverpool's did: Alexander-Arnold and
   Robertson were exceptional, and the general full-back weight is set by the
   league-wide share, which they would otherwise push too high.
@@ -181,8 +183,14 @@ What is left:
   table is clearly outside noise (Counter-attack +4.5 ± 5.1 over five, Low
   block −3.8 ± 2.1 over eleven), much as before.
 - **Pace and recovery are trait-only, and the traits are sparse.** Henry,
-  Salah and Mané carry no pace trait, so Arsenal 2003/04 and Liverpool 2019/20
-  read 23% and 10% for Counter-attack and do little in behind. Recovery now
+  Salah and Mané carried no pace trait, so Arsenal 2003/04 and Liverpool
+  2019/20 read 23% and 10% for Counter-attack and did little in behind. They,
+  Overmars, Vardy, Anelka, Son, Sterling and the young Giggs now carry
+  `Pacey`: Counter-attack reads 50% and 52%, and Arsenal 2003/04 in the
+  2025/26 field went from 79.3 to 83.1 points playing it (titles 33% to 57%,
+  40 seasons each; Balanced 73.9 to 77.4, from the other traits). Liverpool
+  2019/20 takes 89.3 countering and 86.3 Balanced. Pace below the stars is
+  still sparse. Recovery now
   takes the rating baseline (reading the game), so high lines are not
   defenceless, but pace on the break does not.
 - **No trait describes defending.** A deep block is played on rating and work
