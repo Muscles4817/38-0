@@ -186,3 +186,18 @@ That is the same shape as the batch planners, which carried work forward only if
 the thing it belonged to was considered finished. Roles are now inserted every
 time with `INSERT OR IGNORE`, which leaves editor changes alone, and a test
 asserts that no player carries a role the code does not define.
+
+It happened again with whole squads. Seven club-seasons are seeded by `db.ts`
+from code rather than imported from `data/squads/` — Chelsea 2014/15,
+Manchester City 2011/12 and 2017/18, Liverpool 2013/14 and 2019/20, Tottenham
+2018/19 and Newcastle 2022/23 — and the seed wrote every player with no
+traits. Their 77 trait assignments, and five ratings and position lists, were
+added in the editor and existed in one local database only. They are now in
+`src/lib/seedRoles.ts` and the seed itself, and a database rebuilt from scratch
+(`getDb()`, `npm run import:squads -- --prune`, `npm run derive:lineups`,
+`npm run export:data`) reproduces every player in the shipped snapshot.
+
+What a rebuild still cannot reproduce: the 66 club-season style records
+(cohesion, playstyle, focus), which have no file, and five squads that exist
+only in the database — AC Milan 2006/07 and the four stubs of one player each
+(Liverpool 2017/18, AC Milan 1994/95, 2002/03 and 2004/05).

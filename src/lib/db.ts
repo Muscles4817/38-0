@@ -1,4 +1,5 @@
 import Database from 'better-sqlite3';
+import { seedRoles } from './seedRoles';
 import path from 'path';
 import fs from 'fs';
 import type { Ability } from './abilities';
@@ -304,10 +305,10 @@ function seedData(db: Database.Database): void {
     ['Pablo Zabaleta', 'Argentina', 84, '["RB"]'],
     ['David Silva', 'Spain', 93, '["CM","CAM","LM"]'],
     ['Yaya Toure', 'Ivory Coast', 92, '["CM","CDM"]'],
-    ['Gareth Barry', 'England', 83, '["CDM","CM"]'],
-    ['James Milner', 'England', 81, '["RM","CM","LM"]'],
+    ['Gareth Barry', 'England', 83, '["CDM","CM","LB","LM"]'],
+    ['James Milner', 'England', 81, '["RM","CM","LM","RW","LW","LWB","RWB"]'],
     ['Sergio Aguero', 'Argentina', 93, '["ST"]'],
-    ['Carlos Tevez', 'Argentina', 90, '["ST","CAM"]'],
+    ['Carlos Tevez', 'Argentina', 91, '["ST","CAM","CF"]'],
     ['Mario Balotelli', 'Italy', 84, '["ST"]'],
     ['Edin Dzeko', 'Bosnia & Herzegovina', 84, '["ST"]'],
     ['Samir Nasri', 'France', 86, '["CAM","CM","LM"]'],
@@ -315,7 +316,7 @@ function seedData(db: Database.Database): void {
   ];
   for (const [name, nat, rating, pos] of mciPlayers) {
     const pid = ip.run(name, nat).lastInsertRowid as number;
-    ise.run(mci, mci1112, ipv.run(pid, '2011/12', rating, pos, '[]').lastInsertRowid as number);
+    ise.run(mci, mci1112, ipv.run(pid, '2011/12', rating, pos, seedRoles('Manchester City', '2011/12', name)).lastInsertRowid as number);
   }
 
   // ── Leicester City 2015/16 ────────────────────────────────────────────────
@@ -363,7 +364,7 @@ function seedData(db: Database.Database): void {
   ];
   for (const [name, nat, rating, pos] of livPlayers) {
     const pid = ip.run(name, nat).lastInsertRowid as number;
-    ise.run(liv, liv1920, ipv.run(pid, '2019/20', rating, pos, '[]').lastInsertRowid as number);
+    ise.run(liv, liv1920, ipv.run(pid, '2019/20', rating, pos, seedRoles('Liverpool', '2019/20', name)).lastInsertRowid as number);
   }
 
   // ── Blackburn Rovers 1994/95 ──────────────────────────────────────────────
@@ -436,7 +437,7 @@ function seedData(db: Database.Database): void {
   ];
   for (const [name, nat, rating, pos] of totPlayers) {
     const pid = ip.run(name, nat).lastInsertRowid as number;
-    ise.run(tot, tot1819, ipv.run(pid, '2018/19', rating, pos, '[]').lastInsertRowid as number);
+    ise.run(tot, tot1819, ipv.run(pid, '2018/19', rating, pos, seedRoles('Tottenham Hotspur', '2018/19', name)).lastInsertRowid as number);
   }
 
   // ── Newcastle United 2022/23 ──────────────────────────────────────────────
@@ -459,7 +460,7 @@ function seedData(db: Database.Database): void {
   ];
   for (const [name, nat, rating, pos] of newPlayers) {
     const pid = ip.run(name, nat).lastInsertRowid as number;
-    ise.run(new_, new2223, ipv.run(pid, '2022/23', rating, pos, '[]').lastInsertRowid as number);
+    ise.run(new_, new2223, ipv.run(pid, '2022/23', rating, pos, seedRoles('Newcastle United', '2022/23', name)).lastInsertRowid as number);
   }
 
   // ── Aston Villa 2024/25 ───────────────────────────────────────────────────
@@ -1016,7 +1017,7 @@ function seedClassicTeamsIfNeeded(db: Database.Database) {
 
   for (const [name, nat, rating, pos] of playerData) {
     const pid = findOrCreatePlayer(name, nat);
-    ise.run(mciId, s2017.id, ipv.run(pid, '2017/18', rating, pos, '[]').lastInsertRowid as number);
+    ise.run(mciId, s2017.id, ipv.run(pid, '2017/18', rating, pos, seedRoles('Manchester City', '2017/18', name)).lastInsertRowid as number);
   }
 }
 
@@ -1048,9 +1049,10 @@ function seedMorePLClassicsIfNeeded(db: Database.Database) {
   const ise = db.prepare('INSERT OR IGNORE INTO squad_entries (club_id, season_id, player_version_id) VALUES (?, ?, ?)');
 
   function seedSquad(cId: number, sId: number, label: string, players: [string, string, number, string][]) {
+    const club = (db.prepare('SELECT name FROM clubs WHERE id = ?').get(cId) as { name: string } | undefined)?.name ?? '';
     for (const [name, nat, rating, pos] of players) {
       const pid = findOrCreatePlayer(name, nat);
-      ise.run(cId, sId, ipv.run(pid, label, rating, pos, '[]').lastInsertRowid as number);
+      ise.run(cId, sId, ipv.run(pid, label, rating, pos, seedRoles(club, label, name)).lastInsertRowid as number);
     }
   }
 
@@ -1089,7 +1091,7 @@ function seedMorePLClassicsIfNeeded(db: Database.Database) {
       ['Steven Gerrard',         'England',        87, '["CM","CDM","CAM"]'],
       ['Jordan Henderson',       'England',        79, '["CM","CDM"]'],
       ['Philippe Coutinho',      'Brazil',         87, '["CAM","CM","LM"]'],
-      ['Raheem Sterling',        'England',        82, '["RW","LW","RM"]'],
+      ['Raheem Sterling',        'England',        82, '["RW","LW","RM","CAM","CF"]'],
       ['Daniel Sturridge',       'England',        88, '["ST"]'],
       ['Luis Suarez',            'Uruguay',        94, '["ST","LW","RW"]'],
       ['Kolo Toure',             'Ivory Coast',    77, '["CB"]'],
