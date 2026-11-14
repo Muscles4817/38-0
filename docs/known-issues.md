@@ -50,15 +50,18 @@ are now asserted by `matchEngine.calibration.test.ts`.
 
 What is left is in the data, not the engine:
 
-- **Traits switched off by their own slot.** A trait applies only in the
-  positions its role allows (`validPositions`), and 105 of the 1,680 trait
-  assignments in stored XIs fall outside their player's own lineup slot.
-  Firmino's only trait is Chance creator, which does not apply at ST, so in
-  the game he is an untraited striker; Alexander-Arnold's Chance creator is
-  off at RB, Kuyt's Pressing forward at RM. The fix is in the editor: a
-  trait that fits the slot (False nine for Firmino), or the role's positions.
-  The commonest: Anchor at CM (17), No-nonsense defender at RB (9),
-  Attacking full-back at LM (8).
+- **Traits switched off by their own slot: half fixed.** A trait used to
+  apply only in the positions its role allows (`validPositions`), abilities
+  included: 136 of 2,168 trait assignments in stored XIs were off, and 96
+  players lost every trait they had (Firmino's Chance creator at ST,
+  Gerrard's Box to box at RM, Alexander-Arnold's Chance creator at RB). Now
+  a player's abilities (`traits` on `MatchPlayer`) apply in any slot, and
+  only the goal and assist weights and chance affinities (`roles`) still
+  depend on it. Measured on the eight seasons below, 40 passes each: points
+  correlation with the real tables 0.888 to 0.897, points error per club
+  7.37 to 7.06, goals-for error 9.12 to 9.07; dropping the gate altogether
+  measured 0.895, 7.13 and 9.24. No club moved more than about 4 points.
+  What remains slot-bound is deliberate: a Poacher at CAM is not poaching.
 - **Stars with no traits: fixed.** 92 of the 273 players rated 88 or more had
   none — Gerrard, Fàbregas, Rooney, Terry, Schmeichel, Pirès, Ødegaard among
   them — and none of 273 do now. They were given the traits that plainly fit,

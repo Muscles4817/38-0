@@ -841,7 +841,18 @@ export interface MatchPlayer {
   name: string;
   position: Position;
   rating: number;
+  /**
+   * The roles that apply in the slot he is filling: what he produces there —
+   * who gets on the end of a chance, who supplies it. A Poacher at CAM is not
+   * poaching.
+   */
   roles?: PlayerRole[];
+  /**
+   * Every trait he has, wherever he is playing: what he is good at. Pace,
+   * pressing and creation do not stay behind when he moves slot, so the
+   * abilities read these. Absent, `roles` stands in.
+   */
+  traits?: PlayerRole[];
   /** Every position he genuinely plays. Carried for the screens; the match reads only `position`. */
   positions?: Position[];
 }
@@ -1208,7 +1219,7 @@ export const MOMENT_READS: Record<string, readonly Ability[]> = {};
 /** What a player's traits say about one ability, summed. */
 function traitPoints(p: MatchPlayer, name: Ability, roles: RoleMultipliers): number {
   let total = 0;
-  for (const r of p.roles ?? []) total += roles.qualities?.[r]?.[name] ?? 0;
+  for (const r of p.traits ?? p.roles ?? []) total += roles.qualities?.[r]?.[name] ?? 0;
   return total;
 }
 

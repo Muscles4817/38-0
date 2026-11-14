@@ -49,6 +49,12 @@ migration.
 
 ## What the engine reads
 
+A player's qualities apply wherever he plays. His roles' goal and assist
+multipliers and chance affinities apply only in the positions the role lists
+(`validPositions`): what he is good at travels, what he produces depends on
+where he stands. Until this was split, a role outside its positions was off
+entirely, so Gerrard at RM lost his pressing along with his box-to-box goals.
+
 A quality does something only where the match engine reads it. Where it is not
 read yet, the trait is decorative in a match, whatever it says.
 

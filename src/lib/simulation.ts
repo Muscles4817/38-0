@@ -425,6 +425,7 @@ function toMatchPlayer(pick: SquadPick, validPos: Partial<Record<PlayerRole, Pos
     position:  pick.position,
     rating:    ratingInSlot(pick),
     roles:     activeRoles(pick.roles, pick.position, validPos),
+    traits:    pick.roles ?? [],
     positions: pick.positions,
   };
 }
@@ -444,6 +445,7 @@ function opponentSetup(
     position: p.position,
     rating: p.rating,
     roles: activeRoles(p.roles, p.position, validPos),
+    traits: p.roles ?? [],
   }));
   const inferred = inferStyle(eleven);
   return {

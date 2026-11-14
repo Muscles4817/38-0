@@ -382,6 +382,17 @@ describe('who takes part in a phase', () => {
     const plain = xi(shape);
     expect(phaseAbility(diligent, 'block', QUALITIES)).toBeGreaterThan(phaseAbility(plain, 'block', QUALITIES));
   });
+
+  it('reads abilities from every trait, even ones his slot switches off', () => {
+    // A trait outside its positions loses its goal and assist weights (`roles`)
+    // but not what it says he is good at (`traits`): a box-to-box midfielder
+    // played at RM still presses.
+    const shape: [Position, string[]?][] = [['GK'], ['LB'], ['CB'], ['CB'], ['RB'], ['LM'], ['CM'], ['CM'], ['RM'], ['ST'], ['ST']];
+    const plain = xi(shape);
+    const travelled = plain.map(p => (p.position === 'RM' ? { ...p, roles: [], traits: ['Workhorse'] } : p));
+    const before = plain.map(p => (p.position === 'RM' ? { ...p, roles: [], traits: undefined } : p));
+    expect(phaseAbility(travelled, 'block', QUALITIES)).toBeGreaterThan(phaseAbility(before, 'block', QUALITIES));
+  });
 });
 
 describe('goalkeeping traits', () => {
