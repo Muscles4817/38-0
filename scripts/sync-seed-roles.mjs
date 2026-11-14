@@ -1,6 +1,14 @@
-// Writes the traits in src/lib/seedRoles.ts into an existing local database.
+// Brings an existing local database in line with what the code defines:
+// the traits in src/lib/seedRoles.ts, and the definition of every trait
+// (positions, label, description, contributions) in src/lib/db.ts.
 //
 //   npm run sync:seed-roles [-- --dry-run]
+//
+// Trait definitions are inserted once and then left alone, so a change to one
+// in the code (Trequartista gaining LM and RM) never reached a database that
+// already had it, and the next export put the old one back. Abilities are
+// already synced every time by db.ts; this does the rest. A definition edited
+// in the editor and not copied into db.ts is overwritten, and reported.
 //
 // A few club-seasons are seeded by db.ts from code rather than imported from
 // data/squads/, and the seed only runs for a squad the database does not have
@@ -17,6 +25,7 @@ import fs from 'node:fs';
 import path from 'node:path';
 import process from 'node:process';
 import { SEED_ROLES } from '../src/lib/seedRoles.ts';
+import { ALL_ROLES } from '../src/lib/db.ts';
 
 const DB_PATH = path.join(process.cwd(), 'data', '38-0.db');
 const dryRun = process.argv.includes('--dry-run');
@@ -57,5 +66,25 @@ db.transaction(() => {
     }
   }
 })();
-console.log(`${dryRun ? 'Would change' : 'Changed'} ${changed} player(s); ${missing} not found.`);
-if (changed && !dryRun) console.log('Run "npm run export:data" to refresh the snapshot the game ships with.');
+const roleRow = db.prepare('SELECT * FROM role_config WHERE name = ?');
+const setRole = db.prepare(`UPDATE role_config SET label = ?, valid_positions = ?, description = ?,
+  att_contrib = ?, mid_contrib = ?, def_contrib = ? WHERE name = ?`);
+let roleChanges = 0;
+db.transaction(() => {
+  for (const r of ALL_ROLES) {
+    const row = roleRow.get(r.name);
+    if (!row) continue;
+    const want = {
+      label: r.label, valid_positions: JSON.stringify(r.valid_positions), description: r.description,
+      att_contrib: r.att_contrib, mid_contrib: r.mid_contrib, def_contrib: r.def_contrib,
+    };
+    const diff = Object.keys(want).filter(k => row[k] !== want[k]);
+    if (diff.length === 0) continue;
+    for (const k of diff) console.log(`  trait ${r.name} ${k}: ${row[k]} -> ${want[k]}`);
+    if (!dryRun) setRole.run(want.label, want.valid_positions, want.description, want.att_contrib, want.mid_contrib, want.def_contrib, r.name);
+    roleChanges++;
+  }
+})();
+
+console.log(`${dryRun ? 'Would change' : 'Changed'} ${changed} player(s) and ${roleChanges} trait definition(s); ${missing} not found.`);
+if ((changed || roleChanges) && !dryRun) console.log('Run "npm run export:data" to refresh the snapshot the game ships with.');

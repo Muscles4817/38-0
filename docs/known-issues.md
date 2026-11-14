@@ -62,6 +62,15 @@ What is left is in the data, not the engine:
   7.37 to 7.06, goals-for error 9.12 to 9.07; dropping the gate altogether
   measured 0.895, 7.13 and 9.24. No club moved more than about 4 points.
   What remains slot-bound is deliberate: a Poacher at CAM is not poaching.
+- **The trait pass inflated the top sides' goals.** Giving the stars traits
+  season by season (PenaltyTaker, LongShot, Pacey, and the rest) made the
+  sides that carry them score more. On the eight seasons below, 40 passes
+  each, the real top four went from +4.3 goals a season over their real
+  totals to +6.9 (Arsenal 2004/05 alone +13), and the Golden Boot from 29.2
+  to 31.4, while their points moved closer to real (−2.9 to −2.0) and the
+  points correlation held at 0.896. The engine was calibrated on sparser
+  traits; this wants a re-fit of how much a scoring trait is worth, not
+  fewer traits.
 - **Stars with no traits: fixed.** 92 of the 273 players rated 88 or more had
   none — Gerrard, Fàbregas, Rooney, Terry, Schmeichel, Pirès, Ødegaard among
   them — and none of 273 do now. They were given the traits that plainly fit,

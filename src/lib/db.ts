@@ -1877,13 +1877,13 @@ export function loadRoleRows(db: Database.Database): RoleRow[] {
 const ROLE_DEFAULTS: (Omit<RoleRow, 'valid_positions' | 'qualities'> & { valid_positions: string[] })[] = [
   // name, label, goal_mult, assist_mult, valid_positions, description, att_contrib, mid_contrib, def_contrib
   { name: 'AerialThreat',        label: 'Aerial Threat',         goal_mult: 3.50, assist_mult: 0.30, valid_positions: [],                                                              description: 'Dominant in the air; major threat at set pieces from any position', att_contrib:  0, mid_contrib:  0, def_contrib:  0 },
-  { name: 'Anchor',              label: 'Anchor',                goal_mult: 0.20, assist_mult: 0.40, valid_positions: ['CDM'],                                                          description: 'Pure defensive shield; almost never scores',                         att_contrib:  0, mid_contrib:  0, def_contrib:  3 },
+  { name: 'Anchor',              label: 'Anchor',                goal_mult: 0.20, assist_mult: 0.40, valid_positions: ['CDM'],                                                          description: 'Pure defensive shield; almost never scores',                         att_contrib: -1, mid_contrib:  0, def_contrib:  3 },
   { name: 'AttackingFullback',   label: 'Attacking Fullback',    goal_mult: 1.00, assist_mult: 1.80, valid_positions: ['LB','RB','LWB','RWB'],                                          description: 'Bombs forward to provide width and crosses',                         att_contrib:  2, mid_contrib:  0, def_contrib: -2 },
   { name: 'BallPlayingDefender', label: 'Ball Playing Defender', goal_mult: 0.50, assist_mult: 1.50, valid_positions: ['CB'],                                                            description: 'Plays out from the back; contributes to build-up play',             att_contrib:  0, mid_contrib:  2, def_contrib:  0 },
-  { name: 'BoxToBox',            label: 'Box to Box',            goal_mult: 1.30, assist_mult: 1.20, valid_positions: ['CM'],                                                            description: 'Balanced midfielder contributing at both ends',                      att_contrib:  1, mid_contrib:  0, def_contrib:  1 },
-  { name: 'ChanceCreator',       label: 'Chance Creator',        goal_mult: 0.50, assist_mult: 2.00, valid_positions: ['CAM','CM','LM','RM'],                                            description: 'Natural playmaker who creates chances for others',                   att_contrib:  2, mid_contrib:  0, def_contrib:  0 },
+  { name: 'BoxToBox',            label: 'Box to Box',            goal_mult: 1.30, assist_mult: 1.20, valid_positions: ['CM','CDM'],                                                            description: 'Balanced midfielder contributing at both ends',                      att_contrib:  1, mid_contrib: -1, def_contrib:  1 },
+  { name: 'ChanceCreator',       label: 'Chance Creator',        goal_mult: 0.50, assist_mult: 2.00, valid_positions: ['CAM','CM','LM','RM','LW','RW','CF'],                                            description: 'Natural playmaker who creates chances for others',                   att_contrib:  2, mid_contrib:  0, def_contrib:  0 },
   { name: 'CompleteForward',     label: 'Complete Forward',      goal_mult: 1.30, assist_mult: 1.50, valid_positions: ['ST','CF'],                                                       description: 'All-round striker contributing to goals and assists',                att_contrib:  0, mid_contrib:  0, def_contrib:  0 },
-  { name: 'CrossingSpecialist',  label: 'Crossing Specialist',   goal_mult: 0.10, assist_mult: 2.80, valid_positions: ['LB','RB','LWB','RWB','LM','RM','LW','RW'],                      description: 'Elite delivery from wide; rarely attempts shots',                    att_contrib:  0, mid_contrib:  0, def_contrib:  0 },
+  { name: 'CrossingSpecialist',  label: 'Crossing Specialist',   goal_mult: 0.10, assist_mult: 2.80, valid_positions: ['LB','RB','LWB','RWB','LM','RM','LW','RW','CM','CAM'],                      description: 'Elite delivery from wide; rarely attempts shots',                    att_contrib:  0, mid_contrib:  0, def_contrib:  0 },
   { name: 'DeepLyingForward',    label: 'Deep Lying Forward',    goal_mult: 1.00, assist_mult: 1.80, valid_positions: ['ST','CF'],                                                       description: 'Drops deep to link play and create; finishes when presented',        att_contrib:  0, mid_contrib:  1, def_contrib:  0 },
   { name: 'DeepLyingPlaymaker',  label: 'Deep Lying Playmaker',  goal_mult: 0.40, assist_mult: 1.80, valid_positions: ['CDM','CM'],                                                      description: 'Dictates tempo from deep; rarely gets forward',                      att_contrib:  0, mid_contrib:  1, def_contrib:  0 },
   { name: 'Enforcer',            label: 'Enforcer',              goal_mult: 0.15, assist_mult: 0.50, valid_positions: ['CM','CDM'],                                                      description: 'Win it, keep it simple; physical midfield presence',                 att_contrib:  0, mid_contrib:  1, def_contrib:  2 },
@@ -1894,11 +1894,11 @@ const ROLE_DEFAULTS: (Omit<RoleRow, 'valid_positions' | 'qualities'> & { valid_p
   { name: 'Mezzala',             label: 'Mezzala',               goal_mult: 1.50, assist_mult: 1.30, valid_positions: ['CM','LM','RM','CAM'],                                            description: 'Half-space runner who breaks into the box from midfield',            att_contrib:  1, mid_contrib:  1, def_contrib:  0 },
   { name: 'NoNonsenseDefender', label: 'No-Nonsense Defender', goal_mult: 0.15, assist_mult: 0.25, valid_positions: ['CB'],                                                    description: 'Heads it, kicks it, and does not attempt anything else',             att_contrib:  0, mid_contrib: -2, def_contrib: 3.5 },
   { name: 'SweeperKeeper',       label: 'Sweeper Keeper',        goal_mult: 0.00, assist_mult: 1.90, valid_positions: ['GK'],                                                    description: 'Starts the attack and defends the space behind the line',            att_contrib:  0, mid_contrib: 2.5, def_contrib: -1.5 },
-  { name: 'Poacher',             label: 'Poacher',               goal_mult: 2.20, assist_mult: 0.40, valid_positions: ['ST','CF'],                                                       description: 'Lives in the box for the tap-in; pure goal threat',                  att_contrib:  0, mid_contrib:  0, def_contrib:  0 },
+  { name: 'Poacher',             label: 'Poacher',               goal_mult: 2.20, assist_mult: 0.40, valid_positions: ['ST','CF','RW','LW'],                                                       description: 'Lives in the box for the tap-in; pure goal threat',                  att_contrib:  0, mid_contrib:  0, def_contrib:  0 },
   { name: 'Regista',             label: 'Regista',               goal_mult: 0.20, assist_mult: 2.20, valid_positions: ['CDM','CM'],                                                      description: 'Orchestrates from deep; elite passer, minimal open-play goal threat', att_contrib:  0, mid_contrib:  3, def_contrib: -2 },
-  { name: 'SetPieceDeliverer',   label: 'Set Piece Deliverer',   goal_mult: 0.30, assist_mult: 2.50, valid_positions: ['LM','RM','LW','RW','LB','RB','LWB','RWB','CM','CAM'],           description: 'Corner and free kick specialist; rarely scores directly',            att_contrib:  0, mid_contrib:  0, def_contrib:  0 },
+  { name: 'SetPieceDeliverer',   label: 'Set Piece Deliverer',   goal_mult: 0.30, assist_mult: 2.50, valid_positions: ['LM','RM','LW','RW','LB','RB','LWB','RWB','CM','CAM','CDM','GK','CB','CF','ST'],           description: 'Corner and free kick specialist; rarely scores directly',            att_contrib:  0, mid_contrib:  0, def_contrib:  0 },
   { name: 'TargetMan',           label: 'Target Man',            goal_mult: 1.30, assist_mult: 0.90, valid_positions: ['ST','CF'],                                                       description: 'Physical presence up front; wins aerial duels and holds up play',    att_contrib:  0, mid_contrib:  0, def_contrib:  0 },
-  { name: 'Trequartista',        label: 'Trequartista',          goal_mult: 1.40, assist_mult: 1.30, valid_positions: ['CAM','CF'],                                                      description: 'Floats between the lines; creative and dangerous in pockets of space', att_contrib:  0, mid_contrib:  0, def_contrib:  0 },
+  { name: 'Trequartista',        label: 'Trequartista',          goal_mult: 1.40, assist_mult: 1.30, valid_positions: ['CAM','CF','LW','RW','LM','RM'],                                                      description: 'Floats between the lines; creative and dangerous in pockets of space', att_contrib:  0, mid_contrib:  0, def_contrib:  0 },
   { name: 'Winger',              label: 'Winger',                goal_mult: 0.50, assist_mult: 1.80, valid_positions: ['LW','RW','LM','RM'],                                             description: 'Stays wide to deliver crosses; rarely attempts shots on goal',       att_contrib:  0, mid_contrib:  0, def_contrib:  0 },
 ];
 
@@ -1946,16 +1946,21 @@ const ROLE_QUALITIES: Record<string, Partial<Record<Quality, number>>> = {
   Mezzala:             { creation: 1, dribble: 1 },
   // "No-nonsense" literally asserts the limitation.
   NoNonsenseDefender:  { aerial: 2, pressResist: -2, creation: -2, discipline: -1 },
-  // Finishing is the goal multiplier and positioning has no quality. Nothing
-  // else about a poacher is definitional.
-  Poacher:             {},
+  // Finishing is the goal multiplier and positioning has no quality. What
+  // else is definitional is that he lives in the box rather than working
+  // back: a little less pressing, and so a little less in the defensive block.
+  // A poacher who also presses (Vardy) carries PressingForward or Workhorse
+  // as well, and the two add up.
+  Poacher:             { pressing: -1 },
   Regista:             { pressResist: 3, creation: 3, setPiece: 1 },
   SetPieceDeliverer:   { setPiece: 3, penalty: 1 },
   // A sweeper keeper is the last man behind a high line: coming off it to
   // clear the ball played in behind is what the name means.
   SweeperKeeper:       { pressResist: 2, claiming: 1, recovery: 3 },
   TargetMan:           { aerial: 2 },
-  Trequartista:        { creation: 3, dribble: 1 },
+  // The classic trequartista is excused defensive duties; the rare one who
+  // works as well carries a pressing trait too, and the two add up.
+  Trequartista:        { creation: 3, dribble: 1, pressing: -1 },
   Winger:              { setPiece: 2 },
 
   Pacey:               { pace: 3, recovery: 1 },
@@ -2010,7 +2015,8 @@ const EXTRA_ROLES: typeof ROLE_DEFAULTS = [
 ];
 
 /** Every role the game knows: the original set plus the trait additions. */
-const ALL_ROLES = [...ROLE_DEFAULTS, ...EXTRA_ROLES];
+/** Every trait the code defines, as the role_config table holds it. */
+export const ALL_ROLES = [...ROLE_DEFAULTS, ...EXTRA_ROLES];
 
 function migrateRoleConfig(db: Database.Database): void {
   db.exec(`

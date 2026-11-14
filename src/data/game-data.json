@@ -137167,13 +137167,13 @@
     },
     {
       "name": "NoNonsenseDefender",
-      "label": "No Nonsense Defender",
+      "label": "No-Nonsense Defender",
       "goalMult": 0.15,
       "assistMult": 0.25,
       "validPositions": [
         "CB"
       ],
-      "description": "",
+      "description": "Heads it, kicks it, and does not attempt anything else",
       "attContrib": 0,
       "midContrib": -2,
       "defContrib": 3.5,
@@ -137228,7 +137228,9 @@
       "attContrib": 0,
       "midContrib": 0,
       "defContrib": 0,
-      "qualities": {}
+      "qualities": {
+        "pressing": -1
+      }
     },
     {
       "name": "Ponderous",
@@ -137368,7 +137370,7 @@
       "validPositions": [
         "GK"
       ],
-      "description": "Elite reflexes; keeps out what he reaches",
+      "description": "Positioning and handling; keeps out what he sees coming",
       "attContrib": 0,
       "midContrib": 0,
       "defContrib": 2,
@@ -137419,7 +137421,7 @@
       "validPositions": [
         "GK"
       ],
-      "description": "",
+      "description": "Starts the attack and defends the space behind the line",
       "attContrib": 0,
       "midContrib": 2.5,
       "defContrib": -1.5,
@@ -137454,8 +137456,10 @@
       "validPositions": [
         "CAM",
         "CF",
+        "LW",
         "RW",
-        "LW"
+        "LM",
+        "RM"
       ],
       "description": "Floats between the lines; creative and dangerous in pockets of space",
       "attContrib": 0,
@@ -137463,7 +137467,8 @@
       "defContrib": 0,
       "qualities": {
         "creation": 3,
-        "dribble": 1
+        "dribble": 1,
+        "pressing": -1
       }
     },
     {

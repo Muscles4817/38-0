@@ -123,6 +123,19 @@ describe('role qualities', () => {
     expect(role?.qualities?.recovery ?? 0).toBeGreaterThan(0);
   });
 
+  it('excuse a trequartista and a poacher some defensive work, but not a forward who presses', () => {
+    const q = (name: string, quality: string) =>
+      (gameData.roles.find(r => r.name === name)?.qualities as Record<string, number> | undefined)?.[quality] ?? 0;
+    for (const name of ['Trequartista', 'Poacher']) {
+      expect(q(name, 'pressing'), `${name} pressing`).toBeLessThan(0);
+      // The exceptional one who does both carries a pressing trait as well,
+      // and still comes out a presser.
+      for (const presser of ['PressingForward', 'Workhorse']) {
+        expect(q(name, 'pressing') + q(presser, 'pressing'), `${name} + ${presser}`).toBeGreaterThan(0);
+      }
+    }
+  });
+
   it('do not double as a scoring bonus', () => {
     // A trait that exists to describe an ability should not also make a player
     // score more. The ones that legitimately do — Poacher, AerialThreat — are
