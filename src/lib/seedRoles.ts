@@ -14,23 +14,23 @@
 
 export const SEED_ROLES: Record<string, Record<string, string[]>> = {
   'AC Milan 1994/95': {
-    'Paolo Maldini': ['BallPlayingDefender', 'Pacey'],
+    'Paolo Maldini': ['BallPlayingDefender', 'Pacey', 'ReadsTheGame'],
   },
   'AC Milan 2002/03': {
     'Clarence Seedorf': ['Mezzala', 'Carrier', 'LongShot'],
   },
   'AC Milan 2004/05': {
-    'Paolo Maldini': ['BallPlayingDefender', 'Sweeper'],
+    'Paolo Maldini': ['BallPlayingDefender', 'Sweeper', 'ReadsTheGame'],
   },
   'AC Milan 2006/07': {
-    'Alessandro Nesta': ['Sweeper'],
+    'Alessandro Nesta': ['Sweeper', 'ReadsTheGame'],
     'Kaká': ['LateRunner', 'Carrier', 'ChanceCreator', 'Pacey'],
     'Clarence Seedorf': ['Mezzala', 'Carrier', 'LongShot'],
-    'Paolo Maldini': ['BallPlayingDefender', 'Sweeper'],
+    'Paolo Maldini': ['BallPlayingDefender', 'Sweeper', 'ReadsTheGame'],
   },
   'Arsenal 2024/25': {
     'Bukayo Saka': ['InsideForward', 'SetPieceDeliverer', 'Dribbler', 'PenaltyTaker'],
-    'William Saliba': ['BallPlayingDefender', 'Sweeper'],
+    'William Saliba': ['BallPlayingDefender', 'Sweeper', 'ReadsTheGame'],
     'Martin Ødegaard': ['ChanceCreator', 'SetPieceDeliverer', 'Lightweight'],
     'Declan Rice': ['BoxToBox', 'Enforcer', 'SetPieceDeliverer', 'Carrier'],
     'David Raya': ['SweeperKeeper'],
@@ -41,7 +41,7 @@ export const SEED_ROLES: Record<string, Record<string, string[]>> = {
   },
   'Chelsea 2013/14': {
     'Eden Hazard': ['Trequartista', 'Dribbler'],
-    'John Terry': ['AerialThreat', 'Ponderous'],
+    'John Terry': ['AerialThreat', 'Ponderous', 'ReadsTheGame'],
     'Petr Čech': ['ShotStopper', 'CommandingKeeper'],
     'Frank Lampard': ['LateRunner', 'LongShot', 'PenaltyTaker'],
     'Ashley Cole': ['AttackingFullback'],
@@ -58,14 +58,14 @@ export const SEED_ROLES: Record<string, Record<string, string[]>> = {
     'Ramires': ['BoxToBox'],
     'Loic Remy': ['Poacher', 'InsideForward'],
     'Thibaut Courtois': ['ShotStopper'],
-    'John Terry': ['AerialThreat', 'Ponderous'],
+    'John Terry': ['AerialThreat', 'Ponderous', 'ReadsTheGame'],
     'Petr Čech': ['ShotStopper', 'CommandingKeeper'],
   },
   'Chelsea 2016/17': {
-    "N'Golo Kante": ['Enforcer', 'Workhorse'],
+    "N'Golo Kante": ['Enforcer', 'Workhorse', 'ReadsTheGame'],
     'Eden Hazard': ['Trequartista', 'Dribbler'],
     'Thibaut Courtois': ['ShotStopper'],
-    'John Terry': ['AerialThreat', 'Ponderous'],
+    'John Terry': ['AerialThreat', 'Ponderous', 'ReadsTheGame'],
     'Cesc Fàbregas': ['DeepLyingPlaymaker', 'ChanceCreator'],
     'Diego Costa': ['TargetMan', 'PressingForward', 'RashInTheTackle'],
     'David Luiz': ['BallPlayingDefender'],
@@ -76,7 +76,7 @@ export const SEED_ROLES: Record<string, Record<string, string[]>> = {
     'Moisés Caicedo': ['Enforcer', 'Workhorse'],
   },
   'Leicester City 2015/16': {
-    "N'Golo Kante": ['Enforcer', 'Workhorse'],
+    "N'Golo Kante": ['Enforcer', 'Workhorse', 'ReadsTheGame'],
     'Riyad Mahrez': ['InsideForward', 'Dribbler'],
     'Jamie Vardy': ['Poacher', 'Pacey', 'PressingForward'],
     'Kasper Schmeichel': ['Reflexes'],
@@ -97,12 +97,12 @@ export const SEED_ROLES: Record<string, Record<string, string[]>> = {
     'Joe Allen': ['DeepLyingPlaymaker'],
   },
   'Liverpool 2019/20': {
-    'Virgil van Dijk': ['AerialThreat'],
+    'Virgil van Dijk': ['AerialThreat', 'ReadsTheGame'],
     'Mohamed Salah': ['InsideForward', 'Pacey'],
     'Alisson': ['SweeperKeeper'],
     'Sadio Mane': ['InsideForward', 'Pacey'],
     'Andy Robertson': ['CrossingSpecialist', 'AttackingFullback'],
-    'Fabinho': ['Anchor', 'DeepLyingPlaymaker'],
+    'Fabinho': ['Anchor', 'DeepLyingPlaymaker', 'ReadsTheGame'],
     'Trent Alexander-Arnold': ['ChanceCreator', 'CrossingSpecialist', 'SetPieceDeliverer'],
     'Roberto Firmino': ['ChanceCreator'],
     'Joel Matip': ['BallPlayingDefender'],
@@ -115,7 +115,7 @@ export const SEED_ROLES: Record<string, Record<string, string[]>> = {
   'Liverpool 2024/25': {
     'Mohamed Salah': ['InsideForward', 'Pacey', 'PenaltyTaker'],
     'Alisson': ['SweeperKeeper'],
-    'Virgil van Dijk': ['AerialThreat'],
+    'Virgil van Dijk': ['AerialThreat', 'ReadsTheGame'],
     'Trent Alexander-Arnold': ['ChanceCreator', 'CrossingSpecialist', 'SetPieceDeliverer'],
     'Andy Robertson': ['CrossingSpecialist', 'AttackingFullback'],
     'Ibrahima Konaté': ['Stopper', 'Pacey'],

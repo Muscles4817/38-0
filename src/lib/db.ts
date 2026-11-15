@@ -1968,6 +1968,11 @@ const ROLE_QUALITIES: Record<string, Partial<Record<Quality, number>>> = {
   Stopper:             { aerial: 2, pressing: 2, discipline: -1 },
   PressingForward:     { pressing: 3 },
   Workhorse:           { pressing: 2 },
+  // Reading the game (docs/abilities.md): positioning and anticipation. It is
+  // the block's `defending`, which no trait gave before, and a little of the
+  // cover behind, which the engine already treats as reading the game. It
+  // stacks with a style: a Sweeper or an Anchor who also reads the game well.
+  ReadsTheGame:        { defending: 3, recovery: 1 },
   Carrier:             { pressResist: 3, dribble: 2 },
   Dribbler:            { dribble: 3 },
   ShotStopper:         { shotStopping: 3 },
@@ -1998,6 +2003,7 @@ const EXTRA_ROLES: typeof ROLE_DEFAULTS = [
   { name: 'Stopper', label: 'Stopper', goal_mult: 0.50, assist_mult: 0.30, valid_positions: ['CB'], description: 'Steps out to meet the ball and wins it high up the pitch', att_contrib: 0, mid_contrib: 0, def_contrib: 2.5 },
   { name: 'PressingForward', label: 'Pressing Forward', goal_mult: 1.20, assist_mult: 1.00, valid_positions: ['ST', 'CF', 'LW', 'RW'], description: 'Leads the press from the front and gives defenders no rest', att_contrib: 1, mid_contrib: 1, def_contrib: 0 },
   { name: 'Workhorse', label: 'Workhorse', goal_mult: 0.80, assist_mult: 0.90, valid_positions: [], description: 'Covers ground for ninety minutes', att_contrib: 0, mid_contrib: 1, def_contrib: 1 },
+  { name: 'ReadsTheGame', label: 'Reads the Game', goal_mult: 1.00, assist_mult: 1.00, valid_positions: [], description: 'Positioning and anticipation: already where the attack is going', att_contrib: 0, mid_contrib: 0, def_contrib: 2 },
   { name: 'Carrier', label: 'Ball Carrier', goal_mult: 1.00, assist_mult: 1.40, valid_positions: [], description: 'Beats a press by driving through it with the ball', att_contrib: 1, mid_contrib: 2, def_contrib: 0 },
   { name: 'Dribbler', label: 'Dribbler', goal_mult: 1.30, assist_mult: 1.50, valid_positions: [], description: 'Beats his man one on one', att_contrib: 1, mid_contrib: 0, def_contrib: 0 },
   { name: 'ShotStopper', label: 'Shot Stopper', goal_mult: 0.00, assist_mult: 0.20, valid_positions: ['GK'], description: 'Positioning and handling; keeps out what he sees coming', att_contrib: 0, mid_contrib: 0, def_contrib: 2 },
