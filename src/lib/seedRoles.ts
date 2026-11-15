@@ -27,6 +27,7 @@ export const SEED_ROLES: Record<string, Record<string, string[]>> = {
     'Kaká': ['LateRunner', 'Carrier', 'ChanceCreator', 'Pacey'],
     'Clarence Seedorf': ['Mezzala', 'Carrier', 'LongShot'],
     'Paolo Maldini': ['BallPlayingDefender', 'Sweeper', 'ReadsTheGame'],
+    'Dida': ['ShotStopper'],
   },
   'Arsenal 2024/25': {
     'Bukayo Saka': ['InsideForward', 'SetPieceDeliverer', 'Dribbler', 'PenaltyTaker'],
@@ -38,6 +39,8 @@ export const SEED_ROLES: Record<string, Record<string, string[]>> = {
     'Jurriën Timber': ['InvertedWingback'],
     'Kai Havertz': ['DeepLyingForward', 'PressingForward'],
     'Gabriel Martinelli': ['InsideForward', 'Pacey'],
+    'Riccardo Calafiori': ['BallPlayingDefender'],
+    'Mikel Merino': ['LateRunner', 'Workhorse'],
   },
   'Aston Villa 2024/25': {
     'Emiliano Martínez': ['ShotStopper', 'CommandingKeeper'],
@@ -45,10 +48,17 @@ export const SEED_ROLES: Record<string, Record<string, string[]>> = {
     'Pau Torres': ['BallPlayingDefender'],
     'Douglas Luiz': ['DeepLyingPlaymaker', 'PenaltyTaker'],
     'Moussa Diaby': ['Pacey', 'Dribbler'],
+    'Ezri Konsa': ['Pacey'],
+    'Leon Bailey': ['InsideForward', 'Pacey'],
+    'Youri Tielemans': ['DeepLyingPlaymaker', 'LongShot', 'Ponderous'],
+    'John McGinn': ['BoxToBox', 'Workhorse', 'LongShot'],
   },
   'Brighton 2024/25': {
     'Kaoru Mitoma': ['Dribbler'],
     'Lewis Dunk': ['BallPlayingDefender', 'Ponderous'],
+    'João Pedro': ['DeepLyingForward', 'PenaltyTaker'],
+    'Bart Verbruggen': ['SweeperKeeper'],
+    'Jan Paul van Hecke': ['Stopper'],
   },
   'Chelsea 2013/14': {
     'Eden Hazard': ['Trequartista', 'Dribbler'],
@@ -90,17 +100,24 @@ export const SEED_ROLES: Record<string, Record<string, string[]>> = {
     'Marcos Alonso': ['AttackingFullback', 'SetPieceDeliverer'],
     'Gary Cahill': ['AerialThreat'],
     'Willian': ['Winger', 'Workhorse'],
+    'Victor Moses': ['Pacey', 'Workhorse'],
   },
   'Chelsea 2024/25': {
     'Cole Palmer': ['ChanceCreator', 'LongShot', 'PenaltyTaker'],
     'Moisés Caicedo': ['Enforcer', 'Workhorse'],
     'Levi Colwill': ['BallPlayingDefender'],
+    'Marc Cucurella': ['Workhorse', 'RashInTheTackle'],
+    'Nicolas Jackson': ['Pacey'],
+    'Romeo Lavia': ['Anchor'],
+    'Noni Madueke': ['InsideForward', 'Dribbler', 'Pacey'],
+    'Malo Gusto': ['AttackingFullback'],
   },
   'Leicester City 2015/16': {
     "N'Golo Kante": ['Enforcer', 'Workhorse', 'ReadsTheGame'],
     'Riyad Mahrez': ['InsideForward', 'Dribbler'],
     'Jamie Vardy': ['Poacher', 'Pacey', 'PressingForward'],
     'Kasper Schmeichel': ['Reflexes'],
+    'Robert Huth': ['AerialThreat', 'Ponderous'],
   },
   'Liverpool 2013/14': {
     'Luis Suarez': ['CompleteForward', 'Dribbler'],
@@ -161,6 +178,8 @@ export const SEED_ROLES: Record<string, Record<string, string[]>> = {
     'Nigel De Jong': ['Enforcer'],
     'Joe Hart': ['ShotStopper'],
     'Pablo Zabaleta': ['Workhorse'],
+    'Joleon Lescott': ['AerialThreat'],
+    'Gaël Clichy': ['Pacey'],
   },
   'Manchester City 2017/18': {
     'Kevin De Bruyne': ['CrossingSpecialist', 'ChanceCreator', 'Mezzala', 'LongShot'],
@@ -187,6 +206,10 @@ export const SEED_ROLES: Record<string, Record<string, string[]>> = {
     'Nick Pope': ['ShotStopper', 'PoorDistribution'],
     'Kieran Trippier': ['CrossingSpecialist', 'SetPieceDeliverer'],
     'Sven Botman': ['BallPlayingDefender'],
+    'Fabian Schär': ['BallPlayingDefender', 'LongShot'],
+    'Joelinton': ['Carrier', 'Workhorse'],
+    'Miguel Almirón': ['Pacey', 'Workhorse'],
+    'Allan Saint-Maximin': ['Dribbler', 'Pacey'],
   },
   'Tottenham Hotspur 2018/19': {
     'Harry Kane': ['DeepLyingForward', 'PenaltyTaker', 'LongShot'],
@@ -208,6 +231,9 @@ export const SEED_ROLES: Record<string, Record<string, string[]>> = {
   'West Ham United 2024/25': {
     'Lucas Paquetá': ['Carrier', 'ChanceCreator'],
     'Jarrod Bowen': ['InsideForward', 'PressingForward'],
+    'Edson Álvarez': ['Enforcer'],
+    'Crysencio Summerville': ['Dribbler', 'InsideForward'],
+    'Niclas Füllkrug': ['TargetMan'],
   },
 };
 
