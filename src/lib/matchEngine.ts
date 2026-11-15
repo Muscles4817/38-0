@@ -76,7 +76,22 @@ const HOME_CHANCE_QUALITY = 1.04;
 // strength point is worth +3.42 points (real +3.41), +3.08 goals for (+2.79)
 // and −2.15 against (−2.31). See docs/known-issues.md.
 const EDGE_TO_CHANCES = 0.4;
-const FINISHING_EXPONENT = 0.8;
+/**
+ * What a point of trait ability is worth in the contest every possession has,
+ * the attack's creation and the defence's block, in the same units as `edge`
+ * (one is ten rating points). Separate, because an attacker's traits already
+ * reach every shot through finishing and a defender's did not. Fitted against
+ * the real tables: see docs/simulation.md.
+ */
+const CREATION_TRAIT_EDGE = 0;
+const BLOCK_TRAIT_EDGE = 0.5;
+/**
+ * An ordinary defence's block traits: the mean over every stored XI in a
+ * playable season (0.14; 0.25 in 2025/26, whose data carries more traits). A
+ * defence this good concedes what it always did; better ones concede less.
+ */
+const BLOCK_TRAIT_REFERENCE = 0.15;
+const FINISHING_EXPONENT = 0.45;
 const KEEPING_EXPONENT = 0.64;
 
 /**
@@ -170,7 +185,7 @@ const CLAIM_REACH: Record<ChanceType, number> = {
 // Here they decide who gets on the end of a chance, where the same numbers are
 // far too strong: a Poacher at 2.2 took half his side's shots. A leading
 // striker takes roughly a quarter of them, so both role and rating are damped.
-const ROLE_SELECTION_POWER = 0.5;
+const ROLE_SELECTION_POWER = 0.4;
 const RATING_SELECTION_POWER = 0.6;
 
 // ── Set pieces ───────────────────────────────────────────────────────────────
@@ -1004,6 +1019,12 @@ interface TeamModel {
   /** Recovery: getting back to cover the space behind. */
   cover: number;
   creation: number;
+  /**
+   * The same two phases from the traits alone, for the contest every
+   * possession has: the rating is already in the zone qualities.
+   */
+  creationTraits: number;
+  blockingTraits: number;
 }
 
 const ZONES: Zone[] = ['L', 'C', 'R'];
@@ -1097,7 +1118,11 @@ export function aerialQuality(players: MatchPlayer[], roles: RoleMultipliers): n
  * came from traits alone, so matches between ordinary sides play as they did.
  * Negative for a side worse than ordinary on the ball in that phase.
  */
-export function phaseAbility(players: MatchPlayer[], phase: Phase, roles: RoleMultipliers): number {
+export function phaseAbility(
+  players: MatchPlayer[], phase: Phase, roles: RoleMultipliers,
+  /** False for what the traits say alone, without the rating baseline. */
+  withRating = true,
+): number {
   let total = 0;
   let mass = 0;
   for (const p of players) {
@@ -1113,7 +1138,7 @@ export function phaseAbility(players: MatchPlayer[], phase: Phase, roles: RoleMu
       weights += k ?? 0;
     }
     const skill = (weights > 0 ? traits / weights : 0)
-      + (spec.rated ? RATING_TO_ABILITY * (p.rating - ABILITY_REFERENCE_RATING) : 0);
+      + (spec.rated && withRating ? RATING_TO_ABILITY * (p.rating - ABILITY_REFERENCE_RATING) : 0);
     total += w * skill;
     mass += w;
   }
@@ -1191,6 +1216,8 @@ function buildTeam(setup: TeamSetup, roles: RoleMultipliers): TeamModel {
     runningThreat: phaseAbility(players, 'break', roles),
     cover: phaseAbility(players, 'cover', roles),
     creation: phaseAbility(players, 'create', roles),
+    creationTraits: phaseAbility(players, 'create', roles, false),
+    blockingTraits: phaseAbility(players, 'block', roles, false),
     focus: {
       L: Math.max(0, setup.focus.L ?? 0) / focusTotal,
       C: Math.max(0, setup.focus.C ?? 0) / focusTotal,
@@ -1863,7 +1890,13 @@ export function simulateMatch(
     // Does this possession become a chance? Attacking quality in the zone,
     // against defensive quality in the zone it arrives at.
     const edge =
-      Math.log((att.attackZone[zone] * attPenalty) / (def.defendZone[defZone] * defPenalty)) / RATING_CURVE / 10;
+      Math.log((att.attackZone[zone] * attPenalty) / (def.defendZone[defZone] * defPenalty)) / RATING_CURVE / 10
+      // What the players are good at, beyond what their ratings say: the
+      // attack's creators against the defence's readers and workers. Without
+      // it, defensive traits reached a match only in particular style
+      // matchups, while a finisher's traits touched every shot.
+      + CREATION_TRAIT_EDGE * att.creationTraits
+      - BLOCK_TRAIT_EDGE * (def.blockingTraits - BLOCK_TRAIT_REFERENCE);
     // Both sides' organisation decides how far the gap between them tells: a
     // drilled side exploits its superiority, and a drilled one resists it.
     const carry = (expression(att.setup.cohesion ?? DEFAULT_COHESION)
@@ -1952,8 +1985,11 @@ export function simulateMatch(
 
         // How good the chance is: its type, the finisher, and the keeper.
         const affinity = ROLE_CHANCE_AFFINITY[type];
-        let finishing = ratingScale(shooter.rating);
-        for (const r of shooter.roles ?? []) finishing *= Math.sqrt(affinity[r] ?? 1);
+        // His strongest trait for this kind of chance, as choosing the shooter
+        // takes his strongest goal weight. Multiplied, an Inside forward who
+        // was also a Trequartista finished a dribble 1.6 times better.
+        const bestAffinity = Math.max(1, ...(shooter.roles ?? []).map(r => affinity[r] ?? 1));
+        const finishing = ratingScale(shooter.rating) * Math.sqrt(bestAffinity);
         const keeper = def.keeper;
         const keeping = keeper ? ratingScale(keeper.rating) : 1;
         // A shot-stopper or a keeper with reflexes keeps as a better-rated

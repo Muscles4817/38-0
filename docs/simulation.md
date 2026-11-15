@@ -251,6 +251,7 @@ When no seed is passed, `Date.now() % 999983` is used.
 | --- | --- |
 | Shots, conversion, home advantage | `BASE_SHOT_RATE`, `CHANCE_QUALITY`, `HOME_*` in `matchEngine.ts` |
 | How far quality carries | `EDGE_TO_CHANCES`, `FINISHING_EXPONENT`, `KEEPING_EXPONENT` |
+| What traits are worth beyond the rating, every possession | `BLOCK_TRAIT_EDGE`, `BLOCK_TRAIT_REFERENCE`, `CREATION_TRAIT_EDGE` |
 | Who gets on the end of a chance | `ATTACK_WEIGHT`, `AERIAL_WEIGHT`, `SET_PIECE_HEADER_SHARE`, `PENALTY_TAKER_QUALITY_WEIGHT`, `ROLE_CHANCE_AFFINITY`, `ROLE_SELECTION_POWER`, `RATING_SELECTION_POWER` |
 | Set pieces | `SET_PIECE_*`, `AERIAL_*` |
 | Who made it | `CROSS_WEIGHT`, `THROUGH_WEIGHT`, `CREATOR_ABILITY_WEIGHT`, `SET_PIECE_TAKER_WEIGHT`, `SET_PIECE_TAKER_QUALITY_WEIGHT`, `ASSIST_RATE`, role `assistMult` (lay-offs only) |
@@ -378,6 +379,51 @@ changed what the field is made of. `OPPONENT_SD` was 8.6 and the simulation now
 puts it at 7.5 — measured directly as the spread of each opponent's points over
 120 seasons, 7.4 to 7.6 across three fields — so it is 7.5. Expected points stay
 within 2.2 and projected finish within 0.9 across all nine cases.
+
+### Re-fitted for the trait passes
+
+Giving players traits season by season left the engine fitted to data where
+few players had any. Measured with `npm run sim:spread` on the eight real
+seasons, 40 passes each, every figure relative to its own league's average so
+that an era's scoring level does not count:
+
+| | before the passes | after them | re-fitted | real |
+| --- | ---: | ---: | ---: | ---: |
+| spread of goals for | 0.268 | 0.293 | 0.261 | 0.265 |
+| spread of goals against | 0.200 | 0.217 | 0.230 | 0.241 |
+| top four, goals for | 1.375 | 1.420 | 1.372 | 1.372 |
+| top four, goals against | 0.732 | 0.705 | 0.684 | 0.665 |
+| spread of points | 15.0 | 16.2 | 15.9 | 15.8 |
+| Golden Boot, at the league's level | 27.6 | 29.7 | 27.0 | 26.4 |
+| points r / error per club | 0.897 / 7.06 | 0.892 / 7.47 | 0.887 / 7.56 | |
+
+Two of these were wrong before the passes and are structural. A defender's
+traits reached a match only through aerial duels, the press, and the block or
+the cover in particular style matchups, while a finisher's touched every shot;
+and good defences did not concede little enough (0.732 against 0.665). So:
+
+- **The block counts every possession.** `edge` takes
+  `BLOCK_TRAIT_EDGE × (the defence's block traits − BLOCK_TRAIT_REFERENCE)`,
+  the traits alone since the rating is already in the zone qualities, and
+  centred on an ordinary stored XI (0.14; 0.25 in 2025/26) so the league's
+  scoring holds. The creation side has its own weight, `CREATION_TRAIT_EDGE`,
+  fitted at 0: an attacker's traits already reach every shot through
+  finishing, and adding them here widened the gap between attacks.
+- **Finishing takes the strongest trait for the kind of chance**, as choosing
+  the shooter does, instead of multiplying every one.
+- `FINISHING_EXPONENT` 0.8 → 0.45 and `ROLE_SELECTION_POWER` 0.5 → 0.4.
+
+`BLOCK_TRAIT_EDGE` 1.0 put the defence on the real figures exactly (0.245 and
+0.662) but cost points accuracy (r 0.884, error 7.80), and the cost was
+coverage: it rewarded the defences whose players had been through a trait
+pass (Liverpool's Carragher and Hyypiä, Spurs' Ledley King) against the ones
+not yet reviewed. It is 0.5 until the 80–87 pass reaches the rest of the
+league's defenders, then worth re-measuring at 1.0. The per-match calibration
+and the pre-season odds calibration pass unchanged.
+
+The level these are relative to is itself out for older seasons: 1995/96 to
+2008/09 scored about five goals a club fewer than the engine's modern
+calibration (2025/26: 53.0 against a real 53). One engine plays every era.
 
 ### Re-fitted a third time, when the press stopped reading fit
 

@@ -62,17 +62,16 @@ What is left is in the data, not the engine:
   7.37 to 7.06, goals-for error 9.12 to 9.07; dropping the gate altogether
   measured 0.895, 7.13 and 9.24. No club moved more than about 4 points.
   What remains slot-bound is deliberate: a Poacher at CAM is not poaching.
-- **The trait passes inflated the top sides' goals.** Giving players traits
-  season by season (PenaltyTaker, LongShot, Pacey and the rest) made the sides
-  that carry them score more, and defending could not answer: no trait gave
-  `defending` until `ReadsTheGame`, and that one is worth little yet. On the
-  eight seasons below, 40 passes each, from before the passes to after the
-  first 80–87 batch and ReadsTheGame: the real top four +4.3 to +6.9 goals a
-  season over their real totals (76.8 against 73.7), their goals against 39.2
-  to 38.2 (real 33.8), the league 53.6 to 54.1 goals a club (real 50.6), the
-  Golden Boot 29.2 to 31.7; points correlation 0.897 to 0.892. The engine was
-  calibrated on sparser traits. It wants a re-fit of what a scoring trait and
-  the block are worth, not fewer traits.
+- **The trait passes inflated the top sides' goals: re-fitted.** Traits
+  given season by season made the sides carrying them score too much, and a
+  defender's traits barely reached a match. The block now counts every
+  possession and finishing takes a player's strongest trait; see *Re-fitted
+  for the trait passes* in [simulation.md](simulation.md). The top four's
+  goals, the spread of goals for and the Golden Boot are back on the real
+  figures. Two things remain: good defences still concede a little too much
+  (0.684 of the league average against 0.665), held there because a stronger
+  block weight rewards whichever defences have been through a trait pass, and
+  older seasons score about five goals a club more than they really did.
 - **Stars with no traits: fixed.** 92 of the 273 players rated 88 or more had
   none — Gerrard, Fàbregas, Rooney, Terry, Schmeichel, Pirès, Ødegaard among
   them — and none of 273 do now. They were given the traits that plainly fit,
