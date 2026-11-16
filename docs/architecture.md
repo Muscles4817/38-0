@@ -151,7 +151,7 @@ See [pre-season.md](pre-season.md).
 | `38-0-plan` | squad page | squad, results |
 | `38-0-history` | results page | squad (what each style has done with this XI), results (tactics board), home (your record); totals only, capped at 200 seasons, and the one key a new run does not clear. A half-time change of style rewrites the season's record in place. See `src/lib/runHistory.ts` |
 | `38-0-daily` | results page | home (the daily card), results (which season counts); one result per day, the first played, capped at 60 days, never cleared by a new run. See `src/lib/daily.ts` |
-| `38-0-seen-squads` | draft page | results ("What Could Have Been"); `{ clubId, seasonId }` references only, see `src/lib/seenSquads.ts` |
+| `38-0-seen-squads` | draft page | results ("What Could Have Been"); `{ clubId, seasonId, pick }` references only, `pick` being which pick the squad was offered for, so a spin and its rerolls are one choice. See `src/lib/seenSquads.ts` |
 
 Those keys are read through `src/lib/clientStorage.ts`, which wraps them in
 `useSyncExternalStore` so a write anywhere re-renders every reader and server

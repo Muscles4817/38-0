@@ -3,8 +3,8 @@
 import { useState, useEffect, useMemo } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
-import { getFormation, canFillSlot, Formation } from '@/lib/formations';
-import { describeCompetition, describeTraits, getTeamStrengths, pickTraits, runSeasonSimulation, type DataPlayer } from '@/lib/gameData';
+import { getFormation, Formation } from '@/lib/formations';
+import { describeCompetition, describeTraits, getTeamStrengths, pickTraits, runSeasonSimulation } from '@/lib/gameData';
 import { useStoredJson, clearStored, readStored, writeStored } from '@/lib/clientStorage';
 import {
   parseRunHistory, replaceRun, RUN_HISTORY_KEY, styleRecords, withRun, xiKey,
@@ -16,7 +16,8 @@ import {
   DAILY_KEY, dailyShareText, formOf, parseDailyResults, withDailyResult,
   type DailyChallenge, type DailyResult,
 } from '@/lib/daily';
-import { parseSeenSquads, resolveSeenSquads, SEEN_SQUADS_KEY, type SeenSquad } from '@/lib/seenSquads';
+import { groupByPick, parseSeenSquads, resolveSeenSquads, SEEN_SQUADS_KEY } from '@/lib/seenSquads';
+import { bestPossibleXI } from '@/lib/couldHaveBeen';
 import { applyRules, type DraftFilter, type PoolRules } from '@/lib/draftPool';
 import { getTacticEffect } from '@/lib/gameData';
 import type { StoredPlan } from '@/app/squad/page';
@@ -33,58 +34,9 @@ import { ratingColor } from '@/components/ratingColor';
 
 // ── What Could Have Been ─────────────────────────────────────────────────────
 
-type SeenPlayer = DataPlayer & { clubName: string; seasonLabel: string };
-
 // Stable empty array so a missing squad does not hand out a new reference
 // on every render.
 const NO_PICKS: SquadPick[] = [];
-
-/**
- * The strongest legal XI that could have been assembled from every player the
- * draft ever showed. Slots with the fewest eligible players are filled first,
- * so a scarce position is not left empty by a greedy earlier pick.
- */
-function computeBestXI(formation: Formation, seenSquads: SeenSquad[]): SquadPick[] {
-  const byId = new Map<number, SeenPlayer>();
-  for (const squad of seenSquads) {
-    for (const p of squad.players) {
-      const existing = byId.get(p.playerId);
-      if (!existing || p.rating > existing.rating) {
-        byId.set(p.playerId, { ...p, clubName: squad.clubName, seasonLabel: squad.seasonLabel });
-      }
-    }
-  }
-  const pool = [...byId.values()];
-  const result: SquadPick[] = [];
-  const usedIds = new Set<number>();
-
-  const slotOrder = formation.slots
-    .map((slot, index) => ({ slot, index }))
-    .sort((a, b) =>
-      pool.filter(p => canFillSlot(p.positions, a.slot.position)).length -
-      pool.filter(p => canFillSlot(p.positions, b.slot.position)).length);
-
-  for (const { slot, index } of slotOrder) {
-    const candidates = pool
-      .filter(p => !usedIds.has(p.playerId) && canFillSlot(p.positions, slot.position))
-      .sort((a, b) => b.rating - a.rating);
-    const best = candidates[0];
-    if (!best) continue;
-    usedIds.add(best.playerId);
-    result.push({
-      slotIndex: index,
-      position: slot.position,
-      playerId: best.playerId,
-      playerName: best.name,
-      nationality: best.nationality,
-      rating: best.rating,
-      clubName: best.clubName,
-      seasonLabel: best.seasonLabel,
-      positions: best.positions,
-    });
-  }
-  return result;
-}
 
 function WhatCouldHaveBeen({ formation, actualPicks, rules }: {
   formation: Formation;
@@ -97,10 +49,12 @@ function WhatCouldHaveBeen({ formation, actualPicks, rules }: {
     // The same rules the draft applied, so the best XI is built from players
     // this run could have picked, at the ratings it offered them at: no
     // German in a France-only run, and Prime ratings in Prime mode.
+    // One player per pick: the squads offered at a pick (a spin and the ones
+    // its rerolls moved away from) are one choice, not several.
     const seenSquads = resolveSeenSquads(parseSeenSquads(stored))
       .map(squad => ({ ...squad, players: applyRules(squad.players, rules) }))
       .filter(squad => squad.players.length > 0);
-    return seenSquads.length ? computeBestXI(formation, seenSquads) : [];
+    return seenSquads.length ? bestPossibleXI(formation, groupByPick(seenSquads)) : [];
   }, [formation, stored, rules]);
   if (!bestXI.length) return null;
   const bestOverall = computeOverall(bestXI);
@@ -114,7 +68,7 @@ function WhatCouldHaveBeen({ formation, actualPicks, rules }: {
         <div className="text-left">
           <div className="text-xs text-muted uppercase tracking-widest font-bold mb-1">What Could Have Been</div>
           <div className="text-sm text-muted">
-            Best possible XI from your spins —{' '}
+            The best XI your spins could have given, one player per pick —{' '}
             <span className={diff > 0 ? 'text-amber-400' : 'text-accent'}>Overall {bestOverall}</span>
             {diff > 0 && <span className="text-amber-400 ml-1">(+{diff} vs yours)</span>}
             {diff === 0 && <span className="text-accent ml-1">(you nailed it)</span>}

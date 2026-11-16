@@ -91,3 +91,22 @@ their own: a Poacher who is Pacey gives a player away almost as much as his
 rating does, so blind and Hard drafts stay a test of knowledge. In a blind
 draft, placing a player reveals his traits along with his rating. The
 pre-season screen shows every pick's traits whatever the setting.
+
+## What Could Have Been
+
+The best XI this draft could have produced, not the best XI from every squad
+it showed. A pick takes one player from one spin: the squad landed on, or one
+a reroll moved away from at that pick. So `bestPossibleXI`
+(`src/lib/couldHaveBeen.ts`) takes at most one player per pick, each in a slot
+he can play at his rating there, and no player twice. Eleven picks and eleven
+slots make it a small assignment problem, solved exactly over every subset of
+slots. Your own XI is always one of the answers it weighs, so it never comes
+out below what you drafted; `couldHaveBeen.test.ts` checks that on random
+drafts from the real data.
+
+It used to pool every player from every squad shown and choose freely: the
+best side from all of them at once, which no draft could make.
+
+The draft records which pick each squad was offered for (`pick` in
+`38-0-seen-squads`). A list recorded before that has no picks, and each squad
+in it counts as a pick of its own.

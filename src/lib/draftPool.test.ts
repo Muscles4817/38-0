@@ -1,7 +1,8 @@
 import { describe, expect, it } from 'vitest';
-import { getFormation, type Formation } from './formations';
+import { canFillSlot, getFormation, type Formation, type Position } from './formations';
 import { gameData, type DataPlayer, type SpunSquad } from './gameData';
 import {
+  draftListOrder,
   applyRules, clubChoices, draftPool, feasibility, nationChoices, poolCanFieldXI, type PoolRules,
 } from './draftPool';
 
@@ -174,6 +175,23 @@ describe('a guarded draft', () => {
     for (const nation of ['Finland', 'Ghana', 'Slovakia']) {
       const pool = draftPool({ ...ALL_TIME, filter: { kind: 'nation', nation } });
       for (let run = 0; run < 60; run++) expect(draftToEnd(pool, F442, random), nation).toBe(true);
+    }
+  });
+});
+
+describe('the order a spun squad is listed in', () => {
+  const p = (name: string, rating: number, positions: Position[]) => ({ name, rating, positions });
+  const squad = [p('Zola', 90, ['CAM']), p('Adams', 85, ['CB']), p('Seaman', 84, ['GK']), p('Bergkamp', 92, ['CF']), p('Dixon', 80, ['RB'])];
+
+  it('is a team sheet, not best first', () => {
+    expect(draftListOrder(squad).map(x => x.name)).toEqual(['Seaman', 'Adams', 'Dixon', 'Zola', 'Bergkamp']);
+  });
+
+  it('puts the players who can fill the position being spun for first', () => {
+    for (const position of ['GK', 'CB', 'RB', 'CM', 'ST'] as Position[]) {
+      const fits = draftListOrder(squad, position).map(x => canFillSlot(x.positions, position));
+      // Every true before every false.
+      expect(fits).toEqual([...fits].sort((x, y) => Number(y) - Number(x)));
     }
   });
 });

@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import { gameData, getSquad } from './gameData';
-import { parseSeenSquads, resolveSeenSquads, withSeenSquad } from './seenSquads';
+import { groupByPick, parseSeenSquads, resolveSeenSquads, withSeenSquad } from './seenSquads';
 
 const withPlayers = gameData.squads.filter(s => s.players.length > 0);
 const [a, b] = withPlayers;
@@ -27,6 +27,28 @@ describe('withSeenSquad', () => {
     const once = withSeenSquad([], ref);
     expect(withSeenSquad(once, ref)).toBe(once);
     expect(withSeenSquad(once, { clubId: b.clubId, seasonId: b.seasonId })).toHaveLength(2);
+  });
+
+  it('records the same squad again when it comes up for another pick', () => {
+    const first = withSeenSquad([], { clubId: a.clubId, seasonId: a.seasonId, pick: 0 });
+    expect(withSeenSquad(first, { clubId: a.clubId, seasonId: a.seasonId, pick: 0 })).toBe(first);
+    expect(withSeenSquad(first, { clubId: a.clubId, seasonId: a.seasonId, pick: 3 })).toHaveLength(2);
+  });
+
+  it('keeps the pick through storage', () => {
+    expect(parseSeenSquads([{ clubId: a.clubId, seasonId: a.seasonId, pick: 2 }]))
+      .toEqual([{ clubId: a.clubId, seasonId: a.seasonId, pick: 2 }]);
+  });
+});
+
+describe('groupByPick', () => {
+  it('puts a spin and its rerolls together, in pick order', () => {
+    const groups = groupByPick([{ pick: 0, n: 'a' }, { pick: 0, n: 'b' }, { pick: 1, n: 'c' }]);
+    expect(groups.map(g => g.map(x => x.n))).toEqual([['a', 'b'], ['c']]);
+  });
+
+  it('treats a squad recorded before picks were as a pick of its own', () => {
+    expect(groupByPick([{ n: 'a' }, { n: 'b' }] as { pick?: number; n: string }[])).toHaveLength(2);
   });
 
   it('stays small even with every club-season in the snapshot recorded', () => {
