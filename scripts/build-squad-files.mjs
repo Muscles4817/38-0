@@ -61,7 +61,7 @@ const NATIONS = {
   JPN: 'Japan', LBR: 'Liberia', LVA: 'Latvia', MAR: 'Morocco',
   MKD: 'North Macedonia', MLI: 'Mali', PER: 'Peru', SRB: 'Serbia',
   SVK: 'Slovakia', SVN: 'Slovenia', TUR: 'Turkey', UKR: 'Ukraine',
-  URU: 'Uruguay',
+  URU: 'Uruguay', MNE: 'Montenegro',
   // FBref still records the Serbia and Montenegro union that existed
   // 1992-2006 under its own code; players so labelled played under that flag.
   SCG: 'Serbia and Montenegro',
