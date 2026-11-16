@@ -230,6 +230,8 @@ export interface SpunSquad {
   color: string;
   seasonId: number;
   seasonLabel: string;
+  /** The club's league code: 'PL', or one of the icons' leagues. */
+  league: string;
   players: DataPlayer[];
 }
 
@@ -243,6 +245,7 @@ function toSpunSquad(squad: DataSquad): SpunSquad | null {
     color: club.color,
     seasonId: season.id,
     seasonLabel: season.label,
+    league: club.league,
     players: squad.players,
   };
 }

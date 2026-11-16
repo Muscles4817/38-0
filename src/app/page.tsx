@@ -9,7 +9,7 @@ import OptionCard from '@/components/OptionCard';
 import SiteNav from '@/components/SiteNav';
 import RunRecordPanel from '@/components/RunRecordPanel';
 import DailyCard from '@/components/DailyCard';
-import { clubChoices, nationChoices, poolCanFieldXI, type DraftFilter } from '@/lib/draftPool';
+import { clubChoices, nationChoices, poolCanFieldXI, type DraftFilter, type PoolScope } from '@/lib/draftPool';
 import { BUDGET_MAX_RATING, CHALLENGE_ERAS, CHALLENGES, type ChallengeId } from '@/lib/challenges';
 
 const ERA_PRESETS = [
@@ -32,6 +32,7 @@ export default function SetupPage() {
   const [challenge,    setChallenge]    = useState<ChallengeId>('none');
   const [clubId,       setClubId]       = useState<number | null>(null);
   const [nation,       setNation]       = useState<string | null>(null);
+  const [scope,        setScope]        = useState<PoolScope>('with-icons');
 
   // Golden Era, Modern Masters and Pure Chaos are shortcuts for settings on
   // this page. Changing the setting they made afterwards means the player has
@@ -97,19 +98,19 @@ export default function SetupPage() {
   // feasibility checks.
   const rating = playerRating === 'prime' ? 'prime' : 'career';
   const clubs = useMemo(
-    () => (challenge === 'one-club' ? clubChoices({ yearStart, yearEnd, playerRating: rating }, getFormation(formation)) : []),
-    [challenge, yearStart, yearEnd, rating, formation],
+    () => (challenge === 'one-club' ? clubChoices({ yearStart, yearEnd, playerRating: rating, scope }, getFormation(formation)) : []),
+    [challenge, yearStart, yearEnd, rating, scope, formation],
   );
   const nations = useMemo(
-    () => (challenge === 'one-nation' ? nationChoices({ yearStart, yearEnd, playerRating: rating }, getFormation(formation)) : []),
-    [challenge, yearStart, yearEnd, rating, formation],
+    () => (challenge === 'one-nation' ? nationChoices({ yearStart, yearEnd, playerRating: rating, scope }, getFormation(formation)) : []),
+    [challenge, yearStart, yearEnd, rating, scope, formation],
   );
   const budgetFits = useMemo(
     () => challenge !== 'budget' || poolCanFieldXI(
-      { yearStart, yearEnd, playerRating: rating, filter: { kind: 'max-rating', maxRating: BUDGET_MAX_RATING } },
+      { yearStart, yearEnd, playerRating: rating, scope, filter: { kind: 'max-rating', maxRating: BUDGET_MAX_RATING } },
       getFormation(formation),
     ),
-    [challenge, yearStart, yearEnd, rating, formation],
+    [challenge, yearStart, yearEnd, rating, scope, formation],
   );
 
   const chosenClub   = clubs.find(c => c.value === clubId) ?? null;
@@ -140,7 +141,7 @@ export default function SetupPage() {
     const chosenFormation = challenge === 'pure-chaos' ? keys[Math.floor(Math.random() * keys.length)] : formation;
     const setup = {
       formation: chosenFormation, difficulty, showRatings, draftMode, playerRating, yearStart, yearEnd,
-      challenge, filter,
+      challenge, filter, scope,
     };
     // Clear the previous run before saving this one, so a browser whose storage
     // is full frees space before the one write that has to succeed.
@@ -310,18 +311,19 @@ export default function SetupPage() {
         {/* Draft Pool */}
         <section>
           <Label>Draft Pool</Label>
-          <div className="rounded-lg border border-[#00c896]/30 bg-inset px-4 py-3 flex items-center gap-3 select-none">
-            <span className="text-lg">🏴󠁧󠁢󠁥󠁮󠁧󠁿</span>
-            <div className="flex-1 min-w-0">
-              <div className="font-bold text-sm text-fg">Premier League, plus the icons</div>
-              <div className="text-muted text-[11px]">
-                Every English top-flight season in the era, and a handful of famous sides from
-                Serie A, La Liga, the Bundesliga and the World Cup
-              </div>
-            </div>
-            <span className="text-[11px] text-accent font-bold uppercase tracking-widest bg-[#00c896]/10 px-1.5 py-0.5 rounded shrink-0">
-              Active
-            </span>
+          <div className="grid grid-cols-2 gap-3">
+            <OptionCard
+              label="Premier League + icons"
+              description="Plus famous Serie A, La Liga, Bundesliga and World Cup sides"
+              selected={scope === 'with-icons'}
+              onClick={() => setScope('with-icons')}
+            />
+            <OptionCard
+              label="Premier League only"
+              description="English top-flight seasons and nothing else"
+              selected={scope === 'premier-league'}
+              onClick={() => setScope('premier-league')}
+            />
           </div>
           <ComingSoon summary="Full leagues coming soon">
             {[
@@ -435,6 +437,7 @@ export default function SetupPage() {
               <Summary label="Draft"      value={draftMode === 'squad-first' ? 'Squad first' : 'Position first'} />
               <Summary label="Players"    value={playerRating === 'prime' ? 'Prime mode' : 'Career seasons'} />
               <Summary label="Era"        value={`${yearStart}–${yearEnd - 1}`} />
+              <Summary label="Pool"       value={scope === 'premier-league' ? 'Premier League only' : 'Premier League + icons'} />
               <Summary label="Challenge"  value={challengeSummary} />
             </div>
 

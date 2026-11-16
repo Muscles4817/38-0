@@ -42,6 +42,14 @@ describe('draftPool', () => {
     expect(poolCanFieldXI({ ...ALL_TIME, filter: { kind: 'max-rating', maxRating: 78 } }, F442)).toBe(true);
   });
 
+  it('Premier League only leaves out the icons, and nothing else', () => {
+    const all = draftPool({ ...ALL_TIME, playerRating: 'career', filter: null });
+    const english = draftPool({ ...ALL_TIME, playerRating: 'career', filter: null, scope: 'premier-league' });
+    expect(all.some(s => s.league !== 'PL')).toBe(true);
+    expect(english.every(s => s.league === 'PL')).toBe(true);
+    expect(english).toHaveLength(all.filter(s => s.league === 'PL').length);
+  });
+
   it('respects the era', () => {
     const modern = draftPool({ ...ALL_TIME, yearStart: 2016 });
     const seasons = new Map(gameData.seasons.map(s => [s.id, s.yearStart]));
@@ -91,7 +99,7 @@ describe('feasibility', () => {
   const player = (playerId: number, positions: DataPlayer['positions']): DataPlayer =>
     ({ playerId, name: `P${playerId}`, nationality: null, rating: 70, positions, roles: [] });
   const squad = (players: DataPlayer[]): SpunSquad =>
-    ({ clubId: 1, clubName: 'Test', color: '#000', seasonId: 1, seasonLabel: 'T', players });
+    ({ clubId: 1, clubName: 'Test', color: '#000', seasonId: 1, seasonLabel: 'T', league: 'PL', players });
   // Two slots competing for one player: #1 is the only one who can play up front.
   const tiny: Formation = {
     name: 'test', description: '',
