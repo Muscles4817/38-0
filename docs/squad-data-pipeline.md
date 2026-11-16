@@ -74,6 +74,19 @@ passes. Nothing is committed — review `git status` and commit yourself.
 Not covered: phase 5's independent verification pass and the trait pass.
 Ratings come back with `roles` empty, which the checker allows. Those remain
 separate passes, and are the place to look over what the import produced.
+Write a trait pass into the `roles` of the season in `data/raw/ratings/`, not
+into `data/squads/`: the import rebuilds the squad files from the ratings, so
+traits that exist only in a squad file are lost the next time it runs.
+
+The same applies to a club-season that was seeded by hand in `db.ts`. When an
+FBref import replaces it, the squad file takes over and the traits in
+`seedRoles.ts` stop reaching it; `npm run sync:seed-roles` puts them back only
+until the next import. Copy them into the ratings, and check them against
+FBref's positions: Manchester City 2011/12 had Milner as an
+`AttackingFullback`, which the block rules refuse once FBref has him at
+LM/RM/LW. Run with a stale local database and the export also drops traits
+from squads it never touched; refresh it first (`npm run import:squads`, then
+`npm run sync:seed-roles`) and compare the snapshot with the committed one.
 
 ## Phase 1 — appearances
 

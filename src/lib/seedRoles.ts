@@ -179,7 +179,7 @@ export const SEED_ROLES: Record<string, Record<string, string[]>> = {
     'Mario Balotelli': ['CompleteForward'],
     'Edin Dzeko': ['TargetMan'],
     'Gareth Barry': ['Anchor', 'InvertedWingback'],
-    'James Milner': ['BoxToBox', 'AttackingFullback', 'Mezzala'],
+    'James Milner': ['BoxToBox', 'Mezzala'],
     'Adam Johnson': ['InsideForward'],
     'Nigel De Jong': ['Enforcer'],
     'Joe Hart': ['ShotStopper'],
