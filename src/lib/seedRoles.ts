@@ -52,6 +52,7 @@ export const SEED_ROLES: Record<string, Record<string, string[]>> = {
     'Leon Bailey': ['InsideForward', 'Pacey'],
     'Youri Tielemans': ['DeepLyingPlaymaker', 'LongShot', 'Ponderous'],
     'John McGinn': ['BoxToBox', 'Workhorse', 'LongShot'],
+    'Matty Cash': ['AttackingFullback'],
   },
   'Brighton 2024/25': {
     'Kaoru Mitoma': ['Dribbler'],
@@ -59,6 +60,8 @@ export const SEED_ROLES: Record<string, Record<string, string[]>> = {
     'João Pedro': ['DeepLyingForward', 'PenaltyTaker'],
     'Bart Verbruggen': ['SweeperKeeper'],
     'Jan Paul van Hecke': ['Stopper'],
+    'Carlos Baleba': ['Enforcer', 'Carrier'],
+    'Simon Adingra': ['Pacey', 'Winger'],
   },
   'Chelsea 2013/14': {
     'Eden Hazard': ['Trequartista', 'Dribbler'],
@@ -111,6 +114,7 @@ export const SEED_ROLES: Record<string, Record<string, string[]>> = {
     'Romeo Lavia': ['Anchor'],
     'Noni Madueke': ['InsideForward', 'Dribbler', 'Pacey'],
     'Malo Gusto': ['AttackingFullback'],
+    'Wesley Fofana': ['Pacey'],
   },
   'Leicester City 2015/16': {
     "N'Golo Kante": ['Enforcer', 'Workhorse', 'ReadsTheGame'],
@@ -118,6 +122,7 @@ export const SEED_ROLES: Record<string, Record<string, string[]>> = {
     'Jamie Vardy': ['Poacher', 'Pacey', 'PressingForward'],
     'Kasper Schmeichel': ['Reflexes'],
     'Robert Huth': ['AerialThreat', 'Ponderous'],
+    'Wes Morgan': ['AerialThreat', 'Ponderous'],
   },
   'Liverpool 2013/14': {
     'Luis Suarez': ['CompleteForward', 'Dribbler'],
@@ -133,6 +138,7 @@ export const SEED_ROLES: Record<string, Record<string, string[]>> = {
     'Victor Moses': ['Winger'],
     'Lucas Leiva': ['Anchor'],
     'Joe Allen': ['DeepLyingPlaymaker'],
+    'Simon Mignolet': ['ShotStopper'],
   },
   'Liverpool 2019/20': {
     'Virgil van Dijk': ['AerialThreat', 'ReadsTheGame'],
