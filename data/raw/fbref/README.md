@@ -3,6 +3,12 @@
 686 empty files, one per Premier League club-season from 1992/93 to 2025/26.
 Open one, paste, save. Nothing else to do.
 
+## The fastest way: the inbox
+
+Save the league export in `data/inbox/` and run `npm run data:import` — it does
+the split below and every step after it. See
+[`../../inbox/README.md`](../../inbox/README.md).
+
 ## The fast way: one paste per league-season
 
 Every league season on FBref has a stats page listing **every player in the

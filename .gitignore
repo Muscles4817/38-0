@@ -1,5 +1,10 @@
 # See https://help.github.com/articles/ignoring-files/ for more about ignoring files.
 
+# Squad import inbox: exports waiting to import, imported ones, Claude logs.
+# The per-club files they are split into are what gets committed.
+/data/inbox/*
+!/data/inbox/README.md
+
 # SQLite database
 /data/*.db
 /data/*.db-wal

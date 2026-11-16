@@ -4,8 +4,9 @@
   //   Ctrl+Shift+B          runs Check (the same four gates CI runs)
   //   Ctrl+Shift+P -> Tasks: Run Task    picks any of the others
   //
-  // The data tasks run in the order the pipeline expects: paste CSVs, ingest,
-  // build staging files, import, export. See docs/squad-data-pipeline.md.
+  // "Data: import everything in the inbox" does the whole data pipeline in one
+  // go — see data/inbox/README.md. The data tasks after it are the individual
+  // steps, in pipeline order. See docs/squad-data-pipeline.md.
   "version": "2.0.0",
   "tasks": [
     {
@@ -78,6 +79,22 @@
       "presentation": { "reveal": "always", "panel": "dedicated" }
     },
 
+    {
+      "label": "Data: import everything in the inbox",
+      "detail": "data/inbox/*.csv -> club files, positions + ratings via Claude, import, lineups, snapshot, CI checks.",
+      "type": "npm",
+      "script": "data:import",
+      "problemMatcher": [],
+      "presentation": { "reveal": "always", "panel": "dedicated" }
+    },
+    {
+      "label": "Data: import the inbox, stop before Claude",
+      "detail": "The same, but stops and lists the players who need positions or ratings.",
+      "type": "shell",
+      "command": "npm run data:import -- --no-claude",
+      "problemMatcher": [],
+      "presentation": { "reveal": "always", "panel": "dedicated" }
+    },
     {
       "label": "Data: collection status",
       "detail": "How many club-seasons of FBref exports are filled in.",

@@ -166,7 +166,8 @@ for (const line of lines.slice(headerIndex + 1)) {
   const player = bare(cells[iPlayer] ?? '');
   // FBref repeats the header every 25 rows in long tables.
   if (!player || player === 'Player') continue;
-  const squad = bare(cells[iSquad] ?? '');
+  // International tables prefix a flag code: "ar Argentina".
+  const squad = bare(cells[iSquad] ?? '').replace(/^[a-z]{2,3} (?=\p{Lu})/u, '');
   if (!squad) continue;
   if (!byClub.has(squad)) byClub.set(squad, []);
   byClub.get(squad).push(keep(cells).join(','));
