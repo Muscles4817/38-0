@@ -23,6 +23,58 @@ dataset is local. Nothing downstream ever polls a website, so the expensive,
 rate-limited part is paid once and the judgement work can be re-run freely when
 the rating scale changes.
 
+## One command
+
+```bash
+npm run data:import                  # everything in data/inbox/
+npm run data:import -- --no-claude   # stop where judgement is needed
+```
+
+Save a league season's *Player Standard Stats* export as
+`data/inbox/<competition>-<season>.csv` (`serie-a-1997-98.csv`) and run it — or
+the VS Code task *Data: import everything in the inbox*. Steps for the person
+are in [`data/inbox/README.md`](../data/inbox/README.md). `scripts/import-inbox.mjs`
+then runs every phase below in order: split, ingest, player list, both
+planners, positions, ratings, club metadata, `build-squad-files --strict`,
+import, lineups, export, and `npm run check`.
+
+**The judgement phases go to Claude Code, headless, and only for the gaps.**
+Both planners carry finished work forward by FBref id, so after a re-plan the
+only empty entries are players new to the database — on a test import of one
+Serie A season with ten players already known, 58 of 3,293 needed positions.
+Those are sent in chunks (25 for positions, 15 for ratings, three at once) to
+`claude -p` with read-only tools in `dontAsk` mode. Claude cannot write a
+file: it answers with JSON, and the script does every write.
+
+That split is the safety of it:
+
+- **Only empty fields are merged.** Positions/confidence/note on a stub with no
+  positions; rating/note on an unrated season. Measured on the same test
+  import: 3,235 finished position entries and 9,503 rated player-seasons were
+  byte-identical afterwards.
+- **Every answer is checked by the repo's own checkers** — `checkAssignment`
+  and `checkRatingEntry` — before it is merged. A rejected answer is sent back
+  once with the checker's own message; whatever still fails is left empty and
+  the run stops.
+- **A side that cannot field a legal eleven stops the run at the lineup step**,
+  naming the club, instead of surfacing later as a `positionCoherence.test.ts`
+  failure.
+- **New clubs get a `data/clubs.json` entry before import.** Without one
+  `import-squads.mjs` files the club under league `PL`, which would make a new
+  Serie A side a Premier League opponent. The league comes from the
+  competition; Claude supplies the short name and kit colour, which are checked
+  for format and uniqueness.
+- Claude's raw answers are kept in `data/inbox/logs/` (gitignored), so any
+  rating can be traced to what was said.
+
+Every step is idempotent, so a failed run is fixed and re-run with the same
+command; the inbox file moves to `data/inbox/done/` only once `npm run check`
+passes. Nothing is committed — review `git status` and commit yourself.
+
+Not covered: phase 5's independent verification pass and the trait pass.
+Ratings come back with `roles` empty, which the checker allows. Those remain
+separate passes, and are the place to look over what the import produced.
+
 ## Phase 1 — appearances
 
 The source is **FBref standard-stats exports, supplied by hand**. fbref.com sits
@@ -37,6 +89,7 @@ FBref id, which makes player identity exact across thirty years instead of a
 name-matching guess.
 
 ```bash
+node scripts/split-fbref-league.mjs <league.csv> --competition serie-a --season 1997-98
 node scripts/scaffold-fbref-files.mjs            # create the empty files
 node scripts/scaffold-fbref-files.mjs --status   # how much is pasted in
 node scripts/ingest-fbref.mjs                    # exports -> roster files
@@ -47,6 +100,14 @@ one per club-season from 1992/93 to 2025/26. The club list for each season comes
 from that season's real league table, so the 22-club seasons up to 1994/95 and
 every promotion are correct. An empty file means "not collected yet", which is
 what `--status` reports on.
+
+**Paste one league table, not twenty club tables.** A league season's
+*Player Standard Stats* table on FBref holds every player with a `Squad`
+column, and `split-fbref-league.mjs` cuts it into the per-club files, dropping
+the `Rk`, `Squad` and `Born` columns so each is identical to a club-page
+export — checked byte-for-byte against the hand-pasted Inter and Roma 2006/07
+files. It is still a manual export; the script reads a local file and makes
+no requests. Steps are in `data/raw/fbref/README.md`.
 
 `ingest-fbref.mjs` parses those into `data/raw/rosters/<season>/<club>.json`,
 keeping both the squad and everyone excluded, with the reason.

@@ -3,7 +3,60 @@
 686 empty files, one per Premier League club-season from 1992/93 to 2025/26.
 Open one, paste, save. Nothing else to do.
 
-## What to paste
+## The fastest way: the inbox
+
+Save the league export in `data/inbox/` and run `npm run data:import` — it does
+the split below and every step after it. See
+[`../../inbox/README.md`](../../inbox/README.md).
+
+## The fast way: one paste per league-season
+
+Every league season on FBref has a stats page listing **every player in the
+league** with a `Squad` column — e.g.
+<https://fbref.com/en/comps/11/1997-1998/stats/1997-1998-Serie-A-Stats>
+(Competition page → *Player Stats* → *Standard Stats*).
+
+1. Scroll to the **Player Standard Stats** table (the big one, not *Squad
+   Standard Stats* at the top).
+2. *Share & Export* → *Get table as CSV (for Excel)*, copy it.
+3. Paste into any file, say `~/serie-a-1997-98.csv`, and run:
+
+```bash
+npm run data:split -- ~/serie-a-1997-98.csv --competition serie-a --season 1997-98
+```
+
+That writes one file per club into `data/raw/fbref/serie-a/1997-98/`, in the
+same shape as a club-page export, so `ingest-fbref.mjs` reads it unchanged.
+Players who moved mid-season appear once per club, as they would on the club
+pages. Files that already have content are skipped unless you pass `--force`.
+
+- `--only juventus,internazionale` — just the sides you want in the game.
+- `--dry-run` — show which files would be written.
+
+- `--rename "Milan=ac-milan"` — force a club into a given file.
+
+**How clubs are matched to files.** The league table uses FBref's short names
+("Tottenham", "Manchester Utd", "Milan"). Each goes, in order, to: a
+`--rename`; an exact existing file via the `_aliases` map in `data/clubs.json`;
+then the one existing file the short name sits inside (`Tottenham` →
+`tottenham-hotspur.csv`, `Bournemouth` → `afc-bournemouth.csv`). For Serie A,
+La Liga and the rest, files from *other seasons* of that competition count too,
+so `Milan` lands in `ac-milan.csv` if that is the slug already in use.
+
+The script writes nothing for a club that is ambiguous, or that would share a
+file with another club, and lists it under *not written* with a non-zero exit.
+For the Premier League it also never creates a file: every club-season is
+already scaffolded, so a club with no match means the name is wrong. Outside
+the Premier League an unknown club gets a new file, marked `written (new
+club)` — check that slug title-cases into the right name, or add an alias.
+
+The FBref id stays in the last column, which is what positions and ratings are
+carried forward by.
+
+Competition ids for the URL: Premier League 9, Serie A 11, La Liga 12,
+Bundesliga 20.
+
+## What to paste (one club at a time)
 
 The **Standard Stats** table from that club's FBref season page, exported as
 CSV. Paste it whole — the two header rows and the `Squad Total` /

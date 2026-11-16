@@ -1,6 +1,10 @@
 // Assembles data/squads/ staging files from the three pipeline outputs.
 //
-//   node scripts/build-squad-files.mjs --season 1992/93 [--dry-run]
+//   node scripts/build-squad-files.mjs --season 1992/93 [--dry-run] [--strict]
+//
+// --strict fails when any player could not be assembled. Without it a gap is
+// printed and the player is left out, which once lost ~150 players to missing
+// nation codes with an exit code of 0. The one-step import always passes it.
 //
 // The pipeline keeps appearances, positions and ratings apart on purpose: each
 // was produced by a different pass, and each is verifiable on its own. This is
@@ -20,6 +24,7 @@ const args = process.argv.slice(2);
 const value = n => { const i = args.indexOf(`--${n}`); return i === -1 ? null : args[i + 1]; };
 const SEASON = value('season');
 const dryRun = args.includes('--dry-run');
+const strict = args.includes('--strict');
 // Rebuild only one competition's clubs.
 //
 // A season directory is not always one league: 2006/07 also holds
@@ -222,6 +227,7 @@ errors.push(...validateAcrossFiles(written));
 if (gaps.length) {
   console.error(`\n${gaps.length} player(s) could not be assembled:`);
   for (const g of gaps.slice(0, 20)) console.error(`  ${g}`);
+  if (strict) process.exit(1);
 }
 if (errors.length) {
   console.error(`\n${errors.length} validation error(s):`);
