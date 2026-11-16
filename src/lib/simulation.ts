@@ -70,25 +70,25 @@ const ROLE_ASSIST_MULT: Record<PlayerRole, number> = {
 export const ROLE_VALID_POSITIONS: Partial<Record<PlayerRole, Position[]>> = {
   InsideForward:       ['LW', 'RW', 'LM', 'RM'],
   Winger:              ['LW', 'RW', 'LM', 'RM'],
-  Poacher:             ['ST', 'CF'],
+  Poacher:             ['ST', 'CF', 'RW', 'LW'],
   TargetMan:           ['ST', 'CF'],
   CompleteForward:     ['ST', 'CF'],
-  Trequartista:        ['CAM', 'CF'],
+  Trequartista:        ['CAM', 'CF', 'LW', 'RW', 'LM', 'RM'],
   FalseNine:           ['ST', 'CF'],
   DeepLyingForward:    ['ST', 'CF'],
-  ChanceCreator:       ['CAM', 'CM', 'LM', 'RM'],
+  ChanceCreator:       ['CAM', 'CM', 'LM', 'RM', 'LW', 'RW', 'CF'],
   DeepLyingPlaymaker:  ['CDM', 'CM'],
   Regista:             ['CDM', 'CM'],
   Mezzala:             ['CM', 'LM', 'RM', 'CAM'],
   LateRunner:          ['CM', 'CDM', 'CAM'],
-  BoxToBox:            ['CM'],
+  BoxToBox:            ['CM', 'CDM'],
   Anchor:              ['CDM'],
   Enforcer:            ['CM', 'CDM'],
   AttackingFullback:   ['LB', 'RB', 'LWB', 'RWB'],
-  CrossingSpecialist:  ['LB', 'RB', 'LWB', 'RWB', 'LM', 'RM', 'LW', 'RW'],
+  CrossingSpecialist:  ['LB', 'RB', 'LWB', 'RWB', 'LM', 'RM', 'LW', 'RW', 'CM', 'CAM'],
   InvertedWingback:    ['LB', 'RB', 'LWB', 'RWB'],
   BallPlayingDefender: ['CB'],
-  SetPieceDeliverer:   ['LM', 'RM', 'LW', 'RW', 'LB', 'RB', 'LWB', 'RWB', 'CM', 'CAM'],
+  SetPieceDeliverer:   ['LM', 'RM', 'LW', 'RW', 'LB', 'RB', 'LWB', 'RWB', 'CM', 'CAM', 'CDM', 'GK', 'CB', 'CF', 'ST'],
   // AerialThreat: unrestricted — heading ability spans all outfield positions
 };
 
@@ -425,6 +425,7 @@ function toMatchPlayer(pick: SquadPick, validPos: Partial<Record<PlayerRole, Pos
     position:  pick.position,
     rating:    ratingInSlot(pick),
     roles:     activeRoles(pick.roles, pick.position, validPos),
+    traits:    pick.roles ?? [],
     positions: pick.positions,
   };
 }
@@ -444,6 +445,7 @@ function opponentSetup(
     position: p.position,
     rating: p.rating,
     roles: activeRoles(p.roles, p.position, validPos),
+    traits: p.roles ?? [],
   }));
   const inferred = inferStyle(eleven);
   return {

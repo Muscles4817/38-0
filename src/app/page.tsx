@@ -8,6 +8,7 @@ import PitchView from '@/components/PitchView';
 import OptionCard from '@/components/OptionCard';
 import SiteNav from '@/components/SiteNav';
 import RunRecordPanel from '@/components/RunRecordPanel';
+import DailyCard from '@/components/DailyCard';
 import { clubChoices, nationChoices, poolCanFieldXI, type DraftFilter } from '@/lib/draftPool';
 import { BUDGET_MAX_RATING, CHALLENGE_ERAS, CHALLENGES, type ChallengeId } from '@/lib/challenges';
 
@@ -176,6 +177,9 @@ export default function SetupPage() {
         */}
         <div className="flex flex-col gap-8 lg:flex-row lg:items-start lg:gap-10">
         <div className="w-full max-w-xl mx-auto space-y-8 lg:mx-0 lg:flex-1">
+
+        {/* Today's challenge: one tap to a draft everyone else is playing too. */}
+        <DailyCard />
 
         {/* Formation */}
         <section>

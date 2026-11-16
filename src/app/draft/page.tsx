@@ -9,6 +9,7 @@ import { draftPool, feasibility, type DraftFilter, type Feasibility } from '@/li
 import { CHALLENGES, describeFilter, type ChallengeId } from '@/lib/challenges';
 import { useStoredJson, readStored, writeStored, clearStored } from '@/lib/clientStorage';
 import { parseSeenSquads, SEEN_SQUADS_KEY, withSeenSquad } from '@/lib/seenSquads';
+import { dailyOrder, type DailyChallenge } from '@/lib/daily';
 import PitchView from '@/components/PitchView';
 import PositionBadge from '@/components/PositionBadge';
 import LineRatings from '@/components/LineRatings';
@@ -26,6 +27,8 @@ interface Setup {
   /** Absent in a setup saved before challenge modes existed. */
   challenge?: ChallengeId;
   filter?: DraftFilter | null;
+  /** Present when this run is the daily challenge. */
+  daily?: DailyChallenge;
 }
 
 type SpinPhase = 'idle' | 'spinning' | 'reveal';
@@ -43,6 +46,8 @@ interface DraftProgress {
   slot: number | null;
   /** The squad the last pick came from, while that pick can still be taken back. */
   undo: { clubId: number; seasonId: number } | null;
+  /** In the daily challenge, where in the day's order the next spin looks first. */
+  dailyCursor?: number;
 }
 
 const PROGRESS_KEY = '38-0-draft-state';
@@ -75,6 +80,12 @@ export default function DraftPage() {
     filter:       setup.filter ?? null,
   }) : NO_POOL), [setup]);
   const feasible = useMemo(() => (formation ? feasibility(pool, formation) : null), [pool, formation]);
+  // The daily challenge spins through the pool in an order fixed for the day,
+  // so everyone gets the same spins; see src/lib/daily.ts.
+  const dailySpins = useMemo(
+    () => (setup?.daily ? dailyOrder(pool, setup.daily.spinSeed) : null),
+    [pool, setup?.daily],
+  );
 
   const progress = useStoredJson<DraftProgress>(PROGRESS_KEY) ?? NO_PROGRESS;
   // Counting rerolls used rather than remaining keeps this independent of when
@@ -141,7 +152,7 @@ export default function DraftPage() {
    * formation can use. Returns null when the era has nothing left to offer,
    * which lets the caller report it without burning a reroll.
    */
-  function findSquad(excludeDrafted: boolean): SpunSquad | null {
+  function findSquad(excludeDrafted: boolean): { squad: SpunSquad; cursor?: number } | null {
     if (!formation || !feasible) return null;
     const draftedFrom  = new Set(
       picks.filter(p => p.clubId != null && p.seasonId != null)
@@ -156,7 +167,19 @@ export default function DraftPage() {
     });
 
     if (candidates.length === 0) return null;
-    return candidates[Math.floor(Math.random() * candidates.length)];
+    if (dailySpins) {
+      // The next squad in the day's order that the XI can use. A squad passed
+      // over is not come back to, so two players placing the same players see
+      // the same spins.
+      const usable = new Set(candidates);
+      const start = progress.dailyCursor ?? 0;
+      for (let k = 0; k < dailySpins.length; k++) {
+        const i = (start + k) % dailySpins.length;
+        if (usable.has(dailySpins[i])) return { squad: dailySpins[i], cursor: i + 1 };
+      }
+      return null;
+    }
+    return { squad: candidates[Math.floor(Math.random() * candidates.length)] };
   }
 
   function runSpinAnimation(result: SpunSquad) {
@@ -215,13 +238,14 @@ export default function DraftPage() {
     if (reroll && rerollsLeft <= 0) return;
 
     // Resolve the squad first, so a reroll is only spent when it buys something.
-    const found = findSquad(reroll);
-    if (!found) {
+    const landed = findSquad(reroll);
+    if (!landed) {
       setSpinNotice(reroll
         ? 'No other club-season in this era can fill an open position.'
         : 'No club-season in this era can fill an open position. Widen the era and start again.');
       return;
     }
+    const found = landed.squad;
     // Stored before the wheel turns: the squad is decided here, and a reload
     // during or after the animation comes back to the same one.
     saveProgress({
@@ -229,6 +253,7 @@ export default function DraftPage() {
       spun: { clubId: found.clubId, seasonId: found.seasonId },
       slot: reroll ? progress.slot ?? null : slot,
       undo: null,
+      ...(landed.cursor !== undefined ? { dailyCursor: landed.cursor } : {}),
     });
 
     setSpinNotice(null);
@@ -337,7 +362,7 @@ export default function DraftPage() {
   const overall = computeOverall(picks);
   const showRatings = setup.showRatings && setup.difficulty !== 'hard';
   const isSpinning = spinPhase !== 'idle';
-  const challengeLabel =
+  const challengeLabel = setup.daily ? `📅 Daily #${setup.daily.number}` :
     describeFilter(setup.filter ?? null, id => getClub(id)?.name ?? null) ??
     (setup.challenge && setup.challenge !== 'none' ? CHALLENGES.find(c => c.id === setup.challenge)?.label ?? null : null);
 

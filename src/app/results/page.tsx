@@ -12,6 +12,10 @@ import {
 } from '@/lib/runHistory';
 import { PLAYSTYLES, type PlaystyleName } from '@/lib/matchEngine';
 import { keyMoments, seasonStory, type KeyMoment } from '@/lib/keyMoments';
+import {
+  DAILY_KEY, dailyShareText, formOf, parseDailyResults, withDailyResult,
+  type DailyChallenge, type DailyResult,
+} from '@/lib/daily';
 import { parseSeenSquads, resolveSeenSquads, SEEN_SQUADS_KEY, type SeenSquad } from '@/lib/seenSquads';
 import { applyRules, type DraftFilter, type PoolRules } from '@/lib/draftPool';
 import { getTacticEffect } from '@/lib/gameData';
@@ -185,6 +189,35 @@ function runRecord(
   };
 }
 
+/**
+ * Writes a daily challenge's season into `38-0-daily`. Only the day's first
+ * season counts; `withDailyResult` ignores any other, except the same season
+ * rewritten by a half-time change.
+ */
+function recordDaily(daily: DailyChallenge, record: RunRecord, result: SimulationResult) {
+  const entry: DailyResult = {
+    date: daily.date,
+    number: daily.number,
+    seasonLabel: record.seasonLabel,
+    formation: record.formation,
+    overall: record.overall,
+    style: record.style,
+    ...(record.changedTo ? { changedTo: record.changedTo } : {}),
+    position: record.position,
+    points: record.points,
+    wins: record.wins,
+    draws: record.draws,
+    losses: record.losses,
+    goalsFor: record.goalsFor,
+    goalsAgainst: record.goalsAgainst,
+    topScorer: record.topScorer,
+    topScorerGoals: record.topScorerGoals,
+    form: formOf(result),
+    playedAt: record.playedAt,
+  };
+  writeStored(DAILY_KEY, withDailyResult(parseDailyResults(readStored<unknown>(DAILY_KEY)), entry));
+}
+
 // ── Main Page ────────────────────────────────────────────────────────────────
 
 export default function ResultsPage() {
@@ -198,8 +231,16 @@ export default function ResultsPage() {
     draftMode?: string;
     playerRating?: 'career' | 'prime';
     filter?: DraftFilter | null;
+    daily?: DailyChallenge;
   }>('38-0-setup');
-  const plan      = useStoredJson<StoredPlan>('38-0-plan');
+  const daily      = setup?.daily ?? null;
+  const storedPlan = useStoredJson<StoredPlan>('38-0-plan');
+  // The daily challenge fixes the league-season; the pre-season screen does
+  // not offer it, and this makes sure of it.
+  const plan = useMemo(
+    () => (daily && storedPlan ? { ...storedPlan, seasonId: daily.seasonId, league: daily.league } : storedPlan),
+    [daily, storedPlan],
+  );
   const formation = useMemo(() => getFormation(setup?.formation ?? '4-4-2'), [setup]);
   const poolRules = useMemo(() => ({
     playerRating: setup?.playerRating === 'prime' ? 'prime' as const : 'career' as const,
@@ -247,7 +288,8 @@ export default function ResultsPage() {
     if (!picks.length) return;
     let cancelled = false;
     const t = setTimeout(() => {
-      const seed = Math.floor(Math.random() * 2_000_000_000);
+      // The daily challenge's season is the same 38 games for everyone.
+      const seed = daily?.seed ?? Math.floor(Math.random() * 2_000_000_000);
       const result = runSeasonSimulation(picks, seed, {
         seasonId: plan?.seasonId,
         league:   plan?.league,
@@ -262,12 +304,19 @@ export default function ResultsPage() {
       const playedAt = Date.now();
       const record = runRecord(result, seed, playedAt, picks, plan);
       if (record) writeStored(RUN_HISTORY_KEY, withRun(parseRunHistory(readStored<unknown>(RUN_HISTORY_KEY)), record));
+      if (record && daily) recordDaily(daily, record, result);
       setPlayed({ result, seed, playedAt, decided: false });
     }, 0);
     return () => { cancelled = true; clearTimeout(t); };
-  }, [picks, plan, run]);
+  }, [picks, plan, daily, run]);
 
   const history = useStoredJson<unknown>(RUN_HISTORY_KEY);
+  const dailyStored = useStoredJson<unknown>(DAILY_KEY);
+  // The result that counts for today's challenge, and whether it is this one.
+  const dailyCounted = useMemo(
+    () => (daily ? parseDailyResults(dailyStored).find(r => r.date === daily.date) ?? null : null),
+    [daily, dailyStored],
+  );
   const records = useMemo(
     () => (opponent ? styleRecords(parseRunHistory(history), xiKey(picks), opponent.seasonId) : []),
     [history, picks, opponent],
@@ -293,6 +342,7 @@ export default function ResultsPage() {
     });
     const record = runRecord(result, played.seed, played.playedAt, picks, plan);
     if (record) writeStored(RUN_HISTORY_KEY, replaceRun(parseRunHistory(readStored<unknown>(RUN_HISTORY_KEY)), record));
+    if (record && daily) recordDaily(daily, record, result);
     setPlayed({ ...played, result, decided: true });
   }
 
@@ -360,6 +410,7 @@ export default function ResultsPage() {
             odds={odds}
             league={opponent ? `${opponent.leagueName} ${opponent.seasonLabel}` : 'Premier League'}
             records={records}
+            daily={daily ? { counted: dailyCounted, isThis: dailyCounted?.playedAt === played.playedAt } : null}
             onResim={handleResim}
           />
         )}
@@ -819,13 +870,15 @@ function SeasonStory({ result }: { result: SimulationResult }) {
 
 // ── Final Summary ─────────────────────────────────────────────────────────────
 
-function FinalSummary({ result, seed, picks, odds, league, records, onResim }: {
+function FinalSummary({ result, seed, picks, odds, league, records, daily, onResim }: {
   result: SimulationResult;
   seed: number;
   picks: SquadPick[];
   odds: ReturnType<typeof preSeasonOdds>;
   league: string;
   records: StyleRecord[];
+  /** For a daily challenge: the day's counted result, and whether this season is it. */
+  daily: { counted: DailyResult | null; isThis: boolean } | null;
   onResim: () => void;
 }) {
   const [copied, setCopied] = useState(false);
@@ -842,7 +895,9 @@ function FinalSummary({ result, seed, picks, odds, league, records, onResim }: {
   const overall = computeOverall(picks);
 
   function share() {
-    const text = [
+    // A daily challenge shares the day's counted result, whichever season is
+    // on screen: that is the one a friend can compare against.
+    const text = daily?.counted ? dailyShareText(daily.counted, styleLabel) : [
       `38-0 · ${league}`,
       `${ordinal(result.finalPosition)} · ${result.points} pts · ${result.wins}-${result.draws}-${result.losses} · ${result.goalsFor} scored, ${result.goalsAgainst} conceded`,
       `XI rated ${overall}, playing ${change ? `${styleLabel(style)} then ${styleLabel(change.style)}` : styleLabel(style)} (${margin >= 0 ? '+' : ''}${margin} on the bookmakers' ${odds.expectedPoints})`,
@@ -908,22 +963,33 @@ function FinalSummary({ result, seed, picks, odds, league, records, onResim }: {
           >
             Try another style →
           </Link>
-          <button
-            type="button"
-            onClick={onResim}
-            className="px-6 py-3 rounded-xl font-black text-sm bg-raised text-muted hover:bg-raised-max hover:text-fg transition-colors border border-line-strong touch-manipulation"
-          >
-            ↺ Play it again
-          </button>
+          {/* The daily season is one seed, so playing it again would play the same 38 games. */}
+          {!daily && (
+            <button
+              type="button"
+              onClick={onResim}
+              className="px-6 py-3 rounded-xl font-black text-sm bg-raised text-muted hover:bg-raised-max hover:text-fg transition-colors border border-line-strong touch-manipulation"
+            >
+              ↺ Play it again
+            </button>
+          )}
           <button
             type="button"
             onClick={share}
             className="px-6 py-3 rounded-xl font-black text-sm bg-raised text-muted hover:bg-raised-max hover:text-fg transition-colors border border-line-strong touch-manipulation"
           >
-            {copied ? 'Copied ✓' : 'Share'}
+            {copied ? 'Copied ✓' : daily?.counted ? `Share Daily #${daily.counted.number}` : 'Share'}
           </button>
         </div>
-        <div className="text-[11px] text-subtle mt-3">Season #{seed}</div>
+        {daily ? (
+          <p className="text-xs text-muted mt-3 max-w-md mx-auto">
+            {daily.isThis
+              ? 'This is your result for today’s challenge. Seasons played after it are practice.'
+              : `Practice. Today’s result is your first season: ${daily.counted ? `${ordinal(daily.counted.position)}, ${daily.counted.points} pts` : 'not recorded'}.`}
+          </p>
+        ) : (
+          <div className="text-[11px] text-subtle mt-3">Season #{seed}</div>
+        )}
       </div>
 
       <SeasonStory result={result} />

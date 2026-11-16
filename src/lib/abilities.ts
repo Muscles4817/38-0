@@ -90,6 +90,4 @@ export const NOT_YET_READ: Partial<Record<Ability, string>> = {
  * Abilities the engine reads but that no trait gives yet, each with why.
  * The test that checks every ability can be expressed allows exactly these.
  */
-export const NOT_YET_GIVEN: Partial<Record<Ability, string>> = {
-  defending: 'The block reads it; Ball Winner and Tracks Back are designed in docs/abilities.md but not built.',
-};
+export const NOT_YET_GIVEN: Partial<Record<Ability, string>> = {};

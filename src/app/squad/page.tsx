@@ -16,6 +16,7 @@ import PositionBadge from '@/components/PositionBadge';
 import LineRatings from '@/components/LineRatings';
 import BackLink from '@/components/BackLink';
 import { ratingColor } from '@/components/ratingColor';
+import type { DailyChallenge } from '@/lib/daily';
 
 /**
  * What the player settles on between drafting and kick-off.
@@ -34,6 +35,8 @@ export interface StoredPlan {
 interface Setup {
   formation: string;
   draftMode?: string;
+  /** Present when this run is the daily challenge, which fixes the season. */
+  daily?: DailyChallenge;
 }
 
 // Stable empty array so a run that has not loaded yet does not hand out a new
@@ -59,8 +62,11 @@ export default function SquadPage() {
   // The plan is derived from what is stored rather than mirrored into state,
   // so there is one source of truth and a write from anywhere re-renders.
   const style: PlaystyleName = stored?.style ?? 'balanced';
-  const seasonId = stored?.seasonId ?? defaultSeasonId ?? competitions[0]?.seasonId ?? 0;
-  const league   = stored?.league ?? competitions.find(c => c.seasonId === seasonId)?.league;
+  // The daily challenge plays everyone in the same league-season, so it is
+  // not a choice here.
+  const daily    = setup?.daily;
+  const seasonId = daily?.seasonId ?? stored?.seasonId ?? defaultSeasonId ?? competitions[0]?.seasonId ?? 0;
+  const league   = daily ? daily.league : stored?.league ?? competitions.find(c => c.seasonId === seasonId)?.league;
 
   const tactics  = useMemo(() => getTacticOptions(picks), [picks]);
   const chosen   = tactics.find(t => t.style === style) ?? tactics[0];
@@ -198,14 +204,18 @@ export default function SquadPage() {
         <section>
           <Label>Season</Label>
           <p className="text-muted text-[11px] mb-3">
-            The league your XI is dropped into for all 38 games.
+            {daily
+              ? `Daily #${daily.number} is played in ${opponent?.leagueName ?? 'the'} ${opponent?.seasonLabel ?? ''} by everyone, on the same 38 games.`
+              : 'The league your XI is dropped into for all 38 games.'}
           </p>
-          <div className="grid gap-4 lg:grid-cols-[1fr_320px] lg:items-start">
-            <CompetitionPicker
-              competitions={competitions}
-              seasonId={seasonId}
-              onChoose={c => choose({ seasonId: c.seasonId, league: c.league })}
-            />
+          <div className={`grid gap-4 ${daily ? '' : 'lg:grid-cols-[1fr_320px]'} lg:items-start`}>
+            {!daily && (
+              <CompetitionPicker
+                competitions={competitions}
+                seasonId={seasonId}
+                onChoose={c => choose({ seasonId: c.seasonId, league: c.league })}
+              />
+            )}
             {opponent && (
               <div className="lg:sticky lg:top-6">
                 <CompetitionSummary

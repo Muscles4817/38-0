@@ -5,6 +5,8 @@ import PositionBadge from '@/components/PositionBadge';
 import { Position, FORMATIONS, getFormation } from '@/lib/formations';
 import { PlayerRole } from '@/lib/simulation';
 import { NATIONALITIES, isValidNationality } from '@/lib/nationalities';
+import { blocksSave, checkTraits, traitDefinitions } from '@/lib/traitRules';
+import TraitIssues from '@/components/TraitIssues.dev';
 
 const ALL_POSITIONS: Position[] = ['GK','LB','CB','RB','LWB','RWB','CDM','CM','CAM','LM','RM','LW','RW','ST','CF'];
 
@@ -116,12 +118,18 @@ export default function SquadsEditor() {
     setLineupSlots(emptySlots());
   }
 
-  const [roleOptions, setRoleOptions] = useState<{ name: string; label: string }[]>([]);
+  const [roleOptions, setRoleOptions] = useState<RoleOption[]>([]);
+  // The trait rules read each trait's positions and abilities, so they run
+  // against the same rows the picker shows.
+  const traitDefs  = useMemo(() => traitDefinitions(roleOptions), [roleOptions]);
+  const editIssues = useMemo(() => checkTraits(editRoles, editPos, traitDefs), [editRoles, editPos, traitDefs]);
+  const newIssues  = useMemo(() => checkTraits(selRoles, selPos, traitDefs), [selRoles, selPos, traitDefs]);
+  const [saveError, setSaveError] = useState<string | null>(null);
 
   useEffect(() => {
     fetch('/api/clubs').then(r => r.json()).then(setClubs);
     fetch('/api/seasons').then(r => r.json()).then(setSeasons);
-    fetch('/api/roles').then(r => r.json()).then((rows: { name: string; label: string }[]) => setRoleOptions(rows));
+    fetch('/api/roles').then(r => r.json()).then((rows: RoleOption[]) => setRoleOptions(rows));
   }, []);
   useEffect(() => {
     if (!selClub || !selSeason) return;
@@ -280,13 +288,18 @@ export default function SquadsEditor() {
         playerId = selPlayer!.id;
       }
 
-      await fetch('/api/squads', {
+      const res = await fetch('/api/squads', {
         method: 'POST', headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           club_id: +selClub, season_id: +selSeason,
           player_id: playerId, rating, positions: selPos, roles: selRoles,
         }),
       });
+      if (!res.ok) {
+        setSaveError((await res.json().catch(() => null))?.error ?? 'The save was refused.');
+        return;
+      }
+      setSaveError(null);
 
       clearSelection();
       await loadEntries();
@@ -305,10 +318,16 @@ export default function SquadsEditor() {
   async function updateEntry() {
     if (!editEntry) return;
     setSaving(true);
-    await fetch(`/api/squads/${editEntry.id}`, {
+    const res = await fetch(`/api/squads/${editEntry.id}`, {
       method: 'PUT', headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ rating: editRating, positions: editPos, roles: editRoles }),
     });
+    if (!res.ok) {
+      setSaveError((await res.json().catch(() => null))?.error ?? 'The save was refused.');
+      setSaving(false);
+      return;
+    }
+    setSaveError(null);
     setEditEntry(null);
     await loadEntries();
     setSaving(false);
@@ -501,9 +520,11 @@ export default function SquadsEditor() {
                     selected={editRoles}
                     onToggle={r => setEditRoles(prev => prev.includes(r) ? prev.filter(x => x !== r) : [...prev, r])}
                   />
+                  <TraitIssues issues={editIssues} />
                 </div>
 
-                <button onClick={updateEntry} disabled={saving}
+                {saveError && <p className="text-xs text-[#fca5a5]">{saveError}</p>}
+                <button onClick={updateEntry} disabled={saving || blocksSave(editIssues)}
                   className="w-full px-4 py-2 rounded-lg bg-[#00c896] text-black text-sm font-bold hover:bg-[#00b385] disabled:opacity-50 transition-colors">
                   {saving ? 'Saving…' : 'Save Changes'}
                 </button>
@@ -612,11 +633,13 @@ export default function SquadsEditor() {
                     <div>
                       <Label>Roles</Label>
                       <RoleGrid roleOptions={roleOptions} selected={selRoles} onToggle={r => setSelRoles(prev => prev.includes(r) ? prev.filter(x => x !== r) : [...prev, r])} />
+                      <TraitIssues issues={newIssues} />
                     </div>
 
+                    {saveError && <p className="text-xs text-[#fca5a5]">{saveError}</p>}
                     <button
                       onClick={addEntry}
-                      disabled={saving || selPos.length === 0}
+                      disabled={saving || selPos.length === 0 || blocksSave(newIssues)}
                       className="w-full px-4 py-2 rounded-lg bg-[#00c896] text-black text-sm font-bold hover:bg-[#00b385] disabled:opacity-50 transition-colors"
                     >
                       {saving ? 'Adding…' : isNewPlayer ? 'Create & Add to Squad' : 'Add to Squad'}
@@ -745,10 +768,13 @@ function PositionGrid({ selected, onToggle }: { selected: Position[]; onToggle: 
   );
 }
 
+/** A trait as /api/roles returns it: enough to label it and to run the trait rules. */
+type RoleOption = { name: string; label: string; valid_positions?: string; qualities?: string };
+
 function RoleGrid({ selected, onToggle, roleOptions }: {
   selected: string[];
   onToggle: (r: string) => void;
-  roleOptions: { name: string; label: string }[];
+  roleOptions: RoleOption[];
 }) {
   return (
     <div className="flex flex-wrap gap-1.5">

@@ -1,4 +1,5 @@
 import Database from 'better-sqlite3';
+import { seedRoles } from './seedRoles';
 import path from 'path';
 import fs from 'fs';
 import type { Ability } from './abilities';
@@ -239,7 +240,7 @@ function seedData(db: Database.Database): void {
   ];
   for (const [name, nat, rating, pos] of arsPlayers) {
     const pid = ip.run(name, nat).lastInsertRowid as number;
-    ise.run(ars, ars0304, ipv.run(pid, '2003/04', rating, pos, '[]').lastInsertRowid as number);
+    ise.run(ars, ars0304, ipv.run(pid, '2003/04', rating, pos, seedRoles('Arsenal', '2003/04', name)).lastInsertRowid as number);
   }
 
   // ── Manchester United 1998/99 (Treble) ────────────────────────────────────
@@ -265,7 +266,7 @@ function seedData(db: Database.Database): void {
   ];
   for (const [name, nat, rating, pos] of munPlayers) {
     const pid = ip.run(name, nat).lastInsertRowid as number;
-    ise.run(mun, mun9899, ipv.run(pid, '1998/99', rating, pos, '[]').lastInsertRowid as number);
+    ise.run(mun, mun9899, ipv.run(pid, '1998/99', rating, pos, seedRoles('Manchester United', '1998/99', name)).lastInsertRowid as number);
   }
 
   // ── Chelsea 2004/05 ────────────────────────────────────────────────────────
@@ -290,7 +291,7 @@ function seedData(db: Database.Database): void {
   ];
   for (const [name, nat, rating, pos] of chePlayers) {
     const pid = ip.run(name, nat).lastInsertRowid as number;
-    ise.run(che, che0405, ipv.run(pid, '2004/05', rating, pos, '[]').lastInsertRowid as number);
+    ise.run(che, che0405, ipv.run(pid, '2004/05', rating, pos, seedRoles('Chelsea', '2004/05', name)).lastInsertRowid as number);
   }
 
   // ── Manchester City 2011/12 ────────────────────────────────────────────────
@@ -304,10 +305,10 @@ function seedData(db: Database.Database): void {
     ['Pablo Zabaleta', 'Argentina', 84, '["RB"]'],
     ['David Silva', 'Spain', 93, '["CM","CAM","LM"]'],
     ['Yaya Toure', 'Ivory Coast', 92, '["CM","CDM"]'],
-    ['Gareth Barry', 'England', 83, '["CDM","CM"]'],
-    ['James Milner', 'England', 81, '["RM","CM","LM"]'],
+    ['Gareth Barry', 'England', 83, '["CDM","CM","LB","LM"]'],
+    ['James Milner', 'England', 81, '["RM","CM","LM","RW","LW","LWB","RWB"]'],
     ['Sergio Aguero', 'Argentina', 93, '["ST"]'],
-    ['Carlos Tevez', 'Argentina', 90, '["ST","CAM"]'],
+    ['Carlos Tevez', 'Argentina', 91, '["ST","CAM","CF"]'],
     ['Mario Balotelli', 'Italy', 84, '["ST"]'],
     ['Edin Dzeko', 'Bosnia & Herzegovina', 84, '["ST"]'],
     ['Samir Nasri', 'France', 86, '["CAM","CM","LM"]'],
@@ -315,7 +316,7 @@ function seedData(db: Database.Database): void {
   ];
   for (const [name, nat, rating, pos] of mciPlayers) {
     const pid = ip.run(name, nat).lastInsertRowid as number;
-    ise.run(mci, mci1112, ipv.run(pid, '2011/12', rating, pos, '[]').lastInsertRowid as number);
+    ise.run(mci, mci1112, ipv.run(pid, '2011/12', rating, pos, seedRoles('Manchester City', '2011/12', name)).lastInsertRowid as number);
   }
 
   // ── Leicester City 2015/16 ────────────────────────────────────────────────
@@ -338,7 +339,7 @@ function seedData(db: Database.Database): void {
   ];
   for (const [name, nat, rating, pos] of leiPlayers) {
     const pid = ip.run(name, nat).lastInsertRowid as number;
-    ise.run(lei, lei1516, ipv.run(pid, '2015/16', rating, pos, '[]').lastInsertRowid as number);
+    ise.run(lei, lei1516, ipv.run(pid, '2015/16', rating, pos, seedRoles('Leicester City', '2015/16', name)).lastInsertRowid as number);
   }
 
   // ── Liverpool 2019/20 ─────────────────────────────────────────────────────
@@ -363,7 +364,7 @@ function seedData(db: Database.Database): void {
   ];
   for (const [name, nat, rating, pos] of livPlayers) {
     const pid = ip.run(name, nat).lastInsertRowid as number;
-    ise.run(liv, liv1920, ipv.run(pid, '2019/20', rating, pos, '[]').lastInsertRowid as number);
+    ise.run(liv, liv1920, ipv.run(pid, '2019/20', rating, pos, seedRoles('Liverpool', '2019/20', name)).lastInsertRowid as number);
   }
 
   // ── Blackburn Rovers 1994/95 ──────────────────────────────────────────────
@@ -386,7 +387,7 @@ function seedData(db: Database.Database): void {
   ];
   for (const [name, nat, rating, pos] of blkPlayers) {
     const pid = ip.run(name, nat).lastInsertRowid as number;
-    ise.run(blk, blk9495, ipv.run(pid, '1994/95', rating, pos, '[]').lastInsertRowid as number);
+    ise.run(blk, blk9495, ipv.run(pid, '1994/95', rating, pos, seedRoles('Blackburn Rovers', '1994/95', name)).lastInsertRowid as number);
   }
 
   // ── Chelsea 2013/14 (from screenshots) ────────────────────────────────────
@@ -412,7 +413,7 @@ function seedData(db: Database.Database): void {
   for (const [name, nat, rating, pos] of che1314Players) {
     const pidRow = db.prepare('SELECT id FROM players WHERE name = ?').get(name) as { id: number } | undefined;
     const pid = pidRow ? pidRow.id : (ip.run(name, nat).lastInsertRowid as number);
-    ise.run(cheId, che1314, ipv.run(pid, '2013/14', rating, pos, '[]').lastInsertRowid as number);
+    ise.run(cheId, che1314, ipv.run(pid, '2013/14', rating, pos, seedRoles('Chelsea', '2013/14', name)).lastInsertRowid as number);
   }
 
   // ── Tottenham 2018/19 ─────────────────────────────────────────────────────
@@ -436,7 +437,7 @@ function seedData(db: Database.Database): void {
   ];
   for (const [name, nat, rating, pos] of totPlayers) {
     const pid = ip.run(name, nat).lastInsertRowid as number;
-    ise.run(tot, tot1819, ipv.run(pid, '2018/19', rating, pos, '[]').lastInsertRowid as number);
+    ise.run(tot, tot1819, ipv.run(pid, '2018/19', rating, pos, seedRoles('Tottenham Hotspur', '2018/19', name)).lastInsertRowid as number);
   }
 
   // ── Newcastle United 2022/23 ──────────────────────────────────────────────
@@ -459,7 +460,7 @@ function seedData(db: Database.Database): void {
   ];
   for (const [name, nat, rating, pos] of newPlayers) {
     const pid = ip.run(name, nat).lastInsertRowid as number;
-    ise.run(new_, new2223, ipv.run(pid, '2022/23', rating, pos, '[]').lastInsertRowid as number);
+    ise.run(new_, new2223, ipv.run(pid, '2022/23', rating, pos, seedRoles('Newcastle United', '2022/23', name)).lastInsertRowid as number);
   }
 
   // ── Aston Villa 2024/25 ───────────────────────────────────────────────────
@@ -484,7 +485,7 @@ function seedData(db: Database.Database): void {
   for (const [name, nat, rating, pos] of avlPlayers) {
     if (name === 'Unai Emery') continue; // skip manager
     const pid = ip.run(name, nat).lastInsertRowid as number;
-    ise.run(avl, avl2425, ipv.run(pid, '2024/25', rating, pos, '[]').lastInsertRowid as number);
+    ise.run(avl, avl2425, ipv.run(pid, '2024/25', rating, pos, seedRoles('Aston Villa', '2024/25', name)).lastInsertRowid as number);
   }
 }
 
@@ -949,7 +950,7 @@ function seedPL2526(db: Database.Database, seasonId: number): void {
       const cid = getOrCreateClub(clubName, short, color);
       for (const [name, nat, rating, pos] of players) {
         const pid = getOrCreatePlayer(name, nat);
-        const pvId = ipv.run(pid, '2025/26', rating, pos, '[]').lastInsertRowid as number;
+        const pvId = ipv.run(pid, '2025/26', rating, pos, seedRoles(clubName, '2025/26', name)).lastInsertRowid as number;
         ise.run(cid, seasonId, pvId);
       }
     }
@@ -1016,7 +1017,7 @@ function seedClassicTeamsIfNeeded(db: Database.Database) {
 
   for (const [name, nat, rating, pos] of playerData) {
     const pid = findOrCreatePlayer(name, nat);
-    ise.run(mciId, s2017.id, ipv.run(pid, '2017/18', rating, pos, '[]').lastInsertRowid as number);
+    ise.run(mciId, s2017.id, ipv.run(pid, '2017/18', rating, pos, seedRoles('Manchester City', '2017/18', name)).lastInsertRowid as number);
   }
 }
 
@@ -1048,9 +1049,10 @@ function seedMorePLClassicsIfNeeded(db: Database.Database) {
   const ise = db.prepare('INSERT OR IGNORE INTO squad_entries (club_id, season_id, player_version_id) VALUES (?, ?, ?)');
 
   function seedSquad(cId: number, sId: number, label: string, players: [string, string, number, string][]) {
+    const club = (db.prepare('SELECT name FROM clubs WHERE id = ?').get(cId) as { name: string } | undefined)?.name ?? '';
     for (const [name, nat, rating, pos] of players) {
       const pid = findOrCreatePlayer(name, nat);
-      ise.run(cId, sId, ipv.run(pid, label, rating, pos, '[]').lastInsertRowid as number);
+      ise.run(cId, sId, ipv.run(pid, label, rating, pos, seedRoles(club, label, name)).lastInsertRowid as number);
     }
   }
 
@@ -1089,7 +1091,7 @@ function seedMorePLClassicsIfNeeded(db: Database.Database) {
       ['Steven Gerrard',         'England',        87, '["CM","CDM","CAM"]'],
       ['Jordan Henderson',       'England',        79, '["CM","CDM"]'],
       ['Philippe Coutinho',      'Brazil',         87, '["CAM","CM","LM"]'],
-      ['Raheem Sterling',        'England',        82, '["RW","LW","RM"]'],
+      ['Raheem Sterling',        'England',        82, '["RW","LW","RM","CAM","CF"]'],
       ['Daniel Sturridge',       'England',        88, '["ST"]'],
       ['Luis Suarez',            'Uruguay',        94, '["ST","LW","RW"]'],
       ['Kolo Toure',             'Ivory Coast',    77, '["CB"]'],
@@ -1296,7 +1298,7 @@ function seedNonPLClassicsIfNeeded(db: Database.Database) {
         if (seen.has(key)) continue;
         seen.add(key);
         const pid = findOrCreatePlayer(name, nat);
-        milIse.run(milId, s2006.id, milIpv.run(pid, '2006/07', rating, pos, '[]').lastInsertRowid as number);
+        milIse.run(milId, s2006.id, milIpv.run(pid, '2006/07', rating, pos, seedRoles('AC Milan', '2006/07', name)).lastInsertRowid as number);
       }
 
       // Save the UCL final XI as the default lineup (4-3-2-1 Christmas tree)
@@ -1396,7 +1398,7 @@ function seedArsenal2425IfNeeded(db: Database.Database): void {
   db.transaction(() => {
     for (const [name, nat, rating, pos] of squad) {
       const pid = findOrCreatePlayer(name, nat);
-      ise.run(arsClub.id, season.id, ipv.run(pid, '2024/25', rating, pos, '[]').lastInsertRowid as number);
+      ise.run(arsClub.id, season.id, ipv.run(pid, '2024/25', rating, pos, seedRoles('Arsenal', '2024/25', name)).lastInsertRowid as number);
     }
 
     // Save Arteta's most-used XI: 4-3-3 (CDM)
@@ -1487,7 +1489,7 @@ function seedChelsea2425IfNeeded(db: Database.Database): void {
   db.transaction(() => {
     for (const [name, nat, rating, pos] of squad) {
       const pid = findOrCreatePlayer(name, nat);
-      ise.run(cheClub.id, season.id, ipv.run(pid, '2024/25', rating, pos, '[]').lastInsertRowid as number);
+      ise.run(cheClub.id, season.id, ipv.run(pid, '2024/25', rating, pos, seedRoles('Chelsea', '2024/25', name)).lastInsertRowid as number);
     }
 
     // Maresca's preferred XI: 4-2-3-1
@@ -1579,7 +1581,7 @@ function seedLiverpool2425IfNeeded(db: Database.Database): void {
   db.transaction(() => {
     for (const [name, nat, rating, pos] of squad) {
       const pid = findOrCreatePlayer(name, nat);
-      ise.run(livClub.id, season.id, ipv.run(pid, '2024/25', rating, pos, '[]').lastInsertRowid as number);
+      ise.run(livClub.id, season.id, ipv.run(pid, '2024/25', rating, pos, seedRoles('Liverpool', '2024/25', name)).lastInsertRowid as number);
     }
 
     // Slot's most-used XI: 4-3-3 (CDM)
@@ -1670,7 +1672,7 @@ function seedBrighton2425IfNeeded(db: Database.Database): void {
   db.transaction(() => {
     for (const [name, nat, rating, pos] of squad) {
       const pid = findOrCreatePlayer(name, nat);
-      ise.run(club.id, season.id, ipv.run(pid, '2024/25', rating, pos, '[]').lastInsertRowid as number);
+      ise.run(club.id, season.id, ipv.run(pid, '2024/25', rating, pos, seedRoles('Brighton', '2024/25', name)).lastInsertRowid as number);
     }
 
     // Hürzeler's most-used XI: 4-2-3-1
@@ -1759,7 +1761,7 @@ function seedWestHam2425IfNeeded(db: Database.Database): void {
   db.transaction(() => {
     for (const [name, nat, rating, pos] of squad) {
       const pid = findOrCreatePlayer(name, nat);
-      ise.run(club.id, season.id, ipv.run(pid, '2024/25', rating, pos, '[]').lastInsertRowid as number);
+      ise.run(club.id, season.id, ipv.run(pid, '2024/25', rating, pos, seedRoles('West Ham United', '2024/25', name)).lastInsertRowid as number);
     }
 
     // Lopetegui/Potter 4-2-3-1
@@ -1875,13 +1877,13 @@ export function loadRoleRows(db: Database.Database): RoleRow[] {
 const ROLE_DEFAULTS: (Omit<RoleRow, 'valid_positions' | 'qualities'> & { valid_positions: string[] })[] = [
   // name, label, goal_mult, assist_mult, valid_positions, description, att_contrib, mid_contrib, def_contrib
   { name: 'AerialThreat',        label: 'Aerial Threat',         goal_mult: 3.50, assist_mult: 0.30, valid_positions: [],                                                              description: 'Dominant in the air; major threat at set pieces from any position', att_contrib:  0, mid_contrib:  0, def_contrib:  0 },
-  { name: 'Anchor',              label: 'Anchor',                goal_mult: 0.20, assist_mult: 0.40, valid_positions: ['CDM'],                                                          description: 'Pure defensive shield; almost never scores',                         att_contrib:  0, mid_contrib:  0, def_contrib:  3 },
+  { name: 'Anchor',              label: 'Anchor',                goal_mult: 0.20, assist_mult: 0.40, valid_positions: ['CDM'],                                                          description: 'Pure defensive shield; almost never scores',                         att_contrib: -1, mid_contrib:  0, def_contrib:  3 },
   { name: 'AttackingFullback',   label: 'Attacking Fullback',    goal_mult: 1.00, assist_mult: 1.80, valid_positions: ['LB','RB','LWB','RWB'],                                          description: 'Bombs forward to provide width and crosses',                         att_contrib:  2, mid_contrib:  0, def_contrib: -2 },
   { name: 'BallPlayingDefender', label: 'Ball Playing Defender', goal_mult: 0.50, assist_mult: 1.50, valid_positions: ['CB'],                                                            description: 'Plays out from the back; contributes to build-up play',             att_contrib:  0, mid_contrib:  2, def_contrib:  0 },
-  { name: 'BoxToBox',            label: 'Box to Box',            goal_mult: 1.30, assist_mult: 1.20, valid_positions: ['CM'],                                                            description: 'Balanced midfielder contributing at both ends',                      att_contrib:  1, mid_contrib:  0, def_contrib:  1 },
-  { name: 'ChanceCreator',       label: 'Chance Creator',        goal_mult: 0.50, assist_mult: 2.00, valid_positions: ['CAM','CM','LM','RM'],                                            description: 'Natural playmaker who creates chances for others',                   att_contrib:  2, mid_contrib:  0, def_contrib:  0 },
+  { name: 'BoxToBox',            label: 'Box to Box',            goal_mult: 1.30, assist_mult: 1.20, valid_positions: ['CM','CDM'],                                                            description: 'Balanced midfielder contributing at both ends',                      att_contrib:  1, mid_contrib: -1, def_contrib:  1 },
+  { name: 'ChanceCreator',       label: 'Chance Creator',        goal_mult: 0.50, assist_mult: 2.00, valid_positions: ['CAM','CM','LM','RM','LW','RW','CF'],                                            description: 'Natural playmaker who creates chances for others',                   att_contrib:  2, mid_contrib:  0, def_contrib:  0 },
   { name: 'CompleteForward',     label: 'Complete Forward',      goal_mult: 1.30, assist_mult: 1.50, valid_positions: ['ST','CF'],                                                       description: 'All-round striker contributing to goals and assists',                att_contrib:  0, mid_contrib:  0, def_contrib:  0 },
-  { name: 'CrossingSpecialist',  label: 'Crossing Specialist',   goal_mult: 0.10, assist_mult: 2.80, valid_positions: ['LB','RB','LWB','RWB','LM','RM','LW','RW'],                      description: 'Elite delivery from wide; rarely attempts shots',                    att_contrib:  0, mid_contrib:  0, def_contrib:  0 },
+  { name: 'CrossingSpecialist',  label: 'Crossing Specialist',   goal_mult: 0.10, assist_mult: 2.80, valid_positions: ['LB','RB','LWB','RWB','LM','RM','LW','RW','CM','CAM'],                      description: 'Elite delivery from wide; rarely attempts shots',                    att_contrib:  0, mid_contrib:  0, def_contrib:  0 },
   { name: 'DeepLyingForward',    label: 'Deep Lying Forward',    goal_mult: 1.00, assist_mult: 1.80, valid_positions: ['ST','CF'],                                                       description: 'Drops deep to link play and create; finishes when presented',        att_contrib:  0, mid_contrib:  1, def_contrib:  0 },
   { name: 'DeepLyingPlaymaker',  label: 'Deep Lying Playmaker',  goal_mult: 0.40, assist_mult: 1.80, valid_positions: ['CDM','CM'],                                                      description: 'Dictates tempo from deep; rarely gets forward',                      att_contrib:  0, mid_contrib:  1, def_contrib:  0 },
   { name: 'Enforcer',            label: 'Enforcer',              goal_mult: 0.15, assist_mult: 0.50, valid_positions: ['CM','CDM'],                                                      description: 'Win it, keep it simple; physical midfield presence',                 att_contrib:  0, mid_contrib:  1, def_contrib:  2 },
@@ -1892,11 +1894,11 @@ const ROLE_DEFAULTS: (Omit<RoleRow, 'valid_positions' | 'qualities'> & { valid_p
   { name: 'Mezzala',             label: 'Mezzala',               goal_mult: 1.50, assist_mult: 1.30, valid_positions: ['CM','LM','RM','CAM'],                                            description: 'Half-space runner who breaks into the box from midfield',            att_contrib:  1, mid_contrib:  1, def_contrib:  0 },
   { name: 'NoNonsenseDefender', label: 'No-Nonsense Defender', goal_mult: 0.15, assist_mult: 0.25, valid_positions: ['CB'],                                                    description: 'Heads it, kicks it, and does not attempt anything else',             att_contrib:  0, mid_contrib: -2, def_contrib: 3.5 },
   { name: 'SweeperKeeper',       label: 'Sweeper Keeper',        goal_mult: 0.00, assist_mult: 1.90, valid_positions: ['GK'],                                                    description: 'Starts the attack and defends the space behind the line',            att_contrib:  0, mid_contrib: 2.5, def_contrib: -1.5 },
-  { name: 'Poacher',             label: 'Poacher',               goal_mult: 2.20, assist_mult: 0.40, valid_positions: ['ST','CF'],                                                       description: 'Lives in the box for the tap-in; pure goal threat',                  att_contrib:  0, mid_contrib:  0, def_contrib:  0 },
+  { name: 'Poacher',             label: 'Poacher',               goal_mult: 2.20, assist_mult: 0.40, valid_positions: ['ST','CF','RW','LW'],                                                       description: 'Lives in the box for the tap-in; pure goal threat',                  att_contrib:  0, mid_contrib:  0, def_contrib:  0 },
   { name: 'Regista',             label: 'Regista',               goal_mult: 0.20, assist_mult: 2.20, valid_positions: ['CDM','CM'],                                                      description: 'Orchestrates from deep; elite passer, minimal open-play goal threat', att_contrib:  0, mid_contrib:  3, def_contrib: -2 },
-  { name: 'SetPieceDeliverer',   label: 'Set Piece Deliverer',   goal_mult: 0.30, assist_mult: 2.50, valid_positions: ['LM','RM','LW','RW','LB','RB','LWB','RWB','CM','CAM'],           description: 'Corner and free kick specialist; rarely scores directly',            att_contrib:  0, mid_contrib:  0, def_contrib:  0 },
+  { name: 'SetPieceDeliverer',   label: 'Set Piece Deliverer',   goal_mult: 0.30, assist_mult: 2.50, valid_positions: ['LM','RM','LW','RW','LB','RB','LWB','RWB','CM','CAM','CDM','GK','CB','CF','ST'],           description: 'Corner and free kick specialist; rarely scores directly',            att_contrib:  0, mid_contrib:  0, def_contrib:  0 },
   { name: 'TargetMan',           label: 'Target Man',            goal_mult: 1.30, assist_mult: 0.90, valid_positions: ['ST','CF'],                                                       description: 'Physical presence up front; wins aerial duels and holds up play',    att_contrib:  0, mid_contrib:  0, def_contrib:  0 },
-  { name: 'Trequartista',        label: 'Trequartista',          goal_mult: 1.40, assist_mult: 1.30, valid_positions: ['CAM','CF'],                                                      description: 'Floats between the lines; creative and dangerous in pockets of space', att_contrib:  0, mid_contrib:  0, def_contrib:  0 },
+  { name: 'Trequartista',        label: 'Trequartista',          goal_mult: 1.40, assist_mult: 1.30, valid_positions: ['CAM','CF','LW','RW','LM','RM'],                                                      description: 'Floats between the lines; creative and dangerous in pockets of space', att_contrib:  0, mid_contrib:  0, def_contrib:  0 },
   { name: 'Winger',              label: 'Winger',                goal_mult: 0.50, assist_mult: 1.80, valid_positions: ['LW','RW','LM','RM'],                                             description: 'Stays wide to deliver crosses; rarely attempts shots on goal',       att_contrib:  0, mid_contrib:  0, def_contrib:  0 },
 ];
 
@@ -1944,16 +1946,21 @@ const ROLE_QUALITIES: Record<string, Partial<Record<Quality, number>>> = {
   Mezzala:             { creation: 1, dribble: 1 },
   // "No-nonsense" literally asserts the limitation.
   NoNonsenseDefender:  { aerial: 2, pressResist: -2, creation: -2, discipline: -1 },
-  // Finishing is the goal multiplier and positioning has no quality. Nothing
-  // else about a poacher is definitional.
-  Poacher:             {},
+  // Finishing is the goal multiplier and positioning has no quality. What
+  // else is definitional is that he lives in the box rather than working
+  // back: a little less pressing, and so a little less in the defensive block.
+  // A poacher who also presses (Vardy) carries PressingForward or Workhorse
+  // as well, and the two add up.
+  Poacher:             { pressing: -1 },
   Regista:             { pressResist: 3, creation: 3, setPiece: 1 },
   SetPieceDeliverer:   { setPiece: 3, penalty: 1 },
   // A sweeper keeper is the last man behind a high line: coming off it to
   // clear the ball played in behind is what the name means.
   SweeperKeeper:       { pressResist: 2, claiming: 1, recovery: 3 },
   TargetMan:           { aerial: 2 },
-  Trequartista:        { creation: 3, dribble: 1 },
+  // The classic trequartista is excused defensive duties; the rare one who
+  // works as well carries a pressing trait too, and the two add up.
+  Trequartista:        { creation: 3, dribble: 1, pressing: -1 },
   Winger:              { setPiece: 2 },
 
   Pacey:               { pace: 3, recovery: 1 },
@@ -1961,6 +1968,11 @@ const ROLE_QUALITIES: Record<string, Partial<Record<Quality, number>>> = {
   Stopper:             { aerial: 2, pressing: 2, discipline: -1 },
   PressingForward:     { pressing: 3 },
   Workhorse:           { pressing: 2 },
+  // Reading the game (docs/abilities.md): positioning and anticipation. It is
+  // the block's `defending`, which no trait gave before, and a little of the
+  // cover behind, which the engine already treats as reading the game. It
+  // stacks with a style: a Sweeper or an Anchor who also reads the game well.
+  ReadsTheGame:        { defending: 3, recovery: 1 },
   Carrier:             { pressResist: 3, dribble: 2 },
   Dribbler:            { dribble: 3 },
   ShotStopper:         { shotStopping: 3 },
@@ -1991,6 +2003,7 @@ const EXTRA_ROLES: typeof ROLE_DEFAULTS = [
   { name: 'Stopper', label: 'Stopper', goal_mult: 0.50, assist_mult: 0.30, valid_positions: ['CB'], description: 'Steps out to meet the ball and wins it high up the pitch', att_contrib: 0, mid_contrib: 0, def_contrib: 2.5 },
   { name: 'PressingForward', label: 'Pressing Forward', goal_mult: 1.20, assist_mult: 1.00, valid_positions: ['ST', 'CF', 'LW', 'RW'], description: 'Leads the press from the front and gives defenders no rest', att_contrib: 1, mid_contrib: 1, def_contrib: 0 },
   { name: 'Workhorse', label: 'Workhorse', goal_mult: 0.80, assist_mult: 0.90, valid_positions: [], description: 'Covers ground for ninety minutes', att_contrib: 0, mid_contrib: 1, def_contrib: 1 },
+  { name: 'ReadsTheGame', label: 'Reads the Game', goal_mult: 1.00, assist_mult: 1.00, valid_positions: [], description: 'Positioning and anticipation: already where the attack is going', att_contrib: 0, mid_contrib: 0, def_contrib: 2 },
   { name: 'Carrier', label: 'Ball Carrier', goal_mult: 1.00, assist_mult: 1.40, valid_positions: [], description: 'Beats a press by driving through it with the ball', att_contrib: 1, mid_contrib: 2, def_contrib: 0 },
   { name: 'Dribbler', label: 'Dribbler', goal_mult: 1.30, assist_mult: 1.50, valid_positions: [], description: 'Beats his man one on one', att_contrib: 1, mid_contrib: 0, def_contrib: 0 },
   { name: 'ShotStopper', label: 'Shot Stopper', goal_mult: 0.00, assist_mult: 0.20, valid_positions: ['GK'], description: 'Positioning and handling; keeps out what he sees coming', att_contrib: 0, mid_contrib: 0, def_contrib: 2 },
@@ -2008,7 +2021,8 @@ const EXTRA_ROLES: typeof ROLE_DEFAULTS = [
 ];
 
 /** Every role the game knows: the original set plus the trait additions. */
-const ALL_ROLES = [...ROLE_DEFAULTS, ...EXTRA_ROLES];
+/** Every trait the code defines, as the role_config table holds it. */
+export const ALL_ROLES = [...ROLE_DEFAULTS, ...EXTRA_ROLES];
 
 function migrateRoleConfig(db: Database.Database): void {
   db.exec(`
