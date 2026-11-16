@@ -417,9 +417,22 @@ and good defences did not concede little enough (0.732 against 0.665). So:
 0.662) but cost points accuracy (r 0.884, error 7.80), and the cost was
 coverage: it rewarded the defences whose players had been through a trait
 pass (Liverpool's Carragher and Hyypiä, Spurs' Ledley King) against the ones
-not yet reviewed. It is 0.5 until the 80–87 pass reaches the rest of the
-league's defenders, then worth re-measuring at 1.0. The per-match calibration
-and the pre-season odds calibration pass unchanged.
+not yet reviewed. The per-match calibration and the pre-season odds
+calibration pass unchanged.
+
+**Re-measured after the 80–87 pass finished** (all four batches; the same
+eight seasons, 40 passes each, seed 1). With the league's defenders now
+reviewed, a heavier block overshoots instead of catching up:
+
+| `BLOCK_TRAIT_EDGE` | top four, goals against | spread of goals against | points r / error per club |
+| --- | --- | --- | --- |
+| 0.5 | 0.673 | 0.238 | 0.886 / 7.64 |
+| 0.75 | 0.661 | 0.247 | 0.882 / 7.85 |
+| 1.0 | 0.649 | 0.256 | 0.877 / 8.09 |
+| real | 0.665 | 0.241 | |
+
+0.75 lands top-four defences on the real figure but costs points accuracy, and
+1.0 makes good defences better than they were. It stays at 0.5.
 
 The level these are relative to is itself out for older seasons: 1995/96 to
 2008/09 scored about five goals a club fewer than the engine's modern
