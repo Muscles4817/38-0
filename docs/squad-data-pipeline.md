@@ -109,6 +109,15 @@ export — checked byte-for-byte against the hand-pasted Inter and Roma 2006/07
 files. It is still a manual export; the script reads a local file and makes
 no requests. Steps are in `data/raw/fbref/README.md`.
 
+Two guards came from the first real use. The first export copied was 2011/12
+saved as 2003/04 — FBref had been left on another season — and thirteen of its
+clubs matched 2003/04 files; only the fact that those files were already filled
+stopped it. So the splitter now **checks the season from the data** (birth
+year plus age is the season's first year, or one before; the median over a
+table must agree with the filename) and is **all or nothing**: one club it
+cannot place, or a Premier League club missing from the export, and it writes
+no files at all.
+
 `ingest-fbref.mjs` parses those into `data/raw/rosters/<season>/<club>.json`,
 keeping both the squad and everyone excluded, with the reason.
 

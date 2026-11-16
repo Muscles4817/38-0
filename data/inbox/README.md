@@ -22,6 +22,10 @@
    npm run data:import
    ```
 
+Check the season dropdown on FBref before copying: it remembers the last season
+you looked at. If the table is a different season from the filename, the import
+says which season it found and stops before writing anything.
+
 That splits it into club files, works out who is new, has Claude assign
 positions and ratings for only those players, adds any new club to
 `data/clubs.json`, imports, derives lineups, exports the snapshot and runs the

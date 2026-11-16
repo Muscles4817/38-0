@@ -6,6 +6,7 @@
 //   node scripts/split-fbref-league.mjs <export.csv> --competition serie-a --season 1997-98 --only juventus,inter
 //   node scripts/split-fbref-league.mjs <export.csv> ... --dry-run
 //   node scripts/split-fbref-league.mjs <export.csv> ... --force    # overwrite filled-in files
+//   node scripts/split-fbref-league.mjs <export.csv> ... --skip-season-check
 //   node scripts/split-fbref-league.mjs <export.csv> ... --rename "Milan=ac-milan"
 //
 // Where the export comes from: the league season's "Standard Stats" page, e.g.
@@ -95,6 +96,8 @@ const slugsIn = dir => fs.existsSync(dir)
 // scaffolded already, so a club that matches no file is a naming problem, not
 // a new club — report it rather than write a stray file beside the real one.
 const hasManifest = fs.existsSync(path.join(compDir, 'seasons.json'));
+const readManifestClubs = label =>
+  JSON.parse(fs.readFileSync(path.join(compDir, 'seasons.json'), 'utf8')).seasons?.[label] ?? [];
 const known = new Set(slugsIn(outDir));
 if (!hasManifest && fs.existsSync(compDir)) {
   // Other competitions are made by hand: reuse the slug a club already has in
@@ -160,12 +163,20 @@ const iPlayer = header.indexOf('Player');
 const drop = new Set(['Rk', 'Squad', 'Born'].map(c => header.indexOf(c)).filter(i => i !== -1));
 const keep = cells => cells.filter((_, i) => !drop.has(i));
 
+const iBorn = header.indexOf('Born');
+const iAge = header.indexOf('Age');
+const birthPlusAge = [];
+
 const byClub = new Map();
 for (const line of lines.slice(headerIndex + 1)) {
   const cells = splitRow(line);
   const player = bare(cells[iPlayer] ?? '');
   // FBref repeats the header every 25 rows in long tables.
   if (!player || player === 'Player') continue;
+  // Recent seasons write age as "25-123" (years-days); older ones as "25".
+  const born = parseInt(bare(cells[iBorn] ?? ''), 10);
+  const age = parseInt(bare(cells[iAge] ?? ''), 10);
+  if (iBorn !== -1 && iAge !== -1 && born > 1850 && age > 10) birthPlusAge.push(born + age);
   // International tables prefix a flag code: "ar Argentina".
   const squad = bare(cells[iSquad] ?? '').replace(/^[a-z]{2,3} (?=\p{Lu})/u, '');
   if (!squad) continue;
@@ -176,6 +187,36 @@ for (const line of lines.slice(headerIndex + 1)) {
 if (byClub.size === 0) {
   console.error('No player rows found under the header.');
   process.exit(1);
+}
+
+// ── Is this export the season it claims to be? ───────────────────────────────
+//
+// The CSV does not say which season it is; only its filename does. A table
+// copied while FBref was showing a different season has the same columns and
+// many of the same clubs, so without this it would write — say — 2011/12
+// squads into 2003/04 files for every club that was in both, silently.
+//
+// Birth year plus age lands on the season's first year, or the year before for
+// players with a birthday late in the year. So the median over the table should
+// be the start year or one less.
+
+const startYear = Number(season.slice(0, 4));
+if (birthPlusAge.length && !has('skip-season-check')) {
+  const sorted = [...birthPlusAge].sort((a, b) => a - b);
+  const median = sorted[Math.floor(sorted.length / 2)];
+  if (median < startYear - 1 || median > startYear + 1) {
+    const guess = y => (season.length === 4 ? `${y}` : `${y}-${String(y + 1).slice(-2)}`);
+    console.error(
+      `This export does not look like ${season}. Its players' birth years and ages put it at ` +
+      `about ${guess(median)} or ${guess(median + 1)}.\n` +
+      'FBref may have been showing a different season when it was copied. Nothing was written.\n' +
+      'Re-export the right season, or rename the file to the season it really is. ' +
+      '(--skip-season-check overrides this.)',
+    );
+    process.exit(1);
+  }
+} else if (!birthPlusAge.length) {
+  console.log('note: no Born/Age columns, so the season could not be checked against the export.');
 }
 
 // ── Write ────────────────────────────────────────────────────────────────────
@@ -199,11 +240,33 @@ for (const r of resolved) {
   } else claimed.set(r.slug, r);
 }
 
-for (const { squad, rows, slug, isNew, error } of resolved) {
-  if (only && !only.includes(slug) && !only.includes(slugify(squad))) continue;
-  if (error) {
-    problems.push(`${squad}: ${error} — add an alias in data/clubs.json or --rename "${squad}=<slug>"`);
-    summary.push({ fbref: squad, file: '—', players: rows.length, action: 'NOT written' });
+const selected = resolved.filter(r => !only || only.includes(r.slug) || only.includes(slugify(r.squad)));
+for (const r of selected) {
+  if (r.error) problems.push(`${r.squad}: ${r.error} — add an alias in data/clubs.json or --rename "${r.squad}=<slug>"`);
+}
+
+// A Premier League season is scaffolded from the real table, so the export
+// should account for every club in it. One that is missing usually means a
+// partial copy, or a different season.
+if (hasManifest && !only) {
+  const label = season.replace('-', '/');
+  const expected = readManifestClubs(label);
+  const covered = new Set(resolved.map(r => r.slug).filter(Boolean));
+  const missing = expected.filter(c => !covered.has(c.slug));
+  if (missing.length) {
+    problems.push(`${missing.length} club(s) from the ${label} table are not in this export: ` +
+      `${missing.map(c => c.name).join(', ')}`);
+  }
+}
+
+// All or nothing. Writing the clubs that did match while refusing the rest is
+// how one wrong export ends up half-applied.
+const blocked = problems.length > 0;
+
+for (const { squad, rows, slug, isNew, error } of selected) {
+  if (error || blocked) {
+    summary.push({ fbref: squad, file: slug ? path.relative(ROOT, path.join(outDir, `${slug}.csv`)) : '—',
+      players: rows.length, action: error ? 'NOT written (problem)' : 'NOT written (blocked)' });
     continue;
   }
   const file = path.join(outDir, `${slug}.csv`);
@@ -224,7 +287,7 @@ if (only) {
   if (missed.length) console.log(`--only names not found in the export: ${missed.join(', ')}`);
 }
 if (problems.length) {
-  console.log('\nnot written:');
+  console.log('\nNothing was written, because:');
   for (const p of problems) console.log(`  ${p}`);
 }
 console.log(`\nNext: node scripts/ingest-fbref.mjs`);

@@ -33,6 +33,17 @@ pages. Files that already have content are skipped unless you pass `--force`.
 - `--only juventus,internazionale` — just the sides you want in the game.
 - `--dry-run` — show which files would be written.
 
+**It checks the export is the season you named.** The CSV carries no season;
+only the filename does, and FBref keeps whichever season you last looked at. So
+the script works out the season from the table itself — a player's birth year
+plus their age is the season's first year, give or take one — and refuses if
+the two disagree, naming the season it found. A 2011/12 table saved as
+`premier-league-2003-04.csv` shares thirteen clubs with 2003/04, and without
+this check those thirteen would have gone into the 2003/04 files.
+
+**All or nothing.** If any club cannot be placed, or a Premier League club from
+that season's table is missing from the export, nothing is written.
+
 - `--rename "Milan=ac-milan"` — force a club into a given file.
 
 **How clubs are matched to files.** The league table uses FBref's short names
