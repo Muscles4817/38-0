@@ -4,7 +4,7 @@ import { useEffect, useMemo } from 'react';
 import { useRouter } from 'next/navigation';
 import { getFormation } from '@/lib/formations';
 import {
-  describeCompetition, getTacticOptions, getTeamStrengths, getXiProfile, listCompetitions,
+  describeCompetition, describeTraits, getTacticOptions, getTeamStrengths, getXiProfile, listCompetitions, pickTraits,
   type Competition,
 } from '@/lib/gameData';
 import { parseRunHistory, RUN_HISTORY_KEY, styleRecords, xiKey, type StyleRecord } from '@/lib/runHistory';
@@ -13,6 +13,7 @@ import type { Phase, PlaystyleName } from '@/lib/matchEngine';
 import { useStoredJson, writeStored } from '@/lib/clientStorage';
 import PitchView from '@/components/PitchView';
 import PositionBadge from '@/components/PositionBadge';
+import TraitChips from '@/components/TraitChips';
 import LineRatings from '@/components/LineRatings';
 import BackLink from '@/components/BackLink';
 import { ratingColor } from '@/components/ratingColor';
@@ -147,11 +148,17 @@ export default function SquadPage() {
             </div>
             <div className="space-y-1.5">
               {[...picks].sort((a, b) => b.slotIndex - a.slotIndex).map(p => (
-                <div key={p.slotIndex} className="flex items-center gap-3 py-1.5">
-                  <PositionBadge pos={p.position} size="xs" />
-                  <span className="font-bold text-sm flex-1 min-w-0 truncate">{p.playerName}</span>
-                  <span className="text-muted text-xs shrink-0">{p.clubName.slice(0, 3).toUpperCase()} {p.seasonLabel}</span>
-                  <span className="font-black text-sm w-6 text-right shrink-0" style={{ color: ratingColor(p.rating) }}>{p.rating}</span>
+                <div key={p.slotIndex} className="py-1.5">
+                  <div className="flex items-center gap-3">
+                    <PositionBadge pos={p.position} size="xs" />
+                    <span className="font-bold text-sm flex-1 min-w-0 truncate">{p.playerName}</span>
+                    <span className="text-muted text-xs shrink-0">{p.clubName.slice(0, 3).toUpperCase()} {p.seasonLabel}</span>
+                    <span className="font-black text-sm w-6 text-right shrink-0" style={{ color: ratingColor(p.rating) }}>{p.rating}</span>
+                  </div>
+                  {/* What he is good at, in the slot he plays; tap a trait to see what it means. */}
+                  <div className="mt-1.5 pl-9">
+                    <TraitChips traits={describeTraits(pickTraits(p), p.position)} explain />
+                  </div>
                 </div>
               ))}
             </div>
