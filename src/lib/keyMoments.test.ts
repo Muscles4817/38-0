@@ -95,6 +95,19 @@ describe('what a match has in it', () => {
     expect(kinds(m, 6)).toEqual(expect.arrayContaining(['hat-trick', 'red-card']));
     expect(kinds(m, 7)).toContain('hat-trick-against');
   });
+
+  it('says how long a sent-off player is out for, and a ban for yellows, when suspensions are played', () => {
+    const red = { minute: 40, type: 'red' as const, user: true, name: 'Roy Keane' };
+    const m = keyMoments({
+      ...season(38, { 6: { fixture: match([red]) } }),
+      bans: [
+        { week: 6, playerName: 'Roy Keane', matches: 3, reason: 'red' },
+        { week: 9, playerName: 'Paul Scholes', matches: 1, reason: 'yellows' },
+      ],
+    });
+    expect(m.find(x => x.kind === 'red-card')?.text).toBe('Roy Keane sent off against Rivals FC, 40′: out for three matches');
+    expect(m.find(x => x.kind === 'suspension')).toMatchObject({ week: 9, text: 'Paul Scholes booked again: suspended for the next match' });
+  });
 });
 
 describe('the season around it', () => {

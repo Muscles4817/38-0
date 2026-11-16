@@ -15,7 +15,7 @@ export type MomentTone = 'good' | 'bad' | 'neutral';
 
 export type MomentKind =
   | 'late-winner' | 'late-equaliser' | 'late-defeat' | 'late-equaliser-against'
-  | 'comeback' | 'hat-trick' | 'hat-trick-against' | 'red-card'
+  | 'comeback' | 'hat-trick' | 'hat-trick-against' | 'red-card' | 'suspension'
   | 'thrashing' | 'hammering'
   | 'top' | 'knocked-off-top' | 'into-drop-zone' | 'out-of-drop-zone'
   | 'champions' | 'title-elsewhere' | 'relegated' | 'safe'
@@ -59,7 +59,7 @@ const WEIGHTS: Record<MomentKind, number> = {
   'title-elsewhere': 60, 'into-drop-zone': 60, 'late-equaliser': 60, safe: 60,
   'knocked-off-top': 55, 'out-of-drop-zone': 55, 'late-defeat': 55,
   'red-card': 50, 'late-equaliser-against': 50, 'win-streak': 45,
-  'goal-milestone': 40, 'hat-trick-against': 40, thrashing: 35, hammering: 35,
+  'goal-milestone': 40, 'hat-trick-against': 40, suspension: 38, thrashing: 35, hammering: 35,
 };
 
 /** A comeback from a single goal down: worth a line, not a headline. */
@@ -69,6 +69,10 @@ const ONE_GOAL_COMEBACK_WEIGHT = 42;
 type Draft = Omit<KeyMoment, 'weight'> & { weight?: number };
 
 const NUMBER_WORDS = ['', 'One', 'Two', 'Three', 'Four', 'Five', 'Six', 'Seven', 'Eight', 'Nine', 'Ten'];
+
+function matchesWord(n: number): string {
+  return n === 1 ? 'the next match' : `${(NUMBER_WORDS[n] ?? String(n)).toLowerCase()} matches`;
+}
 
 function ordinal(n: number): string {
   const s = ['th', 'st', 'nd', 'rd'];
@@ -174,7 +178,7 @@ function matchMoments(week: number, f: FixtureResult, userName: string): Draft[]
  * Every key moment of a season, in gameweek order and, within a gameweek,
  * most important first.
  */
-export function keyMoments(result: Pick<SimulationResult, 'gameweeks' | 'finalTable'>): KeyMoment[] {
+export function keyMoments(result: Pick<SimulationResult, 'gameweeks' | 'finalTable' | 'bans'>): KeyMoment[] {
   const out: Draft[] = [];
   const lastWeek = result.gameweeks.length;
   const userName = result.finalTable.find(t => t.isUser)?.name ?? 'Your XI';
@@ -198,7 +202,17 @@ export function keyMoments(result: Pick<SimulationResult, 'gameweeks' | 'finalTa
     const f = gw.fixtures.find(x => x.userInvolved);
 
     if (f) {
-      out.push(...matchMoments(week, f, userName));
+      // A red card says how long he is out for, when suspensions are played;
+      // a ban for yellows is a moment of its own.
+      const bansNow = (result.bans ?? []).filter(b => b.week === week);
+      out.push(...matchMoments(week, f, userName).map(m => {
+        const ban = m.kind === 'red-card' ? bansNow.find(b => b.reason !== 'yellows' && m.text.startsWith(b.playerName)) : undefined;
+        return ban ? { ...m, text: `${m.text}: out for ${matchesWord(ban.matches)}` } : m;
+      }));
+      for (const b of bansNow) {
+        if (b.reason !== 'yellows') continue;
+        out.push({ week, kind: 'suspension', tone: 'bad', text: `${b.playerName} booked again: suspended for ${matchesWord(b.matches)}` });
+      }
       const home = f.home === userName;
       const gf = home ? f.homeGoals : f.awayGoals;
       const ga = home ? f.awayGoals : f.homeGoals;

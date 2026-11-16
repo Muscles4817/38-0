@@ -1,9 +1,12 @@
-# Season depth: a proposal, not yet built
+# Season depth: a proposal, partly built
 
-The same eleven play all 38 games. Nobody is injured, suspended, tired or out
-of form, and once the season starts the player makes no decisions. This
+The bench and suspensions are built ([bench.md](bench.md)); the rest is
+still a proposal.
+
+The same eleven play all 38 games unless a bench is drafted. Nobody is injured,
+tired or out of form, and the only decisions after kick-off are at half-time. This
 document records what adding that would take, so it is a design to argue with
-rather than something to rediscover. Nothing here is implemented.
+rather than something to rediscover. Only the bench and suspensions are implemented.
 
 ## Why it was left out
 
@@ -49,7 +52,7 @@ start, as `bestXI` once was).
 
 ## A suggested order
 
-1. Suspensions, as above. Self-contained and measurable.
+1. Suspensions. **Built**, with the bench rather than a fixed-rating stand-in, for every side, and only when the player has a bench: see [bench.md](bench.md#suspensions).
 2. A bench in the draft. **Built** in a narrower form, used only by choice before kick-off and at half-time: see [bench.md](bench.md).
 3. Injuries, once the bench exists.
 4. Fatigue and form together, with the stamina ability.

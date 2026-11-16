@@ -10,6 +10,7 @@
 import rawData from '@/data/game-data.json';
 import { getFormation, type Position } from './formations';
 import { bestFormation } from './lineupFit';
+import { deriveBench } from './bench';
 import {
   simulateSeason,
   tacticEffect,
@@ -348,6 +349,7 @@ function toOpponentPlayer(player: DataPlayer, index: number, slot?: Position): O
     // The slot he fills in the stored lineup. The match engine plays him
     // there: a left-back picked at centre-back defends the middle.
     position: slot ?? player.positions[0] ?? 'CM',
+    positions: player.positions,
     rating: player.rating,
     roles: player.roles,
   };
@@ -363,7 +365,7 @@ export function getOpponentSquads(
   seasonId?: number,
   league: string = SIMULATED_LEAGUE,
 ): OpponentSquad[] {
-  return trimToLeague(assembleField(seasonId, league).map(({ clubId, seasonId: sid, clubName, eleven, slots, formation }) => {
+  return trimToLeague(assembleField(seasonId, league).map(({ clubId, seasonId: sid, clubName, eleven, slots, formation, squad }) => {
     // How the club-season set up, where someone has recorded it. The match
     // engine infers a style and focus from the eleven otherwise.
     const traits = getTraits(clubId, sid);
@@ -371,6 +373,8 @@ export function getOpponentSquads(
     return {
       clubName,
       players: eleven.map((p, i) => toOpponentPlayer(p, i, slots?.[i])),
+      // Used only when suspensions are played; see src/lib/suspensions.ts.
+      bench: deriveBench(squad, new Set(eleven.map(p => p.playerId))).map((p, i) => toOpponentPlayer(p, 100 + i)),
       strength: averageRating(eleven),
       formation,
       style,
@@ -389,6 +393,8 @@ interface FieldSide {
   /** The slot each of `eleven` fills, from the stored lineup. Absent for a `bestXI` fallback. */
   slots?: Position[];
   formation?: string;
+  /** Every rated player in the squad, the eleven included. */
+  squad: DataPlayer[];
 }
 
 /**
@@ -422,7 +428,7 @@ function assembleField(
     const lineup = lineupByKey.get(key(squad.clubId, squad.seasonId));
     const byId = new Map(rated.map(p => [p.playerId, p]));
 
-    const base = { clubId: club.id, seasonId: season.id, clubName: club.name };
+    const base = { clubId: club.id, seasonId: season.id, clubName: club.name, squad: rated };
     if (lineup && lineup.slots.length === 11) {
       const shape = getFormation(lineup.formation);
       const fromSlots = lineup.slots
@@ -691,6 +697,8 @@ export interface SeasonPlan {
   style?: PlaystyleName;
   /** A change of style made during the season, decided on the results page. */
   change?: StyleChange;
+  /** The XI's bench. With one, suspensions are played; see src/lib/suspensions.ts. */
+  bench?: SquadPick[];
 }
 
 /** Runs a full 38-game season for the drafted XI against the stored opponents. */
@@ -706,5 +714,6 @@ export function runSeasonSimulation(
     getRoleConfig(),
     plan.style ?? 'balanced',
     plan.change?.picks ? { ...plan.change, picks: withSeasonRoles(plan.change.picks) } : plan.change,
+    plan.bench && plan.bench.length > 0 ? { bench: withSeasonRoles(plan.bench) } : {},
   );
 }

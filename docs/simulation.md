@@ -231,6 +231,17 @@ for the pre-season screen, with the eleven's fit for it. See
 The XI plays at the engine's default cohesion, because nothing yet says how well
 drilled a drafted side is.
 
+### Suspensions
+
+With a bench, every side serves bans for red cards and yellows and fields a
+stand-in from its bench; without one, nobody is banned and the season is
+exactly what it was. The rules, the stand-in choice and the measurements are
+in [bench.md](bench.md#suspensions). In short: about six bans a club-season,
+and no measurable change to an XI's mean points, finish or title chance over
+300 seasons, because every side loses players alike, so the pre-season odds
+and the calibration tests are unchanged. The calibration tests play without a
+bench.
+
 ## Awards
 
 Player of the Season, for the XI and for the league, is the best average match

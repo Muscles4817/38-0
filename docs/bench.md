@@ -1,9 +1,8 @@
 # The bench
 
-Built. Five players drafted after the eleven, used by the player's own choice:
-to pick the starting eleven and the formation before kick-off, and to change
-both at half-time. It covers nothing: no injuries, no suspensions, no
-rotation. It is a decision, not insurance. It is a narrower first step than the
+Built. Five players drafted after the eleven: to pick the starting eleven and
+the formation before kick-off, to change both at half-time, and to stand in
+for a suspended player. It covers no injuries and no rotation. It is a narrower first step than the
 bench in [season-depth.md](season-depth.md), built so that step can follow.
 
 Code: `src/lib/bench.ts` (the rules), `src/components/LineupEditor.tsx` (the
@@ -97,8 +96,51 @@ then whoever came on, with an App column.
 Nothing changed for the opponents, the engine's weights, the pre-season odds
 model or the calibration tests.
 
+## Suspensions
+
+Played only when the player has a bench, and then for **all twenty sides**:
+skipping the bench is the quick run, and it plays exactly as a season did
+before suspensions existed. Code: `src/lib/suspensions.ts` (the rules) and
+`simulateSeason` (who lines up each round).
+
+| Card | Ban |
+| --- | --- |
+| A second yellow in a match | 1 match |
+| A straight red | 3 matches (the engine's straight reds are serious foul play) |
+| A 5th yellow by the side's 19th match | 1 match |
+| A 10th yellow by its 32nd | 2 matches |
+| A 15th yellow | 3 matches |
+
+The yellows that make a red do not count towards the totals, as in the
+Premier League. A ban is served one match at a time as the side plays.
+
+**Who stands in.** The bench player rated highest *in the slot* among those
+who can play it, the goalkeeper's slot first, nobody twice. If nobody on the
+bench can play the slot, the best-rated player left plays it at
+`EMERGENCY_PENALTY` (20 rating points, so an outfielder in goal is as bad as
+it should be). If the bench has run out altogether, the banned player plays:
+only possible when more are banned at once than the bench holds.
+
+**The opponents' benches** are `deriveBench` over each club-season's squad,
+the same rule as Classic mode: a keeper, a defender, a midfielder, a forward
+and the best outfield player left (`OpponentSquad.bench`).
+
+**What the player sees.** A match lists who was suspended and who came in.
+A red card's key moment says how long he is out for, and a ban for yellows is
+a key moment of its own. The season table gains an appearances column once
+anyone has missed a match. At half-time, the bench for the second half is the
+whole squad less the new eleven, and bans carry over.
+
+**Measured** (2003/04 and 2025/26, real leagues on their stored XIs): the
+engine books about 2.0 yellows and 0.06 reds per side per match, close to the
+real league. A side of Manchester United 1998/99 is banned about 6 times a
+season and misses about 8 player-matches; it loses 1.8 points on average, but
+so do its rivals, and over 300 seasons an XI's mean points, finish and title
+chance are the same with suspensions as without (86-rated in 2025/26: 70.7 /
+70.6 points, title 18% / 20%; 90-rated: 82.6 / 82.8, 74% / 72%). The pre-season
+odds needed no re-fit.
+
 ## Next, if wanted
 
-Suspensions, injuries and rotation can follow unchanged: they need this bench,
-plus benches for the opponents, which `deriveBench` can provide from the
-squads the snapshot already holds.
+Injuries and rotation can follow: they need the same benches, which every
+side now has.
