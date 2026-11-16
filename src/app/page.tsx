@@ -151,6 +151,8 @@ export default function SetupPage() {
     // Nor do the squads it was offered. Without this the list outlived every
     // run started from here; see src/lib/seenSquads.ts.
     localStorage.removeItem('38-0-seen-squads');
+    // And a previous run's bench.
+    localStorage.removeItem('38-0-bench');
     localStorage.setItem('38-0-setup', JSON.stringify(setup));
     router.push('/draft');
   }

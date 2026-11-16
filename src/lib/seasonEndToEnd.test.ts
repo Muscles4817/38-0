@@ -162,6 +162,40 @@ describe(`drafting and playing a ${SEASON} XI`, () => {
     expect(after.styles).toEqual([{ fromWeek: 1, style: 'balanced' }, { fromWeek: 20, style: 'gegenpress' }]);
   });
 
+  it('plays a change of eleven at halfway without touching the first half', () => {
+    // A drafted player who did not start comes on for the starter in a slot he
+    // can play, as the half-time lineup editor would put him there.
+    const used = new Set(picks.map(p => p.playerId));
+    const sub = drafted.find(p => !used.has(p.playerId) && picks.some(s => s.position !== 'GK' && p.positions.includes(s.position)));
+    if (!sub) throw new Error('no drafted player left to bring on');
+    const off = picks.find(s => s.position !== 'GK' && sub.positions.includes(s.position))!;
+    const secondHalf: SquadPick[] = picks.map(p => p === off ? {
+      ...off, playerId: sub.playerId, playerName: sub.name, rating: sub.rating,
+      positions: sub.positions as Position[], roles: sub.roles,
+    } : p);
+
+    const before = runSeasonSimulation(picks, 1993, { style: 'balanced' });
+    const after = runSeasonSimulation(picks, 1993, {
+      style: 'balanced', change: { afterWeek: 19, style: 'balanced', picks: secondHalf },
+    });
+    expect(JSON.stringify(after.gameweeks.slice(0, 19))).toBe(JSON.stringify(before.gameweeks.slice(0, 19)));
+    expect(after.lineupChangedFrom).toBe(20);
+    expect(before.lineupChangedFrom).toBeUndefined();
+
+    // Twelve played: the one taken off and the one who came on each played a half.
+    expect(after.playerStats).toHaveLength(12);
+    const apps = (name: string) => after.playerStats.find(s => s.playerName === name)?.appearances;
+    expect(apps(off.playerName)).toBe(19);
+    expect(apps(sub.name)).toBe(19);
+    expect(apps(picks.find(p => p !== off)!.playerName)).toBe(38);
+  });
+
+  it('treats the same eleven at halfway as no change', () => {
+    const plain = runSeasonSimulation(picks, 1993, { style: 'balanced' });
+    const same = runSeasonSimulation(picks, 1993, { style: 'balanced', change: { afterWeek: 19, style: 'balanced', picks: [...picks].reverse() } });
+    expect(same).toEqual(plain);
+  });
+
   it('treats a change to the same style as no change', () => {
     const plain = runSeasonSimulation(picks, 1993, { style: 'balanced' });
     const same = runSeasonSimulation(picks, 1993, { style: 'balanced', change: { afterWeek: 19, style: 'balanced' } });

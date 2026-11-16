@@ -10,7 +10,9 @@ import {
 import { parseRunHistory, RUN_HISTORY_KEY, styleRecords, xiKey, type StyleRecord } from '@/lib/runHistory';
 import { computeOverall, preSeasonOdds, type SquadPick, type TacticEffect } from '@/lib/simulation';
 import type { Phase, PlaystyleName } from '@/lib/matchEngine';
-import { useStoredJson, writeStored } from '@/lib/clientStorage';
+import { readStored, useStoredJson, writeStored } from '@/lib/clientStorage';
+import { BENCH_KEY } from '@/lib/bench';
+import LineupEditor, { type Lineup } from '@/components/LineupEditor';
 import PitchView from '@/components/PitchView';
 import PositionBadge from '@/components/PositionBadge';
 import TraitChips from '@/components/TraitChips';
@@ -48,6 +50,7 @@ export default function SquadPage() {
   const router = useRouter();
 
   const picks     = useStoredJson<SquadPick[]>('38-0-squad') ?? NO_PICKS;
+  const bench     = useStoredJson<SquadPick[]>(BENCH_KEY) ?? NO_PICKS;
   const setup     = useStoredJson<Setup>('38-0-setup');
   const stored    = useStoredJson<StoredPlan>('38-0-plan');
   const formation = useMemo(() => getFormation(setup?.formation ?? '4-4-2'), [setup]);
@@ -101,6 +104,14 @@ export default function SquadPage() {
     [overall, field],
   );
 
+  function chooseLineup(next: Lineup) {
+    writeStored('38-0-squad', next.xi);
+    writeStored(BENCH_KEY, next.bench);
+    if (next.formation !== setup?.formation) {
+      writeStored('38-0-setup', { ...(readStored<Record<string, unknown>>('38-0-setup') ?? {}), formation: next.formation });
+    }
+  }
+
   function choose(next: Partial<StoredPlan>) {
     writeStored('38-0-plan', { style, seasonId, league, ...next });
   }
@@ -125,7 +136,8 @@ export default function SquadPage() {
 
         {/* ── The XI ─────────────────────────────────────────────────────── */}
         <section className="flex flex-col lg:flex-row gap-6">
-          <div className="flex justify-center shrink-0">
+          {/* items-start: stretched to a team sheet's height, the pitch loses its shape. */}
+          <div className="flex justify-center items-start shrink-0 lg:sticky lg:top-4 lg:self-start">
             <PitchView formation={formation} picks={picks} compact />
           </div>
           {/*
@@ -146,6 +158,16 @@ export default function SquadPage() {
                 </div>
               </div>
             </div>
+            {bench.length > 0 ? (
+              // With a bench, this is team selection: the eleven, and their
+              // shape, are chosen here from all sixteen. Each change is saved
+              // at once, so the odds and the tactics below follow it.
+              <LineupEditor
+                lineup={{ formation: setup?.formation ?? formation.name, xi: picks, bench }}
+                onChange={chooseLineup}
+                showOverall={false}
+              />
+            ) : (
             <div className="space-y-1.5">
               {[...picks].sort((a, b) => b.slotIndex - a.slotIndex).map(p => (
                 <div key={p.slotIndex} className="py-1.5">
@@ -162,6 +184,7 @@ export default function SquadPage() {
                 </div>
               ))}
             </div>
+            )}
             <LineRatings formation={formation} picks={picks} />
           </div>
         </section>

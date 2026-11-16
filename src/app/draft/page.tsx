@@ -6,6 +6,7 @@ import { getFormation, canFillSlot, Formation, Position } from '@/lib/formations
 import { SquadPick, computeOverall } from '@/lib/simulation';
 import { describeTraits, getClub, type DataPlayer, type SpunSquad } from '@/lib/gameData';
 import { draftListOrder, draftPool, feasibility, type DraftFilter, type Feasibility } from '@/lib/draftPool';
+import { BENCH_KEY, BENCH_SIZE, BENCH_SLOT_BASE, isBenchPick } from '@/lib/bench';
 import { CHALLENGES, describeFilter, type ChallengeId } from '@/lib/challenges';
 import { useStoredJson, readStored, writeStored, clearStored } from '@/lib/clientStorage';
 import { parseSeenSquads, SEEN_SQUADS_KEY, withSeenSquad } from '@/lib/seenSquads';
@@ -49,6 +50,8 @@ interface DraftProgress {
   undo: { clubId: number; seasonId: number } | null;
   /** In the daily challenge, where in the day's order the next spin looks first. */
   dailyCursor?: number;
+  /** The player chose to go straight to Team Talk without a bench. */
+  benchSkipped?: boolean;
 }
 
 const PROGRESS_KEY = '38-0-draft-state';
@@ -69,7 +72,12 @@ export default function DraftPage() {
 
   // The run in progress lives in localStorage so a refresh resumes it.
   const setup     = useStoredJson<Setup>('38-0-setup');
+  // The whole draft in pick order: the eleven, then the bench (slotIndex from
+  // BENCH_SLOT_BASE), so an undo, the seen squads' pick numbers and the daily
+  // spin order all simply carry on past the eleventh pick.
   const picks     = useStoredJson<SquadPick[]>('38-0-draft') ?? NO_PICKS;
+  const xiPicks    = useMemo(() => picks.filter(p => !isBenchPick(p)), [picks]);
+  const benchPicks = useMemo(() => picks.filter(isBenchPick), [picks]);
   const formation = useMemo(() => (setup ? getFormation(setup.formation) : null), [setup]);
 
   // What this run can draft from: the era, Prime mode and any challenge
@@ -94,6 +102,10 @@ export default function DraftPage() {
   const rerollsUsed = progress.rerollsUsed ?? 0;
   const rerollsTotal = setup ? REROLLS_BY_DIFFICULTY[setup.difficulty] ?? 1 : 0;
   const rerollsLeft  = Math.max(0, rerollsTotal - rerollsUsed);
+  const xiComplete   = xiPicks.length === 11;
+  // The bench is drafted after the eleven unless the player skips it.
+  const benchPhase   = xiComplete && !progress.benchSkipped && benchPicks.length < BENCH_SIZE;
+  const draftDone    = xiComplete && (progress.benchSkipped || benchPicks.length >= BENCH_SIZE);
 
   // Spin animation state
   const [spinPhase, setSpinPhase]     = useState<SpinPhase>('idle');
@@ -162,9 +174,12 @@ export default function DraftPage() {
 
     // A squad is worth landing on only if one of its players has a placement
     // that still leaves the XI completable; see feasibility() in draftPool.ts.
+    const pickedIds = new Set(picks.map(p => p.playerId));
     const candidates = pool.filter(squad => {
       if (excludeDrafted && draftedFrom.has(`${squad.clubId}-${squad.seasonId}`)) return false;
-      return squad.players.some(p => formation.slots.some((_, i) => feasible.canPlace(picks, p, i)));
+      // A bench place takes anyone not already drafted.
+      if (benchPhase) return squad.players.some(p => !pickedIds.has(p.playerId));
+      return squad.players.some(p => formation.slots.some((_, i) => feasible.canPlace(xiPicks, p, i)));
     });
 
     if (candidates.length === 0) return null;
@@ -241,7 +256,9 @@ export default function DraftPage() {
     // Resolve the squad first, so a reroll is only spent when it buys something.
     const landed = findSquad(reroll);
     if (!landed) {
-      setSpinNotice(reroll
+      setSpinNotice(benchPhase
+        ? 'No club-season left has a player you have not drafted. Start the season with the bench you have.'
+        : reroll
         ? 'No other club-season in this era can fill an open position.'
         : 'No club-season in this era can fill an open position. Widen the era and start again.');
       return;
@@ -279,7 +296,7 @@ export default function DraftPage() {
 
   function placePlayer(slotIndex: number) {
     if (!selectedPlayer || !spinResult || !formation || !feasible) return;
-    if (!feasible.canPlace(picks, selectedPlayer, slotIndex)) return;
+    if (!feasible.canPlace(xiPicks, selectedPlayer, slotIndex)) return;
     const slot = formation.slots[slotIndex];
 
     const pick: SquadPick = {
@@ -320,12 +337,63 @@ export default function DraftPage() {
       undo: showRatings ? { clubId: spinResult.clubId, seasonId: spinResult.seasonId } : null,
     });
 
-    if (next.length === 11) {
-      writeStored('38-0-squad', next);
-      // The XI is complete, but the run is not: the tactic and the season to
-      // play it in are still to be chosen. See src/app/squad.
-      router.push('/squad');
+    // The eleven is complete: the bench comes next, or Team Talk if skipped.
+    if (next.filter(p => !isBenchPick(p)).length === 11 && progress.benchSkipped) finishDraft(next);
+  }
+
+  /** Puts the selected player in the next bench place. */
+  function placeOnBench() {
+    if (!selectedPlayer || !spinResult) return;
+    const showRatings = (setup?.showRatings ?? false) && setup?.difficulty !== 'hard';
+    if (!showRatings) {
+      if (revealTimer.current) clearTimeout(revealTimer.current);
+      setReveal({
+        name: selectedPlayer.name,
+        rating: selectedPlayer.rating,
+        traits: describeTraits(selectedPlayer.roles ?? []).map(t => t.label),
+      });
+      revealTimer.current = setTimeout(() => setReveal(null), 2500);
     }
+    const pick: SquadPick = {
+      slotIndex: BENCH_SLOT_BASE + benchPicks.length,
+      position: selectedPlayer.positions[0],
+      playerId: selectedPlayer.playerId,
+      playerName: selectedPlayer.name,
+      nationality: selectedPlayer.nationality,
+      rating: selectedPlayer.rating,
+      clubName: spinResult.clubName,
+      seasonLabel: spinResult.seasonLabel,
+      clubId: spinResult.clubId,
+      seasonId: spinResult.seasonId,
+      positions: selectedPlayer.positions,
+    };
+    const next = [...picks, pick];
+    saveDraft(next);
+    setSelectedPlayer(null);
+    saveProgress({
+      spun: null,
+      slot: null,
+      undo: showRatings ? { clubId: spinResult.clubId, seasonId: spinResult.seasonId } : null,
+    });
+    if (next.filter(isBenchPick).length >= BENCH_SIZE) finishDraft(next);
+  }
+
+  /**
+   * Hands the run to Team Talk: the eleven in `38-0-squad`, the bench in its
+   * own key, so everything that reads the eleven still reads exactly eleven.
+   */
+  function finishDraft(all: SquadPick[]) {
+    writeStored('38-0-squad', all.filter(p => !isBenchPick(p)));
+    writeStored(BENCH_KEY, all.filter(isBenchPick));
+    // The XI is complete, but the run is not: the tactic and the season to
+    // play it in are still to be chosen. See src/app/squad.
+    router.push('/squad');
+  }
+
+  /** Ends the bench early: with none, the season plays as an XI alone. */
+  function skipBench() {
+    saveProgress({ benchSkipped: true });
+    finishDraft(picks);
   }
 
   /** Takes the last pick back and puts the squad it came from back on the table. */
@@ -344,11 +412,11 @@ export default function DraftPage() {
     if (!selectedPlayer || !formation || !feasible) return undefined;
     return formation.slots
       .map((_, i) => i)
-      .filter(i => feasible.canPlace(picks, selectedPlayer, i));
-  }, [selectedPlayer, formation, feasible, picks]);
+      .filter(i => feasible.canPlace(xiPicks, selectedPlayer, i));
+  }, [selectedPlayer, formation, feasible, xiPicks]);
 
   function handleSlotClick(slotIndex: number) {
-    const filledSlots = new Set(picks.map(p => p.slotIndex));
+    const filledSlots = new Set(xiPicks.map(p => p.slotIndex));
     if (filledSlots.has(slotIndex)) return;
     if (selectedPlayer) {
       placePlayer(slotIndex);
@@ -362,10 +430,10 @@ export default function DraftPage() {
     return <div className="min-h-screen bg-ground flex items-center justify-center text-fg">Loading…</div>;
   }
 
-  const filledSlots = new Set(picks.map(p => p.slotIndex));
+  const filledSlots = new Set(xiPicks.map(p => p.slotIndex));
   const openSlots = formation.slots.filter((_, i) => !filledSlots.has(i));
   const positionFirstSlot = positionFirst !== null ? formation.slots[positionFirst] : null;
-  const overall = computeOverall(picks);
+  const overall = computeOverall(xiPicks);
   const showRatings = setup.showRatings && setup.difficulty !== 'hard';
   const isSpinning = spinPhase !== 'idle';
   const challengeLabel = setup.daily ? `📅 Daily #${setup.daily.number}` :
@@ -402,12 +470,13 @@ export default function DraftPage() {
           {Array.from({ length: rerollsTotal }).map((_, i) => (
             <span key={i} className={`inline-block w-2 h-2 rounded-full ${i < rerollsLeft ? 'bg-amber-400' : 'bg-track'}`} />
           ))}
-          <span className="ml-1">{picks.length}/11</span>
+          <span className="ml-1">{xiPicks.length}/11</span>
+          {xiComplete && !progress.benchSkipped && <span className="ml-1">· bench {benchPicks.length}/{BENCH_SIZE}</span>}
         </div>
 
         <PitchView
           formation={formation}
-          picks={picks}
+          picks={xiPicks}
           onSlotClick={handleSlotClick}
           highlightSlot={highlightSlot}
           eligibleSlots={eligibleSlots}
@@ -430,8 +499,22 @@ export default function DraftPage() {
               <span className="text-[11px] text-muted">Overall <span className="text-fg font-bold">{overall}</span></span>
             )}
           </div>
-          <LineRatings formation={formation} picks={picks} />
+          <LineRatings formation={formation} picks={xiPicks} />
         </div>
+
+        {benchPicks.length > 0 && (
+          <div className="w-full px-1 mt-3">
+            <div className="text-[11px] text-muted uppercase tracking-widest font-bold mb-1.5">Bench</div>
+            <ol className="space-y-1">
+              {benchPicks.map(p => (
+                <li key={p.slotIndex} className="flex items-center gap-2 text-xs">
+                  <PositionBadge pos={p.positions[0]} size="xs" />
+                  <span className="font-bold truncate">{p.playerName}</span>
+                </li>
+              ))}
+            </ol>
+          </div>
+        )}
 
         <div className="w-full px-1 mt-2">
           <DraftRecap picks={picks} />
@@ -446,23 +529,48 @@ export default function DraftPage() {
           <div className="flex flex-col items-center gap-6 mt-8">
             <div className="text-muted text-sm uppercase tracking-widest font-bold">Spin for a Squad</div>
             <div className="text-3xl font-black text-subtle text-center">
-              {openSlots.length === 0
-                ? 'Your XI is complete'
-                : `${openSlots.length} position${openSlots.length !== 1 ? 's' : ''} left to fill`}
+              {draftDone
+                ? 'Your squad is complete'
+                : benchPhase
+                  ? `Your XI is complete: ${BENCH_SIZE - benchPicks.length} bench place${BENCH_SIZE - benchPicks.length !== 1 ? 's' : ''} to go`
+                  : `${openSlots.length} position${openSlots.length !== 1 ? 's' : ''} left to fill`}
             </div>
-            {openSlots.length === 0 && (
+            {benchPhase && (
+              <p className="text-muted text-sm text-center max-w-sm -mt-2">
+                Five subs: choose your starting eleven from all sixteen before kick-off, and change the shape at half-time.
+              </p>
+            )}
+            {benchPhase && (
+              <div className="flex flex-wrap justify-center gap-3">
+                <button
+                  type="button"
+                  onClick={() => spin()}
+                  className="flex items-center gap-2 px-8 py-4 rounded-xl bg-[#00c896] text-black font-black text-lg hover:bg-[#00b385] transition-colors touch-manipulation"
+                >
+                  🎰 Spin for the bench
+                </button>
+                <button
+                  type="button"
+                  onClick={skipBench}
+                  className="px-6 py-4 rounded-xl border border-line-strong text-muted font-bold hover:text-fg hover:border-line-hover transition-colors touch-manipulation"
+                >
+                  {benchPicks.length === 0 ? 'Skip the bench →' : `Done with ${benchPicks.length} sub${benchPicks.length !== 1 ? 's' : ''} →`}
+                </button>
+              </div>
+            )}
+            {draftDone && (
               <button
                 type="button"
-                onClick={() => { writeStored('38-0-squad', picks); router.push('/squad'); }}
+                onClick={() => finishDraft(picks)}
                 className="px-8 py-4 rounded-xl bg-[#00c896] text-black font-black text-lg hover:bg-[#00b385] transition-colors touch-manipulation"
               >
                 Team Talk →
               </button>
             )}
-            {openSlots.length > 0 && setup.draftMode === 'position-first' && (
+            {!xiComplete && openSlots.length > 0 && setup.draftMode === 'position-first' && (
               <div className="text-muted text-sm">Tap an open position on the pitch to spin for it</div>
             )}
-            {openSlots.length > 0 && setup.draftMode === 'squad-first' && (
+            {!xiComplete && openSlots.length > 0 && setup.draftMode === 'squad-first' && (
               <button
                 type="button"
                 onClick={() => spin()}
@@ -541,6 +649,7 @@ export default function DraftPage() {
             onSelectPlayer={selectPlayer}
             onCancelSelection={() => setSelectedPlayer(null)}
             onPlacePlayer={placePlayer}
+            onPlaceBench={benchPhase ? placeOnBench : undefined}
             onReroll={rerollsLeft > 0 ? () => spin(true) : undefined}
             feasible={feasible}
             rerollsLeft={rerollsLeft}
@@ -557,7 +666,7 @@ export default function DraftPage() {
 
 function SpinPanel({
   result, formation, picks, selectedPlayer,
-  onSelectPlayer, onCancelSelection, onPlacePlayer, onReroll, feasible, rerollsLeft, showRatings, positionFilter,
+  onSelectPlayer, onCancelSelection, onPlacePlayer, onPlaceBench, onReroll, feasible, rerollsLeft, showRatings, positionFilter,
 }: {
   result: SpunSquad;
   formation: Formation;
@@ -566,13 +675,16 @@ function SpinPanel({
   onSelectPlayer: (p: DataPlayer) => void;
   onCancelSelection: () => void;
   onPlacePlayer: (slotIdx: number) => void;
+  /** Present while the bench is being drafted: the pick goes to the bench, not a slot. */
+  onPlaceBench?: () => void;
   onReroll?: () => void;
   feasible: Feasibility;
   rerollsLeft: number;
   showRatings: boolean;
   positionFilter?: Position;
 }) {
-  const filledSlots = new Set(picks.map(p => p.slotIndex));
+  const xi = picks.filter(p => !isBenchPick(p));
+  const filledSlots = new Set(xi.map(p => p.slotIndex));
   const pickedPlayerIds = new Set(picks.map(p => p.playerId));
   // In team-sheet order, never best first: see draftListOrder.
   const players = draftListOrder(result.players.filter(p => !pickedPlayerIds.has(p.playerId)), positionFilter);
@@ -580,13 +692,13 @@ function SpinPanel({
   function slotStatus(i: number): 'available' | 'filled' | 'unavailable' {
     if (filledSlots.has(i)) return 'filled';
     if (!selectedPlayer) return 'unavailable';
-    return feasible.canPlace(picks, selectedPlayer, i) ? 'available' : 'unavailable';
+    return feasible.canPlace(xi, selectedPlayer, i) ? 'available' : 'unavailable';
   }
 
   // A slot the player could play but is not offered, because nobody left in
   // the pool could fill some other open slot afterwards. Rare outside a thin
   // challenge pool; said out loud when it happens, so it does not look broken.
-  const heldBack = selectedPlayer !== null && formation.slots.some((slot, i) =>
+  const heldBack = !onPlaceBench && selectedPlayer !== null && formation.slots.some((slot, i) =>
     !filledSlots.has(i) && canFillSlot(selectedPlayer.positions, slot.position) && slotStatus(i) !== 'available');
 
   return (
@@ -600,7 +712,9 @@ function SpinPanel({
             <span className="font-black text-lg">{result.clubName}</span>
             <span className="text-accent font-bold">{result.seasonLabel}</span>
           </div>
-          <div className="text-xs text-muted mt-1">Pick any player, then choose which open position to slot them into.</div>
+          <div className="text-xs text-muted mt-1">
+            {onPlaceBench ? 'Pick any player for the bench.' : 'Pick any player, then choose which open position to slot them into.'}
+          </div>
         </div>
         {onReroll && (
           <button type="button" onClick={onReroll}
@@ -627,6 +741,12 @@ function SpinPanel({
               Cancel
             </button>
           </div>
+          {onPlaceBench ? (
+            <button type="button" onClick={onPlaceBench}
+              className="px-4 py-2.5 rounded-lg bg-[#00c896] text-black text-xs font-bold hover:bg-[#00b385] transition-colors touch-manipulation">
+              Add to the bench
+            </button>
+          ) : (<>
           <div className="text-[11px] text-muted uppercase tracking-widest mb-2">
             Where they can play
           </div>
@@ -646,6 +766,7 @@ function SpinPanel({
               Some positions they could play are held back: filling them would leave a slot no one left in the pool can fill.
             </div>
           )}
+          </>)}
         </div>
       )}
 
@@ -654,7 +775,7 @@ function SpinPanel({
         {players.map(player => {
           const pp: Position[] = player.positions;
           const isSelected = selectedPlayer?.playerId === player.playerId;
-          const canFillAny = formation.slots.some((_, i) => feasible.canPlace(picks, player, i));
+          const canFillAny = onPlaceBench ? true : formation.slots.some((_, i) => feasible.canPlace(xi, player, i));
           const matchesFilter = !positionFilter || canFillSlot(pp, positionFilter);
 
           return (

@@ -705,6 +705,6 @@ export function runSeasonSimulation(
     seed,
     getRoleConfig(),
     plan.style ?? 'balanced',
-    plan.change,
+    plan.change?.picks ? { ...plan.change, picks: withSeasonRoles(plan.change.picks) } : plan.change,
   );
 }
