@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server';
 import { getDb } from '@/lib/db';
+import { refuseBlockedTraits } from '@/lib/traitGuard.dev';
 
 export const runtime = 'nodejs';
 
@@ -17,6 +18,8 @@ export async function GET(req: Request) {
 export async function POST(req: Request) {
   const db = getDb();
   const { player_id, label, rating, positions, roles } = await req.json();
+  const refused = refuseBlockedTraits(db, roles, positions);
+  if (refused) return refused;
   try {
     const { lastInsertRowid } = db.prepare(
       'INSERT INTO player_versions (player_id, label, rating, positions, roles) VALUES (?, ?, ?, ?, ?)'

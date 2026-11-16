@@ -50,19 +50,34 @@ are now asserted by `matchEngine.calibration.test.ts`.
 
 What is left is in the data, not the engine:
 
-- **Traits switched off by their own slot.** A trait applies only in the
-  positions its role allows (`validPositions`), and 105 of the 1,680 trait
-  assignments in stored XIs fall outside their player's own lineup slot.
-  Firmino's only trait is Chance creator, which does not apply at ST, so in
-  the game he is an untraited striker; Alexander-Arnold's Chance creator is
-  off at RB, Kuyt's Pressing forward at RM. The fix is in the editor: a
-  trait that fits the slot (False nine for Firmino), or the role's positions.
-  The commonest: Anchor at CM (17), No-nonsense defender at RB (9),
-  Attacking full-back at LM (8).
-- **Stars with no traits.** 75 of the 219 stored-XI players rated 88 or more
-  have none, Gerrard, Fàbregas, Ødegaard and Pirès among them. The rating
-  baseline keeps them creative, but a 79-rated Winger (Riera) still out-delivers
-  an untraited 92 at set pieces and crosses.
+- **Traits switched off by their own slot: half fixed.** A trait used to
+  apply only in the positions its role allows (`validPositions`), abilities
+  included: 136 of 2,168 trait assignments in stored XIs were off, and 96
+  players lost every trait they had (Firmino's Chance creator at ST,
+  Gerrard's Box to box at RM, Alexander-Arnold's Chance creator at RB). Now
+  a player's abilities (`traits` on `MatchPlayer`) apply in any slot, and
+  only the goal and assist weights and chance affinities (`roles`) still
+  depend on it. Measured on the eight seasons below, 40 passes each: points
+  correlation with the real tables 0.888 to 0.897, points error per club
+  7.37 to 7.06, goals-for error 9.12 to 9.07; dropping the gate altogether
+  measured 0.895, 7.13 and 9.24. No club moved more than about 4 points.
+  What remains slot-bound is deliberate: a Poacher at CAM is not poaching.
+- **The trait passes inflated the top sides' goals: re-fitted.** Traits
+  given season by season made the sides carrying them score too much, and a
+  defender's traits barely reached a match. The block now counts every
+  possession and finishing takes a player's strongest trait; see *Re-fitted
+  for the trait passes* in [simulation.md](simulation.md). The top four's
+  goals, the spread of goals for and the Golden Boot are back on the real
+  figures. Two things remain: good defences still concede a little too much
+  (0.684 of the league average against 0.665), held there because a stronger
+  block weight rewards whichever defences have been through a trait pass, and
+  older seasons score about five goals a club more than they really did.
+- **Stars with no traits: fixed.** 92 of the 273 players rated 88 or more had
+  none — Gerrard, Fàbregas, Rooney, Terry, Schmeichel, Pirès, Ødegaard among
+  them — and none of 273 do now. They were given the traits that plainly fit,
+  consistent with their other seasons where they had any, along with the rest
+  of each player's seasons; 194 assignments in all. A rebuilt database
+  reproduces them (see *A failure worth remembering* in [roles.md](roles.md)).
 - A side's full-backs make fewer than Liverpool's did: Alexander-Arnold and
   Robertson were exceptional, and the general full-back weight is set by the
   league-wide share, which they would otherwise push too high.
@@ -181,8 +196,14 @@ What is left:
   table is clearly outside noise (Counter-attack +4.5 ± 5.1 over five, Low
   block −3.8 ± 2.1 over eleven), much as before.
 - **Pace and recovery are trait-only, and the traits are sparse.** Henry,
-  Salah and Mané carry no pace trait, so Arsenal 2003/04 and Liverpool 2019/20
-  read 23% and 10% for Counter-attack and do little in behind. Recovery now
+  Salah and Mané carried no pace trait, so Arsenal 2003/04 and Liverpool
+  2019/20 read 23% and 10% for Counter-attack and did little in behind. They,
+  Overmars, Vardy, Anelka, Son, Sterling and the young Giggs now carry
+  `Pacey`: Counter-attack reads 50% and 52%, and Arsenal 2003/04 in the
+  2025/26 field went from 79.3 to 83.1 points playing it (titles 33% to 57%,
+  40 seasons each; Balanced 73.9 to 77.4, from the other traits). Liverpool
+  2019/20 takes 89.3 countering and 86.3 Balanced. Pace below the stars is
+  still sparse. Recovery now
   takes the rating baseline (reading the game), so high lines are not
   defenceless, but pace on the break does not.
 - **No trait describes defending.** A deep block is played on rating and work
@@ -243,7 +264,36 @@ a constant to re-fit: `strength` also decides which clubs make way when a season
 had more than twenty, and it is the number the pre-season screen shows, so
 changing it moves three things at once and wants measuring on its own.
 
-## 3. Smaller things
+## 3. A player's allowed positions come from one season's label
+
+`plan-position-batches.mjs` builds each stub's `fbrefPosition` from
+`p.seasons[0].fbrefPosition` — one season — and `checkAssignment` then enforces
+it against the player's whole career. So **collecting a new season can
+retroactively invalidate a reviewed assignment**, with no edit to that
+assignment at all.
+
+Jeremie Frimpong is the worked example. His only season was 2025/26 Liverpool,
+recorded `DFMF`, and he was assigned `RWB/RB/RM` — legal, since `DFMF` permits a
+defensive primary. Adding 2023/24 Leverkusen, which FBref records as `MF`, moved
+his `seasons[0]` to the earlier row, narrowed `allowed` to `CDM CM CAM LM RM`,
+and turned three correct positions into three validation failures.
+
+It was caught, but only because the checker runs over every batch rather than
+the ones being edited. Nothing says *why* a passing assignment started failing,
+and the obvious reading — that whoever last touched it got it wrong — is the
+wrong one.
+
+The escape hatch works: Frimpong carries `labelDisputed` with a note saying
+FBref records him `MF` for 2023/24 while Leverkusen played him as the right
+wing-back of a back three. But a dispute should record a disagreement with the
+source, not absorb an artefact of which season happens to sort first.
+
+The fix is for the constraint to be the union of the labels across a player's
+seasons, or to be applied per season rather than per player. Either is a change
+to how `allowed` is derived, so it wants doing deliberately rather than as part
+of a collection pass.
+
+## 4. Smaller things
 
 - **Four club-seasons ship with a single player.** 2017/18 Liverpool holds only
   Adam Lallana, and AC Milan 1994/95, 2002/03 and 2004/05 hold one man each

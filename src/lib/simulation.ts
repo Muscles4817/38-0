@@ -70,25 +70,25 @@ const ROLE_ASSIST_MULT: Record<PlayerRole, number> = {
 export const ROLE_VALID_POSITIONS: Partial<Record<PlayerRole, Position[]>> = {
   InsideForward:       ['LW', 'RW', 'LM', 'RM'],
   Winger:              ['LW', 'RW', 'LM', 'RM'],
-  Poacher:             ['ST', 'CF'],
+  Poacher:             ['ST', 'CF', 'RW', 'LW'],
   TargetMan:           ['ST', 'CF'],
   CompleteForward:     ['ST', 'CF'],
-  Trequartista:        ['CAM', 'CF'],
+  Trequartista:        ['CAM', 'CF', 'LW', 'RW', 'LM', 'RM'],
   FalseNine:           ['ST', 'CF'],
   DeepLyingForward:    ['ST', 'CF'],
-  ChanceCreator:       ['CAM', 'CM', 'LM', 'RM'],
+  ChanceCreator:       ['CAM', 'CM', 'LM', 'RM', 'LW', 'RW', 'CF'],
   DeepLyingPlaymaker:  ['CDM', 'CM'],
   Regista:             ['CDM', 'CM'],
   Mezzala:             ['CM', 'LM', 'RM', 'CAM'],
   LateRunner:          ['CM', 'CDM', 'CAM'],
-  BoxToBox:            ['CM'],
+  BoxToBox:            ['CM', 'CDM'],
   Anchor:              ['CDM'],
   Enforcer:            ['CM', 'CDM'],
   AttackingFullback:   ['LB', 'RB', 'LWB', 'RWB'],
-  CrossingSpecialist:  ['LB', 'RB', 'LWB', 'RWB', 'LM', 'RM', 'LW', 'RW'],
+  CrossingSpecialist:  ['LB', 'RB', 'LWB', 'RWB', 'LM', 'RM', 'LW', 'RW', 'CM', 'CAM'],
   InvertedWingback:    ['LB', 'RB', 'LWB', 'RWB'],
   BallPlayingDefender: ['CB'],
-  SetPieceDeliverer:   ['LM', 'RM', 'LW', 'RW', 'LB', 'RB', 'LWB', 'RWB', 'CM', 'CAM'],
+  SetPieceDeliverer:   ['LM', 'RM', 'LW', 'RW', 'LB', 'RB', 'LWB', 'RWB', 'CM', 'CAM', 'CDM', 'GK', 'CB', 'CF', 'ST'],
   // AerialThreat: unrestricted — heading ability spans all outfield positions
 };
 
@@ -148,6 +148,8 @@ export interface PlayerStats {
   /** One per match, from the match engine. */
   matchRatings: number[];
   avgMatchRating: number;
+  /** Matches he played: all of them for an unchanged eleven. */
+  appearances: number;
 }
 
 export interface FixtureResult {
@@ -219,10 +221,16 @@ export interface LeagueEntry {
   isUser: boolean;
 }
 
-/** A change of style during the season: `style` from gameweek `afterWeek + 1`. */
+/**
+ * A change made at a point in the season, played from gameweek
+ * `afterWeek + 1`: the style, and optionally a different eleven (a new
+ * formation, bench players in; see src/lib/bench.ts).
+ */
 export interface StyleChange {
   afterWeek: number;
   style: PlaystyleName;
+  /** The eleven for the rest of the season, in its slots. Absent: unchanged. */
+  picks?: SquadPick[];
 }
 
 export interface SimulationResult {
@@ -232,6 +240,8 @@ export interface SimulationResult {
    * One entry unless the style was changed during the season.
    */
   styles: { fromWeek: number; style: PlaystyleName }[];
+  /** The gameweek a changed eleven started from, when the lineup changed. */
+  lineupChangedFrom?: number;
   finalTable: TeamStanding[];
   finalPosition: number;
   points: number;
@@ -425,6 +435,7 @@ function toMatchPlayer(pick: SquadPick, validPos: Partial<Record<PlayerRole, Pos
     position:  pick.position,
     rating:    ratingInSlot(pick),
     roles:     activeRoles(pick.roles, pick.position, validPos),
+    traits:    pick.roles ?? [],
     positions: pick.positions,
   };
 }
@@ -444,6 +455,7 @@ function opponentSetup(
     position: p.position,
     rating: p.rating,
     roles: activeRoles(p.roles, p.position, validPos),
+    traits: p.roles ?? [],
   }));
   const inferred = inferStyle(eleven);
   return {
@@ -811,6 +823,10 @@ export function simulateSeason(
   const gameweeks: Gameweek[] = [];
   const startStyle = sides[0].setup.style;
   const styles: SimulationResult['styles'] = [{ fromWeek: 1, style: startStyle }];
+  let lineupChangedFrom: number | undefined;
+  // Everyone who plays for the XI this season, by snapshot id: the starters,
+  // and whoever a change brings on.
+  const pickOf = new Map<number, SquadPick>(picks.map(p => [p.playerId, p]));
 
   for (let r = 0; r < schedule.length; r++) {
     const fixtures: FixtureResult[] = [];
@@ -818,6 +834,20 @@ export function simulateSeason(
     if (change && r === change.afterWeek && PLAYSTYLES[change.style] && change.style !== startStyle) {
       sides[0].setup = { ...sides[0].setup, style: change.style };
       styles.push({ fromWeek: r + 1, style: change.style });
+    }
+    if (change && r === change.afterWeek && change.picks && change.picks.length > 0 && !sameEleven(picks, change.picks)) {
+      // A player who stays keeps his season so far, and takes his new slot's
+      // position from here on; one coming in starts a season of his own.
+      const sideNow = sides[0].setup.players;
+      const secondHalf: MatchPlayer[] = change.picks.map(pick => {
+        const staying = sideNow.find(p => players.get(p.playerId)?.sourceId === pick.playerId);
+        const id = staying?.playerId ?? enter(USER, true, pick.playerName, pick.position, pick.playerId);
+        players.get(id)!.position = pick.position;
+        return { ...toMatchPlayer(pick, validPos), playerId: id };
+      });
+      sides[0].setup = { ...sides[0].setup, players: secondHalf, focus: inferStyle(secondHalf).focus };
+      lineupChangedFrom = r + 1;
+      for (const pick of change.picks) pickOf.set(pick.playerId, pick);
     }
 
     for (const [hi, ai] of schedule[r]) {
@@ -888,12 +918,12 @@ export function simulateSeason(
   const seasonOf = [...players.values()].map(p => ({ ...p, avgRating: average(p.ratings) }));
   const userSeason = seasonOf.filter(p => p.isUser);
 
-  const statsArr: PlayerStats[] = picks.map((pick, i) => {
-    const s = userSeason[i];
+  const statsArr: PlayerStats[] = userSeason.map(s => {
+    const pick = pickOf.get(s.sourceId)!;
     return {
       playerId:       pick.playerId,
       playerName:     pick.playerName,
-      position:       pick.position,
+      position:       s.position,
       rating:         pick.rating,
       goals:          s.goals,
       assists:        s.assists,
@@ -914,6 +944,7 @@ export function simulateSeason(
       redCards:       s.redCards,
       matchRatings:   s.ratings,
       avgMatchRating: s.ratings.length ? parseFloat(s.avgRating.toFixed(2)) : 6,
+      appearances:    s.ratings.length,
     };
   });
 
@@ -963,6 +994,7 @@ export function simulateSeason(
   return {
     gameweeks,
     styles,
+    ...(lineupChangedFrom ? { lineupChangedFrom } : {}),
     finalTable,
     finalPosition,
     points:       userRow.points,
@@ -990,6 +1022,13 @@ export function simulateSeason(
     topAssisters:     board(p => p.assists),
     topKeepers:       board(p => p.cleanSheets, p => p.position === 'GK'),
   };
+}
+
+/** Whether two elevens are the same players in the same slots. */
+function sameEleven(a: readonly SquadPick[], b: readonly SquadPick[]): boolean {
+  const key = (xs: readonly SquadPick[]) => [...xs].sort((x, y) => x.slotIndex - y.slotIndex)
+    .map(p => `${p.slotIndex}:${p.playerId}`).join('|');
+  return key(a) === key(b);
 }
 
 /** Everything a player did across the season. */

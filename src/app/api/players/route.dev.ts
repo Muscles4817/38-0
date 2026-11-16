@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server';
 import { getDb } from '@/lib/db';
+import { refuseBlockedTraits } from '@/lib/traitGuard.dev';
 
 export const runtime = 'nodejs';
 
@@ -36,6 +37,8 @@ export async function GET(req: Request) {
 export async function POST(req: Request) {
   const db = getDb();
   const { name, nationality, base_rating, base_positions, roles } = await req.json();
+  const refused = refuseBlockedTraits(db, roles, base_positions);
+  if (refused) return refused;
   if (!name?.trim()) return NextResponse.json({ error: 'name required' }, { status: 400 });
   const { lastInsertRowid } = db
     .prepare('INSERT INTO players (name, nationality, base_rating, base_positions, roles) VALUES (?, ?, ?, ?, ?)')

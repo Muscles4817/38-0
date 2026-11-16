@@ -5,6 +5,8 @@ import PositionBadge from '@/components/PositionBadge';
 import { Position } from '@/lib/formations';
 import { NATIONALITIES, isValidNationality } from '@/lib/nationalities';
 import { PlayerRole } from '@/lib/simulation';
+import { blocksSave, checkTraits, traitDefinitions } from '@/lib/traitRules';
+import TraitIssues from '@/components/TraitIssues.dev';
 
 const ALL_POSITIONS: Position[] = ['GK','LB','CB','RB','LWB','RWB','CDM','CM','CAM','LM','RM','LW','RW','ST','CF'];
 
@@ -54,13 +56,18 @@ export default function PlayersEditor() {
     setEntries(await r.json());
   }
 
-  const [roleOptions, setRoleOptions] = useState<{ name: string; label: string }[]>([]);
+  const [roleOptions, setRoleOptions] = useState<RoleOption[]>([]);
+  // The trait rules read each trait's positions and abilities, so they run
+  // against the same rows the picker shows.
+  const traitDefs  = useMemo(() => traitDefinitions(roleOptions), [roleOptions]);
+  const editIssues = useMemo(() => checkTraits(editRoles, editPos, traitDefs), [editRoles, editPos, traitDefs]);
+  const [saveError, setSaveError] = useState<string | null>(null);
 
   useEffect(() => {
     fetch('/api/players').then(r => r.json()).then(setPlayers);
     fetch('/api/clubs').then(r => r.json()).then(setClubs);
     fetch('/api/seasons').then(r => r.json()).then(setSeasons);
-    fetch('/api/roles').then(r => r.json()).then((rows: { name: string; label: string }[]) => setRoleOptions(rows));
+    fetch('/api/roles').then(r => r.json()).then((rows: RoleOption[]) => setRoleOptions(rows));
   }, []);
 
   const filtered = useMemo(() => {
@@ -172,10 +179,16 @@ export default function PlayersEditor() {
   async function saveEntry() {
     if (!editEntryId) return;
     setVerSaving(true);
-    await fetch(`/api/squads/${editEntryId}`, {
+    const res = await fetch(`/api/squads/${editEntryId}`, {
       method: 'PUT', headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ rating: editRating, positions: editPos, roles: editRoles }),
     });
+    if (!res.ok) {
+      setSaveError((await res.json().catch(() => null))?.error ?? 'The save was refused.');
+      setVerSaving(false);
+      return;
+    }
+    setSaveError(null);
     setEditEntryId(null);
     await loadEntries(editing!.id);
     setVerSaving(false);
@@ -348,9 +361,11 @@ export default function PlayersEditor() {
                           selected={editRoles}
                           onToggle={r => setEditRoles(prev => prev.includes(r) ? prev.filter(x => x !== r) : [...prev, r])}
                         />
+                        <TraitIssues issues={editIssues} />
                       </div>
+                      {saveError && <p className="text-xs text-[#fca5a5]">{saveError}</p>}
                       <div className="flex gap-2">
-                        <button onClick={saveEntry} disabled={verSaving}
+                        <button onClick={saveEntry} disabled={verSaving || blocksSave(editIssues)}
                           className="px-3 py-1.5 rounded bg-[#00c896] text-black text-xs font-bold disabled:opacity-50">
                           Save
                         </button>
@@ -467,10 +482,13 @@ function PositionGrid({ selected, onToggle }: { selected: Position[]; onToggle: 
 }
 
 
+/** A trait as /api/roles returns it: enough to label it and to run the trait rules. */
+type RoleOption = { name: string; label: string; valid_positions?: string; qualities?: string };
+
 function RoleGrid({ selected, onToggle, roleOptions }: {
   selected: string[];
   onToggle: (r: string) => void;
-  roleOptions: { name: string; label: string }[];
+  roleOptions: RoleOption[];
 }) {
   return (
     <div className="flex flex-wrap gap-1.5">

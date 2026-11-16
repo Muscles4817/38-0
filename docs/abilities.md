@@ -343,7 +343,11 @@ defensive cost, because a man who has gone forward is not back.
 - **−** Ball-watches.
 - **Does:** stops chances before they become chances, against through balls and
   runs in behind in particular.
-- **Status:** new.
+- **Status:** a trait, not yet an ability. `ReadsTheGame` gives the block's
+  `defending` and a point of `recovery`, the two things the engine already
+  reads that this describes. Its own ability, read where a through ball or a
+  run in behind is decided, is still to build; the trait would then give that
+  instead.
 
 ### Box defending
 - **+** Defends inside his own box: attacks the cross, blocks shots, clears the

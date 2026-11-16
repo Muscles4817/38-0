@@ -17,6 +17,12 @@ to kick off was decided here, so a second confirmation between the decision and
 the result would only be a step to click through. One more decision comes later,
 at halfway: see [After kick-off](#after-kick-off).
 
+## The eleven
+
+With a bench, the screen opens on a team selection: choose the starting eleven
+from all sixteen and the formation they play in. See
+[bench.md](bench.md#before-kick-off). Without one it shows the drafted XI.
+
 ## The tactic
 
 Fourteen styles, defined once in `src/lib/matchEngine.ts` and described in
@@ -45,6 +51,10 @@ gap in it. The loop is:
    trait points above an ordinary side, Good from 0.2, Weak below −0.2). Each
    style card lists the phases it leans on (`TacticEffect.needs`), coloured by
    the XI's level in them.
+   Each player in the XI shows his traits as well, from the club-season he
+   was drafted from (`describeTraits`, `TraitChips`). Tapping one says what
+   it means. A trait whose goal and assist weights do not apply in his slot
+   is faint and marked with a dot: its abilities still count there.
 3. **Every season played is written down.** The results page records it in
    `38-0-history` (`src/lib/runHistory.ts`) against the XI (`xiKey`: who plays
    in which slot) and the league-season. A season whose style was changed at
@@ -134,6 +144,8 @@ stops on the table and asks once: keep the style, or change it for the second
 half. The panel shows the position, the record, the points pace against the
 bookmakers' line, and for each style what it has averaged with this XI in this
 league (the same history the style cards read). Keeping it is one tap.
+With a bench, the panel can also change the formation and the eleven, as many
+players as wanted; see [bench.md](bench.md#at-half-time).
 
 The season was already played in full on arrival, so a change replays it:
 `runSeasonSimulation` with `change: { afterWeek: 19, style }` on the **same

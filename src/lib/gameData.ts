@@ -640,6 +640,47 @@ function withSeasonRoles(picks: SquadPick[]): SquadPick[] {
   return picks.map(pick => ({ ...pick, roles: rolesForPick(pick) }));
 }
 
+/** A drafted player's traits, from the club-season he was drafted from. */
+export function pickTraits(pick: SquadPick): PlayerRole[] {
+  return rolesForPick(pick);
+}
+
+/** A trait as the screens show it. */
+export interface TraitShown {
+  name: string;
+  label: string;
+  description: string;
+  /** Every ability it gives is a weakness: Ponderous, Rash in the Tackle. */
+  weakness: boolean;
+  /**
+   * False when its goal and assist weights do not apply in the slot he is
+   * in. Its abilities always do (docs/roles.md, *What the engine reads*).
+   */
+  weightsApply: boolean;
+}
+
+/**
+ * A player's traits, labelled and described for a screen, in the order he
+ * carries them. With a slot, each says whether its goal and assist weights
+ * apply there.
+ */
+export function describeTraits(roles: readonly string[], slot?: Position): TraitShown[] {
+  const byName = new Map(gameData.roles.map(r => [r.name, r]));
+  return roles.flatMap(name => {
+    const role = byName.get(name);
+    if (!role) return [];
+    const abilities = Object.values(role.qualities ?? {}).filter((v): v is number => typeof v === 'number' && v !== 0);
+    const neutralWeights = role.goalMult === 1 && role.assistMult === 1;
+    return [{
+      name,
+      label: role.label,
+      description: role.description,
+      weakness: abilities.length > 0 && abilities.every(v => v < 0),
+      weightsApply: neutralWeights || !slot || role.validPositions.length === 0 || role.validPositions.includes(slot),
+    }];
+  });
+}
+
 /** What the player settled on before kick-off. */
 export interface SeasonPlan {
   /** The season whose league the XI is dropped into. Defaults to the current one. */
@@ -664,6 +705,6 @@ export function runSeasonSimulation(
     seed,
     getRoleConfig(),
     plan.style ?? 'balanced',
-    plan.change,
+    plan.change?.picks ? { ...plan.change, picks: withSeasonRoles(plan.change.picks) } : plan.change,
   );
 }

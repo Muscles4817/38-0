@@ -31,12 +31,14 @@ the codebase already works.
 | [simulation.md](simulation.md) | Before changing anything that affects match results, ratings or awards. |
 | [draft-pool.md](draft-pool.md) | Before changing what the draft can offer: challenge modes, Prime mode, and the check that stops a filtered draft getting stuck. |
 | [pre-season.md](pre-season.md) | Before touching the screen between the draft and the season: choosing a tactic, choosing a season, and how both reach the simulation. Also the half-time change of style and the key moments on the results page. |
+| [daily.md](daily.md) | Before changing the daily challenge, or anything it fixes: the draft's spins, the season seed, the setup it starts with. |
 | [desktop-ux.md](desktop-ux.md) | Before changing a layout. What a wide screen is for, what was wrong above 640px, and the measurements to take before and after. |
 | [ci-and-deployment.md](ci-and-deployment.md) | Before changing the build, the workflows, or how the site is published. |
 | [squad-data-pipeline.md](squad-data-pipeline.md) | Before adding squad data. How the 680 club-seasons get collected, rated and imported. |
 | [positions-lookup.md](positions-lookup.md) | Before assigning positions. Why it is lookup work and what the rules are. |
 | [ratings.md](ratings.md) | Before rating any player. The absolute scale, the bands and the anchors. |
-| [season-depth.md](season-depth.md) | Before adding suspensions, injuries, a bench, fatigue or form. A proposal with what each would touch; none of it is built. |
+| [bench.md](bench.md) | Before touching the bench: five subs drafted after the XI, team selection before kick-off, changes at half-time, and the computer's bench rule. |
+| [season-depth.md](season-depth.md) | Before adding suspensions, injuries, fatigue or form. A proposal with what each would touch; only the bench is built (bench.md). |
 | [known-issues.md](known-issues.md) | Before starting work — the thing you are about to fix may already be recorded, measured and prioritised here. |
 
 ## The one rule that matters most
@@ -60,6 +62,7 @@ npm run lint         # eslint
 npm run typecheck    # tsc --noEmit
 npm run export:data  # regenerate src/data/game-data.json from the database
 npm run derive:lineups  # most-used XI and formation for every club-season
+npm run sync:seed-roles # write src/lib/seedRoles.ts into an existing database
 ```
 
 `npm run lint`, `npm run typecheck`, `npm test` and `npm run build` are exactly

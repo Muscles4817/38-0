@@ -50,6 +50,6 @@ start, as `bestXI` once was).
 ## A suggested order
 
 1. Suspensions, as above. Self-contained and measurable.
-2. A bench in the draft, used only for suspensions at first.
+2. A bench in the draft. **Built** in a narrower form, used only by choice before kick-off and at half-time: see [bench.md](bench.md).
 3. Injuries, once the bench exists.
 4. Fatigue and form together, with the stamina ability.

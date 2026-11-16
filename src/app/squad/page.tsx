@@ -4,18 +4,22 @@ import { useEffect, useMemo } from 'react';
 import { useRouter } from 'next/navigation';
 import { getFormation } from '@/lib/formations';
 import {
-  describeCompetition, getTacticOptions, getTeamStrengths, getXiProfile, listCompetitions,
+  describeCompetition, describeTraits, getTacticOptions, getTeamStrengths, getXiProfile, listCompetitions, pickTraits,
   type Competition,
 } from '@/lib/gameData';
 import { parseRunHistory, RUN_HISTORY_KEY, styleRecords, xiKey, type StyleRecord } from '@/lib/runHistory';
 import { computeOverall, preSeasonOdds, type SquadPick, type TacticEffect } from '@/lib/simulation';
 import type { Phase, PlaystyleName } from '@/lib/matchEngine';
-import { useStoredJson, writeStored } from '@/lib/clientStorage';
+import { readStored, useStoredJson, writeStored } from '@/lib/clientStorage';
+import { BENCH_KEY } from '@/lib/bench';
+import LineupEditor, { type Lineup } from '@/components/LineupEditor';
 import PitchView from '@/components/PitchView';
 import PositionBadge from '@/components/PositionBadge';
+import TraitChips from '@/components/TraitChips';
 import LineRatings from '@/components/LineRatings';
 import BackLink from '@/components/BackLink';
 import { ratingColor } from '@/components/ratingColor';
+import type { DailyChallenge } from '@/lib/daily';
 
 /**
  * What the player settles on between drafting and kick-off.
@@ -34,6 +38,8 @@ export interface StoredPlan {
 interface Setup {
   formation: string;
   draftMode?: string;
+  /** Present when this run is the daily challenge, which fixes the season. */
+  daily?: DailyChallenge;
 }
 
 // Stable empty array so a run that has not loaded yet does not hand out a new
@@ -44,6 +50,7 @@ export default function SquadPage() {
   const router = useRouter();
 
   const picks     = useStoredJson<SquadPick[]>('38-0-squad') ?? NO_PICKS;
+  const bench     = useStoredJson<SquadPick[]>(BENCH_KEY) ?? NO_PICKS;
   const setup     = useStoredJson<Setup>('38-0-setup');
   const stored    = useStoredJson<StoredPlan>('38-0-plan');
   const formation = useMemo(() => getFormation(setup?.formation ?? '4-4-2'), [setup]);
@@ -59,8 +66,11 @@ export default function SquadPage() {
   // The plan is derived from what is stored rather than mirrored into state,
   // so there is one source of truth and a write from anywhere re-renders.
   const style: PlaystyleName = stored?.style ?? 'balanced';
-  const seasonId = stored?.seasonId ?? defaultSeasonId ?? competitions[0]?.seasonId ?? 0;
-  const league   = stored?.league ?? competitions.find(c => c.seasonId === seasonId)?.league;
+  // The daily challenge plays everyone in the same league-season, so it is
+  // not a choice here.
+  const daily    = setup?.daily;
+  const seasonId = daily?.seasonId ?? stored?.seasonId ?? defaultSeasonId ?? competitions[0]?.seasonId ?? 0;
+  const league   = daily ? daily.league : stored?.league ?? competitions.find(c => c.seasonId === seasonId)?.league;
 
   const tactics  = useMemo(() => getTacticOptions(picks), [picks]);
   const chosen   = tactics.find(t => t.style === style) ?? tactics[0];
@@ -94,6 +104,14 @@ export default function SquadPage() {
     [overall, field],
   );
 
+  function chooseLineup(next: Lineup) {
+    writeStored('38-0-squad', next.xi);
+    writeStored(BENCH_KEY, next.bench);
+    if (next.formation !== setup?.formation) {
+      writeStored('38-0-setup', { ...(readStored<Record<string, unknown>>('38-0-setup') ?? {}), formation: next.formation });
+    }
+  }
+
   function choose(next: Partial<StoredPlan>) {
     writeStored('38-0-plan', { style, seasonId, league, ...next });
   }
@@ -118,7 +136,8 @@ export default function SquadPage() {
 
         {/* ── The XI ─────────────────────────────────────────────────────── */}
         <section className="flex flex-col lg:flex-row gap-6">
-          <div className="flex justify-center shrink-0">
+          {/* items-start: stretched to a team sheet's height, the pitch loses its shape. */}
+          <div className="flex justify-center items-start shrink-0 lg:sticky lg:top-4 lg:self-start">
             <PitchView formation={formation} picks={picks} compact />
           </div>
           {/*
@@ -139,16 +158,33 @@ export default function SquadPage() {
                 </div>
               </div>
             </div>
+            {bench.length > 0 ? (
+              // With a bench, this is team selection: the eleven, and their
+              // shape, are chosen here from all sixteen. Each change is saved
+              // at once, so the odds and the tactics below follow it.
+              <LineupEditor
+                lineup={{ formation: setup?.formation ?? formation.name, xi: picks, bench }}
+                onChange={chooseLineup}
+                showOverall={false}
+              />
+            ) : (
             <div className="space-y-1.5">
               {[...picks].sort((a, b) => b.slotIndex - a.slotIndex).map(p => (
-                <div key={p.slotIndex} className="flex items-center gap-3 py-1.5">
-                  <PositionBadge pos={p.position} size="xs" />
-                  <span className="font-bold text-sm flex-1 min-w-0 truncate">{p.playerName}</span>
-                  <span className="text-muted text-xs shrink-0">{p.clubName.slice(0, 3).toUpperCase()} {p.seasonLabel}</span>
-                  <span className="font-black text-sm w-6 text-right shrink-0" style={{ color: ratingColor(p.rating) }}>{p.rating}</span>
+                <div key={p.slotIndex} className="py-1.5">
+                  <div className="flex items-center gap-3">
+                    <PositionBadge pos={p.position} size="xs" />
+                    <span className="font-bold text-sm flex-1 min-w-0 truncate">{p.playerName}</span>
+                    <span className="text-muted text-xs shrink-0">{p.clubName.slice(0, 3).toUpperCase()} {p.seasonLabel}</span>
+                    <span className="font-black text-sm w-6 text-right shrink-0" style={{ color: ratingColor(p.rating) }}>{p.rating}</span>
+                  </div>
+                  {/* What he is good at, in the slot he plays; tap a trait to see what it means. */}
+                  <div className="mt-1.5 pl-9">
+                    <TraitChips traits={describeTraits(pickTraits(p), p.position)} explain />
+                  </div>
                 </div>
               ))}
             </div>
+            )}
             <LineRatings formation={formation} picks={picks} />
           </div>
         </section>
@@ -198,14 +234,18 @@ export default function SquadPage() {
         <section>
           <Label>Season</Label>
           <p className="text-muted text-[11px] mb-3">
-            The league your XI is dropped into for all 38 games.
+            {daily
+              ? `Daily #${daily.number} is played in ${opponent?.leagueName ?? 'the'} ${opponent?.seasonLabel ?? ''} by everyone, on the same 38 games.`
+              : 'The league your XI is dropped into for all 38 games.'}
           </p>
-          <div className="grid gap-4 lg:grid-cols-[1fr_320px] lg:items-start">
-            <CompetitionPicker
-              competitions={competitions}
-              seasonId={seasonId}
-              onChoose={c => choose({ seasonId: c.seasonId, league: c.league })}
-            />
+          <div className={`grid gap-4 ${daily ? '' : 'lg:grid-cols-[1fr_320px]'} lg:items-start`}>
+            {!daily && (
+              <CompetitionPicker
+                competitions={competitions}
+                seasonId={seasonId}
+                onChoose={c => choose({ seasonId: c.seasonId, league: c.league })}
+              />
+            )}
             {opponent && (
               <div className="lg:sticky lg:top-6">
                 <CompetitionSummary

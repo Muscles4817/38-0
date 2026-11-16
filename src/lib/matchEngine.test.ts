@@ -151,6 +151,37 @@ describe('playstyles are trade-offs', () => {
     expect(share(withTarget)).toBeGreaterThan(share(plain));
   });
 
+  it('concedes fewer when the defence reads the game, whatever the style matchup', () => {
+    // The block used to count only when a side sat deep against a patient one,
+    // so a defender's traits barely reached a match. Balanced against
+    // Balanced, neither deep: the readers should still tell.
+    const roles = { goalMult: {}, assistMult: {}, qualities: { ReadsTheGame: { defending: 3, recovery: 1 } } };
+    const readers = team('Readers', 80, 'balanced', 100, { 1: ['ReadsTheGame'], 2: ['ReadsTheGame'], 3: ['ReadsTheGame'], 4: ['ReadsTheGame'] });
+    const plain = team('Plain', 80, 'balanced', 100);
+    const conceded = (def: TeamSetup) => {
+      const rand = rng(53);
+      let goals = 0;
+      for (let i = 0; i < 400; i++) goals += simulateMatch(team('Att', 80, 'balanced', 0), def, rand, roles).home.goals;
+      return goals;
+    };
+    expect(conceded(readers)).toBeLessThan(conceded(plain) * 0.95);
+  });
+
+  it('finishes a chance on his strongest trait for it, not all of them multiplied', () => {
+    // InsideForward (1.7) and Trequartista (1.5) both favour a chance a player
+    // makes himself; together they are worth the stronger, not 2.55.
+    const roles = { goalMult: {}, assistMult: {} };
+    const both = team('Both', 80, 'balanced', 0, { 9: ['InsideForward', 'Trequartista'], 10: ['InsideForward', 'Trequartista'] });
+    const one = team('One', 80, 'balanced', 0, { 9: ['InsideForward'], 10: ['InsideForward'] });
+    const goals = (t: TeamSetup) => {
+      const rand = rng(61);
+      let g = 0;
+      for (let i = 0; i < 300; i++) g += simulateMatch(t, team('Opp', 80, 'balanced', 100), rand, roles).home.goals;
+      return g;
+    };
+    expect(goals(both)).toBe(goals(one));
+  });
+
   it('describes every style it offers', () => {
     for (const [name, style] of Object.entries(PLAYSTYLES)) {
       expect(style.name).toBe(name);
@@ -381,6 +412,17 @@ describe('who takes part in a phase', () => {
     const diligent = xi(shape.map(([p]) => [p, p === 'LW' || p === 'RW' ? ['Workhorse'] : []]));
     const plain = xi(shape);
     expect(phaseAbility(diligent, 'block', QUALITIES)).toBeGreaterThan(phaseAbility(plain, 'block', QUALITIES));
+  });
+
+  it('reads abilities from every trait, even ones his slot switches off', () => {
+    // A trait outside its positions loses its goal and assist weights (`roles`)
+    // but not what it says he is good at (`traits`): a box-to-box midfielder
+    // played at RM still presses.
+    const shape: [Position, string[]?][] = [['GK'], ['LB'], ['CB'], ['CB'], ['RB'], ['LM'], ['CM'], ['CM'], ['RM'], ['ST'], ['ST']];
+    const plain = xi(shape);
+    const travelled = plain.map(p => (p.position === 'RM' ? { ...p, roles: [], traits: ['Workhorse'] } : p));
+    const before = plain.map(p => (p.position === 'RM' ? { ...p, roles: [], traits: undefined } : p));
+    expect(phaseAbility(travelled, 'block', QUALITIES)).toBeGreaterThan(phaseAbility(before, 'block', QUALITIES));
   });
 });
 

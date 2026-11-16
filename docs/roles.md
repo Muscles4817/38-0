@@ -49,6 +49,12 @@ migration.
 
 ## What the engine reads
 
+A player's qualities apply wherever he plays. His roles' goal and assist
+multipliers and chance affinities apply only in the positions the role lists
+(`validPositions`): what he is good at travels, what he produces depends on
+where he stands. Until this was split, a role outside its positions was off
+entirely, so Gerrard at RM lost his pressing along with his box-to-box goals.
+
 A quality does something only where the match engine reads it. Where it is not
 read yet, the trait is decorative in a match, whatever it says.
 
@@ -57,7 +63,7 @@ read yet, the trait is decorative in a match, whatever it says.
 | `aerial` | aerial phases, headed chances, set pieces | who wins headers at both ends |
 | `pace` | the `break` phase | runs in behind against a high line |
 | `recovery` | the `cover` phase; on a keeper, sweeping (`SWEEP_PER_POINT`) | covering the space behind. On a keeper it is also coming off his line: he cuts out a share of balls played in behind, per point and in proportion to his own side's line, however quick the runner. A `SweeperKeeper` (recovery 3) against a quick counter-attacking side concedes 10.4% fewer behind a gegenpress line, 4.7% behind a balanced one, 1.6% behind a parked bus; against a possession side with no pace, 5.1%, 2.3% and 0.4% (20,000 matches each). In the real leagues, about 1.9 goals a season fewer on 11 club-seasons with paired seeds, from Liverpool 2025/26 behind a gegenpress line (6.1) to Liverpool 2008/09 in a low block (0.2). Covering alone was worth 0.1: few opponents in the data carry pace traits that beat these sides' cover |
-| `pressing` | the `press` phase; work rate in the `block` | winning the ball high; a working wide man defends |
+| `pressing` | the `press` phase; work rate in the `block` | winning the ball high; a working wide man defends. `Trequartista` and `Poacher` carry −1: excused defensive work by definition. A forward who does both carries a pressing trait as well and the two add (PressingForward + Trequartista nets +2). Measured on eight seasons, 40 passes each: points r 0.891 to 0.896, points error per club 7.33 to 7.17 |
 | `pressResist` | the `build` phase | playing through a press |
 | `creation` | the `create` phase; through-ball creators | unpicking a deep block |
 | `setPiece` | the `delivery` phase; crossers and set-piece takers | who delivers, and how well |
@@ -68,7 +74,7 @@ read yet, the trait is decorative in a match, whatever it says.
 | `dribble` | draws a player into the `break` phase only | not yet an ability of its own |
 | `claiming` | the keeper coming for the ball in the air (`CLAIM_PER_POINT`, `CLAIM_REACH`) | before a cross, a header or a set piece becomes a shot, a keeper with claiming takes a share of them (none of a through ball, a long shot or an individual effort). A keeper who flaps does not face more crosses; he turns the ones he faces into better chances. A CommandingKeeper (3) concedes crosses −9.4%, headers −8.5%, set pieces −6.7%, −3.3% in all (1.8 goals a season) against an ordinary side, 2.6 against a crossing side with target men; FlapsAtCrosses (−2) +1.9% in all (1.0 a season), 2.5 against a crossing side (20,000 matches). In the real leagues, pooled over five seeds: FlapsAtCrosses +1.6 goals a season on all 6 club-seasons that have it; CommandingKeeper −1.2 on the only one (Aston Villa 2025/26); a SweeperKeeper's claiming 1 is lost in the noise |
 | `longShot` | nothing yet (long shots go by role affinity) | |
-| `defending` | the `block` phase | no trait grants it yet |
+| `defending` | the `block` phase, and from the re-fit every possession (`BLOCK_TRAIT_EDGE`) | positioning and anticipation in a set defence. Only `ReadsTheGame` gives it (3, with recovery 1). Before the block counted every possession it was worth 0.4 goals a season to the top four; see *Re-fitted for the trait passes* in simulation.md |
 
 ## The traits added for the playstyle work
 
@@ -89,6 +95,7 @@ from a set of roles containing no forward at all.
 | `Reflexes` | reflexes 3 | Saving is two abilities: a ShotStopper sees it coming, a keeper with reflexes reacts to what he does not |
 | `CommandingKeeper` | claiming 3, aerial 1 | Claims crosses — meaningful now set pieces exist |
 | `PenaltyTaker` | penalty 3 | A penalty is 0.78 xG and anyone was taking them |
+| `ReadsTheGame` | defending 3, recovery 1 | Positioning and anticipation: Makélélé, Nesta, Kanté. Nothing gave `defending` before it, so a defender who reads the game was told apart from an ordinary one only by his rating. It stacks with a style: a Sweeper or an Anchor who also reads the game. |
 | `LongShot` | longShot 3 | The engine has a long-shot chance type with almost nothing attached |
 
 Their goal and assist multipliers are deliberately modest. **A trait that exists
@@ -169,9 +176,41 @@ it gets worse: `Poacher` + `AerialThreat` is 7.7x.
 says the same thing about the player without handing him the whole season. Ibra
 went to 48 goals and 49%, in line with Henry's 45% for Arsenal 2003/04.
 
-The general form: **a forward should carry at most one big scoring role.** The
-multipliers compound, and the engine's square-root damping is not enough to
-absorb two of them on the player who already receives most of the chances.
+That rule used to be more general — "a forward should carry at most one big
+scoring role" — because the multipliers compounded. They no longer do where it
+mattered: choosing who takes a chance uses only a player's strongest boost and
+his strongest drag (`combineRoleMults`). Two traits still multiply when he
+finishes a kind of chance they both favour, by the square root of each
+(`ROLE_CHANCE_AFFINITY`), which the editor warns about (W3 below).
+
+## The rules the editor enforces
+
+`src/lib/traitRules.ts` checks a player-season's traits against his positions.
+The squad and player editors show the result under the trait picker; the API
+refuses a blocked save; and `traitRules.test.ts` fails CI if any player in the
+shipped snapshot breaks a block rule, so data that arrives by `import:squads`
+is held to the same rules. Rules that depend on what a trait does read its
+definition, so changing a trait's positions or abilities changes what they
+say.
+
+| | Level | Rule |
+| --- | --- | --- |
+| B1 | block | Only traits the game defines. |
+| B2 | block | No trait twice. |
+| B3 | block | Goalkeeper traits (positions exactly `GK`) only on a player who plays in goal: keeping is read only for the keeper. |
+| B4 | block | No trait that has no abilities and whose positions include none of his: it does nothing wherever he plays. |
+| B5 | warn | A strength and the weakness that cancels it (`CONTRADICTIONS`): Pacey + Ponderous, Lightweight + an aerial trait, and so on. The numbers still add up, so it is allowed. |
+| W1 | warn | AerialThreat on a player who plays ST or CF: TargetMan says the same without taking his side's chances. |
+| W2 | warn | A trait with abilities whose positions include none of his: the abilities apply, the goal and assist weights never will. |
+| W3 | warn | Two traits favouring the same kind of chance, which multiply when he finishes one. |
+
+Deliberately not a rule: a player's traits may differ from one season to the
+next. Players gain and lose abilities.
+
+On the snapshot when the rules went in: no blocks (two Crystal Palace 2025/26
+players were fixed first: Muñoz AttackingFullback → Winger, Nketiah Poacher →
+LateRunner, since FBref has both as midfielders), one W1 (Tim Cahill), eight
+W2 and twenty W3.
 
 ## A failure worth remembering
 
@@ -186,3 +225,32 @@ That is the same shape as the batch planners, which carried work forward only if
 the thing it belonged to was considered finished. Roles are now inserted every
 time with `INSERT OR IGNORE`, which leaves editor changes alone, and a test
 asserts that no player carries a role the code does not define.
+
+It happened again with whole squads. Eighteen club-seasons are seeded by
+`db.ts` from code rather than imported from `data/squads/` — among them
+Chelsea 2013/14, 2014/15 and 2016/17, Manchester City 2011/12 and 2017/18,
+Liverpool 2013/14, 2019/20 and 2024/25, Tottenham 2018/19, Newcastle 2022/23,
+and the 2024/25 Arsenal, Chelsea and Aston Villa sides — and the seed wrote
+every player with no traits. Their traits, and five ratings and position
+lists, were added in the editor and existed in one local database only. They
+are now in `src/lib/seedRoles.ts` and the seed. A database rebuilt from scratch
+(`getDb()`, `npm run import:squads -- --prune`, `npm run derive:lineups`,
+`npm run export:data`) reproduces the traits, rating and positions of every
+player in the shipped snapshot that it holds.
+
+**A trait added to a code-seeded side goes in two places**: the snapshot (or
+the editor) and `SEED_ROLES`. The seed only runs for a squad a database does
+not have yet, so an existing database never sees a new entry in `SEED_ROLES`;
+`npm run sync:seed-roles` writes them into it, and reports each change.
+
+What a rebuild still cannot reproduce:
+
+- the 66 club-season style records (cohesion, playstyle, focus), which have no
+  file;
+- five squads that exist only in the database — AC Milan 2006/07 and the four
+  stubs of one player each (Liverpool 2017/18, AC Milan 1994/95, 2002/03 and
+  2004/05);
+- two players added to code-seeded squads in the editor, Nigel de Jong
+  (Manchester City 2011/12) and Moussa Dembélé (Tottenham 2018/19);
+- the accented spellings the editor gave about forty players: a rebuild calls
+  him Robert Pires, the game Robert Pirès.

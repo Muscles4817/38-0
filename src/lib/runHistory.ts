@@ -30,6 +30,11 @@ export interface RunRecord {
    * Such a season measures neither style, so the tactics board leaves it out.
    */
   changedTo?: string;
+  /**
+   * True when the eleven or its formation changed at halfway. Like a change
+   * of style, such a season measures neither side, so the board leaves it out.
+   */
+  lineupChanged?: boolean;
   formation: string;
   overall: number;
   position: number;
@@ -107,7 +112,7 @@ export interface StyleRecord {
 export function styleRecords(list: readonly RunRecord[], xi: string, seasonId: number): StyleRecord[] {
   const byStyle = new Map<string, RunRecord[]>();
   for (const run of list) {
-    if (run.xi !== xi || run.seasonId !== seasonId || run.changedTo) continue;
+    if (run.xi !== xi || run.seasonId !== seasonId || run.changedTo || run.lineupChanged) continue;
     byStyle.set(run.style, [...(byStyle.get(run.style) ?? []), run]);
   }
   return [...byStyle].map(([style, runs]) => ({
