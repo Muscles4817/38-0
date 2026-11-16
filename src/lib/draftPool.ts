@@ -18,7 +18,7 @@
 // placement during the draft that would make the XI impossible to finish.
 
 import { canFillSlot, type Formation, type Position } from './formations';
-import { gameData, listDraftableSquads, type DataPlayer, type SpunSquad } from './gameData';
+import { gameData, listDraftableSquads, SIMULATED_LEAGUE, type DataPlayer, type SpunSquad } from './gameData';
 
 export type DraftFilter =
   | { kind: 'club'; clubId: number }
@@ -31,7 +31,14 @@ export interface PoolRules {
   /** 'prime' rates every player at the best rating the snapshot holds for them. */
   playerRating: 'career' | 'prime';
   filter: DraftFilter | null;
+  /**
+   * 'premier-league' leaves out the icons: the Serie A, La Liga, Bundesliga
+   * and World Cup sides. Absent means everything, as before the choice existed.
+   */
+  scope?: PoolScope;
 }
+
+export type PoolScope = 'with-icons' | 'premier-league';
 
 // ── Prime ratings ─────────────────────────────────────
 
@@ -84,6 +91,7 @@ export function draftPool(rules: PoolRules): SpunSquad[] {
   const pool: SpunSquad[] = [];
   for (const squad of listDraftableSquads(rules.yearStart, rules.yearEnd)) {
     if (filter?.kind === 'club' && squad.clubId !== filter.clubId) continue;
+    if (rules.scope === 'premier-league' && squad.league !== SIMULATED_LEAGUE) continue;
     const players = applyRules(squad.players, rules);
     if (players.length > 0) pool.push({ ...squad, players });
   }

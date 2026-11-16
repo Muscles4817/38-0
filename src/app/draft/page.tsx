@@ -5,7 +5,7 @@ import { useRouter } from 'next/navigation';
 import { getFormation, canFillSlot, Formation, Position } from '@/lib/formations';
 import { SquadPick, computeOverall } from '@/lib/simulation';
 import { describeTraits, getClub, type DataPlayer, type SpunSquad } from '@/lib/gameData';
-import { draftListOrder, draftPool, feasibility, type DraftFilter, type Feasibility } from '@/lib/draftPool';
+import { draftListOrder, draftPool, feasibility, type DraftFilter, type Feasibility, type PoolScope } from '@/lib/draftPool';
 import { BENCH_KEY, BENCH_SIZE, BENCH_SLOT_BASE, isBenchPick } from '@/lib/bench';
 import { CHALLENGES, describeFilter, type ChallengeId } from '@/lib/challenges';
 import { useStoredJson, readStored, writeStored, clearStored } from '@/lib/clientStorage';
@@ -29,6 +29,8 @@ interface Setup {
   /** Absent in a setup saved before challenge modes existed. */
   challenge?: ChallengeId;
   filter?: DraftFilter | null;
+  /** Absent in a setup saved before the choice existed: everything, icons included. */
+  scope?: PoolScope;
   /** Present when this run is the daily challenge. */
   daily?: DailyChallenge;
 }
@@ -87,6 +89,7 @@ export default function DraftPage() {
     yearEnd:      setup.yearEnd,
     playerRating: setup.playerRating === 'prime' ? 'prime' : 'career',
     filter:       setup.filter ?? null,
+    scope:        setup.scope,
   }) : NO_POOL), [setup]);
   const feasible = useMemo(() => (formation ? feasibility(pool, formation) : null), [pool, formation]);
   // The daily challenge spins through the pool in an order fixed for the day,

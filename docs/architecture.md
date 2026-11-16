@@ -144,7 +144,7 @@ See [pre-season.md](pre-season.md).
 
 | Key | Written by | Read by |
 | --- | --- | --- |
-| `38-0-setup` | setup page, classic page, daily card | draft, squad, results; includes the challenge `filter`, see [draft-pool.md](draft-pool.md), and `daily` for the daily challenge, see [daily.md](daily.md) |
+| `38-0-setup` | setup page, classic page, daily card | draft, squad, results; includes the challenge `filter` and the pool `scope`, see [draft-pool.md](draft-pool.md), and `daily` for the daily challenge, see [daily.md](daily.md) |
 | `38-0-draft` | draft page | draft; the eleven and any bench picks so far |
 | `38-0-draft-state` | draft page | draft; the squad on the table, rerolls spent and the pick that can still be undone, so a reload cannot be used as a free reroll; in the daily challenge, where the next spin looks in the day's order |
 | `38-0-squad` | draft page, classic page, squad page (team selection) | squad, results; always the starting eleven |

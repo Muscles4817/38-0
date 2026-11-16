@@ -24,6 +24,16 @@ challenge or Prime mode is on.
 
 Opponents are never filtered: the league is always the real squads.
 
+## Which squads: with the icons, or Premier League only
+
+The setup page offers two pools. **Premier League + icons**, the default, is
+every English top-flight season in the era plus the famous sides from Serie A,
+La Liga, the Bundesliga and two World Cups (34 of the 458 squads).
+**Premier League only** leaves those out (`PoolRules.scope: 'premier-league'`,
+saved in `38-0-setup` as `scope`). The setup card used to read just "Premier
+League" while the pool always held the icons, which read as a bug. The daily
+challenge always uses the full pool, so everyone gets the same one.
+
 ## Challenges
 
 A challenge is a filter, not a different game. The draft runs unchanged on
