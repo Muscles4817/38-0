@@ -2,6 +2,7 @@ import { describe, expect, it } from 'vitest';
 import { FORMATIONS, canFillSlot, getFormation, type Position } from './formations';
 import { PHASES, PLAYSTYLES } from './matchEngine';
 import {
+  describeTraits,
   SIMULATED_LEAGUE,
   SIMULATED_SEASON_START,
   bestXI,
@@ -740,5 +741,33 @@ describe('tactic fit for a saved XI', () => {
     for (const value of Object.values(profile)) expect(Number.isFinite(value)).toBe(true);
     // Barcelona 2009/10 play out from the back better than an ordinary side.
     expect(profile.build).toBeGreaterThan(0.2);
+  });
+});
+
+describe('traits as the screens show them', () => {
+  it('labels and describes each trait a player carries, in his order', () => {
+    const shown = describeTraits(['Pacey', 'ReadsTheGame']);
+    expect(shown.map(t => t.label)).toEqual(['Pacey', 'Reads the Game']);
+    expect(shown.every(t => t.description.length > 0)).toBe(true);
+  });
+
+  it('marks a weakness only when everything the trait says is a weakness', () => {
+    const [ponderous, noNonsense] = describeTraits(['Ponderous', 'NoNonsenseDefender']);
+    expect(ponderous.weakness).toBe(true);
+    // Strong in the air, poor on the ball: not a weakness overall.
+    expect(noNonsense.weakness).toBe(false);
+  });
+
+  it('says when a trait is not weighted to score or assist in his slot', () => {
+    expect(describeTraits(['Trequartista'], 'ST')[0].weightsApply).toBe(false);
+    expect(describeTraits(['Trequartista'], 'CAM')[0].weightsApply).toBe(true);
+    // A trait with no positions, or neutral weights, applies anywhere.
+    expect(describeTraits(['Pacey', 'ReadsTheGame'], 'GK').every(t => t.weightsApply)).toBe(true);
+    // No slot given (a draft row): nothing to flag.
+    expect(describeTraits(['Trequartista'])[0].weightsApply).toBe(true);
+  });
+
+  it('leaves out a trait the game does not define', () => {
+    expect(describeTraits(['Superstar', 'Pacey']).map(t => t.name)).toEqual(['Pacey']);
   });
 });

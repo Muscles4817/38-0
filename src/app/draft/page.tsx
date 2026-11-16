@@ -4,7 +4,7 @@ import { useState, useEffect, useMemo, useRef } from 'react';
 import { useRouter } from 'next/navigation';
 import { getFormation, canFillSlot, Formation, Position } from '@/lib/formations';
 import { SquadPick, computeOverall } from '@/lib/simulation';
-import { getClub, type DataPlayer, type SpunSquad } from '@/lib/gameData';
+import { describeTraits, getClub, type DataPlayer, type SpunSquad } from '@/lib/gameData';
 import { draftPool, feasibility, type DraftFilter, type Feasibility } from '@/lib/draftPool';
 import { CHALLENGES, describeFilter, type ChallengeId } from '@/lib/challenges';
 import { useStoredJson, readStored, writeStored, clearStored } from '@/lib/clientStorage';
@@ -12,6 +12,7 @@ import { parseSeenSquads, SEEN_SQUADS_KEY, withSeenSquad } from '@/lib/seenSquad
 import { dailyOrder, type DailyChallenge } from '@/lib/daily';
 import PitchView from '@/components/PitchView';
 import PositionBadge from '@/components/PositionBadge';
+import TraitChips from '@/components/TraitChips';
 import LineRatings from '@/components/LineRatings';
 import DraftRecap from '@/components/DraftRecap';
 import BackLink from '@/components/BackLink';
@@ -113,7 +114,7 @@ export default function DraftPage() {
   const [selectedPlayer, setSelectedPlayer] = useState<DataPlayer | null>(null);
 
   // Rating reveal toast (when showRatings is off)
-  const [reveal, setReveal]           = useState<{ name: string; rating: number } | null>(null);
+  const [reveal, setReveal]           = useState<{ name: string; rating: number; traits: string[] } | null>(null);
   const revealTimer                   = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   // Setup is written by the home page; without it there is nothing to draft.
@@ -298,7 +299,11 @@ export default function DraftPage() {
     const showRatings = (setup?.showRatings ?? false) && setup?.difficulty !== 'hard';
     if (!showRatings) {
       if (revealTimer.current) clearTimeout(revealTimer.current);
-      setReveal({ name: selectedPlayer.name, rating: selectedPlayer.rating });
+      setReveal({
+        name: selectedPlayer.name,
+        rating: selectedPlayer.rating,
+        traits: describeTraits(selectedPlayer.roles ?? []).map(t => t.label),
+      });
       revealTimer.current = setTimeout(() => setReveal(null), 2500);
     }
 
@@ -409,9 +414,12 @@ export default function DraftPage() {
 
         {/* Rating reveal toast */}
         <div className={`w-full mt-3 px-3 py-2 rounded-xl transition-all duration-300 overflow-hidden
-          ${reveal ? 'opacity-100 max-h-16 bg-[#00c896]' : 'opacity-0 max-h-0'}`}>
+          ${reveal ? 'opacity-100 max-h-24 bg-[#00c896]' : 'opacity-0 max-h-0'}`}>
           <div className="text-black text-xs font-bold">{reveal?.name}</div>
           <div className="text-black text-xl font-black">{reveal?.rating} revealed</div>
+          {reveal && reveal.traits.length > 0 && (
+            <div className="text-black text-xs font-bold">{reveal.traits.join(' · ')}</div>
+          )}
         </div>
 
         <div className="mt-4 w-full px-1 space-y-1">
@@ -670,6 +678,10 @@ function SpinPanel({
               <div className="flex-1 min-w-0">
                 <div className="font-bold text-sm truncate">{player.name}</div>
                 <div className="text-muted text-xs">{player.nationality}</div>
+                {/* Traits give a player away as much as a rating does, so they follow the same setting. */}
+                {showRatings && (player.roles?.length ?? 0) > 0 && (
+                  <div className="mt-1"><TraitChips traits={describeTraits(player.roles ?? [])} /></div>
+                )}
               </div>
               <div className="flex gap-1 flex-wrap justify-end">
                 {pp.map(pos => <PositionBadge key={pos} pos={pos} size="xs" />)}

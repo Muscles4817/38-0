@@ -82,3 +82,12 @@ his best season. Only the rating changes. Positions stay those of the squad
 being shown, so the list's "where they can play" is true of the row it is on;
 110 players have different positions in different seasons. Budget XI is applied
 after Prime, so in Prime mode it means "whose best was 78 or below".
+
+## What a player row shows
+
+Name, nationality, positions, and, when ratings are shown, the rating and the
+player's traits. Traits follow the ratings setting rather than having one of
+their own: a Poacher who is Pacey gives a player away almost as much as his
+rating does, so blind and Hard drafts stay a test of knowledge. In a blind
+draft, placing a player reveals his traits along with his rating. The
+pre-season screen shows every pick's traits whatever the setting.
