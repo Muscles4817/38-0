@@ -17,6 +17,12 @@ to kick off was decided here, so a second confirmation between the decision and
 the result would only be a step to click through. One more decision comes later,
 at halfway: see [After kick-off](#after-kick-off).
 
+## The eleven
+
+With a bench, the screen opens on a team selection: choose the starting eleven
+from all sixteen and the formation they play in. See
+[bench.md](bench.md#before-kick-off). Without one it shows the drafted XI.
+
 ## The tactic
 
 Fourteen styles, defined once in `src/lib/matchEngine.ts` and described in
@@ -138,6 +144,8 @@ stops on the table and asks once: keep the style, or change it for the second
 half. The panel shows the position, the record, the points pace against the
 bookmakers' line, and for each style what it has averaged with this XI in this
 league (the same history the style cards read). Keeping it is one tap.
+With a bench, the panel can also change the formation and the eleven, as many
+players as wanted; see [bench.md](bench.md#at-half-time).
 
 The season was already played in full on arrival, so a change replays it:
 `runSeasonSimulation` with `change: { afterWeek: 19, style }` on the **same

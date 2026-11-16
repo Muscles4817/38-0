@@ -28,6 +28,8 @@ import {
 import PitchView from '@/components/PitchView';
 import PositionBadge from '@/components/PositionBadge';
 import TraitChips from '@/components/TraitChips';
+import LineupEditor, { type Lineup } from '@/components/LineupEditor';
+import { BENCH_KEY, sameLineup } from '@/lib/bench';
 import LineRatings from '@/components/LineRatings';
 import BackLink from '@/components/BackLink';
 import { ratingColor } from '@/components/ratingColor';
@@ -127,6 +129,7 @@ function runRecord(
     seasonLabel: competition.seasonLabel,
     style: result.styles[0].style,
     ...(changedTo ? { changedTo } : {}),
+    ...(result.lineupChangedFrom ? { lineupChanged: true } : {}),
     formation: readStored<{ formation?: string }>('38-0-setup')?.formation ?? '',
     overall: computeOverall(picks),
     position: result.finalPosition,
@@ -158,6 +161,7 @@ function recordDaily(daily: DailyChallenge, record: RunRecord, result: Simulatio
     overall: record.overall,
     style: record.style,
     ...(record.changedTo ? { changedTo: record.changedTo } : {}),
+    ...(record.lineupChanged ? { lineupChanged: true } : {}),
     position: record.position,
     points: record.points,
     wins: record.wins,
@@ -192,6 +196,7 @@ export default function ResultsPage() {
   const storedPlan = useStoredJson<StoredPlan>('38-0-plan');
   // The daily challenge fixes the league-season; the pre-season screen does
   // not offer it, and this makes sure of it.
+  const bench = useStoredJson<SquadPick[]>(BENCH_KEY) ?? NO_PICKS;
   const plan = useMemo(
     () => (daily && storedPlan ? { ...storedPlan, seasonId: daily.seasonId, league: daily.league } : storedPlan),
     [daily, storedPlan],
@@ -283,9 +288,10 @@ export default function ResultsPage() {
    * gameweek: the first half comes out exactly as it was shown (see
    * `simulateSeason`), so only what has not been seen yet is new.
    */
-  function handleHalfTime(style: PlaystyleName) {
+  function handleHalfTime(style: PlaystyleName, secondHalf?: Lineup) {
     if (!played) return;
-    if (style === played.result.styles[0].style) {
+    const newEleven = secondHalf && !sameLineup(picks, secondHalf.xi) ? secondHalf.xi : undefined;
+    if (style === played.result.styles[0].style && !newEleven) {
       setPlayed({ ...played, decided: true });
       return;
     }
@@ -293,7 +299,7 @@ export default function ResultsPage() {
       seasonId: plan?.seasonId,
       league:   plan?.league,
       style:    plan?.style,
-      change:   { afterWeek: halfwayWeek(played.result), style },
+      change:   { afterWeek: halfwayWeek(played.result), style, ...(newEleven ? { picks: newEleven } : {}) },
     });
     const record = runRecord(result, played.seed, played.playedAt, picks, plan);
     if (record) writeStored(RUN_HISTORY_KEY, replaceRun(parseRunHistory(readStored<unknown>(RUN_HISTORY_KEY)), record));
@@ -352,6 +358,7 @@ export default function ResultsPage() {
             records={records}
             expectedPoints={odds.expectedPoints}
             onHalfTime={handleHalfTime}
+            lineup={{ formation: formation.name, xi: picks, bench }}
             onDone={() => setShowFinal(true)}
           />
         )}
@@ -400,7 +407,7 @@ export default function ResultsPage() {
           it is not something they can act on, so it is a summary they can open
           rather than a screen of list they have to scroll past.
         */}
-        <SquadPanel formation={formation} picks={picks} overall={overall} />
+        <SquadPanel formation={formation} picks={picks} bench={bench} overall={overall} />
 
         {/* What Could Have Been */}
         <WhatCouldHaveBeen formation={formation} actualPicks={picks} rules={poolRules} />
@@ -409,7 +416,7 @@ export default function ResultsPage() {
           <button
             type="button"
             onClick={() => {
-              clearStored('38-0-draft', '38-0-draft-state', '38-0-squad', SEEN_SQUADS_KEY, '38-0-plan');
+              clearStored('38-0-draft', '38-0-draft-state', '38-0-squad', '38-0-bench', SEEN_SQUADS_KEY, '38-0-plan');
               router.push('/');
             }}
             className="text-subtle text-xs hover:text-fg transition-colors px-4 py-3 touch-manipulation"
@@ -424,9 +431,10 @@ export default function ResultsPage() {
 
 // ── The XI, folded away ──────────────────────────────────────────────────────
 
-function SquadPanel({ formation, picks, overall }: {
+function SquadPanel({ formation, picks, bench, overall }: {
   formation: Formation;
   picks: SquadPick[];
+  bench: SquadPick[];
   overall: number;
 }) {
   const sorted = [...picks].sort((a, b) => b.slotIndex - a.slotIndex);
@@ -464,6 +472,21 @@ function SquadPanel({ formation, picks, overall }: {
               </div>
             ))}
           </div>
+          {bench.length > 0 && (
+            <div>
+              <div className="text-[11px] text-subtle uppercase tracking-widest font-bold mb-1.5">Bench</div>
+              <div className="space-y-1.5">
+                {bench.map(p => (
+                  <div key={p.slotIndex} className="flex items-center gap-3">
+                    <PositionBadge pos={p.positions[0]} size="xs" />
+                    <span className="font-bold text-sm flex-1 min-w-0 truncate">{p.playerName}</span>
+                    <span className="text-subtle text-xs shrink-0">{p.clubName.slice(0, 3).toUpperCase()} {p.seasonLabel}</span>
+                    <span className="text-accent font-black text-sm w-6 text-right shrink-0">{p.rating}</span>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
           <LineRatings formation={formation} picks={picks} />
         </div>
       </div>
@@ -474,14 +497,16 @@ function SquadPanel({ formation, picks, overall }: {
 // ── Live GW Animation ────────────────────────────────────────────────────────
 
 function LiveSimulation({
-  simResult, decided, records, expectedPoints, onHalfTime, onDone,
+  simResult, decided, records, expectedPoints, onHalfTime, lineup, onDone,
 }: {
   simResult: SimulationResult;
   /** Whether the half-time choice of style has been made. */
   decided: boolean;
   records: StyleRecord[];
   expectedPoints: number;
-  onHalfTime: (style: PlaystyleName) => void;
+  onHalfTime: (style: PlaystyleName, secondHalf?: Lineup) => void;
+  /** The starting eleven and the bench, for changing them at half-time. */
+  lineup: Lineup;
   onDone: () => void;
 }) {
   const [gw, setGw]           = useState(1);
@@ -591,7 +616,8 @@ function LiveSimulation({
           current={simResult.styles[0].style}
           records={records}
           expectedPoints={expectedPoints}
-          onDecide={style => { onHalfTime(style); setPlaying(true); }}
+          lineup={lineup}
+          onDecide={(style, secondHalf) => { onHalfTime(style, secondHalf); setPlaying(true); }}
         />
       )}
 
@@ -709,21 +735,25 @@ function LiveSimulation({
  * The first half stands either way; the record each style has with this XI
  * comes from the tactics board's history.
  */
-function HalfTime({ table, half, lastGw, current, records, expectedPoints, onDecide }: {
+function HalfTime({ table, half, lastGw, current, records, expectedPoints, lineup, onDecide }: {
   table: TeamStanding[];
   half: number;
   lastGw: number;
   current: PlaystyleName;
   records: StyleRecord[];
   expectedPoints: number;
-  onDecide: (style: PlaystyleName) => void;
+  lineup: Lineup;
+  onDecide: (style: PlaystyleName, secondHalf?: Lineup) => void;
 }) {
   const [choice, setChoice] = useState<PlaystyleName>(current);
+  // The second half's eleven and shape, starting from the first half's.
+  const [secondHalf, setSecondHalf] = useState<Lineup>(lineup);
+  const reshaped = !sameLineup(lineup.xi, secondHalf.xi);
   const me = table.find(t => t.isUser);
   const byStyle = new Map(records.map(r => [r.style, r]));
   if (!me) return null;
   const pace = Math.round((me.points * lastGw) / Math.max(1, me.played));
-  const keep = choice === current;
+  const keep = choice === current && !reshaped;
   return (
     <section className="bg-card rounded-2xl p-5 border border-[#00c896]/50" aria-labelledby="half-time-heading">
       <div className="text-[11px] text-accent uppercase tracking-widest font-bold mb-1">
@@ -765,14 +795,30 @@ function HalfTime({ table, half, lastGw, current, records, expectedPoints, onDec
           );
         })}
       </div>
+      {lineup.bench.length > 0 && (
+        <details className="mt-4 group">
+          <summary className="cursor-pointer list-none flex items-center gap-2 text-sm font-bold min-h-11 touch-manipulation">
+            <span className="text-subtle transition-transform group-open:rotate-90">▶</span>
+            Change the shape or the eleven
+            {reshaped && <span className="text-[11px] text-accent font-bold">changed</span>}
+          </summary>
+          <div className="mt-2 max-w-xl">
+            <LineupEditor lineup={secondHalf} onChange={setSecondHalf} />
+          </div>
+        </details>
+      )}
       {/* Sticks to the bottom on a phone, where the fourteen styles run past it. */}
       <div className="sticky bottom-3 mt-4 sm:static">
         <button
           type="button"
-          onClick={() => onDecide(choice)}
+          onClick={() => onDecide(choice, reshaped ? secondHalf : undefined)}
           className="w-full sm:w-auto px-6 py-3 rounded-xl font-black text-sm bg-[#00c896] text-black hover:bg-[#00b385] transition-colors touch-manipulation shadow-lg sm:shadow-none"
         >
-          {keep ? `Keep ${styleLabel(current)} →` : `Switch to ${styleLabel(choice)} →`}
+          {keep
+            ? `Keep ${styleLabel(current)} →`
+            : reshaped
+              ? `Play the second half${choice === current ? '' : ` as ${styleLabel(choice)}`} →`
+              : `Switch to ${styleLabel(choice)} →`}
         </button>
       </div>
     </section>
@@ -846,9 +892,12 @@ function FinalSummary({ result, seed, picks, odds, league, records, daily, onRes
   const change = result.styles[1];
   // How the season was played: one style, or one and then another from
   // halfway.
+  const reshaped = result.lineupChangedFrom;
   const playedAs = change
-    ? `${styleLabel(style)}, then ${styleLabel(change.style)} from gameweek ${change.fromWeek},`
-    : styleLabel(style);
+    ? `${styleLabel(style)}, then ${styleLabel(change.style)}${reshaped ? ' and reshaped' : ''} from gameweek ${change.fromWeek},`
+    : reshaped
+      ? `${styleLabel(style)}, reshaped from gameweek ${reshaped},`
+      : styleLabel(style);
   // The bookmakers priced this XI playing Balanced. The margin against their
   // line is what the season, and the style it was played in, was worth.
   const margin = result.points - odds.expectedPoints;
@@ -954,7 +1003,7 @@ function FinalSummary({ result, seed, picks, odds, league, records, daily, onRes
 
       <SeasonStory result={result} />
 
-      <TacticsBoard records={records} current={change ? null : style} expected={odds.expectedPoints} />
+      <TacticsBoard records={records} current={change || reshaped ? null : style} expected={odds.expectedPoints} />
 
       {/* Season stats. Six numbers on one row once there is room for them. */}
       <div className="grid grid-cols-3 gap-3 md:grid-cols-6">
@@ -979,7 +1028,7 @@ function FinalSummary({ result, seed, picks, odds, league, records, daily, onRes
       */}
       <div className="grid gap-6 min-w-0 lg:grid-cols-2 lg:items-start [&>*]:min-w-0">
 
-        <XiStats picks={picks} stats={result.playerStats} />
+        <XiStats picks={picks} stats={result.playerStats} reshapedFrom={result.lineupChangedFrom} />
 
         <div className="space-y-6">
           {/*
@@ -1088,7 +1137,7 @@ function TacticsBoard({ records, current, expected }: {
       <p className="text-xs text-muted mb-4 max-w-2xl">
         Average points by style, against the bookmakers&apos; Balanced line of {expected}. A single season can
         land six points either side of a style&apos;s true level, so play one again before trusting it.
-        {current === null && ' This season changed style at halfway, so it measures neither and is not on the board.'}
+        {current === null && ' This season changed at halfway, so it measures neither half and is not on the board.'}
       </p>
       <div className="space-y-2">
         {records.map(r => {
@@ -1260,8 +1309,21 @@ const STAT_COLUMNS: Record<StatView, { head: string; title: string; value: (s: P
  * engine records a dozen: the tackles, key passes and saves were always
  * counted and never shown.
  */
-function XiStats({ picks, stats }: { picks: SquadPick[]; stats: PlayerStats[] }) {
+function XiStats({ picks, stats, reshapedFrom }: {
+  picks: SquadPick[];
+  stats: PlayerStats[];
+  /** The gameweek a half-time change of eleven started from, if there was one. */
+  reshapedFrom?: number;
+}) {
   const [view, setView] = useState<StatView>('summary');
+  // The starters in their slots, then anyone who came on at half-time.
+  const starters = new Set(picks.map(p => p.playerId));
+  const rows = [
+    ...[...picks].sort((a, b) => b.slotIndex - a.slotIndex)
+      .map(p => ({ key: `xi-${p.slotIndex}`, playerId: p.playerId, name: p.playerName, position: p.position, rating: p.rating })),
+    ...stats.filter(s => !starters.has(s.playerId))
+      .map(s => ({ key: `on-${s.playerId}`, playerId: s.playerId, name: s.playerName, position: s.position, rating: s.rating })),
+  ];
   const columns = STAT_COLUMNS[view];
   return (
     <div className="bg-card rounded-2xl p-4 sm:p-6 min-w-0">
@@ -1279,25 +1341,26 @@ function XiStats({ picks, stats }: { picks: SquadPick[]; stats: PlayerStats[] })
       <div className="flex items-center gap-2 sm:gap-3 mb-2 text-[11px] text-muted">
         <span className="flex-1" />
         {columns.map(c => <abbr key={c.head} title={c.title} className="w-7 text-center no-underline">{c.head}</abbr>)}
+        {reshapedFrom && <abbr title="Appearances" className="w-7 text-center no-underline">App</abbr>}
         <abbr title="Overall rating" className="w-6 text-right no-underline">OVR</abbr>
         <abbr title="Average match rating" className="w-7 text-right no-underline">RTG</abbr>
       </div>
       <div className="space-y-2">
-        {[...picks].sort((a, b) => b.slotIndex - a.slotIndex).map(p => {
-          const stat = stats.find(s => s.playerId === p.playerId && s.position === p.position)
-            ?? stats.find(s => s.playerId === p.playerId);
+        {rows.map(p => {
+          const stat = stats.find(s => s.playerId === p.playerId);
           const rtg  = stat?.avgMatchRating ?? 0;
           // Bands from the match engine's measured spread of season
           // averages (660 player-seasons across 60 real XIs): about the
           // top 5%, the top quarter, above the median, and the rest.
           const rtgColor = rtg >= 6.7 ? 'text-accent' : rtg >= 6.5 ? 'text-sky' : rtg >= 6.4 ? 'text-fg' : 'text-muted';
           return (
-            <div key={p.slotIndex} className="flex items-center gap-2 sm:gap-3">
+            <div key={p.key} className="flex items-center gap-2 sm:gap-3">
               <PositionBadge pos={p.position} size="xs" />
-              <span className="font-bold text-sm flex-1 min-w-0 truncate">{p.playerName}</span>
+              <span className="font-bold text-sm flex-1 min-w-0 truncate">{p.name}</span>
               {columns.map(c => (
                 <span key={c.head} className="text-muted text-xs font-bold w-7 text-center">{stat ? c.value(stat) : 0}</span>
               ))}
+              {reshapedFrom && <span className="text-muted text-xs font-bold w-7 text-center">{stat?.appearances ?? 0}</span>}
               <span className="font-black text-sm w-6 text-right" style={{ color: ratingColor(p.rating) }}>{p.rating}</span>
               <span className={`font-black text-xs w-7 text-right ${rtgColor}`}>{rtg > 0 ? rtg.toFixed(1) : '-'}</span>
             </div>
@@ -1305,7 +1368,7 @@ function XiStats({ picks, stats }: { picks: SquadPick[]; stats: PlayerStats[] })
         })}
       </div>
       <p className="text-[11px] text-muted mt-3">
-        {columns.map(c => `${c.head} ${c.title.toLowerCase()}`).join(' · ')} · RTG average match rating, 6.5 is an ordinary game
+        {columns.map(c => `${c.head} ${c.title.toLowerCase()}`).join(' · ')}{reshapedFrom ? ' · App appearances' : ''} · RTG average match rating, 6.5 is an ordinary game
       </p>
     </div>
   );

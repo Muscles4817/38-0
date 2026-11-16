@@ -115,6 +115,8 @@ export interface DailyResult {
   overall: number;
   style: string;
   changedTo?: string;
+  /** The eleven or its formation changed at halfway. */
+  lineupChanged?: boolean;
   position: number;
   points: number;
   wins: number;
@@ -201,6 +203,6 @@ export function dailyShareText(r: DailyResult, styleLabel: (style: string) => st
     `${ordinal(r.position)} · ${r.points} pts · ${r.wins}-${r.draws}-${r.losses}`,
     row(r.form.slice(0, half)),
     row(r.form.slice(half)),
-    `XI ${r.overall} · ${styleLabel(r.style)}${r.changedTo ? ` → ${styleLabel(r.changedTo)}` : ''} · ${r.topScorer} ${r.topScorerGoals}`,
+    `XI ${r.overall} · ${styleLabel(r.style)}${r.changedTo ? ` → ${styleLabel(r.changedTo)}` : ''}${r.lineupChanged ? ' · reshaped at half-time' : ''} · ${r.topScorer} ${r.topScorerGoals}`,
   ].join('\n');
 }

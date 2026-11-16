@@ -131,5 +131,11 @@ describe('the share text', () => {
     expect([...lines[2]]).toHaveLength(19);
     expect([...lines[3]]).toHaveLength(19);
     expect(lines[4]).toContain('BALANCED → GEGENPRESS');
+    expect(lines[4]).not.toContain('reshaped');
+  });
+
+  it('says when the eleven was reshaped at half-time', () => {
+    const text = dailyShareText(result({ lineupChanged: true }), s => s);
+    expect(text).toContain('reshaped at half-time');
   });
 });

@@ -8,6 +8,7 @@ import PitchView from '@/components/PitchView';
 import OptionCard from '@/components/OptionCard';
 import type { SquadPick } from '@/lib/simulation';
 import { getClassicTeams, getSquad, getLineup, type ClassicTeam, type DataPlayer } from '@/lib/gameData';
+import { BENCH_KEY, BENCH_SLOT_BASE, deriveBench, toBenchPick } from '@/lib/bench';
 import SiteNav from '@/components/SiteNav';
 import BackLink from '@/components/BackLink';
 import { ratingColor } from '@/components/ratingColor';
@@ -163,6 +164,12 @@ export default function ClassicPage() {
     };
     writeStored('38-0-setup', setup);
     writeStored('38-0-squad', picks);
+    // The club's own bench: its best five outside the eleven, one of them a
+    // keeper and one from each line (deriveBench).
+    const startingIds = new Set(picks.map(p => p.playerId));
+    writeStored(BENCH_KEY, selected
+      ? deriveBench(entries, startingIds).map((p, i) => toBenchPick(playerToPick(p, BENCH_SLOT_BASE + i, p.positions[0], selected), i))
+      : []);
     clearStored('38-0-seen-squads', '38-0-plan', '38-0-draft-state');
     router.push('/squad');
   }

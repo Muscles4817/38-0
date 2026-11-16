@@ -74,6 +74,13 @@ list scans. It is used three ways:
 A player counts as a candidate for a slot if any version of them in the pool can
 play it, because whichever squad they appear in next is the one offered.
 
+## The bench
+
+After the eleventh pick the draft can go on for five more, onto the bench. A
+bench spin lands on any squad in the pool with a player not yet drafted, and
+feasibility does not apply: a bench place has no position. See
+[bench.md](bench.md).
+
 ## Prime mode
 
 Prime rates every player at the best rating the snapshot holds for them, in any

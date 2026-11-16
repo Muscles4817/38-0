@@ -68,7 +68,7 @@ export default function DailyCard() {
     };
     // The previous run goes first, as on Start Draft, so a full storage quota
     // frees space before the one write that has to succeed.
-    clearStored('38-0-draft', '38-0-draft-state', '38-0-squad', '38-0-plan', SEEN_SQUADS_KEY);
+    clearStored('38-0-draft', '38-0-draft-state', '38-0-squad', '38-0-bench', '38-0-plan', SEEN_SQUADS_KEY);
     writeStored('38-0-setup', dailySetup);
     router.push('/draft');
   }

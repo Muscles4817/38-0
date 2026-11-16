@@ -100,4 +100,9 @@ describe('a season whose style changed at halfway', () => {
     const list = [run({ style: 'balanced', points: 60 }), run({ style: 'balanced', points: 90, changedTo: 'gegenpress' })];
     expect(styleRecords(list, 'A', 1)).toEqual([expect.objectContaining({ style: 'balanced', played: 1, averagePoints: 60 })]);
   });
+
+  it('is left off the tactics board when the eleven changed at half-time, too', () => {
+    const list = [run({ style: 'balanced', points: 60 }), run({ style: 'balanced', points: 90, lineupChanged: true })];
+    expect(styleRecords(list, 'A', 1)).toEqual([expect.objectContaining({ style: 'balanced', played: 1, averagePoints: 60 })]);
+  });
 });

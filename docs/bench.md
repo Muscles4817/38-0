@@ -1,112 +1,104 @@
-# The bench: a proposal
+# The bench
 
-Not built. A design to approve, change or reject before any of it is written.
-It is a narrower first step than the bench in
-[season-depth.md](season-depth.md), and it is built so that step can follow.
+Built. Five players drafted after the eleven, used by the player's own choice:
+to pick the starting eleven and the formation before kick-off, and to change
+both at half-time. It covers nothing: no injuries, no suspensions, no
+rotation. It is a decision, not insurance. It is a narrower first step than the
+bench in [season-depth.md](season-depth.md), built so that step can follow.
 
-## What it is
-
-After the eleventh pick the draft carries on for **five more**: the bench. At
-half-time of the season, where the game already stops to ask about the style,
-the player can also **change the formation and bring bench players in**. The
-second half is then played by the new eleven, in the new shape, in whatever
-style was chosen.
-
-That is all the bench does in this version. It covers nothing: no injuries, no
-suspensions, no rotation. It is a decision, not insurance.
+Code: `src/lib/bench.ts` (the rules), `src/components/LineupEditor.tsx` (the
+one editor both screens use), and the `change.picks` path in `simulateSeason`.
 
 ## Why this version first
 
 Every other use of a bench needs the opponents to have one. If a drafted XI
 can lose a player to a red card and call on a substitute, the nineteen real
-clubs must be able to as well, or the comparison is unfair, and the bench data
-for 680 club-seasons does not exist (season-depth.md, *The opponents are the
-hard part*). A bench used only by the player's own choice at half-time touches
-none of that: the opponents play exactly as they do today, and nothing that is
-calibrated moves.
-
-It also gives the half-time decision more to it. Today it is a choice among
-fourteen styles. With a bench it is the decision a manager actually makes:
-the shape is not working, so change it and change the personnel to fit.
+clubs must be able to as well, or the comparison is unfair. A bench used only
+by the player's own choice touches none of that: the opponents play exactly as
+before, and nothing that is calibrated moves.
 
 ## The draft
 
-- **Five more picks, after the eleven.** Same wheel, same rerolls, same rules
-  (era, challenge filter, Prime mode). A bench pick goes into any of five
-  numbered bench places, not a formation slot, so there is no position to
-  fit; the feasibility check that stops a draft getting stuck does not apply.
-- **No positional requirement.** A second keeper is the player's choice. With
-  no injuries in this version, a reserve keeper is only worth drafting to
-  play him; requiring one would spend a fifth of the bench on nothing.
-- **A one-tap "Skip the bench" after the eleventh pick**, for a quick run. The
-  season then plays exactly as it does today.
+- **Five more picks, after the eleven** (`BENCH_SIZE`). Same wheel, same
+  rerolls, same rules (era, challenge filter, Prime mode), **one squad a
+  spin**. A bench pick goes into a numbered bench place, a `SquadPick` with
+  `slotIndex` of `BENCH_SLOT_BASE` (100) or more, so it can never be read as a
+  formation slot. Any player in the squad not already drafted can be taken;
+  there is no position to fit, so the feasibility check does not apply. A
+  bench spin lands on any squad with a player not yet drafted.
+- **No positional requirement** on the player's own bench. A second keeper is
+  their choice; with no injuries, one is only worth drafting to play him.
+- **"Skip the bench"** after the eleventh pick, for a quick run, and **"Done
+  with N subs"** once some are picked. With no bench the season plays as an
+  XI alone, as it always did.
 - **The daily challenge** includes the bench: the day's spin order simply
-  continues, so everyone still gets the same sixteen spins.
-- **Classic mode** gets the club's real bench: the five best squad players
-  not in its stored lineup.
-- **What Could Have Been** keeps judging the starting eleven. The bench picks
-  are recorded with their pick numbers like the rest, so a later version can
-  include them.
+  continues, so everyone gets the same sixteen spins.
+- **Storage.** While drafting, bench picks sit in `38-0-draft` with the eleven.
+  When the draft finishes they are split: `38-0-squad` keeps exactly eleven, so
+  everything that read it still reads eleven, and `38-0-bench` holds the rest.
+- **What Could Have Been** still judges the starting eleven only. Bench picks
+  are recorded in `38-0-seen-squads` with their pick numbers like the rest, so
+  a later version can include them.
 
-The cost is length: sixteen spins instead of eleven, about 45% more drafting.
-The skip keeps the short run available.
+## The computer's bench
+
+**Classic mode** gets the club's real bench, picked by `deriveBench`: **one
+goalkeeper, then one defender, one midfielder and one forward, then the best
+outfield player left**, each the best rated of its kind not in the stored
+lineup. A line the squad cannot supply is filled by the best outfield player
+left. The same rule is the one to give the opponents when they get benches;
+they have none yet.
 
 ## Before kick-off
 
-The pre-season screen shows the bench under the XI, with each player's
-traits. Nothing to decide there in this version: the starting eleven is the
-one drafted. Choosing the starting eleven from all sixteen before kick-off is
-a natural next step (open question 3).
+When there is a bench, the pre-season screen is a **team selection**: the
+eleven and the bench, each player's traits, and a formation picker. Tap a
+player, then another, to swap them: two starters swap slots, a starter and a
+sub swap places. Each starter shows his rating *in his slot* (four lower out of
+position, as everywhere else) and the XI's overall updates as you go.
+
+Changing the formation lays the current eleven into the new shape with
+`refitToFormation`: an exact search over every way of placing them, starters
+kept wherever they can play, any slot none of them can play filled from the
+bench, leftovers to the bench. The picker offers only shapes this squad can
+fill with eleven.
+
+The choice is written straight back to `38-0-squad`, `38-0-bench` and the
+setup's formation, so the odds, the style history and the season all read the
+chosen eleven: the odds are priced on it, as they are on the drafted one.
 
 ## At half-time
 
-The half-time panel gains a second part beside the style:
+The half-time panel keeps the style choice and adds **"Change the shape or the
+eleven"**, the same editor. There is **no limit** on changes: it is half a
+season, not a match. Keeping everything stays one tap.
 
-- **Formation.** Any formation the game offers. The current eleven is laid
-  into the new shape automatically (best fit by position, then rating), and
-  the player adjusts it.
-- **Lineup.** Tap a player on the pitch, then a bench player, to swap them;
-  or tap two players on the pitch to swap their slots. Each slot shows the
-  player's rating *in that slot* (out of position costs 4, as everywhere
-  else), and the XI's overall updates as he goes.
-- **Keep everything** stays one tap, as now.
+A change replays the season on the same seed with
+`change: { afterWeek: 19, style, picks }`. At the top of round 20
+`simulateSeason` swaps the XI's players: one who stays keeps his season record,
+one who comes on is entered fresh, and the side's focus is re-inferred from the
+new shape. Rounds before the change are untouched, so the first nineteen
+gameweeks come out byte-identical (`seasonEndToEnd.test.ts`). An unchanged
+eleven (`sameLineup`) is passed as no change at all.
 
-The players taken off go to the bench. There is no limit on how many change:
-it is half a season, not a match.
+`SimulationResult.lineupChangedFrom` marks the gameweek the new eleven started.
+Every `PlayerStats` has `appearances`; the season table lists the starters,
+then whoever came on, with an App column.
 
-## What changes underneath
+## What else reads it
 
-| Area | Change |
+| Area | Behaviour |
 | --- | --- |
-| `simulateSeason` | `change` grows from `{ afterWeek, style }` to also carry the second half's picks and formation. Rounds before `afterWeek` are untouched, so the first half replays identically on the same seed, exactly as the style change already does (`seasonEndToEnd.test.ts` holds it to the byte). |
-| Player stats | A player who plays one half accumulates for the matches he played. The XI's season table lists all sixteen, with appearances. |
-| Storage | A new `38-0-bench` key (five picks), so everything that reads `38-0-squad` keeps reading exactly eleven. |
-| Run history | `changedTo` already marks a style change; it gains whether the lineup or formation changed. Such a season is left off the tactics board, as a style change already is. |
-| Daily result | Records the second-half formation and lineup changes, and the share text says so. |
-| Awards | Unchanged in kind: they read the season's stats, which now include whoever came on. |
+| Run history | `RunRecord.lineupChanged`. Such a season is left off the tactics board, as a style change is: it measures neither eleven. |
+| Daily result | `DailyResult.lineupChanged`; the share text adds "reshaped at half-time". |
+| Awards | Unchanged in kind: they read the season's stats, which include whoever came on. |
+| Squad panel (results) | Lists the bench under the XI. |
 
-Nothing changes for the opponents, the engine's weights, the pre-season
-odds or the calibration tests. The odds are priced on the starting eleven,
-as the style already is.
+Nothing changed for the opponents, the engine's weights, the pre-season odds
+model or the calibration tests.
 
-## Open questions
+## Next, if wanted
 
-1. **Five?** Five matches the modern substitutes' bench and keeps the draft to
-   sixteen spins. Three would keep it shorter; seven would allow a whole new
-   midfield.
-2. **Bench picks from any squad, or a narrower spin?** A bench pick could
-   offer two squads at once to keep the extra spins quick. Simpler to keep one
-   squad a spin.
-3. **Choose the starting eleven before kick-off too?** It makes the pre-season
-   screen a team selection, and makes drafting a bench useful before the
-   season starts. It also raises the question of whether the odds should be
-   priced on the chosen eleven (they would be: the same function, different
-   picks).
-4. **A cap on half-time changes?** None is proposed. A cap of three would
-   echo a match's substitutions but has no reason in a season.
-
-## Then, if wanted
-
-This is step 2 of season-depth.md's suggested order brought forward and
-given a job of its own. Suspensions, injuries and rotation can follow it
-unchanged: they need the same bench, plus benches for the opponents.
+Suspensions, injuries and rotation can follow unchanged: they need this bench,
+plus benches for the opponents, which `deriveBench` can provide from the
+squads the snapshot already holds.
