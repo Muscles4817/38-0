@@ -228,3 +228,29 @@ export function nationChoices(rules: Omit<PoolRules, 'filter'>, formation: Forma
 export function poolCanFieldXI(rules: PoolRules, formation: Formation): boolean {
   return feasibility(draftPool(rules), formation).canComplete([]);
 }
+
+// ── The order a spun squad is listed in ──────────────
+
+/** Where a player's first position sits on a team sheet: keeper first, forwards last. */
+function lineOrder(positions: readonly Position[]): number {
+  const first = positions[0];
+  if (first === 'GK') return 0;
+  if (['CB', 'LB', 'RB', 'LWB', 'RWB'].includes(first)) return 1;
+  if (['CDM', 'CM', 'CAM', 'LM', 'RM'].includes(first)) return 2;
+  return 3;
+}
+
+/**
+ * A spun squad's players in the order the draft lists them: a team sheet's
+ * (keepers, defenders, midfielders, forwards, alphabetical within each), and,
+ * when spinning for a position, those who can fill it first. Never best
+ * first: squads are stored that way, and listing them as stored told a blind
+ * draft who the best player was.
+ */
+export function draftListOrder<T extends { name: string; positions: Position[] }>(
+  players: readonly T[], position?: Position,
+): T[] {
+  const fits = (p: T) => (position && canFillSlot(p.positions, position) ? 0 : position ? 1 : 0);
+  return [...players].sort((a, b) =>
+    fits(a) - fits(b) || lineOrder(a.positions) - lineOrder(b.positions) || a.name.localeCompare(b.name));
+}

@@ -5,7 +5,7 @@ import { useRouter } from 'next/navigation';
 import { getFormation, canFillSlot, Formation, Position } from '@/lib/formations';
 import { SquadPick, computeOverall } from '@/lib/simulation';
 import { describeTraits, getClub, type DataPlayer, type SpunSquad } from '@/lib/gameData';
-import { draftPool, feasibility, type DraftFilter, type Feasibility } from '@/lib/draftPool';
+import { draftListOrder, draftPool, feasibility, type DraftFilter, type Feasibility } from '@/lib/draftPool';
 import { CHALLENGES, describeFilter, type ChallengeId } from '@/lib/challenges';
 import { useStoredJson, readStored, writeStored, clearStored } from '@/lib/clientStorage';
 import { parseSeenSquads, SEEN_SQUADS_KEY, withSeenSquad } from '@/lib/seenSquads';
@@ -265,7 +265,8 @@ export default function DraftPage() {
     // Record the squad for "what could have been", whether or not it is used.
     // After the animation has started: history is a nice-to-have, the spin is not.
     const seen = parseSeenSquads(readStored<unknown>(SEEN_SQUADS_KEY));
-    writeStored(SEEN_SQUADS_KEY, withSeenSquad(seen, found));
+    // The pick it is for is the number already made: a reroll shares it.
+    writeStored(SEEN_SQUADS_KEY, withSeenSquad(seen, { clubId: found.clubId, seasonId: found.seasonId, pick: picks.length }));
   }
 
   function selectPlayer(player: DataPlayer) {
@@ -573,7 +574,8 @@ function SpinPanel({
 }) {
   const filledSlots = new Set(picks.map(p => p.slotIndex));
   const pickedPlayerIds = new Set(picks.map(p => p.playerId));
-  const players = result.players.filter(p => !pickedPlayerIds.has(p.playerId));
+  // In team-sheet order, never best first: see draftListOrder.
+  const players = draftListOrder(result.players.filter(p => !pickedPlayerIds.has(p.playerId)), positionFilter);
 
   function slotStatus(i: number): 'available' | 'filled' | 'unavailable' {
     if (filledSlots.has(i)) return 'filled';
