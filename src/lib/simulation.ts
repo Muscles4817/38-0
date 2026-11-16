@@ -345,14 +345,26 @@ function genName(rand: () => number): string {
  * round, and the rotation has nowhere to put it. A caller assembling an
  * opponent list is responsible for handing over an odd number of opponents.
  */
-function buildSchedule(n: number): [number, number][][] {
+export function buildSchedule(n: number): [number, number][][] {
   const schedule: [number, number][][] = [];
   const order = Array.from({ length: n }, (_, i) => i);
 
+  // The circle method: team 0 stays put and the rest rotate round it. Who is
+  // at home alternates, or one side plays every first-half game at home and
+  // every second-half game away. That side was the XI, always first in the
+  // list: nineteen home games before half-time flattered the table it was
+  // shown at the half-time decision. Now the fixed pair alternates by round
+  // and every other pair is oriented by its place in the circle, which is the
+  // classic minimal-break schedule: every side gets nine or ten home games in
+  // each half, a side alternates home and away apart from at most one double,
+  // and none plays three at home or away in a row. schedule.test.ts holds it.
   for (let r = 0; r < n - 1; r++) {
     const round: [number, number][] = [];
-    round.push([order[0], order[n - 1]]);
-    for (let i = 1; i < n / 2; i++) round.push([order[i], order[n - 1 - i]]);
+    for (let i = 0; i < n / 2; i++) {
+      const pair: [number, number] = [order[i], order[n - 1 - i]];
+      const swap = i === 0 ? r % 2 === 1 : i % 2 === 1;
+      round.push(swap ? [pair[1], pair[0]] : pair);
+    }
     schedule.push(round);
     // Rotate indices 1..n-1
     const last = order[n - 1];
@@ -360,9 +372,13 @@ function buildSchedule(n: number): [number, number][][] {
     order[1] = last;
   }
 
-  // Second half: swap home/away
+  // Second half: the same rounds with home and away swapped, starting from
+  // the second. Starting from the first would put a side that opened with two
+  // home games on three away games in a row across halfway; reversing the
+  // order would play the last first-half fixture again the very next week.
   const firstHalf = schedule.slice();
-  schedule.push(...firstHalf.map(r => r.map(([h, a]): [number, number] => [a, h])));
+  const secondHalf = [...firstHalf.slice(1), firstHalf[0]];
+  schedule.push(...secondHalf.map(r => r.map(([h, a]): [number, number] => [a, h])));
   return schedule;
 }
 
