@@ -1,4 +1,5 @@
 import { type Position, effectiveRating } from './formations';
+import { isBanned, newDiscipline, pickStandIns, recordMatch, type BanReason, type Discipline } from './suspensions';
 import {
   DEFAULT_COHESION, PHASES, PLAYSTYLES, fitForStyle, inferStyle, lineRatings, mulberry32,
   phaseAbility, simulateMatch,
@@ -188,6 +189,8 @@ export interface FixtureDetail {
     assist?: string;
     penalty?: boolean;
   }[];
+  /** The XI's suspended players this match, and who stood in for each. */
+  absent?: { name: string; standIn?: string }[];
 }
 
 export interface Gameweek {
@@ -242,6 +245,10 @@ export interface SimulationResult {
   styles: { fromWeek: number; style: PlaystyleName }[];
   /** The gameweek a changed eleven started from, when the lineup changed. */
   lineupChangedFrom?: number;
+  /** True when suspensions were played: the player had a bench. See src/lib/suspensions.ts. */
+  suspensions?: boolean;
+  /** The XI's bans, in the order given. */
+  bans?: { week: number; playerName: string; matches: number; reason: BanReason }[];
   finalTable: TeamStanding[];
   finalPosition: number;
   points: number;
@@ -279,11 +286,15 @@ export interface OpponentPlayer {
   position: Position;
   rating: number;
   roles?: PlayerRole[];
+  /** Everywhere he can play; a stand-in needs it to fill a slot. Defaults to `position`. */
+  positions?: Position[];
 }
 
 export interface OpponentSquad {
   clubName: string;
   players: OpponentPlayer[];
+  /** Who comes in when one of the eleven is suspended; see src/lib/bench.ts, deriveBench. */
+  bench?: OpponentPlayer[];
   strength: number;
   /** How the club-season set up, where the data records it. Otherwise inferred from the eleven. */
   formation?: string;
@@ -755,6 +766,13 @@ export function simulateSeason(
    * has already shown.
    */
   change?: StyleChange,
+  /**
+   * The XI's bench. With one, suspensions are played, for every side: a
+   * banned player misses matches and the best bench player for his slot
+   * stands in (src/lib/suspensions.ts). Without one, nobody is ever banned and
+   * the season plays exactly as it did before benches existed.
+   */
+  options: { bench?: SquadPick[] } = {},
 ): SimulationResult {
   const rand = rng(seed ?? Date.now() % 999983);
   const USER = 'Your XI';
@@ -807,6 +825,70 @@ export function simulateSeason(
     });
   }
 
+  // ── Benches and suspensions ─────────────────────────────────────────────────
+  //
+  // Everyone a side could call on. A bench player is entered into the season
+  // (given an id) only when he first plays, so one who never does leaves no
+  // trace in the stats.
+  interface BenchEntry {
+    name: string; rating: number; positions: Position[]; roles?: PlayerRole[];
+    sourceId: number; team: string; isUser: boolean; id?: number;
+  }
+  const fromPick = (pick: SquadPick, id?: number): BenchEntry => ({
+    name: pick.playerName, rating: pick.rating, positions: pick.positions ?? [pick.position],
+    roles: pick.roles, sourceId: pick.playerId, team: USER, isUser: true, id,
+  });
+  // The XI's whole squad, starters included, so that a starter left out at
+  // half-time can still be called on.
+  const userPool = new Map<number, BenchEntry>();
+  picks.forEach((pick, i) => userPool.set(pick.playerId, fromPick(pick, userPlayers[i].playerId)));
+  for (const pick of options.bench ?? []) if (!userPool.has(pick.playerId)) userPool.set(pick.playerId, fromPick(pick));
+
+  const suspensionsOn = (options.bench?.length ?? 0) > 0;
+  const benches: BenchEntry[][] = sides.map(() => []);
+  const discipline: Discipline[] = sides.map(() => newDiscipline());
+  if (suspensionsOn) {
+    benches[0] = (options.bench ?? []).map(pick => userPool.get(pick.playerId)!);
+    opponents.forEach((squad, i) => {
+      benches[i + 1] = (squad.bench ?? []).map((p, j) => ({
+        name: p.name, rating: p.rating, positions: p.positions ?? [p.position], roles: p.roles,
+        sourceId: 100 + j, team: squad.clubName, isUser: false,
+      }));
+    });
+  }
+  const bans: NonNullable<SimulationResult['bans']> = [];
+
+  /** The side as it lines up this round: its eleven, less anyone suspended. */
+  function lineupFor(i: number): { setup: TeamSetup; absent: { name: string; standIn?: string }[] } {
+    const base = sides[i].setup;
+    if (!suspensionsOn) return { setup: base, absent: [] };
+    const d = discipline[i];
+    const out = base.players.flatMap((p, k) => (isBanned(d, p.playerId) ? [k] : []));
+    if (out.length === 0) return { setup: base, absent: [] };
+    const onPitch = new Set(base.players.map(p => p.playerId));
+    const standIns = pickStandIns(
+      out.map(k => base.players[k].position),
+      benches[i],
+      b => b.id != null && (isBanned(d, b.id) || onPitch.has(b.id)),
+    );
+    const players = base.players.slice();
+    const absent: { name: string; standIn?: string }[] = [];
+    out.forEach((k, j) => {
+      const banned = base.players[k];
+      const { player: b, rating } = standIns[j];
+      // Nobody left on the bench at all: the banned man plays. Only possible
+      // with a bench shorter than the number banned at once.
+      if (!b) { absent.push({ name: banned.name }); return; }
+      b.id ??= enter(b.team, b.isUser, b.name, banned.position, b.sourceId);
+      players[k] = {
+        playerId: b.id, name: b.name, position: banned.position, rating,
+        roles: activeRoles(b.roles, banned.position, validPos), traits: b.roles ?? [], positions: b.positions,
+      };
+      absent.push({ name: banned.name, standIn: b.name });
+    });
+    return { setup: { ...base, players }, absent };
+  }
+
   // ── Standings ───────────────────────────────────────────────────────────────
   const standings = new Map<string, MutableStanding>();
   for (const side of sides) {
@@ -826,7 +908,7 @@ export function simulateSeason(
   let lineupChangedFrom: number | undefined;
   // Everyone who plays for the XI this season, by snapshot id: the starters,
   // and whoever a change brings on.
-  const pickOf = new Map<number, SquadPick>(picks.map(p => [p.playerId, p]));
+  const pickOf = new Map<number, SquadPick>([...picks, ...(options.bench ?? [])].map(p => [p.playerId, p]));
 
   for (let r = 0; r < schedule.length; r++) {
     const fixtures: FixtureResult[] = [];
@@ -841,19 +923,36 @@ export function simulateSeason(
       const sideNow = sides[0].setup.players;
       const secondHalf: MatchPlayer[] = change.picks.map(pick => {
         const staying = sideNow.find(p => players.get(p.playerId)?.sourceId === pick.playerId);
-        const id = staying?.playerId ?? enter(USER, true, pick.playerName, pick.position, pick.playerId);
+        const known = userPool.get(pick.playerId);
+        const id = staying?.playerId ?? known?.id ?? enter(USER, true, pick.playerName, pick.position, pick.playerId);
+        if (known) known.id = id; else userPool.set(pick.playerId, fromPick(pick, id));
         players.get(id)!.position = pick.position;
         return { ...toMatchPlayer(pick, validPos), playerId: id };
       });
       sides[0].setup = { ...sides[0].setup, players: secondHalf, focus: inferStyle(secondHalf).focus };
       lineupChangedFrom = r + 1;
       for (const pick of change.picks) pickOf.set(pick.playerId, pick);
+      // The bench is now whoever of the squad is not in the new eleven.
+      if (suspensionsOn) {
+        const starting = new Set(change.picks.map(p => p.playerId));
+        benches[0] = [...userPool.values()].filter(e => !starting.has(e.sourceId));
+      }
     }
+
+    const today = sides.map((_, i) => lineupFor(i));
 
     for (const [hi, ai] of schedule[r]) {
       const home = sides[hi];
       const away = sides[ai];
-      const match = simulateMatch(home.setup, away.setup, rand, roles);
+      const match = simulateMatch(today[hi].setup, today[ai].setup, rand, roles);
+      if (suspensionsOn) {
+        for (const [i, team] of [[hi, match.home], [ai, match.away]] as const) {
+          const given = recordMatch(discipline[i], team.players, r + 1);
+          if (i === 0) for (const b of given) {
+            bans.push({ week: r + 1, playerName: players.get(b.playerId)!.name, matches: b.matches, reason: b.reason });
+          }
+        }
+      }
       const homeGoals = match.home.goals;
       const awayGoals = match.away.goals;
 
@@ -906,6 +1005,7 @@ export function simulateSeason(
           ...(e.assistName ? { assist: e.assistName } : {}),
           ...(e.chanceType === 'penalty' ? { penalty: true } : {}),
         })),
+        ...(today[0].absent.length > 0 ? { absent: today[0].absent } : {}),
       } : undefined;
       fixtures.push({ home: home.name, away: away.name, homeGoals, awayGoals, userInvolved, scorers, detail });
     }
@@ -995,6 +1095,7 @@ export function simulateSeason(
     gameweeks,
     styles,
     ...(lineupChangedFrom ? { lineupChangedFrom } : {}),
+    ...(suspensionsOn ? { suspensions: true, bans } : {}),
     finalTable,
     finalPosition,
     points:       userRow.points,

@@ -254,6 +254,8 @@ export default function ResultsPage() {
         seasonId: plan?.seasonId,
         league:   plan?.league,
         style:    plan?.style,
+        // With a bench, suspensions are played; see src/lib/suspensions.ts.
+        bench,
       });
       if (cancelled) return;
       // Written down as it is played, here rather than in an effect on the
@@ -268,7 +270,7 @@ export default function ResultsPage() {
       setPlayed({ result, seed, playedAt, decided: false });
     }, 0);
     return () => { cancelled = true; clearTimeout(t); };
-  }, [picks, plan, daily, run]);
+  }, [picks, bench, plan, daily, run]);
 
   const history = useStoredJson<unknown>(RUN_HISTORY_KEY);
   const dailyStored = useStoredJson<unknown>(DAILY_KEY);
@@ -299,6 +301,7 @@ export default function ResultsPage() {
       seasonId: plan?.seasonId,
       league:   plan?.league,
       style:    plan?.style,
+      bench,
       change:   { afterWeek: halfwayWeek(played.result), style, ...(newEleven ? { picks: newEleven } : {}) },
     });
     const record = runRecord(result, played.seed, played.playedAt, picks, plan);
@@ -1192,6 +1195,11 @@ function MatchDetail({ fixture }: { fixture: FixtureResult }) {
   const column = (user: boolean) => detail.events.filter(e => e.user === user);
   return (
     <div className="mt-3 space-y-3">
+      {detail.absent && detail.absent.length > 0 && (
+        <p className="text-xs text-muted">
+          Suspended: {detail.absent.map(a => `${lastName(a.name)}${a.standIn ? ` (${lastName(a.standIn)} in)` : ''}`).join(', ')}
+        </p>
+      )}
       {detail.events.length > 0 && (
         <div className="grid grid-cols-2 gap-4 text-xs">
           <ul className="space-y-0.5 text-right text-fg-soft" aria-label="Your XI">
@@ -1316,7 +1324,8 @@ function XiStats({ picks, stats, reshapedFrom }: {
   reshapedFrom?: number;
 }) {
   const [view, setView] = useState<StatView>('summary');
-  // The starters in their slots, then anyone who came on at half-time.
+  // The starters in their slots, then anyone else who played: on at half-time,
+  // or standing in for a suspended player.
   const starters = new Set(picks.map(p => p.playerId));
   const rows = [
     ...[...picks].sort((a, b) => b.slotIndex - a.slotIndex)
@@ -1325,6 +1334,10 @@ function XiStats({ picks, stats, reshapedFrom }: {
       .map(s => ({ key: `on-${s.playerId}`, playerId: s.playerId, name: s.playerName, position: s.position, rating: s.rating })),
   ];
   const columns = STAT_COLUMNS[view];
+  // Appearances are worth a column once not everyone played every match: a
+  // change at half-time, or a suspension.
+  const mostApps = Math.max(...stats.map(s => s.appearances));
+  const showApps = reshapedFrom != null || stats.some(s => s.appearances < mostApps);
   return (
     <div className="bg-card rounded-2xl p-4 sm:p-6 min-w-0">
       <div className="flex items-center gap-2 mb-3 flex-wrap">
@@ -1341,7 +1354,7 @@ function XiStats({ picks, stats, reshapedFrom }: {
       <div className="flex items-center gap-2 sm:gap-3 mb-2 text-[11px] text-muted">
         <span className="flex-1" />
         {columns.map(c => <abbr key={c.head} title={c.title} className="w-7 text-center no-underline">{c.head}</abbr>)}
-        {reshapedFrom && <abbr title="Appearances" className="w-7 text-center no-underline">App</abbr>}
+        {showApps && <abbr title="Appearances" className="w-7 text-center no-underline">App</abbr>}
         <abbr title="Overall rating" className="w-6 text-right no-underline">OVR</abbr>
         <abbr title="Average match rating" className="w-7 text-right no-underline">RTG</abbr>
       </div>
@@ -1360,7 +1373,7 @@ function XiStats({ picks, stats, reshapedFrom }: {
               {columns.map(c => (
                 <span key={c.head} className="text-muted text-xs font-bold w-7 text-center">{stat ? c.value(stat) : 0}</span>
               ))}
-              {reshapedFrom && <span className="text-muted text-xs font-bold w-7 text-center">{stat?.appearances ?? 0}</span>}
+              {showApps && <span className="text-muted text-xs font-bold w-7 text-center">{stat?.appearances ?? 0}</span>}
               <span className="font-black text-sm w-6 text-right" style={{ color: ratingColor(p.rating) }}>{p.rating}</span>
               <span className={`font-black text-xs w-7 text-right ${rtgColor}`}>{rtg > 0 ? rtg.toFixed(1) : '-'}</span>
             </div>
@@ -1368,7 +1381,7 @@ function XiStats({ picks, stats, reshapedFrom }: {
         })}
       </div>
       <p className="text-[11px] text-muted mt-3">
-        {columns.map(c => `${c.head} ${c.title.toLowerCase()}`).join(' · ')}{reshapedFrom ? ' · App appearances' : ''} · RTG average match rating, 6.5 is an ordinary game
+        {columns.map(c => `${c.head} ${c.title.toLowerCase()}`).join(' · ')}{showApps ? ' · App appearances' : ''} · RTG average match rating, 6.5 is an ordinary game
       </p>
     </div>
   );

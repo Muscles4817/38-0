@@ -537,7 +537,7 @@ export default function DraftPage() {
             </div>
             {benchPhase && (
               <p className="text-muted text-sm text-center max-w-sm -mt-2">
-                Five subs: choose your starting eleven from all sixteen before kick-off, and change the shape at half-time.
+                Five subs: choose your starting eleven from all sixteen before kick-off, change the shape at half-time, and cover for suspensions. Skip the bench for a quicker run with no suspensions.
               </p>
             )}
             {benchPhase && (
