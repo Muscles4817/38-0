@@ -213,10 +213,11 @@ What is left:
   their high line concedes through balls. Their real success came from
   coaching the data does not record.
 
-### The season has no absences
+### The season has few absences
 
-The same eleven play all 38 games: no suspensions, injuries, fatigue or form,
-and no decisions after kick-off. What adding them would take is written up in
+With a bench, suspensions are played for every side ([bench.md](bench.md#suspensions)).
+There are still no injuries, fatigue or form, and without a bench the same
+eleven play all 38 games. What adding the rest would take is written up in
 [season-depth.md](season-depth.md).
 
 ## 1. The draft pool is still lopsided
@@ -311,6 +312,17 @@ of a collection pass.
 ## Fixed, for reference
 
 Do not re-report these:
+
+- **The XI played its first nineteen games at home and its last nineteen
+  away.** The fixture list used the circle method with the XI as the fixed
+  team and never alternated who was at home, so the table shown at the
+  half-time decision flattered every XI: an 82-rated side in 2003/04 had 38.7
+  points at halfway and took 30.9 in the second half, and sat 2.9th at
+  gameweek 19 against a final 3.8th (150 seasons). `buildSchedule` now gives
+  every side nine or ten home games in each half, never three at home or away
+  in a row, and never the same fixture two weeks running (`schedule.test.ts`).
+  The same side now takes 34.7 and 33.8, and finishes where it did. Opponents
+  had blocks of nine or ten home games too; nothing else measured moved.
 
 - **The report hid most of what the engine recorded.** A defeat showed only
   the XI's scorers, and the squad table only goals, assists and clean sheets.
