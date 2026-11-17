@@ -1,8 +1,184 @@
 {
   "batch": 42,
-  "of": 134,
+  "of": 152,
   "instructions": "See docs/positions-lookup.md. Fill in \"positions\" for each player, most natural first, using only values from \"allowed\". The first must come from \"primaryMustBeOneOf\". Set confidence to high, medium or low.",
   "players": [
+    {
+      "fbrefId": "7f97bf11",
+      "name": "Jürgen Klinsmann",
+      "nation": "GER",
+      "fbrefPosition": "FW",
+      "allowed": [
+        "LW",
+        "RW",
+        "ST",
+        "CF"
+      ],
+      "primaryMustBeOneOf": [
+        "LW",
+        "RW",
+        "ST",
+        "CF"
+      ],
+      "choices": 4,
+      "totalMinutes": 4906,
+      "seasons": [
+        {
+          "season": "1994/95",
+          "club": "Tottenham Hotspur",
+          "minutes": 3625,
+          "starts": 41,
+          "goals": 20,
+          "assists": 10,
+          "fbrefPosition": "FW"
+        },
+        {
+          "season": "1997/98",
+          "club": "Tottenham Hotspur",
+          "minutes": 1281,
+          "starts": 15,
+          "goals": 9,
+          "assists": 5,
+          "fbrefPosition": "FW"
+        }
+      ],
+      "positions": [
+        "ST",
+        "CF"
+      ],
+      "confidence": "high",
+      "note": null
+    },
+    {
+      "fbrefId": "def14f68",
+      "name": "David Albelda",
+      "nation": "ESP",
+      "fbrefPosition": "DFMF",
+      "allowed": [
+        "LB",
+        "CB",
+        "RB",
+        "LWB",
+        "RWB",
+        "CDM",
+        "CM",
+        "CAM",
+        "LM",
+        "RM"
+      ],
+      "primaryMustBeOneOf": [
+        "LB",
+        "CB",
+        "RB",
+        "LWB",
+        "RWB"
+      ],
+      "choices": 10,
+      "totalMinutes": 4870,
+      "seasons": [
+        {
+          "season": "2005/06",
+          "club": "Valencia",
+          "minutes": 2833,
+          "starts": 32,
+          "goals": 2,
+          "assists": 1,
+          "fbrefPosition": "DFMF"
+        },
+        {
+          "season": "2009/10",
+          "club": "Valencia",
+          "minutes": 2037,
+          "starts": 22,
+          "goals": 1,
+          "assists": 1,
+          "fbrefPosition": "DFMF"
+        }
+      ],
+      "positions": [
+        "CB",
+        "CDM",
+        "CM"
+      ],
+      "confidence": "medium",
+      "note": "A holding midfielder by trade who also covered centre-back; FBref orders the defensive bucket first, so the primary follows the label."
+    },
+    {
+      "fbrefId": "60c96516",
+      "name": "Stephen McPhail",
+      "nation": "IRL",
+      "fbrefPosition": "MF",
+      "allowed": [
+        "CDM",
+        "CM",
+        "CAM",
+        "LM",
+        "RM"
+      ],
+      "primaryMustBeOneOf": [
+        "CDM",
+        "CM",
+        "CAM",
+        "LM",
+        "RM"
+      ],
+      "choices": 5,
+      "totalMinutes": 4862,
+      "seasons": [
+        {
+          "season": "1998/99",
+          "club": "Leeds United",
+          "minutes": 998,
+          "starts": 11,
+          "goals": 0,
+          "assists": 2,
+          "fbrefPosition": "MF"
+        },
+        {
+          "season": "1999/00",
+          "club": "Leeds United",
+          "minutes": 2069,
+          "starts": 23,
+          "goals": 2,
+          "assists": 4,
+          "fbrefPosition": "MF"
+        },
+        {
+          "season": "2000/01",
+          "club": "Leeds United",
+          "minutes": 360,
+          "starts": 3,
+          "goals": 0,
+          "assists": 0,
+          "fbrefPosition": "MF"
+        },
+        {
+          "season": "2002/03",
+          "club": "Leeds United",
+          "minutes": 662,
+          "starts": 7,
+          "goals": 0,
+          "assists": 1,
+          "fbrefPosition": "MF"
+        },
+        {
+          "season": "2003/04",
+          "club": "Leeds United",
+          "minutes": 773,
+          "starts": 8,
+          "goals": 1,
+          "assists": 0,
+          "fbrefPosition": "MF"
+        }
+      ],
+      "positions": [
+        "CM",
+        "CAM",
+        "LM"
+      ],
+      "confidence": "medium",
+      "note": null
+    },
     {
       "fbrefId": "f7ee69fb",
       "name": "Mousa Dembélé",
@@ -647,45 +823,6 @@
       "note": "Right of the front three at Bayern, also behind the striker."
     },
     {
-      "fbrefId": "01b8a2b2",
-      "name": "Wojciech Szczęsny",
-      "nation": "POL",
-      "fbrefPosition": "GK",
-      "allowed": [
-        "GK"
-      ],
-      "primaryMustBeOneOf": [
-        "GK"
-      ],
-      "choices": 1,
-      "totalMinutes": 4770,
-      "seasons": [
-        {
-          "season": "2010/11",
-          "club": "Arsenal",
-          "minutes": 1350,
-          "starts": 15,
-          "goals": 0,
-          "assists": 0,
-          "fbrefPosition": "GK"
-        },
-        {
-          "season": "2011/12",
-          "club": "Arsenal",
-          "minutes": 3420,
-          "starts": 38,
-          "goals": 0,
-          "assists": 0,
-          "fbrefPosition": "GK"
-        }
-      ],
-      "positions": [
-        "GK"
-      ],
-      "confidence": "high",
-      "note": null
-    },
-    {
       "fbrefId": "852a4f4d",
       "name": "Micky Adams",
       "nation": "ENG",
@@ -1317,107 +1454,6 @@
       ],
       "confidence": "medium",
       "note": "Central midfielder at Middlesbrough, also used on the right where he made his name at Valencia."
-    },
-    {
-      "fbrefId": "4dd90468",
-      "name": "Alan Reeves",
-      "nation": "ENG",
-      "fbrefPosition": "DF",
-      "allowed": [
-        "LB",
-        "CB",
-        "RB",
-        "LWB",
-        "RWB"
-      ],
-      "primaryMustBeOneOf": [
-        "LB",
-        "CB",
-        "RB",
-        "LWB",
-        "RWB"
-      ],
-      "choices": 5,
-      "totalMinutes": 4687,
-      "seasons": [
-        {
-          "season": "1994/95",
-          "club": "Wimbledon",
-          "minutes": 2703,
-          "starts": 31,
-          "goals": 3,
-          "assists": 0,
-          "fbrefPosition": "DF"
-        },
-        {
-          "season": "1995/96",
-          "club": "Wimbledon",
-          "minutes": 1984,
-          "starts": 22,
-          "goals": 1,
-          "assists": 0,
-          "fbrefPosition": "DF"
-        }
-      ],
-      "positions": [
-        "CB",
-        "RB"
-      ],
-      "confidence": "medium",
-      "note": null
-    },
-    {
-      "fbrefId": "dbfc8648",
-      "name": "Lee McCulloch",
-      "nation": "SCO",
-      "fbrefPosition": "DFFW",
-      "allowed": [
-        "LB",
-        "CB",
-        "RB",
-        "LWB",
-        "RWB",
-        "LW",
-        "RW",
-        "ST",
-        "CF"
-      ],
-      "primaryMustBeOneOf": [
-        "LB",
-        "CB",
-        "RB",
-        "LWB",
-        "RWB"
-      ],
-      "choices": 9,
-      "totalMinutes": 4687,
-      "seasons": [
-        {
-          "season": "2005/06",
-          "club": "Wigan Athletic",
-          "minutes": 2382,
-          "starts": 27,
-          "goals": 5,
-          "assists": 1,
-          "fbrefPosition": "DFFW"
-        },
-        {
-          "season": "2006/07",
-          "club": "Wigan Athletic",
-          "minutes": 2305,
-          "starts": 25,
-          "goals": 4,
-          "assists": 5,
-          "fbrefPosition": "DFFW"
-        }
-      ],
-      "positions": [
-        "LB",
-        "LW",
-        "ST"
-      ],
-      "confidence": "low",
-      "note": "Mainly a left-sided midfielder and forward at Wigan; the defender-primary label reflects his cover at left-back."
     }
   ]
 }

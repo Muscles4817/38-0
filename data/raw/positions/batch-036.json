@@ -1,8 +1,119 @@
 {
   "batch": 36,
-  "of": 134,
+  "of": 152,
   "instructions": "See docs/positions-lookup.md. Fill in \"positions\" for each player, most natural first, using only values from \"allowed\". The first must come from \"primaryMustBeOneOf\". Set confidence to high, medium or low.",
   "players": [
+    {
+      "fbrefId": "66f7c69b",
+      "name": "Darren Moore",
+      "nation": "JAM",
+      "fbrefPosition": "DF",
+      "allowed": [
+        "LB",
+        "CB",
+        "RB",
+        "LWB",
+        "RWB"
+      ],
+      "primaryMustBeOneOf": [
+        "LB",
+        "CB",
+        "RB",
+        "LWB",
+        "RWB"
+      ],
+      "choices": 5,
+      "totalMinutes": 5910,
+      "seasons": [
+        {
+          "season": "2002/03",
+          "club": "West Bromwich Albion",
+          "minutes": 2458,
+          "starts": 29,
+          "goals": 2,
+          "assists": 1,
+          "fbrefPosition": "DF"
+        },
+        {
+          "season": "2004/05",
+          "club": "West Bromwich Albion",
+          "minutes": 986,
+          "starts": 10,
+          "goals": 0,
+          "assists": 0,
+          "fbrefPosition": "DF"
+        },
+        {
+          "season": "2007/08",
+          "club": "Derby County",
+          "minutes": 2466,
+          "starts": 29,
+          "goals": 0,
+          "assists": 0,
+          "fbrefPosition": "DF"
+        }
+      ],
+      "positions": [
+        "CB"
+      ],
+      "confidence": "high",
+      "note": null
+    },
+    {
+      "fbrefId": "40094615",
+      "name": "Dalian Atkinson",
+      "nation": "ENG",
+      "fbrefPosition": "FW",
+      "allowed": [
+        "LW",
+        "RW",
+        "ST",
+        "CF"
+      ],
+      "primaryMustBeOneOf": [
+        "LW",
+        "RW",
+        "ST",
+        "CF"
+      ],
+      "choices": 4,
+      "totalMinutes": 5901,
+      "seasons": [
+        {
+          "season": "1992/93",
+          "club": "Aston Villa",
+          "minutes": 2413,
+          "starts": 28,
+          "goals": 11,
+          "assists": 4,
+          "fbrefPosition": "FW"
+        },
+        {
+          "season": "1993/94",
+          "club": "Aston Villa",
+          "minutes": 2541,
+          "starts": 29,
+          "goals": 8,
+          "assists": 5,
+          "fbrefPosition": "FW"
+        },
+        {
+          "season": "1994/95",
+          "club": "Aston Villa",
+          "minutes": 947,
+          "starts": 11,
+          "goals": 3,
+          "assists": 2,
+          "fbrefPosition": "FW"
+        }
+      ],
+      "positions": [
+        "ST",
+        "CF"
+      ],
+      "confidence": "high",
+      "note": null
+    },
     {
       "fbrefId": "5748f64c",
       "name": "Robert Molenaar",
@@ -1398,121 +1509,6 @@
       ],
       "confidence": "high",
       "note": null
-    },
-    {
-      "fbrefId": "44151558",
-      "name": "Iván Helguera",
-      "nation": "ESP",
-      "fbrefPosition": "DFMF",
-      "allowed": [
-        "LB",
-        "CB",
-        "RB",
-        "LWB",
-        "RWB",
-        "CDM",
-        "CM",
-        "CAM",
-        "LM",
-        "RM"
-      ],
-      "primaryMustBeOneOf": [
-        "LB",
-        "CB",
-        "RB",
-        "LWB",
-        "RWB"
-      ],
-      "choices": 10,
-      "totalMinutes": 5756,
-      "seasons": [
-        {
-          "season": "2002/03",
-          "club": "Real Madrid",
-          "minutes": 2889,
-          "starts": 33,
-          "goals": 6,
-          "assists": 1,
-          "fbrefPosition": "DFMF"
-        },
-        {
-          "season": "2004/05",
-          "club": "Real Madrid",
-          "minutes": 2867,
-          "starts": 33,
-          "goals": 3,
-          "assists": 0,
-          "fbrefPosition": "DFMF"
-        }
-      ],
-      "positions": [
-        "CB",
-        "CDM"
-      ],
-      "confidence": "high",
-      "note": "Real Madrid's centre-back in these seasons, having come through as a holding midfielder."
-    },
-    {
-      "fbrefId": "98faf70c",
-      "name": "Steve McMahon",
-      "nation": "ENG",
-      "fbrefPosition": "DFFW",
-      "allowed": [
-        "LB",
-        "CB",
-        "RB",
-        "LWB",
-        "RWB",
-        "LW",
-        "RW",
-        "ST",
-        "CF"
-      ],
-      "primaryMustBeOneOf": [
-        "LB",
-        "CB",
-        "RB",
-        "LWB",
-        "RWB"
-      ],
-      "choices": 9,
-      "totalMinutes": 5750,
-      "seasons": [
-        {
-          "season": "1992/93",
-          "club": "Manchester City",
-          "minutes": 2082,
-          "starts": 24,
-          "goals": 1,
-          "assists": 0,
-          "fbrefPosition": "DFFW"
-        },
-        {
-          "season": "1993/94",
-          "club": "Manchester City",
-          "minutes": 3107,
-          "starts": 35,
-          "goals": 0,
-          "assists": 3,
-          "fbrefPosition": "DFFW"
-        },
-        {
-          "season": "1994/95",
-          "club": "Manchester City",
-          "minutes": 561,
-          "starts": 6,
-          "goals": 0,
-          "assists": 1,
-          "fbrefPosition": "DFFW"
-        }
-      ],
-      "positions": [
-        "CM",
-        "CDM"
-      ],
-      "confidence": "high",
-      "note": "FBref's DFFW allows no midfield position at all, which is plainly wrong: McMahon was Manchester City's combative central midfielder in these seasons, as he had been at Liverpool and for England.",
-      "labelDisputed": true
     }
   ]
 }

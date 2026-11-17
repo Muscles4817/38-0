@@ -1,8 +1,109 @@
 {
   "batch": 43,
-  "of": 134,
+  "of": 152,
   "instructions": "See docs/positions-lookup.md. Fill in \"positions\" for each player, most natural first, using only values from \"allowed\". The first must come from \"primaryMustBeOneOf\". Set confidence to high, medium or low.",
   "players": [
+    {
+      "fbrefId": "4dd90468",
+      "name": "Alan Reeves",
+      "nation": "ENG",
+      "fbrefPosition": "DF",
+      "allowed": [
+        "LB",
+        "CB",
+        "RB",
+        "LWB",
+        "RWB"
+      ],
+      "primaryMustBeOneOf": [
+        "LB",
+        "CB",
+        "RB",
+        "LWB",
+        "RWB"
+      ],
+      "choices": 5,
+      "totalMinutes": 4687,
+      "seasons": [
+        {
+          "season": "1994/95",
+          "club": "Wimbledon",
+          "minutes": 2703,
+          "starts": 31,
+          "goals": 3,
+          "assists": 0,
+          "fbrefPosition": "DF"
+        },
+        {
+          "season": "1995/96",
+          "club": "Wimbledon",
+          "minutes": 1984,
+          "starts": 22,
+          "goals": 1,
+          "assists": 0,
+          "fbrefPosition": "DF"
+        }
+      ],
+      "positions": [
+        "CB",
+        "RB"
+      ],
+      "confidence": "medium",
+      "note": null
+    },
+    {
+      "fbrefId": "dbfc8648",
+      "name": "Lee McCulloch",
+      "nation": "SCO",
+      "fbrefPosition": "DFFW",
+      "allowed": [
+        "LB",
+        "CB",
+        "RB",
+        "LWB",
+        "RWB",
+        "LW",
+        "RW",
+        "ST",
+        "CF"
+      ],
+      "primaryMustBeOneOf": [
+        "LB",
+        "CB",
+        "RB",
+        "LWB",
+        "RWB"
+      ],
+      "choices": 9,
+      "totalMinutes": 4687,
+      "seasons": [
+        {
+          "season": "2005/06",
+          "club": "Wigan Athletic",
+          "minutes": 2382,
+          "starts": 27,
+          "goals": 5,
+          "assists": 1,
+          "fbrefPosition": "DFFW"
+        },
+        {
+          "season": "2006/07",
+          "club": "Wigan Athletic",
+          "minutes": 2305,
+          "starts": 25,
+          "goals": 4,
+          "assists": 5,
+          "fbrefPosition": "DFFW"
+        }
+      ],
+      "positions": [
+        "LB",
+        "LW",
+        "ST"
+      ],
+      "confidence": "low",
+      "note": "Mainly a left-sided midfielder and forward at Wigan; the defender-primary label reflects his cover at left-back."
+    },
     {
       "fbrefId": "8ff60fb9",
       "name": "Radhi Jaïdi",
@@ -1278,117 +1379,6 @@
       ],
       "confidence": "high",
       "note": null
-    },
-    {
-      "fbrefId": "e85fb9b8",
-      "name": "Giorgio Chiellini",
-      "nation": "ITA",
-      "fbrefPosition": "DF",
-      "allowed": [
-        "LB",
-        "CB",
-        "RB",
-        "LWB",
-        "RWB"
-      ],
-      "primaryMustBeOneOf": [
-        "LB",
-        "CB",
-        "RB",
-        "LWB",
-        "RWB"
-      ],
-      "choices": 5,
-      "totalMinutes": 4560,
-      "seasons": [
-        {
-          "season": "2013/14",
-          "club": "Juventus",
-          "minutes": 2773,
-          "starts": 31,
-          "goals": 3,
-          "assists": 3,
-          "fbrefPosition": "DF"
-        },
-        {
-          "season": "2015/16",
-          "club": "Juventus",
-          "minutes": 1787,
-          "starts": 21,
-          "goals": 1,
-          "assists": 0,
-          "fbrefPosition": "DF"
-        }
-      ],
-      "positions": [
-        "CB",
-        "LB"
-      ],
-      "confidence": "high",
-      "note": "Left-sided centre-back at Juventus; a left-back earlier in his career."
-    },
-    {
-      "fbrefId": "d3d758d8",
-      "name": "Valon Behrami",
-      "nation": "SUI",
-      "fbrefPosition": "DFMF",
-      "allowed": [
-        "LB",
-        "CB",
-        "RB",
-        "LWB",
-        "RWB",
-        "CDM",
-        "CM",
-        "CAM",
-        "LM",
-        "RM"
-      ],
-      "primaryMustBeOneOf": [
-        "LB",
-        "CB",
-        "RB",
-        "LWB",
-        "RWB"
-      ],
-      "choices": 10,
-      "totalMinutes": 4560,
-      "seasons": [
-        {
-          "season": "2008/09",
-          "club": "West Ham United",
-          "minutes": 2001,
-          "starts": 24,
-          "goals": 1,
-          "assists": 0,
-          "fbrefPosition": "DFMF"
-        },
-        {
-          "season": "2009/10",
-          "club": "West Ham United",
-          "minutes": 2048,
-          "starts": 24,
-          "goals": 1,
-          "assists": 1,
-          "fbrefPosition": "DFMF"
-        },
-        {
-          "season": "2010/11",
-          "club": "West Ham United",
-          "minutes": 511,
-          "starts": 6,
-          "goals": 2,
-          "assists": 0,
-          "fbrefPosition": "DFMF"
-        }
-      ],
-      "positions": [
-        "RB",
-        "RM",
-        "CM"
-      ],
-      "confidence": "medium",
-      "note": "West Ham played him mostly wide right in midfield; a right-back by trade."
     }
   ]
 }

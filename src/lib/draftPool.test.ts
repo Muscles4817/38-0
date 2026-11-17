@@ -4,6 +4,7 @@ import { gameData, type DataPlayer, type SpunSquad } from './gameData';
 import {
   draftListOrder,
   applyRules, clubChoices, draftPool, feasibility, nationChoices, poolCanFieldXI, type PoolRules,
+  DEFAULT_SOURCES, describeSources, ICONS, LEGACY_SOURCES, poolSourceOf, poolSourceOptions, resolveSources,
 } from './draftPool';
 
 const ALL_TIME: PoolRules = { yearStart: 1992, yearEnd: 2026, playerRating: 'career', filter: null };
@@ -55,6 +56,52 @@ describe('draftPool', () => {
     const seasons = new Map(gameData.seasons.map(s => [s.id, s.yearStart]));
     expect(modern.every(s => seasons.get(s.seasonId)! >= 2016)).toBe(true);
   });
+});
+
+describe('pool sources', () => {
+  const everything = draftPool({ ...ALL_TIME, sources: [...LEGACY_SOURCES, 'LL'] });
+  const name = (s: SpunSquad) => `${s.clubName} ${s.seasonLabel}`;
+
+  it('a new run drafts from the Premier League only', () => {
+    expect(DEFAULT_SOURCES).toEqual(['PL']);
+    const pool = draftPool({ ...ALL_TIME, sources: DEFAULT_SOURCES });
+    expect(pool.length).toBeGreaterThan(400);
+    expect(pool.every(s => s.league === 'PL')).toBe(true);
+  });
+
+  it('puts every club of a full league-season in that league, and nothing else there', () => {
+    const laLiga = draftPool({ ...ALL_TIME, sources: ['LL'] });
+    expect(laLiga.length).toBeGreaterThanOrEqual(19);
+    expect(laLiga.every(s => s.league === 'LL' && s.seasonLabel === '2025/26')).toBe(true);
+    expect(laLiga.map(name)).toContain('Oviedo 2025/26');
+  });
+
+  it('keeps a famous side from outside a full league-season among the icons', () => {
+    const icons = draftPool({ ...ALL_TIME, sources: [ICONS] });
+    expect(icons.every(s => s.league !== 'PL')).toBe(true);
+    expect(icons.map(name)).toContain('Barcelona 2009/10');
+    expect(icons.some(s => poolSourceOf(s) === 'LL')).toBe(false);
+  });
+
+  it('gives every squad exactly one source', () => {
+    const bySource = (id: string) => draftPool({ ...ALL_TIME, sources: [id] }).length;
+    expect(bySource('PL') + bySource('LL') + bySource(ICONS)).toBe(everything.length);
+  });
+
+  it('reads old setups, and the daily challenge, as Premier League + icons', () => {
+    expect(resolveSources({})).toEqual(LEGACY_SOURCES);
+    expect(resolveSources({ scope: 'with-icons' })).toEqual(LEGACY_SOURCES);
+    expect(resolveSources({ scope: 'premier-league' })).toEqual(['PL']);
+    const legacy = draftPool(ALL_TIME);
+    expect(legacy.some(s => poolSourceOf(s) === 'LL')).toBe(false);
+  });
+
+  it('offers a league on the setup page once a full season of it exists', () => {
+    expect(poolSourceOptions().map(o => o.id)).toEqual(['PL', 'LL', ICONS]);
+    expect(describeSources(['PL'])).toBe('Premier League only');
+    expect(describeSources(['PL', 'LL'])).toBe('Premier League + La Liga');
+  });
+
 });
 
 describe('Prime mode', () => {

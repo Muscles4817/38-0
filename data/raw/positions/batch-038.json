@@ -1,8 +1,136 @@
 {
   "batch": 38,
-  "of": 134,
+  "of": 152,
   "instructions": "See docs/positions-lookup.md. Fill in \"positions\" for each player, most natural first, using only values from \"allowed\". The first must come from \"primaryMustBeOneOf\". Set confidence to high, medium or low.",
   "players": [
+    {
+      "fbrefId": "1fb6cf8f",
+      "name": "John Williams",
+      "nation": "ENG",
+      "fbrefPosition": "FW",
+      "allowed": [
+        "LW",
+        "RW",
+        "ST",
+        "CF"
+      ],
+      "primaryMustBeOneOf": [
+        "LW",
+        "RW",
+        "ST",
+        "CF"
+      ],
+      "choices": 4,
+      "totalMinutes": 5627,
+      "seasons": [
+        {
+          "season": "1992/93",
+          "club": "Coventry City",
+          "minutes": 3318,
+          "starts": 38,
+          "goals": 8,
+          "assists": 4,
+          "fbrefPosition": "FW"
+        },
+        {
+          "season": "1993/94",
+          "club": "Coventry City",
+          "minutes": 2309,
+          "starts": 27,
+          "goals": 3,
+          "assists": 4,
+          "fbrefPosition": "FW"
+        }
+      ],
+      "positions": [
+        "ST",
+        "RW"
+      ],
+      "confidence": "medium",
+      "note": "Pacy forward, often used wide right."
+    },
+    {
+      "fbrefId": "fac73006",
+      "name": "Matt Jansen",
+      "nation": "ENG",
+      "fbrefPosition": "FW",
+      "allowed": [
+        "LW",
+        "RW",
+        "ST",
+        "CF"
+      ],
+      "primaryMustBeOneOf": [
+        "LW",
+        "RW",
+        "ST",
+        "CF"
+      ],
+      "choices": 4,
+      "totalMinutes": 5582,
+      "seasons": [
+        {
+          "season": "1997/98",
+          "club": "Crystal Palace",
+          "minutes": 546,
+          "starts": 5,
+          "goals": 3,
+          "assists": 0,
+          "fbrefPosition": "FW"
+        },
+        {
+          "season": "1998/99",
+          "club": "Blackburn Rovers",
+          "minutes": 674,
+          "starts": 10,
+          "goals": 3,
+          "assists": 1,
+          "fbrefPosition": "FW"
+        },
+        {
+          "season": "2001/02",
+          "club": "Blackburn Rovers",
+          "minutes": 2941,
+          "starts": 34,
+          "goals": 10,
+          "assists": 5,
+          "fbrefPosition": "FW"
+        },
+        {
+          "season": "2003/04",
+          "club": "Blackburn Rovers",
+          "minutes": 852,
+          "starts": 9,
+          "goals": 2,
+          "assists": 2,
+          "fbrefPosition": "FW"
+        },
+        {
+          "season": "2004/05",
+          "club": "Blackburn Rovers",
+          "minutes": 298,
+          "starts": 3,
+          "goals": 2,
+          "assists": 0,
+          "fbrefPosition": "FW"
+        },
+        {
+          "season": "2005/06",
+          "club": "Bolton Wanderers",
+          "minutes": 271,
+          "starts": 3,
+          "goals": 0,
+          "assists": 1,
+          "fbrefPosition": "FW"
+        }
+      ],
+      "positions": [
+        "ST",
+        "CF"
+      ],
+      "confidence": "high",
+      "note": null
+    },
     {
       "fbrefId": "7b4de647",
       "name": "Asmir Begović",
@@ -770,6 +898,54 @@
       "note": null
     },
     {
+      "fbrefId": "01b8a2b2",
+      "name": "Wojciech Szczęsny",
+      "nation": "POL",
+      "fbrefPosition": "GK",
+      "allowed": [
+        "GK"
+      ],
+      "primaryMustBeOneOf": [
+        "GK"
+      ],
+      "choices": 1,
+      "totalMinutes": 5490,
+      "seasons": [
+        {
+          "season": "2010/11",
+          "club": "Arsenal",
+          "minutes": 1350,
+          "starts": 15,
+          "goals": 0,
+          "assists": 0,
+          "fbrefPosition": "GK"
+        },
+        {
+          "season": "2011/12",
+          "club": "Arsenal",
+          "minutes": 3420,
+          "starts": 38,
+          "goals": 0,
+          "assists": 0,
+          "fbrefPosition": "GK"
+        },
+        {
+          "season": "2025/26",
+          "club": "Barcelona",
+          "minutes": 720,
+          "starts": 8,
+          "goals": 0,
+          "assists": 0,
+          "fbrefPosition": "GK"
+        }
+      ],
+      "positions": [
+        "GK"
+      ],
+      "confidence": "high",
+      "note": null
+    },
+    {
       "fbrefId": "f5efb153",
       "name": "Laurent Koscielny",
       "nation": "FRA",
@@ -1165,52 +1341,6 @@
       "note": null
     },
     {
-      "fbrefId": "8d78e732",
-      "name": "Robert Lewandowski",
-      "nation": "POL",
-      "fbrefPosition": "FW",
-      "allowed": [
-        "LW",
-        "RW",
-        "ST",
-        "CF"
-      ],
-      "primaryMustBeOneOf": [
-        "LW",
-        "RW",
-        "ST",
-        "CF"
-      ],
-      "choices": 4,
-      "totalMinutes": 5463,
-      "seasons": [
-        {
-          "season": "2011/12",
-          "club": "Borussia Dortmund",
-          "minutes": 2868,
-          "starts": 34,
-          "goals": 22,
-          "assists": 7,
-          "fbrefPosition": "FW"
-        },
-        {
-          "season": "2012/13",
-          "club": "Borussia Dortmund",
-          "minutes": 2595,
-          "starts": 29,
-          "goals": 24,
-          "assists": 5,
-          "fbrefPosition": "FW"
-        }
-      ],
-      "positions": [
-        "ST",
-        "CF"
-      ],
-      "confidence": "high",
-      "note": "Dortmund's lone centre-forward, dropping in to link play."
-    },
-    {
       "fbrefId": "fc77951f",
       "name": "Matty Holmes",
       "nation": "ENG",
@@ -1419,126 +1549,6 @@
       ],
       "confidence": "medium",
       "note": "Watford forward who also played off the right flank."
-    },
-    {
-      "fbrefId": "e509ea01",
-      "name": "Kevin Lisbie",
-      "nation": "JAM",
-      "fbrefPosition": "FW",
-      "allowed": [
-        "LW",
-        "RW",
-        "ST",
-        "CF"
-      ],
-      "primaryMustBeOneOf": [
-        "LW",
-        "RW",
-        "ST",
-        "CF"
-      ],
-      "choices": 4,
-      "totalMinutes": 5434,
-      "seasons": [
-        {
-          "season": "2000/01",
-          "club": "Charlton Athletic",
-          "minutes": 545,
-          "starts": 5,
-          "goals": 0,
-          "assists": 2,
-          "fbrefPosition": "FW"
-        },
-        {
-          "season": "2001/02",
-          "club": "Charlton Athletic",
-          "minutes": 1121,
-          "starts": 10,
-          "goals": 5,
-          "assists": 1,
-          "fbrefPosition": "FW"
-        },
-        {
-          "season": "2002/03",
-          "club": "Charlton Athletic",
-          "minutes": 2183,
-          "starts": 24,
-          "goals": 4,
-          "assists": 3,
-          "fbrefPosition": "FW"
-        },
-        {
-          "season": "2003/04",
-          "club": "Charlton Athletic",
-          "minutes": 452,
-          "starts": 5,
-          "goals": 4,
-          "assists": 0,
-          "fbrefPosition": "FW"
-        },
-        {
-          "season": "2004/05",
-          "club": "Charlton Athletic",
-          "minutes": 1133,
-          "starts": 12,
-          "goals": 1,
-          "assists": 0,
-          "fbrefPosition": "FW"
-        }
-      ],
-      "positions": [
-        "ST",
-        "RW"
-      ],
-      "confidence": "medium",
-      "note": null
-    },
-    {
-      "fbrefId": "6f34d0b5",
-      "name": "Tyrone Mears",
-      "nation": "JAM",
-      "fbrefPosition": "DF",
-      "allowed": [
-        "LB",
-        "CB",
-        "RB",
-        "LWB",
-        "RWB"
-      ],
-      "primaryMustBeOneOf": [
-        "LB",
-        "CB",
-        "RB",
-        "LWB",
-        "RWB"
-      ],
-      "choices": 5,
-      "totalMinutes": 5430,
-      "seasons": [
-        {
-          "season": "2007/08",
-          "club": "Derby County",
-          "minutes": 2010,
-          "starts": 22,
-          "goals": 1,
-          "assists": 1,
-          "fbrefPosition": "DF"
-        },
-        {
-          "season": "2009/10",
-          "club": "Burnley",
-          "minutes": 3420,
-          "starts": 38,
-          "goals": 0,
-          "assists": 4,
-          "fbrefPosition": "DF"
-        }
-      ],
-      "positions": [
-        "RB"
-      ],
-      "confidence": "high",
-      "note": "Burnley's ever-present right-back in 2009/10."
     }
   ]
 }

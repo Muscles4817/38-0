@@ -29,7 +29,9 @@ interface Setup {
   /** Absent in a setup saved before challenge modes existed. */
   challenge?: ChallengeId;
   filter?: DraftFilter | null;
-  /** Absent in a setup saved before the choice existed: everything, icons included. */
+  /** The parts of the pool switched on; see resolveSources in draftPool.ts. */
+  sources?: readonly string[];
+  /** Saved before `sources` existed, and absent in the daily challenge: Premier League + icons. */
   scope?: PoolScope;
   /** Present when this run is the daily challenge. */
   daily?: DailyChallenge;
@@ -89,6 +91,7 @@ export default function DraftPage() {
     yearEnd:      setup.yearEnd,
     playerRating: setup.playerRating === 'prime' ? 'prime' : 'career',
     filter:       setup.filter ?? null,
+    sources:      setup.sources,
     scope:        setup.scope,
   }) : NO_POOL), [setup]);
   const feasible = useMemo(() => (formation ? feasibility(pool, formation) : null), [pool, formation]);

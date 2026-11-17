@@ -1,6 +1,6 @@
 {
   "batch": 30,
-  "of": 134,
+  "of": 152,
   "instructions": "See docs/positions-lookup.md. Fill in \"positions\" for each player, most natural first, using only values from \"allowed\". The first must come from \"primaryMustBeOneOf\". Set confidence to high, medium or low.",
   "players": [
     {
@@ -1295,6 +1295,61 @@
       "note": null
     },
     {
+      "fbrefId": "8d78e732",
+      "name": "Robert Lewandowski",
+      "nation": "POL",
+      "fbrefPosition": "FW",
+      "allowed": [
+        "LW",
+        "RW",
+        "ST",
+        "CF"
+      ],
+      "primaryMustBeOneOf": [
+        "LW",
+        "RW",
+        "ST",
+        "CF"
+      ],
+      "choices": 4,
+      "totalMinutes": 7127,
+      "seasons": [
+        {
+          "season": "2011/12",
+          "club": "Borussia Dortmund",
+          "minutes": 2868,
+          "starts": 34,
+          "goals": 22,
+          "assists": 7,
+          "fbrefPosition": "FW"
+        },
+        {
+          "season": "2012/13",
+          "club": "Borussia Dortmund",
+          "minutes": 2595,
+          "starts": 29,
+          "goals": 24,
+          "assists": 5,
+          "fbrefPosition": "FW"
+        },
+        {
+          "season": "2025/26",
+          "club": "Barcelona",
+          "minutes": 1664,
+          "starts": 17,
+          "goals": 14,
+          "assists": 2,
+          "fbrefPosition": "FW"
+        }
+      ],
+      "positions": [
+        "ST",
+        "CF"
+      ],
+      "confidence": "high",
+      "note": "Dortmund's lone centre-forward, dropping in to link play."
+    },
+    {
       "fbrefId": "ba8f0ea1",
       "name": "Tony Roberts",
       "nation": "WAL",
@@ -1600,67 +1655,6 @@
       ],
       "confidence": "high",
       "note": "Holding midfielder at Barcelona, before the box-to-box role at City."
-    },
-    {
-      "fbrefId": "d70ce98e",
-      "name": "Lionel Messi",
-      "nation": "ARG",
-      "fbrefPosition": "FWMF",
-      "allowed": [
-        "LW",
-        "RW",
-        "ST",
-        "CF",
-        "CDM",
-        "CM",
-        "CAM",
-        "LM",
-        "RM"
-      ],
-      "primaryMustBeOneOf": [
-        "LW",
-        "RW",
-        "ST",
-        "CF"
-      ],
-      "choices": 9,
-      "totalMinutes": 7091,
-      "seasons": [
-        {
-          "season": "2005/06",
-          "club": "Barcelona",
-          "minutes": 911,
-          "starts": 11,
-          "goals": 6,
-          "assists": 3,
-          "fbrefPosition": "FWMF"
-        },
-        {
-          "season": "2009/10",
-          "club": "Barcelona",
-          "minutes": 2805,
-          "starts": 30,
-          "goals": 34,
-          "assists": 9,
-          "fbrefPosition": "FWMF"
-        },
-        {
-          "season": "2014/15",
-          "club": "Barcelona",
-          "minutes": 3375,
-          "starts": 37,
-          "goals": 43,
-          "assists": 18,
-          "fbrefPosition": "FWMF"
-        }
-      ],
-      "positions": [
-        "CF",
-        "RW",
-        "ST"
-      ],
-      "confidence": "high",
-      "note": "By 2009/10 largely a false nine, having started his career on the right."
     }
   ]
 }

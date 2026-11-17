@@ -1,8 +1,119 @@
 {
   "batch": 44,
-  "of": 134,
+  "of": 152,
   "instructions": "See docs/positions-lookup.md. Fill in \"positions\" for each player, most natural first, using only values from \"allowed\". The first must come from \"primaryMustBeOneOf\". Set confidence to high, medium or low.",
   "players": [
+    {
+      "fbrefId": "e85fb9b8",
+      "name": "Giorgio Chiellini",
+      "nation": "ITA",
+      "fbrefPosition": "DF",
+      "allowed": [
+        "LB",
+        "CB",
+        "RB",
+        "LWB",
+        "RWB"
+      ],
+      "primaryMustBeOneOf": [
+        "LB",
+        "CB",
+        "RB",
+        "LWB",
+        "RWB"
+      ],
+      "choices": 5,
+      "totalMinutes": 4560,
+      "seasons": [
+        {
+          "season": "2013/14",
+          "club": "Juventus",
+          "minutes": 2773,
+          "starts": 31,
+          "goals": 3,
+          "assists": 3,
+          "fbrefPosition": "DF"
+        },
+        {
+          "season": "2015/16",
+          "club": "Juventus",
+          "minutes": 1787,
+          "starts": 21,
+          "goals": 1,
+          "assists": 0,
+          "fbrefPosition": "DF"
+        }
+      ],
+      "positions": [
+        "CB",
+        "LB"
+      ],
+      "confidence": "high",
+      "note": "Left-sided centre-back at Juventus; a left-back earlier in his career."
+    },
+    {
+      "fbrefId": "d3d758d8",
+      "name": "Valon Behrami",
+      "nation": "SUI",
+      "fbrefPosition": "DFMF",
+      "allowed": [
+        "LB",
+        "CB",
+        "RB",
+        "LWB",
+        "RWB",
+        "CDM",
+        "CM",
+        "CAM",
+        "LM",
+        "RM"
+      ],
+      "primaryMustBeOneOf": [
+        "LB",
+        "CB",
+        "RB",
+        "LWB",
+        "RWB"
+      ],
+      "choices": 10,
+      "totalMinutes": 4560,
+      "seasons": [
+        {
+          "season": "2008/09",
+          "club": "West Ham United",
+          "minutes": 2001,
+          "starts": 24,
+          "goals": 1,
+          "assists": 0,
+          "fbrefPosition": "DFMF"
+        },
+        {
+          "season": "2009/10",
+          "club": "West Ham United",
+          "minutes": 2048,
+          "starts": 24,
+          "goals": 1,
+          "assists": 1,
+          "fbrefPosition": "DFMF"
+        },
+        {
+          "season": "2010/11",
+          "club": "West Ham United",
+          "minutes": 511,
+          "starts": 6,
+          "goals": 2,
+          "assists": 0,
+          "fbrefPosition": "DFMF"
+        }
+      ],
+      "positions": [
+        "RB",
+        "RM",
+        "CM"
+      ],
+      "confidence": "medium",
+      "note": "West Ham played him mostly wide right in midfield; a right-back by trade."
+    },
     {
       "fbrefId": "fe278764",
       "name": "Stephen Hughes",
@@ -1316,120 +1427,6 @@
       ],
       "confidence": "high",
       "note": "Small, quick forward who played off a target man."
-    },
-    {
-      "fbrefId": "f4c68930",
-      "name": "David Sommeil",
-      "nation": "GLP",
-      "fbrefPosition": "DF",
-      "allowed": [
-        "LB",
-        "CB",
-        "RB",
-        "LWB",
-        "RWB"
-      ],
-      "primaryMustBeOneOf": [
-        "LB",
-        "CB",
-        "RB",
-        "LWB",
-        "RWB"
-      ],
-      "choices": 5,
-      "totalMinutes": 4405,
-      "seasons": [
-        {
-          "season": "2002/03",
-          "club": "Manchester City",
-          "minutes": 1260,
-          "starts": 14,
-          "goals": 1,
-          "assists": 0,
-          "fbrefPosition": "DF"
-        },
-        {
-          "season": "2003/04",
-          "club": "Manchester City",
-          "minutes": 1620,
-          "starts": 18,
-          "goals": 1,
-          "assists": 0,
-          "fbrefPosition": "DF"
-        },
-        {
-          "season": "2005/06",
-          "club": "Manchester City",
-          "minutes": 1197,
-          "starts": 14,
-          "goals": 2,
-          "assists": 1,
-          "fbrefPosition": "DF"
-        },
-        {
-          "season": "2006/07",
-          "club": "Sheffield United",
-          "minutes": 328,
-          "starts": 4,
-          "goals": 0,
-          "assists": 0,
-          "fbrefPosition": "DF"
-        }
-      ],
-      "positions": [
-        "CB",
-        "RB"
-      ],
-      "confidence": "medium",
-      "note": null
-    },
-    {
-      "fbrefId": "4cce2c67",
-      "name": "Ramires",
-      "nation": "BRA",
-      "fbrefPosition": "MF",
-      "allowed": [
-        "CDM",
-        "CM",
-        "CAM",
-        "LM",
-        "RM"
-      ],
-      "primaryMustBeOneOf": [
-        "CDM",
-        "CM",
-        "CAM",
-        "LM",
-        "RM"
-      ],
-      "choices": 5,
-      "totalMinutes": 4404,
-      "seasons": [
-        {
-          "season": "2010/11",
-          "club": "Chelsea",
-          "minutes": 1933,
-          "starts": 22,
-          "goals": 2,
-          "assists": 0,
-          "fbrefPosition": "MF"
-        },
-        {
-          "season": "2011/12",
-          "club": "Chelsea",
-          "minutes": 2471,
-          "starts": 28,
-          "goals": 5,
-          "assists": 1,
-          "fbrefPosition": "MF"
-        }
-      ],
-      "positions": [
-        "CM",
-        "RM"
-      ],
-      "confidence": "high",
-      "note": "Box-to-box midfielder, often deployed on the right of a Chelsea midfield three in his first season."
     }
   ]
 }

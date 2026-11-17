@@ -1,11 +1,407 @@
 {
   "batch": 102,
-  "of": 134,
+  "of": 152,
   "instructions": "See docs/positions-lookup.md. Fill in \"positions\" for each player, most natural first, using only values from \"allowed\". The first must come from \"primaryMustBeOneOf\". Set confidence to high, medium or low.",
   "players": [
     {
-      "fbrefId": "b334dc77",
-      "name": "Clint Easton",
+      "fbrefId": "5f21b94c",
+      "name": "Joel Roca",
+      "nation": "ESP",
+      "fbrefPosition": "MFFW",
+      "allowed": [
+        "CDM",
+        "CM",
+        "CAM",
+        "LM",
+        "RM",
+        "LW",
+        "RW",
+        "ST",
+        "CF"
+      ],
+      "primaryMustBeOneOf": [
+        "CDM",
+        "CM",
+        "CAM",
+        "LM",
+        "RM"
+      ],
+      "choices": 9,
+      "totalMinutes": 1473,
+      "seasons": [
+        {
+          "season": "2025/26",
+          "club": "Girona",
+          "minutes": 1473,
+          "starts": 16,
+          "goals": 3,
+          "assists": 1,
+          "fbrefPosition": "MFFW"
+        }
+      ],
+      "positions": [
+        "LM",
+        "LW",
+        "RM"
+      ],
+      "confidence": "medium",
+      "note": "Winger, mostly on the left"
+    },
+    {
+      "fbrefId": "80d687ee",
+      "name": "Aruna Dindane",
+      "nation": "CIV",
+      "fbrefPosition": "FW",
+      "allowed": [
+        "LW",
+        "RW",
+        "ST",
+        "CF"
+      ],
+      "primaryMustBeOneOf": [
+        "LW",
+        "RW",
+        "ST",
+        "CF"
+      ],
+      "choices": 4,
+      "totalMinutes": 1472,
+      "seasons": [
+        {
+          "season": "2009/10",
+          "club": "Portsmouth",
+          "minutes": 1472,
+          "starts": 18,
+          "goals": 8,
+          "assists": 2,
+          "fbrefPosition": "FW"
+        }
+      ],
+      "positions": [
+        "ST",
+        "CF",
+        "LW"
+      ],
+      "confidence": "medium",
+      "note": null
+    },
+    {
+      "fbrefId": "9460aaed",
+      "name": "Moritz Leitner",
+      "nation": "GER",
+      "fbrefPosition": "MF",
+      "allowed": [
+        "CDM",
+        "CM",
+        "CAM",
+        "LM",
+        "RM"
+      ],
+      "primaryMustBeOneOf": [
+        "CDM",
+        "CM",
+        "CAM",
+        "LM",
+        "RM"
+      ],
+      "choices": 5,
+      "totalMinutes": 1470,
+      "seasons": [
+        {
+          "season": "2011/12",
+          "club": "Borussia Dortmund",
+          "minutes": 480,
+          "starts": 2,
+          "goals": 0,
+          "assists": 0,
+          "fbrefPosition": "MF"
+        },
+        {
+          "season": "2012/13",
+          "club": "Borussia Dortmund",
+          "minutes": 990,
+          "starts": 8,
+          "goals": 0,
+          "assists": 2,
+          "fbrefPosition": "MF"
+        }
+      ],
+      "positions": [
+        "CAM",
+        "CM"
+      ],
+      "confidence": "medium",
+      "note": null
+    },
+    {
+      "fbrefId": "80bc263c",
+      "name": "Alessandro Del Piero",
+      "nation": "ITA",
+      "fbrefPosition": "FWMF",
+      "allowed": [
+        "LW",
+        "RW",
+        "ST",
+        "CF",
+        "CDM",
+        "CM",
+        "CAM",
+        "LM",
+        "RM"
+      ],
+      "primaryMustBeOneOf": [
+        "LW",
+        "RW",
+        "ST",
+        "CF"
+      ],
+      "choices": 9,
+      "totalMinutes": 1469,
+      "seasons": [
+        {
+          "season": "2003/04",
+          "club": "Juventus",
+          "minutes": 1469,
+          "starts": 18,
+          "goals": 8,
+          "assists": 4,
+          "fbrefPosition": "FWMF"
+        }
+      ],
+      "positions": [
+        "CF",
+        "ST",
+        "CAM"
+      ],
+      "confidence": "high",
+      "note": null
+    },
+    {
+      "fbrefId": "7c473e12",
+      "name": "Dedryck Boyata",
+      "nation": "BEL",
+      "fbrefPosition": "DF",
+      "allowed": [
+        "LB",
+        "CB",
+        "RB",
+        "LWB",
+        "RWB"
+      ],
+      "primaryMustBeOneOf": [
+        "LB",
+        "CB",
+        "RB",
+        "LWB",
+        "RWB"
+      ],
+      "choices": 5,
+      "totalMinutes": 1467,
+      "seasons": [
+        {
+          "season": "2010/11",
+          "club": "Manchester City",
+          "minutes": 345,
+          "starts": 5,
+          "goals": 0,
+          "assists": 0,
+          "fbrefPosition": "DF"
+        },
+        {
+          "season": "2011/12",
+          "club": "Bolton Wanderers",
+          "minutes": 1122,
+          "starts": 13,
+          "goals": 1,
+          "assists": 0,
+          "fbrefPosition": "DF"
+        }
+      ],
+      "positions": [
+        "CB",
+        "RB"
+      ],
+      "confidence": "high",
+      "note": null
+    },
+    {
+      "fbrefId": "39c5ed92",
+      "name": "Giuseppe Baresi",
+      "nation": "ITA",
+      "fbrefPosition": "DFMF",
+      "allowed": [
+        "LB",
+        "CB",
+        "RB",
+        "LWB",
+        "RWB",
+        "CDM",
+        "CM",
+        "CAM",
+        "LM",
+        "RM"
+      ],
+      "primaryMustBeOneOf": [
+        "LB",
+        "CB",
+        "RB",
+        "LWB",
+        "RWB"
+      ],
+      "choices": 10,
+      "totalMinutes": 1467,
+      "seasons": [
+        {
+          "season": "1988/89",
+          "club": "Internazionale",
+          "minutes": 1467,
+          "starts": 13,
+          "goals": 0,
+          "assists": null,
+          "fbrefPosition": "DFMF"
+        }
+      ],
+      "positions": [
+        "CB",
+        "CDM"
+      ],
+      "confidence": "medium",
+      "note": "A holding midfielder who by the late 1980s played mostly as a defender/libero for Inter, which fits the DF-first label."
+    },
+    {
+      "fbrefId": "3d5db1eb",
+      "name": "Chris Herd",
+      "nation": "AUS",
+      "fbrefPosition": "DFMF",
+      "allowed": [
+        "LB",
+        "CB",
+        "RB",
+        "LWB",
+        "RWB",
+        "CDM",
+        "CM",
+        "CAM",
+        "LM",
+        "RM"
+      ],
+      "primaryMustBeOneOf": [
+        "LB",
+        "CB",
+        "RB",
+        "LWB",
+        "RWB"
+      ],
+      "choices": 10,
+      "totalMinutes": 1466,
+      "seasons": [
+        {
+          "season": "2011/12",
+          "club": "Aston Villa",
+          "minutes": 1466,
+          "starts": 19,
+          "goals": 1,
+          "assists": 0,
+          "fbrefPosition": "DFMF"
+        }
+      ],
+      "positions": [
+        "RB",
+        "CM",
+        "CDM"
+      ],
+      "confidence": "medium",
+      "note": "Split between right-back and central midfield at Villa"
+    },
+    {
+      "fbrefId": "b83001b0",
+      "name": "Dean Yates",
+      "nation": "ENG",
+      "fbrefPosition": "DF",
+      "allowed": [
+        "LB",
+        "CB",
+        "RB",
+        "LWB",
+        "RWB"
+      ],
+      "primaryMustBeOneOf": [
+        "LB",
+        "CB",
+        "RB",
+        "LWB",
+        "RWB"
+      ],
+      "choices": 5,
+      "totalMinutes": 1465,
+      "seasons": [
+        {
+          "season": "1996/97",
+          "club": "Derby County",
+          "minutes": 712,
+          "starts": 8,
+          "goals": 0,
+          "assists": 1,
+          "fbrefPosition": "DF"
+        },
+        {
+          "season": "1997/98",
+          "club": "Derby County",
+          "minutes": 753,
+          "starts": 8,
+          "goals": 0,
+          "assists": 0,
+          "fbrefPosition": "DF"
+        }
+      ],
+      "positions": [
+        "CB"
+      ],
+      "confidence": "high",
+      "note": null
+    },
+    {
+      "fbrefId": "71a08f97",
+      "name": "Kevin McDonald",
+      "nation": "SCO",
+      "fbrefPosition": "MF",
+      "allowed": [
+        "CDM",
+        "CM",
+        "CAM",
+        "LM",
+        "RM"
+      ],
+      "primaryMustBeOneOf": [
+        "CDM",
+        "CM",
+        "CAM",
+        "LM",
+        "RM"
+      ],
+      "choices": 5,
+      "totalMinutes": 1465,
+      "seasons": [
+        {
+          "season": "2009/10",
+          "club": "Burnley",
+          "minutes": 1465,
+          "starts": 15,
+          "goals": 1,
+          "assists": 1,
+          "fbrefPosition": "MF"
+        }
+      ],
+      "positions": [
+        "CM",
+        "CDM"
+      ],
+      "confidence": "medium",
+      "note": null
+    },
+    {
+      "fbrefId": "7f60e79c",
+      "name": "Danny Pugh",
       "nation": "ENG",
       "fbrefPosition": "DFMF",
       "allowed": [
@@ -28,13 +424,22 @@
         "RWB"
       ],
       "choices": 10,
-      "totalMinutes": 1096,
+      "totalMinutes": 1462,
       "seasons": [
         {
-          "season": "1999/00",
-          "club": "Watford",
-          "minutes": 1096,
-          "starts": 13,
+          "season": "2008/09",
+          "club": "Stoke City",
+          "minutes": 934,
+          "starts": 9,
+          "goals": 0,
+          "assists": 2,
+          "fbrefPosition": "DFMF"
+        },
+        {
+          "season": "2010/11",
+          "club": "Stoke City",
+          "minutes": 528,
+          "starts": 5,
           "goals": 0,
           "assists": 0,
           "fbrefPosition": "DFMF"
@@ -45,12 +450,12 @@
         "LM"
       ],
       "confidence": "medium",
-      "note": "Left-sided; played left midfield as often as left-back at Watford."
+      "note": "Left-sided; played left-back and left midfield."
     },
     {
-      "fbrefId": "8d5a668a",
-      "name": "Ron Willems",
-      "nation": "NED",
+      "fbrefId": "8db8ad1e",
+      "name": "Jozy Altidore",
+      "nation": "USA",
       "fbrefPosition": "FW",
       "allowed": [
         "LW",
@@ -65,73 +470,210 @@
         "CF"
       ],
       "choices": 4,
-      "totalMinutes": 1095,
+      "totalMinutes": 1461,
       "seasons": [
         {
-          "season": "1996/97",
-          "club": "Derby County",
-          "minutes": 670,
-          "starts": 7,
-          "goals": 2,
-          "assists": 0,
-          "fbrefPosition": "FW"
-        },
-        {
-          "season": "1997/98",
-          "club": "Derby County",
-          "minutes": 425,
-          "starts": 3,
-          "goals": 0,
-          "assists": 0,
+          "season": "2009/10",
+          "club": "Hull City",
+          "minutes": 1461,
+          "starts": 16,
+          "goals": 1,
+          "assists": 3,
           "fbrefPosition": "FW"
         }
       ],
       "positions": [
-        "CF",
-        "ST"
-      ],
-      "confidence": "medium",
-      "note": "Played off the front man rather than as the target."
-    },
-    {
-      "fbrefId": "bbc6102c",
-      "name": "Facundo Sava",
-      "nation": "ARG",
-      "fbrefPosition": "FW",
-      "allowed": [
-        "LW",
-        "RW",
         "ST",
         "CF"
-      ],
-      "primaryMustBeOneOf": [
-        "LW",
-        "RW",
-        "ST",
-        "CF"
-      ],
-      "choices": 4,
-      "totalMinutes": 1093,
-      "seasons": [
-        {
-          "season": "2002/03",
-          "club": "Fulham",
-          "minutes": 1093,
-          "starts": 13,
-          "goals": 5,
-          "assists": 1,
-          "fbrefPosition": "FW"
-        }
-      ],
-      "positions": [
-        "ST"
       ],
       "confidence": "high",
       "note": null
     },
     {
-      "fbrefId": "8db518ba",
-      "name": "Keith Southern",
+      "fbrefId": "65b9e56b",
+      "name": "Raúl Bravo",
+      "nation": "ESP",
+      "fbrefPosition": "DF",
+      "allowed": [
+        "LB",
+        "CB",
+        "RB",
+        "LWB",
+        "RWB"
+      ],
+      "primaryMustBeOneOf": [
+        "LB",
+        "CB",
+        "RB",
+        "LWB",
+        "RWB"
+      ],
+      "choices": 5,
+      "totalMinutes": 1461,
+      "seasons": [
+        {
+          "season": "2002/03",
+          "club": "Leeds United",
+          "minutes": 400,
+          "starts": 5,
+          "goals": 0,
+          "assists": 0,
+          "fbrefPosition": "DF"
+        },
+        {
+          "season": "2004/05",
+          "club": "Real Madrid",
+          "minutes": 1061,
+          "starts": 13,
+          "goals": 0,
+          "assists": 0,
+          "fbrefPosition": "DF"
+        }
+      ],
+      "positions": [
+        "LB",
+        "CB"
+      ],
+      "confidence": "medium",
+      "note": null
+    },
+    {
+      "fbrefId": "9655ab80",
+      "name": "Bruno Cheyrou",
+      "nation": "FRA",
+      "fbrefPosition": "MF",
+      "allowed": [
+        "CDM",
+        "CM",
+        "CAM",
+        "LM",
+        "RM"
+      ],
+      "primaryMustBeOneOf": [
+        "CDM",
+        "CM",
+        "CAM",
+        "LM",
+        "RM"
+      ],
+      "choices": 5,
+      "totalMinutes": 1460,
+      "seasons": [
+        {
+          "season": "2002/03",
+          "club": "Liverpool",
+          "minutes": 760,
+          "starts": 8,
+          "goals": 0,
+          "assists": 0,
+          "fbrefPosition": "MF"
+        },
+        {
+          "season": "2003/04",
+          "club": "Liverpool",
+          "minutes": 700,
+          "starts": 9,
+          "goals": 2,
+          "assists": 0,
+          "fbrefPosition": "MF"
+        }
+      ],
+      "positions": [
+        "CAM",
+        "CM",
+        "LM"
+      ],
+      "confidence": "medium",
+      "note": null
+    },
+    {
+      "fbrefId": "35b9ebac",
+      "name": "Jamie Smith",
+      "nation": "ENG",
+      "fbrefPosition": "DF",
+      "allowed": [
+        "LB",
+        "CB",
+        "RB",
+        "LWB",
+        "RWB"
+      ],
+      "primaryMustBeOneOf": [
+        "LB",
+        "CB",
+        "RB",
+        "LWB",
+        "RWB"
+      ],
+      "choices": 5,
+      "totalMinutes": 1456,
+      "seasons": [
+        {
+          "season": "1997/98",
+          "club": "Crystal Palace",
+          "minutes": 1456,
+          "starts": 16,
+          "goals": 0,
+          "assists": 2,
+          "fbrefPosition": "DF"
+        }
+      ],
+      "positions": [
+        "RB"
+      ],
+      "confidence": "medium",
+      "note": "Palace full-back, mainly right."
+    },
+    {
+      "fbrefId": "85bcb2e5",
+      "name": "Scott Marshall",
+      "nation": "SCO",
+      "fbrefPosition": "DF",
+      "allowed": [
+        "LB",
+        "CB",
+        "RB",
+        "LWB",
+        "RWB"
+      ],
+      "primaryMustBeOneOf": [
+        "LB",
+        "CB",
+        "RB",
+        "LWB",
+        "RWB"
+      ],
+      "choices": 5,
+      "totalMinutes": 1453,
+      "seasons": [
+        {
+          "season": "1995/96",
+          "club": "Arsenal",
+          "minutes": 920,
+          "starts": 10,
+          "goals": 1,
+          "assists": 0,
+          "fbrefPosition": "DF"
+        },
+        {
+          "season": "1996/97",
+          "club": "Arsenal",
+          "minutes": 533,
+          "starts": 6,
+          "goals": 0,
+          "assists": 0,
+          "fbrefPosition": "DF"
+        }
+      ],
+      "positions": [
+        "CB"
+      ],
+      "confidence": "high",
+      "note": null
+    },
+    {
+      "fbrefId": "1544f145",
+      "name": "Jacob Ramsey",
       "nation": "ENG",
       "fbrefPosition": "MF",
       "allowed": [
@@ -149,53 +691,54 @@
         "RM"
       ],
       "choices": 5,
-      "totalMinutes": 1093,
-      "seasons": [
-        {
-          "season": "2010/11",
-          "club": "Blackpool",
-          "minutes": 1093,
-          "starts": 11,
-          "goals": 0,
-          "assists": 0,
-          "fbrefPosition": "MF"
-        }
-      ],
-      "positions": [
-        "CM",
-        "CDM"
-      ],
-      "confidence": "medium",
-      "note": "Blackpool’s workmanlike central midfielder; no goals or assists in eleven starts."
-    },
-    {
-      "fbrefId": "c8aa95da",
-      "name": "Fabian Schär",
-      "nation": "SUI",
-      "fbrefPosition": "DF",
-      "allowed": [
-        "LB",
-        "CB",
-        "RB",
-        "LWB",
-        "RWB"
-      ],
-      "primaryMustBeOneOf": [
-        "LB",
-        "CB",
-        "RB",
-        "LWB",
-        "RWB"
-      ],
-      "choices": 5,
-      "totalMinutes": 1091,
+      "totalMinutes": 1450,
       "seasons": [
         {
           "season": "2025/26",
           "club": "Newcastle United",
-          "minutes": 1091,
-          "starts": 11,
-          "goals": 0,
+          "minutes": 1450,
+          "starts": 15,
+          "goals": 2,
+          "assists": 3,
+          "fbrefPosition": "MF"
+        }
+      ],
+      "positions": [
+        "CAM",
+        "CM",
+        "LM"
+      ],
+      "confidence": "medium",
+      "note": "Left-sided attacking eight."
+    },
+    {
+      "fbrefId": "ca09be9a",
+      "name": "Paolo Montero",
+      "nation": "URU",
+      "fbrefPosition": "DF",
+      "allowed": [
+        "LB",
+        "CB",
+        "RB",
+        "LWB",
+        "RWB"
+      ],
+      "primaryMustBeOneOf": [
+        "LB",
+        "CB",
+        "RB",
+        "LWB",
+        "RWB"
+      ],
+      "choices": 5,
+      "totalMinutes": 1449,
+      "seasons": [
+        {
+          "season": "2003/04",
+          "club": "Juventus",
+          "minutes": 1449,
+          "starts": 17,
+          "goals": 1,
           "assists": 0,
           "fbrefPosition": "DF"
         }
@@ -207,9 +750,93 @@
       "note": null
     },
     {
-      "fbrefId": "b04b9530",
-      "name": "Mirko Vučinić",
-      "nation": "MNE",
+      "fbrefId": "e6536124",
+      "name": "Patrick Dorgu",
+      "nation": "DEN",
+      "fbrefPosition": "MF",
+      "allowed": [
+        "CDM",
+        "CM",
+        "CAM",
+        "LM",
+        "RM"
+      ],
+      "primaryMustBeOneOf": [
+        "CDM",
+        "CM",
+        "CAM",
+        "LM",
+        "RM"
+      ],
+      "choices": 5,
+      "totalMinutes": 1449,
+      "seasons": [
+        {
+          "season": "2025/26",
+          "club": "Manchester United",
+          "minutes": 1449,
+          "starts": 15,
+          "goals": 4,
+          "assists": 4,
+          "fbrefPosition": "MF"
+        }
+      ],
+      "positions": [
+        "LM",
+        "RM"
+      ],
+      "confidence": "high",
+      "note": "Wing-back; FBref records MF only, so LM stands in for LWB."
+    },
+    {
+      "fbrefId": "2374aaca",
+      "name": "Nicolás González",
+      "nation": "ARG",
+      "fbrefPosition": "MFDF",
+      "allowed": [
+        "CDM",
+        "CM",
+        "CAM",
+        "LM",
+        "RM",
+        "LB",
+        "CB",
+        "RB",
+        "LWB",
+        "RWB"
+      ],
+      "primaryMustBeOneOf": [
+        "CDM",
+        "CM",
+        "CAM",
+        "LM",
+        "RM"
+      ],
+      "choices": 10,
+      "totalMinutes": 1448,
+      "seasons": [
+        {
+          "season": "2025/26",
+          "club": "Atlético Madrid",
+          "minutes": 1448,
+          "starts": 18,
+          "goals": 5,
+          "assists": 0,
+          "fbrefPosition": "MFDF"
+        }
+      ],
+      "positions": [
+        "LM",
+        "RM",
+        "LWB"
+      ],
+      "confidence": "medium",
+      "note": "Wide midfielder; sometimes a wing-back under Simeone"
+    },
+    {
+      "fbrefId": "54b6ee79",
+      "name": "Claudio Pizarro",
+      "nation": "PER",
       "fbrefPosition": "FW",
       "allowed": [
         "LW",
@@ -224,131 +851,24 @@
         "CF"
       ],
       "choices": 4,
-      "totalMinutes": 1091,
+      "totalMinutes": 1447,
       "seasons": [
         {
-          "season": "2006/07",
-          "club": "Roma",
-          "minutes": 687,
-          "starts": 5,
+          "season": "2007/08",
+          "club": "Chelsea",
+          "minutes": 693,
+          "starts": 4,
           "goals": 2,
-          "assists": 3,
+          "assists": 1,
           "fbrefPosition": "FW"
         },
         {
-          "season": "2013/14",
-          "club": "Juventus",
-          "minutes": 404,
-          "starts": 4,
-          "goals": 2,
-          "assists": 0,
-          "fbrefPosition": "FW"
-        }
-      ],
-      "positions": [
-        "ST",
-        "LW",
-        "CF"
-      ],
-      "confidence": "medium",
-      "note": "Second striker who often started from the left."
-    },
-    {
-      "fbrefId": "525719c7",
-      "name": "Al Bangura",
-      "nation": "SLE",
-      "fbrefPosition": "MF",
-      "allowed": [
-        "CDM",
-        "CM",
-        "CAM",
-        "LM",
-        "RM"
-      ],
-      "primaryMustBeOneOf": [
-        "CDM",
-        "CM",
-        "CAM",
-        "LM",
-        "RM"
-      ],
-      "choices": 5,
-      "totalMinutes": 1085,
-      "seasons": [
-        {
-          "season": "2006/07",
-          "club": "Watford",
-          "minutes": 1085,
-          "starts": 12,
-          "goals": 0,
-          "assists": 0,
-          "fbrefPosition": "MF"
-        }
-      ],
-      "positions": [
-        "CM",
-        "CDM"
-      ],
-      "confidence": "medium",
-      "note": null
-    },
-    {
-      "fbrefId": "c1e37691",
-      "name": "Nick Hammond",
-      "nation": "ENG",
-      "fbrefPosition": "GK",
-      "allowed": [
-        "GK"
-      ],
-      "primaryMustBeOneOf": [
-        "GK"
-      ],
-      "choices": 1,
-      "totalMinutes": 1084,
-      "seasons": [
-        {
-          "season": "1993/94",
-          "club": "Swindon Town",
-          "minutes": 1084,
-          "starts": 11,
-          "goals": 0,
-          "assists": 0,
-          "fbrefPosition": "GK"
-        }
-      ],
-      "positions": [
-        "GK"
-      ],
-      "confidence": "high",
-      "note": null
-    },
-    {
-      "fbrefId": "0cc5f4a5",
-      "name": "Lukas Nmecha",
-      "nation": "GER",
-      "fbrefPosition": "FW",
-      "allowed": [
-        "LW",
-        "RW",
-        "ST",
-        "CF"
-      ],
-      "primaryMustBeOneOf": [
-        "LW",
-        "RW",
-        "ST",
-        "CF"
-      ],
-      "choices": 4,
-      "totalMinutes": 1083,
-      "seasons": [
-        {
-          "season": "2025/26",
-          "club": "Leeds United",
-          "minutes": 1083,
-          "starts": 10,
+          "season": "2012/13",
+          "club": "Bayern Munich",
+          "minutes": 754,
+          "starts": 7,
           "goals": 6,
-          "assists": 1,
+          "assists": 7,
           "fbrefPosition": "FW"
         }
       ],
@@ -360,309 +880,9 @@
       "note": null
     },
     {
-      "fbrefId": "96c42690",
-      "name": "Youssef Safri",
-      "nation": "MAR",
-      "fbrefPosition": "MF",
-      "allowed": [
-        "CDM",
-        "CM",
-        "CAM",
-        "LM",
-        "RM"
-      ],
-      "primaryMustBeOneOf": [
-        "CDM",
-        "CM",
-        "CAM",
-        "LM",
-        "RM"
-      ],
-      "choices": 5,
-      "totalMinutes": 1083,
-      "seasons": [
-        {
-          "season": "2004/05",
-          "club": "Norwich City",
-          "minutes": 1083,
-          "starts": 13,
-          "goals": 1,
-          "assists": 0,
-          "fbrefPosition": "MF"
-        }
-      ],
-      "positions": [
-        "CDM",
-        "CM"
-      ],
-      "confidence": "high",
-      "note": null
-    },
-    {
-      "fbrefId": "48a5a5d6",
-      "name": "Gabriel Martinelli",
-      "nation": "BRA",
-      "fbrefPosition": "FWMF",
-      "allowed": [
-        "LW",
-        "RW",
-        "ST",
-        "CF",
-        "CDM",
-        "CM",
-        "CAM",
-        "LM",
-        "RM"
-      ],
-      "primaryMustBeOneOf": [
-        "LW",
-        "RW",
-        "ST",
-        "CF"
-      ],
-      "choices": 9,
-      "totalMinutes": 1081,
-      "seasons": [
-        {
-          "season": "2025/26",
-          "club": "Arsenal",
-          "minutes": 1081,
-          "starts": 11,
-          "goals": 1,
-          "assists": 4,
-          "fbrefPosition": "FWMF"
-        }
-      ],
-      "positions": [
-        "LW",
-        "ST"
-      ],
-      "confidence": "high",
-      "note": null
-    },
-    {
-      "fbrefId": "980e2173",
-      "name": "Bernard Lama",
-      "nation": "FRA",
-      "fbrefPosition": "GK",
-      "allowed": [
-        "GK"
-      ],
-      "primaryMustBeOneOf": [
-        "GK"
-      ],
-      "choices": 1,
-      "totalMinutes": 1080,
-      "seasons": [
-        {
-          "season": "1997/98",
-          "club": "West Ham United",
-          "minutes": 1080,
-          "starts": 12,
-          "goals": 0,
-          "assists": 0,
-          "fbrefPosition": "GK"
-        }
-      ],
-      "positions": [
-        "GK"
-      ],
-      "confidence": "high",
-      "note": null
-    },
-    {
-      "fbrefId": "58e98028",
-      "name": "Elliott Ward",
+      "fbrefId": "d8964af6",
+      "name": "Andy Preece",
       "nation": "ENG",
-      "fbrefPosition": "DF",
-      "allowed": [
-        "LB",
-        "CB",
-        "RB",
-        "LWB",
-        "RWB"
-      ],
-      "primaryMustBeOneOf": [
-        "LB",
-        "CB",
-        "RB",
-        "LWB",
-        "RWB"
-      ],
-      "choices": 5,
-      "totalMinutes": 1080,
-      "seasons": [
-        {
-          "season": "2011/12",
-          "club": "Norwich City",
-          "minutes": 1080,
-          "starts": 12,
-          "goals": 0,
-          "assists": 1,
-          "fbrefPosition": "DF"
-        }
-      ],
-      "positions": [
-        "CB"
-      ],
-      "confidence": "high",
-      "note": null
-    },
-    {
-      "fbrefId": "9e5708be",
-      "name": "Sam Johnstone",
-      "nation": "ENG",
-      "fbrefPosition": "GK",
-      "allowed": [
-        "GK"
-      ],
-      "primaryMustBeOneOf": [
-        "GK"
-      ],
-      "choices": 1,
-      "totalMinutes": 1080,
-      "seasons": [
-        {
-          "season": "2025/26",
-          "club": "Wolverhampton Wanderers",
-          "minutes": 1080,
-          "starts": 12,
-          "goals": 0,
-          "assists": 0,
-          "fbrefPosition": "GK"
-        }
-      ],
-      "positions": [
-        "GK"
-      ],
-      "confidence": "high",
-      "note": null
-    },
-    {
-      "fbrefId": "b8a642fc",
-      "name": "Samuel Chukwueze",
-      "nation": "NGA",
-      "fbrefPosition": "MF",
-      "allowed": [
-        "CDM",
-        "CM",
-        "CAM",
-        "LM",
-        "RM"
-      ],
-      "primaryMustBeOneOf": [
-        "CDM",
-        "CM",
-        "CAM",
-        "LM",
-        "RM"
-      ],
-      "choices": 5,
-      "totalMinutes": 1079,
-      "seasons": [
-        {
-          "season": "2025/26",
-          "club": "Fulham",
-          "minutes": 1079,
-          "starts": 10,
-          "goals": 3,
-          "assists": 4,
-          "fbrefPosition": "MF"
-        }
-      ],
-      "positions": [
-        "RM",
-        "CAM"
-      ],
-      "confidence": "high",
-      "note": "Right winger; MF label rules out RW."
-    },
-    {
-      "fbrefId": "20b104bc",
-      "name": "Adam Smith",
-      "nation": "ENG",
-      "fbrefPosition": "DF",
-      "allowed": [
-        "LB",
-        "CB",
-        "RB",
-        "LWB",
-        "RWB"
-      ],
-      "primaryMustBeOneOf": [
-        "LB",
-        "CB",
-        "RB",
-        "LWB",
-        "RWB"
-      ],
-      "choices": 5,
-      "totalMinutes": 1077,
-      "seasons": [
-        {
-          "season": "2025/26",
-          "club": "Bournemouth",
-          "minutes": 1077,
-          "starts": 14,
-          "goals": 0,
-          "assists": 2,
-          "fbrefPosition": "DF"
-        }
-      ],
-      "positions": [
-        "RB",
-        "RWB",
-        "CB"
-      ],
-      "confidence": "high",
-      "note": null
-    },
-    {
-      "fbrefId": "6a11048a",
-      "name": "Andrés D'Alessandro",
-      "nation": "ARG",
-      "fbrefPosition": "FWMF",
-      "allowed": [
-        "LW",
-        "RW",
-        "ST",
-        "CF",
-        "CDM",
-        "CM",
-        "CAM",
-        "LM",
-        "RM"
-      ],
-      "primaryMustBeOneOf": [
-        "LW",
-        "RW",
-        "ST",
-        "CF"
-      ],
-      "choices": 9,
-      "totalMinutes": 1077,
-      "seasons": [
-        {
-          "season": "2005/06",
-          "club": "Portsmouth",
-          "minutes": 1077,
-          "starts": 13,
-          "goals": 1,
-          "assists": 2,
-          "fbrefPosition": "FWMF"
-        }
-      ],
-      "positions": [
-        "LW",
-        "CAM"
-      ],
-      "confidence": "medium",
-      "note": "A No 10 deployed wide left; hence the FW-first label."
-    },
-    {
-      "fbrefId": "e3f9d3e8",
-      "name": "Fredi Bobic",
-      "nation": "GER",
       "fbrefPosition": "FW",
       "allowed": [
         "LW",
@@ -677,13 +897,13 @@
         "CF"
       ],
       "choices": 4,
-      "totalMinutes": 1077,
+      "totalMinutes": 1446,
       "seasons": [
         {
-          "season": "2001/02",
-          "club": "Bolton Wanderers",
-          "minutes": 1077,
-          "starts": 14,
+          "season": "1994/95",
+          "club": "Crystal Palace",
+          "minutes": 1446,
+          "starts": 17,
           "goals": 4,
           "assists": 2,
           "fbrefPosition": "FW"
@@ -696,9 +916,99 @@
       "note": null
     },
     {
-      "fbrefId": "779598dc",
-      "name": "Brian O'Neil",
-      "nation": "SCO",
+      "fbrefId": "169fd162",
+      "name": "Hwang Hee-chan",
+      "nation": "KOR",
+      "fbrefPosition": "FWMF",
+      "allowed": [
+        "LW",
+        "RW",
+        "ST",
+        "CF",
+        "CDM",
+        "CM",
+        "CAM",
+        "LM",
+        "RM"
+      ],
+      "primaryMustBeOneOf": [
+        "LW",
+        "RW",
+        "ST",
+        "CF"
+      ],
+      "choices": 9,
+      "totalMinutes": 1446,
+      "seasons": [
+        {
+          "season": "2025/26",
+          "club": "Wolverhampton Wanderers",
+          "minutes": 1446,
+          "starts": 18,
+          "goals": 2,
+          "assists": 2,
+          "fbrefPosition": "FWMF"
+        }
+      ],
+      "positions": [
+        "LW",
+        "ST",
+        "RW"
+      ],
+      "confidence": "medium",
+      "note": null
+    },
+    {
+      "fbrefId": "264b69a0",
+      "name": "Lorenzo Amoruso",
+      "nation": "ITA",
+      "fbrefPosition": "DF",
+      "allowed": [
+        "LB",
+        "CB",
+        "RB",
+        "LWB",
+        "RWB"
+      ],
+      "primaryMustBeOneOf": [
+        "LB",
+        "CB",
+        "RB",
+        "LWB",
+        "RWB"
+      ],
+      "choices": 5,
+      "totalMinutes": 1444,
+      "seasons": [
+        {
+          "season": "2003/04",
+          "club": "Blackburn Rovers",
+          "minutes": 991,
+          "starts": 11,
+          "goals": 3,
+          "assists": 0,
+          "fbrefPosition": "DF"
+        },
+        {
+          "season": "2004/05",
+          "club": "Blackburn Rovers",
+          "minutes": 453,
+          "starts": 5,
+          "goals": 0,
+          "assists": 0,
+          "fbrefPosition": "DF"
+        }
+      ],
+      "positions": [
+        "CB"
+      ],
+      "confidence": "high",
+      "note": null
+    },
+    {
+      "fbrefId": "8449d35e",
+      "name": "Vitaly Janelt",
+      "nation": "GER",
       "fbrefPosition": "MF",
       "allowed": [
         "CDM",
@@ -715,115 +1025,29 @@
         "RM"
       ],
       "choices": 5,
-      "totalMinutes": 1076,
+      "totalMinutes": 1443,
       "seasons": [
         {
-          "season": "1996/97",
-          "club": "Nottingham Forest",
-          "minutes": 371,
-          "starts": 4,
-          "goals": 0,
-          "assists": 0,
-          "fbrefPosition": "MF"
-        },
-        {
-          "season": "2001/02",
-          "club": "Derby County",
-          "minutes": 705,
-          "starts": 8,
-          "goals": 0,
-          "assists": 0,
+          "season": "2025/26",
+          "club": "Brentford",
+          "minutes": 1443,
+          "starts": 15,
+          "goals": 1,
+          "assists": 4,
           "fbrefPosition": "MF"
         }
       ],
       "positions": [
-        "CDM",
-        "CM"
-      ],
-      "confidence": "medium",
-      "note": "Combative holding midfielder."
-    },
-    {
-      "fbrefId": "148e746e",
-      "name": "Rafael Schmitz",
-      "nation": "BRA",
-      "fbrefPosition": "DF",
-      "allowed": [
-        "LB",
-        "CB",
-        "RB",
-        "LWB",
-        "RWB"
-      ],
-      "primaryMustBeOneOf": [
-        "LB",
-        "CB",
-        "RB",
-        "LWB",
-        "RWB"
-      ],
-      "choices": 5,
-      "totalMinutes": 1075,
-      "seasons": [
-        {
-          "season": "2007/08",
-          "club": "Birmingham City",
-          "minutes": 1075,
-          "starts": 12,
-          "goals": 0,
-          "assists": 1,
-          "fbrefPosition": "DF"
-        }
-      ],
-      "positions": [
-        "CB",
-        "LB"
-      ],
-      "confidence": "medium",
-      "note": null
-    },
-    {
-      "fbrefId": "a3d06a0f",
-      "name": "Valérien Ismaël",
-      "nation": "FRA",
-      "fbrefPosition": "DF",
-      "allowed": [
-        "LB",
-        "CB",
-        "RB",
-        "LWB",
-        "RWB"
-      ],
-      "primaryMustBeOneOf": [
-        "LB",
-        "CB",
-        "RB",
-        "LWB",
-        "RWB"
-      ],
-      "choices": 5,
-      "totalMinutes": 1074,
-      "seasons": [
-        {
-          "season": "1997/98",
-          "club": "Crystal Palace",
-          "minutes": 1074,
-          "starts": 13,
-          "goals": 0,
-          "assists": 0,
-          "fbrefPosition": "DF"
-        }
-      ],
-      "positions": [
-        "CB"
+        "CM",
+        "CDM"
       ],
       "confidence": "high",
       "note": null
     },
     {
-      "fbrefId": "bfaa24c3",
-      "name": "Jean-Claude Darcheville",
-      "nation": "FRA",
+      "fbrefId": "129af0db",
+      "name": "Álvaro Morata",
+      "nation": "ESP",
       "fbrefPosition": "FW",
       "allowed": [
         "LW",
@@ -838,155 +1062,24 @@
         "CF"
       ],
       "choices": 4,
-      "totalMinutes": 1073,
+      "totalMinutes": 1441,
       "seasons": [
         {
-          "season": "1998/99",
-          "club": "Nottingham Forest",
-          "minutes": 1073,
-          "starts": 14,
-          "goals": 2,
-          "assists": 2,
+          "season": "2015/16",
+          "club": "Juventus",
+          "minutes": 1441,
+          "starts": 16,
+          "goals": 7,
+          "assists": 7,
           "fbrefPosition": "FW"
         }
       ],
       "positions": [
         "ST",
-        "LW"
-      ],
-      "confidence": "medium",
-      "note": null
-    },
-    {
-      "fbrefId": "d9b0f08e",
-      "name": "Javier Farinós",
-      "nation": "ESP",
-      "fbrefPosition": "MF",
-      "allowed": [
-        "CDM",
-        "CM",
-        "CAM",
-        "LM",
-        "RM"
-      ],
-      "primaryMustBeOneOf": [
-        "CDM",
-        "CM",
-        "CAM",
-        "LM",
-        "RM"
-      ],
-      "choices": 5,
-      "totalMinutes": 1071,
-      "seasons": [
-        {
-          "season": "2003/04",
-          "club": "Internazionale",
-          "minutes": 1071,
-          "starts": 12,
-          "goals": 1,
-          "assists": 1,
-          "fbrefPosition": "MF"
-        }
-      ],
-      "positions": [
-        "CDM",
-        "CM"
+        "CF"
       ],
       "confidence": "high",
       "note": null
-    },
-    {
-      "fbrefId": "3727dd3c",
-      "name": "Jonjo Shelvey",
-      "nation": "ENG",
-      "fbrefPosition": "MF",
-      "allowed": [
-        "CDM",
-        "CM",
-        "CAM",
-        "LM",
-        "RM"
-      ],
-      "primaryMustBeOneOf": [
-        "CDM",
-        "CM",
-        "CAM",
-        "LM",
-        "RM"
-      ],
-      "choices": 5,
-      "totalMinutes": 1070,
-      "seasons": [
-        {
-          "season": "2010/11",
-          "club": "Liverpool",
-          "minutes": 340,
-          "starts": 0,
-          "goals": 0,
-          "assists": 1,
-          "fbrefPosition": "MF"
-        },
-        {
-          "season": "2011/12",
-          "club": "Liverpool",
-          "minutes": 730,
-          "starts": 8,
-          "goals": 1,
-          "assists": 0,
-          "fbrefPosition": "MF"
-        }
-      ],
-      "positions": [
-        "CM",
-        "CAM"
-      ],
-      "confidence": "medium",
-      "note": null
-    },
-    {
-      "fbrefId": "57760e66",
-      "name": "Marcus Edwards",
-      "nation": "ENG",
-      "fbrefPosition": "MFFW",
-      "allowed": [
-        "CDM",
-        "CM",
-        "CAM",
-        "LM",
-        "RM",
-        "LW",
-        "RW",
-        "ST",
-        "CF"
-      ],
-      "primaryMustBeOneOf": [
-        "CDM",
-        "CM",
-        "CAM",
-        "LM",
-        "RM"
-      ],
-      "choices": 9,
-      "totalMinutes": 1067,
-      "seasons": [
-        {
-          "season": "2025/26",
-          "club": "Burnley",
-          "minutes": 1067,
-          "starts": 11,
-          "goals": 1,
-          "assists": 3,
-          "fbrefPosition": "MFFW"
-        }
-      ],
-      "positions": [
-        "RM",
-        "CAM",
-        "RW"
-      ],
-      "confidence": "medium",
-      "note": "Wide attacker at Sporting and Burnley, also used off the front as a ten."
     }
   ]
 }
