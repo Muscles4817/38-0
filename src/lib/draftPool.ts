@@ -18,7 +18,10 @@
 // placement during the draft that would make the XI impossible to finish.
 
 import { canFillSlot, type Formation, type Position } from './formations';
-import { gameData, listDraftableSquads, SIMULATED_LEAGUE, type DataPlayer, type SpunSquad } from './gameData';
+import {
+  describeCompetition, gameData, leagueName, listCompetitions, listDraftableSquads, SIMULATED_LEAGUE,
+  type DataPlayer, type SpunSquad,
+} from './gameData';
 
 export type DraftFilter =
   | { kind: 'club'; clubId: number }
@@ -32,13 +35,91 @@ export interface PoolRules {
   playerRating: 'career' | 'prime';
   filter: DraftFilter | null;
   /**
-   * 'premier-league' leaves out the icons: the Serie A, La Liga, Bundesliga
-   * and World Cup sides. Absent means everything, as before the choice existed.
+   * The parts of the pool switched on: league codes ('PL', 'LL') and/or
+   * ICONS. See poolSourceOf. Absent falls back to `scope`.
+   */
+  sources?: readonly string[];
+  /**
+   * The choice before `sources`, still read from setups saved with it:
+   * 'premier-league' is Premier League only, and 'with-icons' or absent is
+   * Premier League + icons. The daily challenge saves neither, so it keeps
+   * the pool it has always had.
    */
   scope?: PoolScope;
 }
 
 export type PoolScope = 'with-icons' | 'premier-league';
+
+// ── Pool sources ──────────────────────────────────────
+
+/** The source for famous sides from outside a full league-season. */
+export const ICONS = 'icons';
+
+/** What a new run drafts from unless the player switches more on. */
+export const DEFAULT_SOURCES: readonly string[] = [SIMULATED_LEAGUE];
+
+/** Premier League + icons: old setups, and the daily challenge. */
+export const LEGACY_SOURCES: readonly string[] = [SIMULATED_LEAGUE, ICONS];
+
+const fullLeagueSeason = new Map<string, boolean>();
+
+/**
+ * Which part of the pool a club-season belongs to. English sides are 'PL'.
+ * A side from a league-season complete enough to play a league in
+ * (describeCompetition) is its league, so every La Liga 2025/26 club is 'LL'.
+ * Anything else, such as Barcelona 2009/10 on its own, is an icon.
+ */
+export function poolSourceOf(squad: Pick<SpunSquad, 'league' | 'seasonId'>): string {
+  if (squad.league === SIMULATED_LEAGUE) return SIMULATED_LEAGUE;
+  const key = `${squad.league}|${squad.seasonId}`;
+  let full = fullLeagueSeason.get(key);
+  if (full === undefined) {
+    full = describeCompetition(squad.seasonId, squad.league) !== null;
+    fullLeagueSeason.set(key, full);
+  }
+  return full ? squad.league : ICONS;
+}
+
+/** The sources a set of rules switches on. */
+export function resolveSources(rules: Pick<PoolRules, 'sources' | 'scope'>): readonly string[] {
+  if (rules.sources) return rules.sources;
+  return rules.scope === 'premier-league' ? DEFAULT_SOURCES : LEGACY_SOURCES;
+}
+
+export interface PoolSourceOption {
+  id: string;
+  label: string;
+  description: string;
+}
+
+/**
+ * The sources the setup page offers: the Premier League, every other league
+ * with at least one full season in the snapshot, and the icons. A league
+ * appears here as soon as a whole season of it is imported.
+ */
+export function poolSourceOptions(): PoolSourceOption[] {
+  const seasonsByLeague = new Map<string, string[]>();
+  for (const c of listCompetitions()) {
+    if (c.league === SIMULATED_LEAGUE) continue;
+    seasonsByLeague.set(c.league, [...(seasonsByLeague.get(c.league) ?? []), c.seasonLabel]);
+  }
+  return [
+    { id: SIMULATED_LEAGUE, label: leagueName(SIMULATED_LEAGUE), description: 'Every English top-flight season' },
+    ...[...seasonsByLeague.entries()].map(([league, seasons]) => ({
+      id: league,
+      label: leagueName(league),
+      description: `Every club, ${seasons.sort().join(', ')}`,
+    })),
+    { id: ICONS, label: 'Icons', description: 'Famous Serie A, La Liga, Bundesliga and World Cup sides' },
+  ];
+}
+
+/** "Premier League + La Liga", for the setup summary. */
+export function describeSources(sources: readonly string[]): string {
+  const labels = poolSourceOptions().filter(o => sources.includes(o.id)).map(o => o.label);
+  if (labels.length === 1 && sources[0] !== ICONS) return `${labels[0]} only`;
+  return labels.join(' + ');
+}
 
 // ── Prime ratings ─────────────────────────────────────
 
@@ -88,10 +169,11 @@ export function applyRules(players: DataPlayer[], rules: Pick<PoolRules, 'player
 /** The club-seasons the draft can spin, with their players under the rules. */
 export function draftPool(rules: PoolRules): SpunSquad[] {
   const filter = rules.filter;
+  const sources = new Set(resolveSources(rules));
   const pool: SpunSquad[] = [];
   for (const squad of listDraftableSquads(rules.yearStart, rules.yearEnd)) {
     if (filter?.kind === 'club' && squad.clubId !== filter.clubId) continue;
-    if (rules.scope === 'premier-league' && squad.league !== SIMULATED_LEAGUE) continue;
+    if (!sources.has(poolSourceOf(squad))) continue;
     const players = applyRules(squad.players, rules);
     if (players.length > 0) pool.push({ ...squad, players });
   }

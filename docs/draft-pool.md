@@ -24,15 +24,31 @@ challenge or Prime mode is on.
 
 Opponents are never filtered: the league is always the real squads.
 
-## Which squads: with the icons, or Premier League only
+## Which squads: the pool sources
 
-The setup page offers two pools. **Premier League + icons**, the default, is
-every English top-flight season in the era plus the famous sides from Serie A,
-La Liga, the Bundesliga and two World Cups (34 of the 458 squads).
-**Premier League only** leaves those out (`PoolRules.scope: 'premier-league'`,
-saved in `38-0-setup` as `scope`). The setup card used to read just "Premier
-League" while the pool always held the icons, which read as a bug. The daily
-challenge always uses the full pool, so everyone gets the same one.
+Every club-season belongs to exactly one source (`poolSourceOf`):
+
+- **Premier League** (`PL`): every English top-flight season.
+- **A full league**, by its code (`LL` for La Liga): every club of a
+  league-season with enough clubs to play a league in, the same test
+  `listCompetitions()` uses. Today that is La Liga 2025/26.
+- **Icons** (`icons`): everything else, the famous Serie A, La Liga,
+  Bundesliga and World Cup sides held on their own, such as Barcelona 2009/10.
+
+Of the 497 draftable squads, 443 are Premier League, 20 La Liga and 34 icons.
+
+The setup page shows one card per source (`poolSourceOptions`) and lets the
+player switch on any mix; the last one cannot be switched off. **The default is
+Premier League only.** A league gets its card as soon as a full season of it is
+imported, with no code change. The choice is saved in `38-0-setup` as
+`sources` and passed to `PoolRules.sources`.
+
+Before the sources there were two pools, saved as `scope`: `'premier-league'`,
+and `'with-icons'`, which was the default. `resolveSources` still reads those,
+and reads a setup with neither as Premier League + icons. **The daily challenge
+saves neither**, so it keeps the pool it always had, Premier League + icons,
+and everyone gets the same one; adding La Liga to it would change the daily
+for everyone and is a separate decision.
 
 ## Challenges
 
