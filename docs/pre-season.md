@@ -96,9 +96,10 @@ measure any XI.
 ## The season
 
 `listCompetitions()` in `src/lib/gameData.ts` returns every league-season the
-snapshot can field a full league for, which today is fourteen Premier League
-seasons: 1992/93 to 2004/05, and 2025/26. It is generic in the league, so a
-Serie A season imported later becomes selectable with no code change here or on
+snapshot can field a full league for, which today is twenty-two: the Premier
+League from 1992/93 to 2011/12 and 2025/26, and La Liga 2025/26. It is generic
+in the league, so a Serie A season imported later becomes selectable with no
+code change here or on
 the screen.
 
 A league is twenty teams, because the game is called 38-0. Nineteen opponents

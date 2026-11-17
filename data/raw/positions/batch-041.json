@@ -1,8 +1,127 @@
 {
   "batch": 41,
-  "of": 134,
+  "of": 152,
   "instructions": "See docs/positions-lookup.md. Fill in \"positions\" for each player, most natural first, using only values from \"allowed\". The first must come from \"primaryMustBeOneOf\". Set confidence to high, medium or low.",
   "players": [
+    {
+      "fbrefId": "654f4e63",
+      "name": "Zinédine Zidane",
+      "nation": "FRA",
+      "fbrefPosition": "MF",
+      "allowed": [
+        "CDM",
+        "CM",
+        "CAM",
+        "LM",
+        "RM"
+      ],
+      "primaryMustBeOneOf": [
+        "CDM",
+        "CM",
+        "CAM",
+        "LM",
+        "RM"
+      ],
+      "choices": 5,
+      "totalMinutes": 5049,
+      "seasons": [
+        {
+          "season": "2002/03",
+          "club": "Real Madrid",
+          "minutes": 2703,
+          "starts": 32,
+          "goals": 9,
+          "assists": 9,
+          "fbrefPosition": "MF"
+        },
+        {
+          "season": "2004/05",
+          "club": "Real Madrid",
+          "minutes": 2346,
+          "starts": 28,
+          "goals": 6,
+          "assists": 5,
+          "fbrefPosition": "MF"
+        }
+      ],
+      "positions": [
+        "CAM",
+        "CM"
+      ],
+      "confidence": "high",
+      "note": null
+    },
+    {
+      "fbrefId": "e7ca0439",
+      "name": "James Tomkins",
+      "nation": "ENG",
+      "fbrefPosition": "DFMF",
+      "allowed": [
+        "LB",
+        "CB",
+        "RB",
+        "LWB",
+        "RWB",
+        "CDM",
+        "CM",
+        "CAM",
+        "LM",
+        "RM"
+      ],
+      "primaryMustBeOneOf": [
+        "LB",
+        "CB",
+        "RB",
+        "LWB",
+        "RWB"
+      ],
+      "choices": 10,
+      "totalMinutes": 5044,
+      "seasons": [
+        {
+          "season": "2007/08",
+          "club": "West Ham United",
+          "minutes": 467,
+          "starts": 5,
+          "goals": 0,
+          "assists": 0,
+          "fbrefPosition": "DFMF"
+        },
+        {
+          "season": "2008/09",
+          "club": "West Ham United",
+          "minutes": 1002,
+          "starts": 11,
+          "goals": 1,
+          "assists": 0,
+          "fbrefPosition": "DFMF"
+        },
+        {
+          "season": "2009/10",
+          "club": "West Ham United",
+          "minutes": 1996,
+          "starts": 22,
+          "goals": 0,
+          "assists": 0,
+          "fbrefPosition": "DFMF"
+        },
+        {
+          "season": "2010/11",
+          "club": "West Ham United",
+          "minutes": 1579,
+          "starts": 18,
+          "goals": 1,
+          "assists": 1,
+          "fbrefPosition": "DFMF"
+        }
+      ],
+      "positions": [
+        "CB",
+        "CDM"
+      ],
+      "confidence": "medium",
+      "note": "Centre-back who occasionally filled in as a holding midfielder."
+    },
     {
       "fbrefId": "aa4d048f",
       "name": "Kevin Gallen",
@@ -478,6 +597,55 @@
       ],
       "confidence": "medium",
       "note": null
+    },
+    {
+      "fbrefId": "55126f3b",
+      "name": "Koke",
+      "nation": "ESP",
+      "fbrefPosition": "MF",
+      "allowed": [
+        "CDM",
+        "CM",
+        "CAM",
+        "LM",
+        "RM"
+      ],
+      "primaryMustBeOneOf": [
+        "CDM",
+        "CM",
+        "CAM",
+        "LM",
+        "RM"
+      ],
+      "choices": 5,
+      "totalMinutes": 5004,
+      "seasons": [
+        {
+          "season": "2013/14",
+          "club": "Atlético Madrid",
+          "minutes": 2785,
+          "starts": 33,
+          "goals": 6,
+          "assists": 14,
+          "fbrefPosition": "MF"
+        },
+        {
+          "season": "2025/26",
+          "club": "Atlético Madrid",
+          "minutes": 2219,
+          "starts": 24,
+          "goals": 2,
+          "assists": 2,
+          "fbrefPosition": "MF"
+        }
+      ],
+      "positions": [
+        "CM",
+        "LM",
+        "CAM"
+      ],
+      "confidence": "medium",
+      "note": "Nominally left of midfield in Atlético's 4-4-2, but functioned as the central creator."
     },
     {
       "fbrefId": "99bd8581",
@@ -1274,182 +1442,6 @@
         "GK"
       ],
       "confidence": "high",
-      "note": null
-    },
-    {
-      "fbrefId": "7f97bf11",
-      "name": "Jürgen Klinsmann",
-      "nation": "GER",
-      "fbrefPosition": "FW",
-      "allowed": [
-        "LW",
-        "RW",
-        "ST",
-        "CF"
-      ],
-      "primaryMustBeOneOf": [
-        "LW",
-        "RW",
-        "ST",
-        "CF"
-      ],
-      "choices": 4,
-      "totalMinutes": 4906,
-      "seasons": [
-        {
-          "season": "1994/95",
-          "club": "Tottenham Hotspur",
-          "minutes": 3625,
-          "starts": 41,
-          "goals": 20,
-          "assists": 10,
-          "fbrefPosition": "FW"
-        },
-        {
-          "season": "1997/98",
-          "club": "Tottenham Hotspur",
-          "minutes": 1281,
-          "starts": 15,
-          "goals": 9,
-          "assists": 5,
-          "fbrefPosition": "FW"
-        }
-      ],
-      "positions": [
-        "ST",
-        "CF"
-      ],
-      "confidence": "high",
-      "note": null
-    },
-    {
-      "fbrefId": "def14f68",
-      "name": "David Albelda",
-      "nation": "ESP",
-      "fbrefPosition": "DFMF",
-      "allowed": [
-        "LB",
-        "CB",
-        "RB",
-        "LWB",
-        "RWB",
-        "CDM",
-        "CM",
-        "CAM",
-        "LM",
-        "RM"
-      ],
-      "primaryMustBeOneOf": [
-        "LB",
-        "CB",
-        "RB",
-        "LWB",
-        "RWB"
-      ],
-      "choices": 10,
-      "totalMinutes": 4870,
-      "seasons": [
-        {
-          "season": "2005/06",
-          "club": "Valencia",
-          "minutes": 2833,
-          "starts": 32,
-          "goals": 2,
-          "assists": 1,
-          "fbrefPosition": "DFMF"
-        },
-        {
-          "season": "2009/10",
-          "club": "Valencia",
-          "minutes": 2037,
-          "starts": 22,
-          "goals": 1,
-          "assists": 1,
-          "fbrefPosition": "DFMF"
-        }
-      ],
-      "positions": [
-        "CB",
-        "CDM",
-        "CM"
-      ],
-      "confidence": "medium",
-      "note": "A holding midfielder by trade who also covered centre-back; FBref orders the defensive bucket first, so the primary follows the label."
-    },
-    {
-      "fbrefId": "60c96516",
-      "name": "Stephen McPhail",
-      "nation": "IRL",
-      "fbrefPosition": "MF",
-      "allowed": [
-        "CDM",
-        "CM",
-        "CAM",
-        "LM",
-        "RM"
-      ],
-      "primaryMustBeOneOf": [
-        "CDM",
-        "CM",
-        "CAM",
-        "LM",
-        "RM"
-      ],
-      "choices": 5,
-      "totalMinutes": 4862,
-      "seasons": [
-        {
-          "season": "1998/99",
-          "club": "Leeds United",
-          "minutes": 998,
-          "starts": 11,
-          "goals": 0,
-          "assists": 2,
-          "fbrefPosition": "MF"
-        },
-        {
-          "season": "1999/00",
-          "club": "Leeds United",
-          "minutes": 2069,
-          "starts": 23,
-          "goals": 2,
-          "assists": 4,
-          "fbrefPosition": "MF"
-        },
-        {
-          "season": "2000/01",
-          "club": "Leeds United",
-          "minutes": 360,
-          "starts": 3,
-          "goals": 0,
-          "assists": 0,
-          "fbrefPosition": "MF"
-        },
-        {
-          "season": "2002/03",
-          "club": "Leeds United",
-          "minutes": 662,
-          "starts": 7,
-          "goals": 0,
-          "assists": 1,
-          "fbrefPosition": "MF"
-        },
-        {
-          "season": "2003/04",
-          "club": "Leeds United",
-          "minutes": 773,
-          "starts": 8,
-          "goals": 1,
-          "assists": 0,
-          "fbrefPosition": "MF"
-        }
-      ],
-      "positions": [
-        "CM",
-        "CAM",
-        "LM"
-      ],
-      "confidence": "medium",
       "note": null
     }
   ]

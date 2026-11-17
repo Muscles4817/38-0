@@ -1,8 +1,179 @@
 {
   "batch": 51,
-  "of": 134,
+  "of": 152,
   "instructions": "See docs/positions-lookup.md. Fill in \"positions\" for each player, most natural first, using only values from \"allowed\". The first must come from \"primaryMustBeOneOf\". Set confidence to high, medium or low.",
   "players": [
+    {
+      "fbrefId": "0717f817",
+      "name": "Aliou Cissé",
+      "nation": "SEN",
+      "fbrefPosition": "DFMF",
+      "allowed": [
+        "LB",
+        "CB",
+        "RB",
+        "LWB",
+        "RWB",
+        "CDM",
+        "CM",
+        "CAM",
+        "LM",
+        "RM"
+      ],
+      "primaryMustBeOneOf": [
+        "LB",
+        "CB",
+        "RB",
+        "LWB",
+        "RWB"
+      ],
+      "choices": 10,
+      "totalMinutes": 3572,
+      "seasons": [
+        {
+          "season": "2002/03",
+          "club": "Birmingham City",
+          "minutes": 1881,
+          "starts": 21,
+          "goals": 1,
+          "assists": 0,
+          "fbrefPosition": "DFMF"
+        },
+        {
+          "season": "2003/04",
+          "club": "Birmingham City",
+          "minutes": 535,
+          "starts": 5,
+          "goals": 0,
+          "assists": 0,
+          "fbrefPosition": "DFMF"
+        },
+        {
+          "season": "2004/05",
+          "club": "Portsmouth",
+          "minutes": 1156,
+          "starts": 12,
+          "goals": 0,
+          "assists": 1,
+          "fbrefPosition": "DFMF"
+        }
+      ],
+      "positions": [
+        "CDM",
+        "CM"
+      ],
+      "confidence": "medium",
+      "note": "FBref putting DF first is wrong: Cissé was bought as the holding midfielder he had been for Senegal and filled that role at Birmingham and Portsmouth.",
+      "labelDisputed": true
+    },
+    {
+      "fbrefId": "f9b5e5bd",
+      "name": "David Nugent",
+      "nation": "ENG",
+      "fbrefPosition": "FW",
+      "allowed": [
+        "LW",
+        "RW",
+        "ST",
+        "CF"
+      ],
+      "primaryMustBeOneOf": [
+        "LW",
+        "RW",
+        "ST",
+        "CF"
+      ],
+      "choices": 4,
+      "totalMinutes": 3558,
+      "seasons": [
+        {
+          "season": "2007/08",
+          "club": "Portsmouth",
+          "minutes": 625,
+          "starts": 5,
+          "goals": 0,
+          "assists": 0,
+          "fbrefPosition": "FW"
+        },
+        {
+          "season": "2008/09",
+          "club": "Portsmouth",
+          "minutes": 1058,
+          "starts": 13,
+          "goals": 3,
+          "assists": 1,
+          "fbrefPosition": "FW"
+        },
+        {
+          "season": "2009/10",
+          "club": "Burnley",
+          "minutes": 1875,
+          "starts": 20,
+          "goals": 6,
+          "assists": 2,
+          "fbrefPosition": "FW"
+        }
+      ],
+      "positions": [
+        "ST",
+        "CF"
+      ],
+      "confidence": "high",
+      "note": null
+    },
+    {
+      "fbrefId": "59a231bb",
+      "name": "Martin Djetou",
+      "nation": "FRA",
+      "fbrefPosition": "DFMF",
+      "allowed": [
+        "LB",
+        "CB",
+        "RB",
+        "LWB",
+        "RWB",
+        "CDM",
+        "CM",
+        "CAM",
+        "LM",
+        "RM"
+      ],
+      "primaryMustBeOneOf": [
+        "LB",
+        "CB",
+        "RB",
+        "LWB",
+        "RWB"
+      ],
+      "choices": 10,
+      "totalMinutes": 3549,
+      "seasons": [
+        {
+          "season": "2002/03",
+          "club": "Fulham",
+          "minutes": 1789,
+          "starts": 22,
+          "goals": 1,
+          "assists": 1,
+          "fbrefPosition": "DFMF"
+        },
+        {
+          "season": "2003/04",
+          "club": "Fulham",
+          "minutes": 1760,
+          "starts": 19,
+          "goals": 0,
+          "assists": 0,
+          "fbrefPosition": "DFMF"
+        }
+      ],
+      "positions": [
+        "CB",
+        "CDM"
+      ],
+      "confidence": "medium",
+      "note": "Alternated between centre-back and the holding role at Fulham."
+    },
     {
       "fbrefId": "baca4d08",
       "name": "Hameur Bouazza",
@@ -53,59 +224,6 @@
       ],
       "confidence": "high",
       "note": null
-    },
-    {
-      "fbrefId": "05439de2",
-      "name": "David Alaba",
-      "nation": "AUT",
-      "fbrefPosition": "DFMF",
-      "allowed": [
-        "LB",
-        "CB",
-        "RB",
-        "LWB",
-        "RWB",
-        "CDM",
-        "CM",
-        "CAM",
-        "LM",
-        "RM"
-      ],
-      "primaryMustBeOneOf": [
-        "LB",
-        "CB",
-        "RB",
-        "LWB",
-        "RWB"
-      ],
-      "choices": 10,
-      "totalMinutes": 3539,
-      "seasons": [
-        {
-          "season": "2011/12",
-          "club": "Bayern Munich",
-          "minutes": 1546,
-          "starts": 14,
-          "goals": 2,
-          "assists": 2,
-          "fbrefPosition": "DFMF"
-        },
-        {
-          "season": "2012/13",
-          "club": "Bayern Munich",
-          "minutes": 1993,
-          "starts": 22,
-          "goals": 3,
-          "assists": 3,
-          "fbrefPosition": "DFMF"
-        }
-      ],
-      "positions": [
-        "LB",
-        "CM"
-      ],
-      "confidence": "high",
-      "note": "Bayern's left-back in these seasons; also used in central midfield."
     },
     {
       "fbrefId": "8ff638d4",
@@ -899,6 +1017,69 @@
       "note": "Target man."
     },
     {
+      "fbrefId": "f4290206",
+      "name": "Marcos Alonso",
+      "nation": "ESP",
+      "fbrefPosition": "DFMF",
+      "allowed": [
+        "LB",
+        "CB",
+        "RB",
+        "LWB",
+        "RWB",
+        "CDM",
+        "CM",
+        "CAM",
+        "LM",
+        "RM"
+      ],
+      "primaryMustBeOneOf": [
+        "LB",
+        "CB",
+        "RB",
+        "LWB",
+        "RWB"
+      ],
+      "choices": 10,
+      "totalMinutes": 3459,
+      "seasons": [
+        {
+          "season": "2010/11",
+          "club": "Bolton Wanderers",
+          "minutes": 360,
+          "starts": 4,
+          "goals": 0,
+          "assists": 0,
+          "fbrefPosition": "DFMF"
+        },
+        {
+          "season": "2011/12",
+          "club": "Bolton Wanderers",
+          "minutes": 331,
+          "starts": 4,
+          "goals": 1,
+          "assists": 0,
+          "fbrefPosition": "DFMF"
+        },
+        {
+          "season": "2025/26",
+          "club": "Celta Vigo",
+          "minutes": 2768,
+          "starts": 31,
+          "goals": 1,
+          "assists": 0,
+          "fbrefPosition": "DF"
+        }
+      ],
+      "positions": [
+        "LB",
+        "LWB",
+        "LM"
+      ],
+      "confidence": "high",
+      "note": "Left-back and left wing-back; FBref lists him DF-first for this season."
+    },
+    {
       "fbrefId": "d9129797",
       "name": "DJ Campbell",
       "nation": "ENG",
@@ -1180,123 +1361,6 @@
       ],
       "confidence": "medium",
       "note": "A holding midfielder by trade who deputised at centre-back for Dortmund, which is what FBref's DF-first label reflects in these seasons."
-    },
-    {
-      "fbrefId": "10206347",
-      "name": "Nenad Milijaš",
-      "nation": "SRB",
-      "fbrefPosition": "MF",
-      "allowed": [
-        "CDM",
-        "CM",
-        "CAM",
-        "LM",
-        "RM"
-      ],
-      "primaryMustBeOneOf": [
-        "CDM",
-        "CM",
-        "CAM",
-        "LM",
-        "RM"
-      ],
-      "choices": 5,
-      "totalMinutes": 3429,
-      "seasons": [
-        {
-          "season": "2009/10",
-          "club": "Wolverhampton Wanderers",
-          "minutes": 980,
-          "starts": 12,
-          "goals": 2,
-          "assists": 3,
-          "fbrefPosition": "MF"
-        },
-        {
-          "season": "2010/11",
-          "club": "Wolverhampton Wanderers",
-          "minutes": 1713,
-          "starts": 20,
-          "goals": 2,
-          "assists": 3,
-          "fbrefPosition": "MF"
-        },
-        {
-          "season": "2011/12",
-          "club": "Wolverhampton Wanderers",
-          "minutes": 736,
-          "starts": 6,
-          "goals": 0,
-          "assists": 1,
-          "fbrefPosition": "MF"
-        }
-      ],
-      "positions": [
-        "CM",
-        "CAM"
-      ],
-      "confidence": "medium",
-      "note": "Central midfielder with a set-piece and long-range threat."
-    },
-    {
-      "fbrefId": "cf134113",
-      "name": "Bart Verbruggen",
-      "nation": "NED",
-      "fbrefPosition": "GK",
-      "allowed": [
-        "GK"
-      ],
-      "primaryMustBeOneOf": [
-        "GK"
-      ],
-      "choices": 1,
-      "totalMinutes": 3420,
-      "seasons": [
-        {
-          "season": "2025/26",
-          "club": "Brighton",
-          "minutes": 3420,
-          "starts": 38,
-          "goals": 0,
-          "assists": 0,
-          "fbrefPosition": "GK"
-        }
-      ],
-      "positions": [
-        "GK"
-      ],
-      "confidence": "high",
-      "note": null
-    },
-    {
-      "fbrefId": "2628fd2b",
-      "name": "Bernd Leno",
-      "nation": "GER",
-      "fbrefPosition": "GK",
-      "allowed": [
-        "GK"
-      ],
-      "primaryMustBeOneOf": [
-        "GK"
-      ],
-      "choices": 1,
-      "totalMinutes": 3420,
-      "seasons": [
-        {
-          "season": "2025/26",
-          "club": "Fulham",
-          "minutes": 3420,
-          "starts": 38,
-          "goals": 0,
-          "assists": 0,
-          "fbrefPosition": "GK"
-        }
-      ],
-      "positions": [
-        "GK"
-      ],
-      "confidence": "high",
-      "note": null
     }
   ]
 }

@@ -1,8 +1,69 @@
 {
   "batch": 31,
-  "of": 134,
+  "of": 152,
   "instructions": "See docs/positions-lookup.md. Fill in \"positions\" for each player, most natural first, using only values from \"allowed\". The first must come from \"primaryMustBeOneOf\". Set confidence to high, medium or low.",
   "players": [
+    {
+      "fbrefId": "d70ce98e",
+      "name": "Lionel Messi",
+      "nation": "ARG",
+      "fbrefPosition": "FWMF",
+      "allowed": [
+        "LW",
+        "RW",
+        "ST",
+        "CF",
+        "CDM",
+        "CM",
+        "CAM",
+        "LM",
+        "RM"
+      ],
+      "primaryMustBeOneOf": [
+        "LW",
+        "RW",
+        "ST",
+        "CF"
+      ],
+      "choices": 9,
+      "totalMinutes": 7091,
+      "seasons": [
+        {
+          "season": "2005/06",
+          "club": "Barcelona",
+          "minutes": 911,
+          "starts": 11,
+          "goals": 6,
+          "assists": 3,
+          "fbrefPosition": "FWMF"
+        },
+        {
+          "season": "2009/10",
+          "club": "Barcelona",
+          "minutes": 2805,
+          "starts": 30,
+          "goals": 34,
+          "assists": 9,
+          "fbrefPosition": "FWMF"
+        },
+        {
+          "season": "2014/15",
+          "club": "Barcelona",
+          "minutes": 3375,
+          "starts": 37,
+          "goals": 43,
+          "assists": 18,
+          "fbrefPosition": "FWMF"
+        }
+      ],
+      "positions": [
+        "CF",
+        "RW",
+        "ST"
+      ],
+      "confidence": "high",
+      "note": "By 2009/10 largely a false nine, having started his career on the right."
+    },
     {
       "fbrefId": "b7d082af",
       "name": "Mohamed Diamé",
@@ -1563,89 +1624,6 @@
       "positions": [
         "RB",
         "RWB"
-      ],
-      "confidence": "high",
-      "note": null
-    },
-    {
-      "fbrefId": "b1d82fc2",
-      "name": "Philippe Senderos",
-      "nation": "SUI",
-      "fbrefPosition": "DF",
-      "allowed": [
-        "LB",
-        "CB",
-        "RB",
-        "LWB",
-        "RWB"
-      ],
-      "primaryMustBeOneOf": [
-        "LB",
-        "CB",
-        "RB",
-        "LWB",
-        "RWB"
-      ],
-      "choices": 5,
-      "totalMinutes": 6916,
-      "seasons": [
-        {
-          "season": "2004/05",
-          "club": "Arsenal",
-          "minutes": 1088,
-          "starts": 12,
-          "goals": 0,
-          "assists": 0,
-          "fbrefPosition": "DF"
-        },
-        {
-          "season": "2005/06",
-          "club": "Arsenal",
-          "minutes": 1675,
-          "starts": 19,
-          "goals": 2,
-          "assists": 0,
-          "fbrefPosition": "DF"
-        },
-        {
-          "season": "2006/07",
-          "club": "Arsenal",
-          "minutes": 809,
-          "starts": 9,
-          "goals": 0,
-          "assists": 0,
-          "fbrefPosition": "DF"
-        },
-        {
-          "season": "2007/08",
-          "club": "Arsenal",
-          "minutes": 1247,
-          "starts": 14,
-          "goals": 2,
-          "assists": 0,
-          "fbrefPosition": "DF"
-        },
-        {
-          "season": "2010/11",
-          "club": "Fulham",
-          "minutes": 270,
-          "starts": 3,
-          "goals": 0,
-          "assists": 0,
-          "fbrefPosition": "DF"
-        },
-        {
-          "season": "2011/12",
-          "club": "Fulham",
-          "minutes": 1827,
-          "starts": 21,
-          "goals": 1,
-          "assists": 1,
-          "fbrefPosition": "DF"
-        }
-      ],
-      "positions": [
-        "CB"
       ],
       "confidence": "high",
       "note": null

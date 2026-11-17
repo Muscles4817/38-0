@@ -131,8 +131,8 @@ fails after an export, fix the database rather than the test:
   **except** the default simulated one — Premier League 2025/26.
 - `listCompetitions()` offers every league-season with **at least nineteen**
   clubs of eleven rated players, which is what it takes to field a twenty-team
-  league. Today that is fourteen Premier League seasons: 1992/93 to 2004/05 and
-  2025/26.
+  league. Today that is twenty-two: the Premier League from 1992/93 to
+  2011/12 and 2025/26, and La Liga 2025/26.
 - `getOpponentSquads(seasonId, league)` takes that league-season, trimmed to
   **exactly nineteen** clubs: the weakest make way, because the schedule needs
   an even field and 38 games is the point of the game. It defaults to Premier
@@ -140,11 +140,14 @@ fails after an export, fix the database rather than the test:
 
 So adding a club from another league makes it draftable, and only a *full*
 league-season makes any of them opponents. Codes in use are `PL`, `SA`, `LL`,
-`BL` and `WC`; none but `PL` has enough clubs in any one season yet.
+`BL` and `WC`; `PL` and, for 2025/26 only, `LL` have enough clubs in a season.
+A full league-season also decides where its clubs sit in the draft pool: every
+club in one belongs to that league, and a side from outside one is an icon (see
+[draft-pool.md](draft-pool.md)).
 
 The trimming is why a season's club count is worth knowing: 1992/93, 1993/94
 and 1994/95 have 22 clubs each and lose three, every 20-club season loses one,
-and 2025/26 has 19 already.
+and Premier League 2025/26 has 19 already.
 
 A season label is normally `1994/95`. A tournament happens inside one calendar
 year, so a World Cup squad is labelled with the bare year — `1986`. `year_start`

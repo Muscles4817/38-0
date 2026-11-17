@@ -1,8 +1,64 @@
 {
   "batch": 34,
-  "of": 134,
+  "of": 152,
   "instructions": "See docs/positions-lookup.md. Fill in \"positions\" for each player, most natural first, using only values from \"allowed\". The first must come from \"primaryMustBeOneOf\". Set confidence to high, medium or low.",
   "players": [
+    {
+      "fbrefId": "8623b652",
+      "name": "Paul Butler",
+      "nation": "IRL",
+      "fbrefPosition": "DF",
+      "allowed": [
+        "LB",
+        "CB",
+        "RB",
+        "LWB",
+        "RWB"
+      ],
+      "primaryMustBeOneOf": [
+        "LB",
+        "CB",
+        "RB",
+        "LWB",
+        "RWB"
+      ],
+      "choices": 5,
+      "totalMinutes": 6388,
+      "seasons": [
+        {
+          "season": "1999/00",
+          "club": "Sunderland",
+          "minutes": 2788,
+          "starts": 31,
+          "goals": 1,
+          "assists": 1,
+          "fbrefPosition": "DF"
+        },
+        {
+          "season": "2000/01",
+          "club": "Sunderland",
+          "minutes": 270,
+          "starts": 3,
+          "goals": 0,
+          "assists": 0,
+          "fbrefPosition": "DF"
+        },
+        {
+          "season": "2003/04",
+          "club": "Wolverhampton Wanderers",
+          "minutes": 3330,
+          "starts": 37,
+          "goals": 1,
+          "assists": 0,
+          "fbrefPosition": "DF"
+        }
+      ],
+      "positions": [
+        "CB"
+      ],
+      "confidence": "high",
+      "note": null
+    },
     {
       "fbrefId": "3ffdc43f",
       "name": "Neil Adams",
@@ -1164,6 +1220,45 @@
       "note": null
     },
     {
+      "fbrefId": "1840e36d",
+      "name": "Thibaut Courtois",
+      "nation": "BEL",
+      "fbrefPosition": "GK",
+      "allowed": [
+        "GK"
+      ],
+      "primaryMustBeOneOf": [
+        "GK"
+      ],
+      "choices": 1,
+      "totalMinutes": 6210,
+      "seasons": [
+        {
+          "season": "2013/14",
+          "club": "Atlético Madrid",
+          "minutes": 3330,
+          "starts": 37,
+          "goals": 0,
+          "assists": 0,
+          "fbrefPosition": "GK"
+        },
+        {
+          "season": "2025/26",
+          "club": "Real Madrid",
+          "minutes": 2880,
+          "starts": 32,
+          "goals": 0,
+          "assists": 0,
+          "fbrefPosition": "GK"
+        }
+      ],
+      "positions": [
+        "GK"
+      ],
+      "confidence": "high",
+      "note": null
+    },
+    {
       "fbrefId": "71e8454e",
       "name": "Diomansy Kamara",
       "nation": "SEN",
@@ -1540,130 +1635,6 @@
       ],
       "confidence": "high",
       "note": null
-    },
-    {
-      "fbrefId": "2fb9e5c1",
-      "name": "Javier Zanetti",
-      "nation": "ARG",
-      "fbrefPosition": "DFMF",
-      "allowed": [
-        "LB",
-        "CB",
-        "RB",
-        "LWB",
-        "RWB",
-        "CDM",
-        "CM",
-        "CAM",
-        "LM",
-        "RM"
-      ],
-      "primaryMustBeOneOf": [
-        "LB",
-        "CB",
-        "RB",
-        "LWB",
-        "RWB"
-      ],
-      "choices": 10,
-      "totalMinutes": 6163,
-      "seasons": [
-        {
-          "season": "2003/04",
-          "club": "Internazionale",
-          "minutes": 3034,
-          "starts": 34,
-          "goals": 0,
-          "assists": 3,
-          "fbrefPosition": "DFMF"
-        },
-        {
-          "season": "2006/07",
-          "club": "Internazionale",
-          "minutes": 3129,
-          "starts": 34,
-          "goals": 1,
-          "assists": 1,
-          "fbrefPosition": "DFMF"
-        }
-      ],
-      "positions": [
-        "RB",
-        "RWB",
-        "CM"
-      ],
-      "confidence": "high",
-      "note": "Right-back and right wing-back for Inter, also used in central midfield."
-    },
-    {
-      "fbrefId": "8fd1ea1f",
-      "name": "Andrey Arshavin",
-      "nation": "RUS",
-      "fbrefPosition": "FWMF",
-      "allowed": [
-        "LW",
-        "RW",
-        "ST",
-        "CF",
-        "CDM",
-        "CM",
-        "CAM",
-        "LM",
-        "RM"
-      ],
-      "primaryMustBeOneOf": [
-        "LW",
-        "RW",
-        "ST",
-        "CF"
-      ],
-      "choices": 9,
-      "totalMinutes": 6159,
-      "seasons": [
-        {
-          "season": "2008/09",
-          "club": "Arsenal",
-          "minutes": 993,
-          "starts": 12,
-          "goals": 6,
-          "assists": 5,
-          "fbrefPosition": "FWMF"
-        },
-        {
-          "season": "2009/10",
-          "club": "Arsenal",
-          "minutes": 2255,
-          "starts": 25,
-          "goals": 10,
-          "assists": 1,
-          "fbrefPosition": "FWMF"
-        },
-        {
-          "season": "2010/11",
-          "club": "Arsenal",
-          "minutes": 2187,
-          "starts": 25,
-          "goals": 6,
-          "assists": 11,
-          "fbrefPosition": "FWMF"
-        },
-        {
-          "season": "2011/12",
-          "club": "Arsenal",
-          "minutes": 724,
-          "starts": 8,
-          "goals": 1,
-          "assists": 3,
-          "fbrefPosition": "FWMF"
-        }
-      ],
-      "positions": [
-        "LW",
-        "CF",
-        "CAM"
-      ],
-      "confidence": "high",
-      "note": "Left-sided attacker at Arsenal, also used as a second striker behind the front man."
     }
   ]
 }

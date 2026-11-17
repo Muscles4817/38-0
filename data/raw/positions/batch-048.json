@@ -1,8 +1,111 @@
 {
   "batch": 48,
-  "of": 134,
+  "of": 152,
   "instructions": "See docs/positions-lookup.md. Fill in \"positions\" for each player, most natural first, using only values from \"allowed\". The first must come from \"primaryMustBeOneOf\". Set confidence to high, medium or low.",
   "players": [
+    {
+      "fbrefId": "819b3158",
+      "name": "İlkay Gündoğan",
+      "nation": "GER",
+      "fbrefPosition": "MF",
+      "allowed": [
+        "CDM",
+        "CM",
+        "CAM",
+        "LM",
+        "RM"
+      ],
+      "primaryMustBeOneOf": [
+        "CDM",
+        "CM",
+        "CAM",
+        "LM",
+        "RM"
+      ],
+      "choices": 5,
+      "totalMinutes": 4020,
+      "seasons": [
+        {
+          "season": "2011/12",
+          "club": "Borussia Dortmund",
+          "minutes": 1905,
+          "starts": 22,
+          "goals": 3,
+          "assists": 3,
+          "fbrefPosition": "MF"
+        },
+        {
+          "season": "2012/13",
+          "club": "Borussia Dortmund",
+          "minutes": 2115,
+          "starts": 26,
+          "goals": 3,
+          "assists": 3,
+          "fbrefPosition": "MF"
+        }
+      ],
+      "positions": [
+        "CM",
+        "CDM"
+      ],
+      "confidence": "high",
+      "note": "Deep central midfielder in Dortmund’s double pivot."
+    },
+    {
+      "fbrefId": "e6c506bf",
+      "name": "Barry Hayles",
+      "nation": "JAM",
+      "fbrefPosition": "FW",
+      "allowed": [
+        "LW",
+        "RW",
+        "ST",
+        "CF"
+      ],
+      "primaryMustBeOneOf": [
+        "LW",
+        "RW",
+        "ST",
+        "CF"
+      ],
+      "choices": 4,
+      "totalMinutes": 4013,
+      "seasons": [
+        {
+          "season": "2001/02",
+          "club": "Fulham",
+          "minutes": 2436,
+          "starts": 27,
+          "goals": 8,
+          "assists": 3,
+          "fbrefPosition": "FW"
+        },
+        {
+          "season": "2002/03",
+          "club": "Fulham",
+          "minutes": 549,
+          "starts": 4,
+          "goals": 1,
+          "assists": 2,
+          "fbrefPosition": "FW"
+        },
+        {
+          "season": "2003/04",
+          "club": "Fulham",
+          "minutes": 1028,
+          "starts": 10,
+          "goals": 4,
+          "assists": 2,
+          "fbrefPosition": "FW"
+        }
+      ],
+      "positions": [
+        "ST",
+        "LW"
+      ],
+      "confidence": "medium",
+      "note": null
+    },
     {
       "fbrefId": "4fb135bb",
       "name": "David Busst",
@@ -352,6 +455,68 @@
       ],
       "confidence": "high",
       "note": "Used wide right as often as through the middle in these seasons."
+    },
+    {
+      "fbrefId": "05439de2",
+      "name": "David Alaba",
+      "nation": "AUT",
+      "fbrefPosition": "DFMF",
+      "allowed": [
+        "LB",
+        "CB",
+        "RB",
+        "LWB",
+        "RWB",
+        "CDM",
+        "CM",
+        "CAM",
+        "LM",
+        "RM"
+      ],
+      "primaryMustBeOneOf": [
+        "LB",
+        "CB",
+        "RB",
+        "LWB",
+        "RWB"
+      ],
+      "choices": 10,
+      "totalMinutes": 3963,
+      "seasons": [
+        {
+          "season": "2011/12",
+          "club": "Bayern Munich",
+          "minutes": 1546,
+          "starts": 14,
+          "goals": 2,
+          "assists": 2,
+          "fbrefPosition": "DFMF"
+        },
+        {
+          "season": "2012/13",
+          "club": "Bayern Munich",
+          "minutes": 1993,
+          "starts": 22,
+          "goals": 3,
+          "assists": 3,
+          "fbrefPosition": "DFMF"
+        },
+        {
+          "season": "2025/26",
+          "club": "Real Madrid",
+          "minutes": 424,
+          "starts": 5,
+          "goals": 0,
+          "assists": 0,
+          "fbrefPosition": "DF"
+        }
+      ],
+      "positions": [
+        "LB",
+        "CM"
+      ],
+      "confidence": "high",
+      "note": "Bayern's left-back in these seasons; also used in central midfield."
     },
     {
       "fbrefId": "2080e6bb",
@@ -1225,157 +1390,6 @@
       ],
       "confidence": "low",
       "note": "Used both as a forward (the Blackburn substitute who scored twice against Manchester United) and in central midfield at Villa and Leicester; the MF label is defensible across the span but his best moments were further forward."
-    },
-    {
-      "fbrefId": "70a59026",
-      "name": "Samuele Dalla Bona",
-      "nation": "ITA",
-      "fbrefPosition": "MF",
-      "allowed": [
-        "CDM",
-        "CM",
-        "CAM",
-        "LM",
-        "RM"
-      ],
-      "primaryMustBeOneOf": [
-        "CDM",
-        "CM",
-        "CAM",
-        "LM",
-        "RM"
-      ],
-      "choices": 5,
-      "totalMinutes": 3821,
-      "seasons": [
-        {
-          "season": "2000/01",
-          "club": "Chelsea",
-          "minutes": 2255,
-          "starts": 26,
-          "goals": 2,
-          "assists": 3,
-          "fbrefPosition": "MF"
-        },
-        {
-          "season": "2001/02",
-          "club": "Chelsea",
-          "minutes": 1566,
-          "starts": 16,
-          "goals": 4,
-          "assists": 0,
-          "fbrefPosition": "MF"
-        }
-      ],
-      "positions": [
-        "CM",
-        "CAM"
-      ],
-      "confidence": "medium",
-      "note": null
-    },
-    {
-      "fbrefId": "49a6d30d",
-      "name": "Bradley Allen",
-      "nation": "ENG",
-      "fbrefPosition": "FW",
-      "allowed": [
-        "LW",
-        "RW",
-        "ST",
-        "CF"
-      ],
-      "primaryMustBeOneOf": [
-        "LW",
-        "RW",
-        "ST",
-        "CF"
-      ],
-      "choices": 4,
-      "totalMinutes": 3819,
-      "seasons": [
-        {
-          "season": "1992/93",
-          "club": "Queens Park Rangers",
-          "minutes": 2044,
-          "starts": 21,
-          "goals": 10,
-          "assists": 4,
-          "fbrefPosition": "FW"
-        },
-        {
-          "season": "1993/94",
-          "club": "Queens Park Rangers",
-          "minutes": 1389,
-          "starts": 14,
-          "goals": 7,
-          "assists": 1,
-          "fbrefPosition": "FW"
-        },
-        {
-          "season": "1995/96",
-          "club": "Queens Park Rangers",
-          "minutes": 386,
-          "starts": 4,
-          "goals": 1,
-          "assists": 1,
-          "fbrefPosition": "FW"
-        }
-      ],
-      "positions": [
-        "ST",
-        "CF"
-      ],
-      "confidence": "high",
-      "note": null
-    },
-    {
-      "fbrefId": "d9c359b5",
-      "name": "Kevin Gage",
-      "nation": "ENG",
-      "fbrefPosition": "MF",
-      "allowed": [
-        "CDM",
-        "CM",
-        "CAM",
-        "LM",
-        "RM"
-      ],
-      "primaryMustBeOneOf": [
-        "CDM",
-        "CM",
-        "CAM",
-        "LM",
-        "RM"
-      ],
-      "choices": 5,
-      "totalMinutes": 3806,
-      "seasons": [
-        {
-          "season": "1992/93",
-          "club": "Sheffield United",
-          "minutes": 2341,
-          "starts": 27,
-          "goals": 0,
-          "assists": 0,
-          "fbrefPosition": "MF"
-        },
-        {
-          "season": "1993/94",
-          "club": "Sheffield United",
-          "minutes": 1465,
-          "starts": 16,
-          "goals": 0,
-          "assists": 2,
-          "fbrefPosition": "MF"
-        }
-      ],
-      "positions": [
-        "RM",
-        "CM"
-      ],
-      "confidence": "low",
-      "note": "FBref records MF, but Gage was really a right-back; RM is the nearest allowed role."
     }
   ]
 }
