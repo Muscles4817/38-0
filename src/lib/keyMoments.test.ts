@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import { keyMoments, LATE_MINUTE, seasonStory, type KeyMoment } from './keyMoments';
-import type { FixtureDetail, FixtureResult, Gameweek, TeamStanding } from './simulation';
+import type { FixtureDetail, FixtureResult, Gameweek, PlayerStats, TeamStanding } from './simulation';
 
 const ME = 'Your XI';
 
@@ -78,7 +78,9 @@ describe('what a match has in it', () => {
     const one = m.find(x => x.kind === 'comeback' && x.week === 2)!;
     const two = m.find(x => x.kind === 'comeback' && x.week === 3)!;
     expect(two.weight).toBeGreaterThan(one.weight);
-    expect(two.text).toContain('0–2 down');
+    // However it is phrased, it names the deficit and the result.
+    expect(two.text).toMatch(/0–2|2–0/);
+    expect(two.text).toMatch(/3–2|2–3/);
   });
 
   it('calls a big win a thrashing, not a comeback', () => {
@@ -105,8 +107,14 @@ describe('what a match has in it', () => {
         { week: 9, playerName: 'Paul Scholes', matches: 1, reason: 'yellows' },
       ],
     });
-    expect(m.find(x => x.kind === 'red-card')?.text).toBe('Roy Keane sent off against Rivals FC, 40′: out for three matches');
-    expect(m.find(x => x.kind === 'suspension')).toMatchObject({ week: 9, text: 'Paul Scholes booked again: suspended for the next match' });
+    const sentOff = m.find(x => x.kind === 'red-card')!.text;
+    expect(sentOff).toContain('Roy Keane');
+    expect(sentOff).toContain('Rivals FC');
+    expect(sentOff).toMatch(/Out for three matches$/);
+    const ban = m.find(x => x.kind === 'suspension')!;
+    expect(ban.week).toBe(9);
+    expect(ban.text).toContain('Paul Scholes');
+    expect(ban.text).toMatch(/the next match/);
   });
 });
 
@@ -131,13 +139,15 @@ describe('the season around it', () => {
     const won = m.filter(x => x.kind === 'champions');
     expect(won).toHaveLength(1);
     expect(won[0].week).toBe(33);
-    expect(won[0].text).toBe('Champions with 5 to play');
+    expect(won[0].text).toMatch(/^Champions|The title is won/);
+    expect(won[0].text).toMatch(/5|five/);
   });
 
   it('settles a title that went to the last day on the last day', () => {
     const m = keyMoments(season(38, { 38: { table: table([['Rivals FC', 80], [ME, 80], ...league(20, 0, 1).slice(2)]) } }));
     const title = m.find(x => x.kind === 'title-elsewhere');
-    expect(title?.text).toBe('Rivals FC are champions on the final day');
+    expect(title?.text).toContain('Rivals FC');
+    expect(title?.text).toMatch(/final day|last day/);
     expect(title?.tone).toBe('bad');
   });
 
@@ -166,5 +176,60 @@ describe('the story of a season', () => {
       { week: 10, kind: 'late-winner', text: '', tone: 'good', weight: 80 },
     ];
     expect(seasonStory(m, 2).map(x => x.week)).toEqual([10, 30]);
+  });
+
+  it('gives no kind of moment more than two places', () => {
+    const hatTricks: KeyMoment[] = [5, 10, 15, 20].map(week => ({ week, kind: 'hat-trick', text: '', tone: 'good', weight: 70 }));
+    const m = [...hatTricks, { week: 30, kind: 'thrashing', text: '', tone: 'good', weight: 35 } as KeyMoment];
+    expect(seasonStory(m, 4).map(x => x.kind)).toEqual(['hat-trick', 'hat-trick', 'thrashing']);
+  });
+});
+
+describe('the stories only a whole season tells', () => {
+  /** Just what the moments read from a player's season. */
+  const stat = (playerName: string, position: string, appearances = 38, traits: string[] = []) =>
+    ({ playerName, position, appearances, traits }) as unknown as PlayerStats;
+
+  it('notices a centre-back\'s only goal, and lets it replace the late-winner line for the same goal', () => {
+    const m = keyMoments({
+      ...season(38, { 9: { fixture: match([goal(30, false), goal(60, true, 'Our Striker'), goal(88, true, 'Big Centre-Back')]) } }),
+      playerStats: [stat('Big Centre-Back', 'CB'), stat('Our Striker', 'ST')],
+    });
+    const only = m.filter(x => x.kind === 'only-goal');
+    expect(only).toHaveLength(1);
+    expect(only[0]).toMatchObject({ week: 9 });
+    expect(only[0].text).toContain('Big Centre-Back');
+    expect(kinds(m, 9)).not.toContain('late-winner');
+    // It takes the late winner's place in the story, not a lesser one.
+    expect(only[0].weight).toBeGreaterThanOrEqual(80);
+  });
+
+  it('does not call a striker\'s single goal a curiosity', () => {
+    const m = keyMoments({
+      ...season(38, { 9: { fixture: match([goal(30, true, 'Our Striker')]) } }),
+      playerStats: [stat('Our Striker', 'ST')],
+    });
+    expect(kinds(m)).not.toContain('only-goal');
+  });
+
+  it('counts runs of clean sheets, defeats and matches without a win', () => {
+    const lose = () => ({ fixture: match([goal(10, false)]) });
+    const nil = () => ({ fixture: match([goal(10, true)]) });
+    const over: Record<number, { fixture: FixtureResult }> = {};
+    for (let w = 1; w <= 6; w++) over[w] = nil();
+    for (let w = 10; w <= 14; w++) over[w] = lose();
+    const m = keyMoments(season(38, over));
+    expect(kinds(m)).toContain('clean-sheet-run');
+    expect(kinds(m)).toContain('losing-run');
+  });
+
+  it('says when a striker ends a long run without a goal', () => {
+    const m = keyMoments({
+      ...season(38, { 2: { fixture: match([goal(10, true, 'Our Striker')]) }, 14: { fixture: match([goal(10, true, 'Our Striker')]) } }),
+      playerStats: [stat('Our Striker', 'ST')],
+    });
+    const drought = m.find(x => x.kind === 'drought-over');
+    expect(drought?.week).toBe(14);
+    expect(drought?.text).toContain('Our Striker');
   });
 });

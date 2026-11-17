@@ -3,7 +3,7 @@ import { isBanned, newDiscipline, pickStandIns, recordMatch, type BanReason, typ
 import {
   DEFAULT_COHESION, PHASES, PLAYSTYLES, fitForStyle, inferStyle, lineRatings, mulberry32,
   phaseAbility, simulateMatch,
-  type MatchPlayer, type Phase, type PlaystyleName, type RoleMultipliers, type TeamSetup, type Zone,
+  type ChanceType, type MatchPlayer, type Phase, type PlaystyleName, type RoleMultipliers, type TeamSetup, type Zone,
 } from './matchEngine';
 
 // ── Player roles ─────────────────────────────────────────────────────────────
@@ -151,6 +151,8 @@ export interface PlayerStats {
   avgMatchRating: number;
   /** Matches he played: all of them for an unchanged eleven. */
   appearances: number;
+  /** His traits that season, for saying how he played (src/lib/keyMoments.ts). */
+  traits: string[];
 }
 
 export interface FixtureResult {
@@ -188,6 +190,8 @@ export interface FixtureDetail {
     name: string;
     assist?: string;
     penalty?: boolean;
+    /** How a goal came about: from distance, a header, a set piece. */
+    chance?: ChanceType;
   }[];
   /** The XI's suspended players this match, and who stood in for each. */
   absent?: { name: string; standIn?: string }[];
@@ -1020,6 +1024,7 @@ export function simulateSeason(
           name: e.playerName,
           ...(e.assistName ? { assist: e.assistName } : {}),
           ...(e.chanceType === 'penalty' ? { penalty: true } : {}),
+          ...(e.type === 'goal' && e.chanceType ? { chance: e.chanceType } : {}),
         })),
         ...(today[0].absent.length > 0 ? { absent: today[0].absent } : {}),
       } : undefined;
@@ -1061,6 +1066,7 @@ export function simulateSeason(
       matchRatings:   s.ratings,
       avgMatchRating: s.ratings.length ? parseFloat(s.avgRating.toFixed(2)) : 6,
       appearances:    s.ratings.length,
+      traits:         pick.roles ?? [],
     };
   });
 

@@ -172,11 +172,28 @@ defeats by four or more, going top and being knocked off it (not before round
 4), dropping into and out of the bottom three (not before round 7), the week
 the title is mathematically settled, relegation or safety confirmed, winning
 streaks and players' 10/20/30-goal marks, and a perfect or unbeaten season.
+Since the moments rework it also notices runs (unbeaten, clean sheets, defeats,
+matches without a win), a winning goal from distance in a close match, a
+forward ending a run of eight or more games without scoring, bans, and, once
+the season is over, a defender's, holding midfielder's or keeper's only goal
+of the season (which replaces the late-winner line for the same goal).
+
+**How each is said** lives in `src/lib/momentText.ts`. Every kind has several
+phrasings, and a goal is said for how it came and who scored it: the engine's
+chance type (`FixtureDetail` events carry `chance`) coloured by the scorer's
+traits (`PlayerStats.traits`), so a Long Shot player's winner from distance is
+a thunderbolt, a Poacher's cross is a tap-in, a Target Man's is a header, a
+Set Piece Deliverer's dead ball is a free kick, and a centre-back's winner is
+a surprise. Red cards lean on Rash in the Tackle and Enforcer, hat-tricks and
+goal milestones on the scorer's traits. The phrasing is chosen by a hash of
+the moment (kind, week, player), not a random draw, so a season reads the
+same in the live view, the report and on every render.
 
 Each kind has a weight. The live view shows the newest five under the XI's
 match, this gameweek's in bold; the final report shows the eight heaviest in
-order as *The season in moments* (`seasonStory`). It is pure and reads only the
-result, so it cannot change one.
+order as *The season in moments* (`seasonStory`), at most two of any one kind,
+so four hat-tricks do not crowd out the rest of the season. It is pure and
+reads only the result, so it cannot change one.
 
 Measured on fifteen seasons of a strong 1992/93 XI in the 2025/26 field: about
 13 moments a season, landing in 11 of the 38 gameweeks. Comebacks from a goal
