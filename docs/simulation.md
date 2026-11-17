@@ -245,7 +245,11 @@ bench.
 ## Awards
 
 Player of the Season, for the XI and for the league, is the best average match
-rating. Golden Boot, top assister and Golden Glove are counts. The awards are
+rating among players who played at least half the season (`POTS_MIN_SHARE`).
+Without that floor a stand-in for a suspended player, or someone on for a few
+weeks after half-time, won it on two or three good games: on one seed a
+drafted XI's award went to a player with six appearances. Golden Boot, top
+assister and Golden Glove are counts. The awards are
 exactly as good as the ratings: see [Match ratings](#match-ratings).
 
 ## Randomness

@@ -1092,12 +1092,21 @@ export function simulateSeason(
   // rating of what each player did, match by match, valued in goals against an
   // ordinary player in his position (see *What an event is worth* in
   // matchEngine.ts). It is exactly as good as those ratings are.
+  //
+  // Only a player who played at least half the season is eligible. An average
+  // over two matches is mostly luck, and a stand-in for a suspended man, or a
+  // keeper who only came on for a week, used to win it on one good game.
+  const minApps = Math.ceil(gameweeks.length * POTS_MIN_SHARE);
+  const qualified = <T,>(xs: T[], apps: (x: T) => number): T[] => {
+    const q = xs.filter(x => apps(x) >= minApps);
+    return q.length > 0 ? q : xs;
+  };
   const topScorer = statsArr.reduce((a, b) => a.goals > b.goals ? a : b);
   const topAssist = statsArr.reduce((a, b) => a.assists > b.assists ? a : b);
   const topGKs    = statsArr.filter(s => s.position === 'GK');
   const topGK     = topGKs.length ? topGKs.reduce((a, b) => a.cleanSheets > b.cleanSheets ? a : b) : statsArr[0];
-  const pots      = statsArr.reduce((a, b) => b.avgMatchRating > a.avgMatchRating ? b : a);
-  const leaguePots = seasonOf.reduce((a, b) => b.avgRating > a.avgRating ? b : a);
+  const pots      = qualified(statsArr, s => s.appearances).reduce((a, b) => b.avgMatchRating > a.avgMatchRating ? b : a);
+  const leaguePots = qualified(seasonOf, p => p.ratings.length).reduce((a, b) => b.avgRating > a.avgRating ? b : a);
 
   // ── League leaderboards ─────────────────────────────────────────────────────
   const board = (value: (p: typeof seasonOf[number]) => number, only?: (p: typeof seasonOf[number]) => boolean) =>
@@ -1176,6 +1185,9 @@ interface SeasonPlayer {
   redCards: number;
   ratings: number[];
 }
+
+/** Player of the Season needs this share of the season's matches played. */
+const POTS_MIN_SHARE = 0.5;
 
 const CLEAN_SHEET_POSITIONS: Position[] = ['GK', 'CB', 'LB', 'RB', 'LWB', 'RWB'];
 
