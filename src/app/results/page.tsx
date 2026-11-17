@@ -1363,9 +1363,9 @@ function XiStats({ picks, stats, reshapedFrom }: {
           const stat = stats.find(s => s.playerId === p.playerId);
           const rtg  = stat?.avgMatchRating ?? 0;
           // Bands from the match engine's measured spread of season
-          // averages (660 player-seasons across 60 real XIs): about the
-          // top 5%, the top quarter, above the median, and the rest.
-          const rtgColor = rtg >= 6.7 ? 'text-accent' : rtg >= 6.5 ? 'text-sky' : rtg >= 6.4 ? 'text-fg' : 'text-muted';
+          // averages (5,016 player-seasons across 24 real league-seasons):
+          // about the top 5%, the top quarter, above the median, and the rest.
+          const rtgColor = rtg >= 7.2 ? 'text-accent' : rtg >= 6.9 ? 'text-sky' : rtg >= 6.7 ? 'text-fg' : 'text-muted';
           return (
             <div key={p.key} className="flex items-center gap-2 sm:gap-3">
               <PositionBadge pos={p.position} size="xs" />
@@ -1381,7 +1381,7 @@ function XiStats({ picks, stats, reshapedFrom }: {
         })}
       </div>
       <p className="text-[11px] text-muted mt-3">
-        {columns.map(c => `${c.head} ${c.title.toLowerCase()}`).join(' · ')}{showApps ? ' · App appearances' : ''} · RTG average match rating, 6.5 is an ordinary game
+        {columns.map(c => `${c.head} ${c.title.toLowerCase()}`).join(' · ')}{showApps ? ' · App appearances' : ''} · RTG average match rating, 6.75 is an ordinary game
       </p>
     </div>
   );
