@@ -240,11 +240,11 @@ describe('and rates players fairly', () => {
   // player in his position (POSITION_MEAN in matchEngine.ts). If the engine
   // changes what a position contributes, this says the means need measuring
   // again, before the ratings tilt toward one position.
-  it('rates an ordinary player in every position about 6.5', () => {
+  it('rates an ordinary player in every position about 6.75', () => {
     for (const [group, ratings] of ratingsByGroup) {
       const mean = ratings.reduce((a, b) => a + b, 0) / ratings.length;
-      expect(mean, group).toBeGreaterThan(6.3);
-      expect(mean, group).toBeLessThan(6.7);
+      expect(mean, group).toBeGreaterThan(6.55);
+      expect(mean, group).toBeLessThan(6.95);
     }
   });
 

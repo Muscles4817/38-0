@@ -236,6 +236,15 @@ describe(`drafting and playing a ${SEASON} XI`, () => {
       expect(total).toBe(38 * 11);
     });
 
+    it('gives Player of the Season to someone who played at least half the season', () => {
+      // A stand-in with two good games used to win it on his average.
+      for (const seed of [1993, 1994, 1995, 1996, 1997, 1998]) {
+        const r = runSeasonSimulation(picks, seed, { bench });
+        const pots = r.playerStats.find(s => s.playerName === r.awards.playerOfSeason.name)!;
+        expect(pots.appearances, `seed ${seed}`).toBeGreaterThanOrEqual(19);
+      }
+    });
+
     it('leaves the first half alone when the eleven changes at halfway', () => {
       const before = runSeasonSimulation(picks, 1993, { bench });
       const secondHalf = picks.map(p => p);

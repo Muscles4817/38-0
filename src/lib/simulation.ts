@@ -3,7 +3,7 @@ import { isBanned, newDiscipline, pickStandIns, recordMatch, type BanReason, typ
 import {
   DEFAULT_COHESION, PHASES, PLAYSTYLES, fitForStyle, inferStyle, lineRatings, mulberry32,
   phaseAbility, simulateMatch,
-  type MatchPlayer, type Phase, type PlaystyleName, type RoleMultipliers, type TeamSetup, type Zone,
+  type ChanceType, type MatchPlayer, type Phase, type PlaystyleName, type RoleMultipliers, type TeamSetup, type Zone,
 } from './matchEngine';
 
 // ── Player roles ─────────────────────────────────────────────────────────────
@@ -151,6 +151,8 @@ export interface PlayerStats {
   avgMatchRating: number;
   /** Matches he played: all of them for an unchanged eleven. */
   appearances: number;
+  /** His traits that season, for saying how he played (src/lib/keyMoments.ts). */
+  traits: string[];
 }
 
 export interface FixtureResult {
@@ -188,6 +190,8 @@ export interface FixtureDetail {
     name: string;
     assist?: string;
     penalty?: boolean;
+    /** How a goal came about: from distance, a header, a set piece. */
+    chance?: ChanceType;
   }[];
   /** The XI's suspended players this match, and who stood in for each. */
   absent?: { name: string; standIn?: string }[];
@@ -1020,6 +1024,7 @@ export function simulateSeason(
           name: e.playerName,
           ...(e.assistName ? { assist: e.assistName } : {}),
           ...(e.chanceType === 'penalty' ? { penalty: true } : {}),
+          ...(e.type === 'goal' && e.chanceType ? { chance: e.chanceType } : {}),
         })),
         ...(today[0].absent.length > 0 ? { absent: today[0].absent } : {}),
       } : undefined;
@@ -1061,6 +1066,7 @@ export function simulateSeason(
       matchRatings:   s.ratings,
       avgMatchRating: s.ratings.length ? parseFloat(s.avgRating.toFixed(2)) : 6,
       appearances:    s.ratings.length,
+      traits:         pick.roles ?? [],
     };
   });
 
@@ -1092,12 +1098,21 @@ export function simulateSeason(
   // rating of what each player did, match by match, valued in goals against an
   // ordinary player in his position (see *What an event is worth* in
   // matchEngine.ts). It is exactly as good as those ratings are.
+  //
+  // Only a player who played at least half the season is eligible. An average
+  // over two matches is mostly luck, and a stand-in for a suspended man, or a
+  // keeper who only came on for a week, used to win it on one good game.
+  const minApps = Math.ceil(gameweeks.length * POTS_MIN_SHARE);
+  const qualified = <T,>(xs: T[], apps: (x: T) => number): T[] => {
+    const q = xs.filter(x => apps(x) >= minApps);
+    return q.length > 0 ? q : xs;
+  };
   const topScorer = statsArr.reduce((a, b) => a.goals > b.goals ? a : b);
   const topAssist = statsArr.reduce((a, b) => a.assists > b.assists ? a : b);
   const topGKs    = statsArr.filter(s => s.position === 'GK');
   const topGK     = topGKs.length ? topGKs.reduce((a, b) => a.cleanSheets > b.cleanSheets ? a : b) : statsArr[0];
-  const pots      = statsArr.reduce((a, b) => b.avgMatchRating > a.avgMatchRating ? b : a);
-  const leaguePots = seasonOf.reduce((a, b) => b.avgRating > a.avgRating ? b : a);
+  const pots      = qualified(statsArr, s => s.appearances).reduce((a, b) => b.avgMatchRating > a.avgMatchRating ? b : a);
+  const leaguePots = qualified(seasonOf, p => p.ratings.length).reduce((a, b) => b.avgRating > a.avgRating ? b : a);
 
   // ── League leaderboards ─────────────────────────────────────────────────────
   const board = (value: (p: typeof seasonOf[number]) => number, only?: (p: typeof seasonOf[number]) => boolean) =>
@@ -1176,6 +1191,9 @@ interface SeasonPlayer {
   redCards: number;
   ratings: number[];
 }
+
+/** Player of the Season needs this share of the season's matches played. */
+const POTS_MIN_SHARE = 0.5;
 
 const CLEAN_SHEET_POSITIONS: Position[] = ['GK', 'CB', 'LB', 'RB', 'LWB', 'RWB'];
 

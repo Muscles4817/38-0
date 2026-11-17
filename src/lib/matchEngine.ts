@@ -399,6 +399,10 @@ const KEY_PASS_RATE = 0.75;
 //   lost to the press              - TURNOVER_VALUE; the presser gains it
 //   cards                          - YELLOW_VALUE / RED_VALUE
 //   the result                     + RESULT_SHARE of the goal difference, each
+//   chances denied                 + DEFENSIVE_SHARE of what the side kept the
+//                                    opponent below an ordinary xG
+//   a clean sheet                  + CLEAN_SHEET_VALUE to the keeper and the
+//                                    back line
 
 /** Goals per shot in the league, for the threat of a possession that never got one. */
 const MEAN_SHOT_XG = 0.11;
@@ -413,10 +417,33 @@ const YELLOW_VALUE = 0.03;
 /** A red card: most of a match a man short, which costs about four tenths of a goal. */
 const RED_VALUE = 0.4;
 const RESULT_SHARE = 0.05;
+
+/**
+ * A defence's best work leaves no trace in the event list: the chance that
+ * never came. Crediting only tackles, blocks and clearances rated a
+ * centre-back highest when his side was under siege, and the defenders of the
+ * best sides, rarely called on, sat at 6.5 to 6.8 for a season however few
+ * they conceded. So each match, what the side held the opponent below an
+ * ordinary match's xG (or above it, which costs) is shared by the players who
+ * defend, by how much of the defending their position does. The shares add up
+ * to about one per side, so the chances denied are counted once.
+ */
+const XG_AGAINST_ORDINARY = 1.38;
+const DEFENSIVE_SHARE: Record<PositionGroup, number> = {
+  GK: 0.15, CB: 0.2, FB: 0.14, DM: 0.12, CM: 0.06, AM: 0.03, W: 0.02, ST: 0,
+};
+/** A clean sheet, for the keeper and the back line: the goal that did not come. */
+const CLEAN_SHEET_VALUE = 0.1;
+const CLEAN_SHEET_GROUPS: readonly PositionGroup[] = ['GK', 'CB', 'FB'];
 /** How far, in rating points, one standard deviation of value moves a match rating. */
-const RATING_SPREAD = 0.8;
-/** An ordinary performance, at any position. */
-const RATING_BASELINE = 6.5;
+const RATING_SPREAD = 0.85;
+/**
+ * An ordinary performance, at any position. On the scale players know from
+ * FotMob and Sofascore, where an ordinary appearance is near 6.7–6.9 and 6.5
+ * reads as a poor game. It was 6.5, which put the regulars of a title-winning
+ * side at 6.85 on average.
+ */
+const RATING_BASELINE = 6.75;
 
 type PositionGroup = 'GK' | 'CB' | 'FB' | 'DM' | 'CM' | 'AM' | 'W' | 'ST';
 
@@ -444,7 +471,7 @@ function positionGroup(position: Position): PositionGroup {
  * ratings.
  */
 const POSITION_MEAN: Record<PositionGroup, number> = {
-  GK: -0.869, CB: 0.192, FB: 0.225, DM: 0.282, CM: 0.37, AM: 0.429, W: 0.617, ST: 0.528,
+  GK: -0.755, CB: 0.23, FB: 0.246, DM: 0.273, CM: 0.359, AM: 0.412, W: 0.55, ST: 0.491,
 };
 
 /**
@@ -2142,12 +2169,15 @@ export function simulateMatch(
 
   const finish = (team: TeamModel, own: number, against: number): TeamMatchStats => {
     const players: MatchPlayerStats[] = [];
+    const xgAgainst = (team === home ? acc.away : acc.home).xg;
     for (const p of team.players) {
       const s = stats.get(p.playerId)!;
       s.cleanSheet = against === 0 && p.position !== 'ST' && p.position !== 'CF';
       // The result belongs to everybody, a little.
       s.value += RESULT_SHARE * (own - against);
       const group = positionGroup(p.position);
+      s.value += DEFENSIVE_SHARE[group] * (XG_AGAINST_ORDINARY - xgAgainst);
+      if (against === 0 && CLEAN_SHEET_GROUPS.includes(group)) s.value += CLEAN_SHEET_VALUE;
       const sd = group === 'GK' ? KEEPER_VALUE_SD : OUTFIELD_VALUE_SD;
       const r = RATING_BASELINE + RATING_SPREAD * (s.value - POSITION_MEAN[group]) / sd;
       s.rating = Math.round(Math.max(1, Math.min(10, r)) * 10) / 10;

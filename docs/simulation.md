@@ -197,28 +197,55 @@ possession produces on average); a keeper gains the xG
 of every save and loses 1 − xG for every goal. Nothing is weighted for
 effect: a tackle is small because ending one attack is worth little.
 
-A player's match is then his total against an ordinary player in his
-position (`POSITION_MEAN`, measured over two passes each of the 2025/26 and
-2003/04 leagues), on one scale for every outfield player
-(`OUTFIELD_VALUE_SD`): 6.5 is an ordinary match, and 0.47 of a goal above
-ordinary is +0.8. The scale is shared so that a goal, or a goal-saving block,
-is worth the same whoever makes it. Scaling each position by its own spread,
-tried first, made a centre-back's goal worth half again a striker's, and
-defenders won the league award in 70–80% of seasons. A keeper's value is
-in other units and keeps its own scale.
+Two credits belong to the side rather than to one event. **Chances denied**:
+each match, what the side held the opponent below an ordinary match's xG
+(`XG_AGAINST_ORDINARY`, 1.38, the engine's mean per side in every era
+measured) is shared by the players who defend, by `DEFENSIVE_SHARE` (keeper
+0.15, centre-back 0.2, full-back 0.14, holding midfielder 0.12, down to a
+striker's 0); the shares add up to about one per side, and a side that
+concedes more than ordinary loses the same way. **A clean sheet** is
+`CLEAN_SHEET_VALUE` (0.1) to the keeper and back line. Without these a
+defence's best work, the chance that never came, left no trace: the
+defenders of the best sides were rarely called on and sat at 6.5–6.8 for a
+season however little they conceded, while a centre-back under siege rated
+highest.
 
-Measured: every position averages 6.45–6.57 on the 2025/26 lineups, which
-`matchEngine.calibration.test.ts` asserts; across 60 real XIs the season
-averages run p10 6.15, p50 6.39, p95 6.73. Strikers and wingers spread
-widest (a season's goals vary most), centre-backs and full-backs least. For
-Liverpool 2019/20 Van Dijk rates 6.89, Robertson 6.82, Salah 6.82,
-Alexander-Arnold 6.80, Mané 6.77 and Matip 6.49; the XI's award goes to Van
-Dijk in 38% of seasons and Salah in 28%. For 2008/09 Torres rates 6.93 and
-Gerrard 6.90. The league award goes to a forward in 63% of seasons in the
-2025/26 field (35% in 2008/09), a midfielder 25% (33%) and a defender 13%
-(33%); in 2008/09 Nemanja Vidić wins it most often, as he won the Premier
-League's own award that season. Of two centre-backs in one XI the
-better-rated out-rates the other 72% of the time.
+A player's match is then his total against an ordinary player in his
+position (`POSITION_MEAN`, measured over three passes each of the 2025/26 and
+2003/04 leagues), on one scale for every outfield player
+(`OUTFIELD_VALUE_SD`): **6.75 is an ordinary match** (`RATING_BASELINE`), the
+scale players know from FotMob and Sofascore, and half a goal above ordinary
+is +0.85 (`RATING_SPREAD`). It was 6.5 and 0.8, which put a title-winning
+side's regulars at 6.85 on average. The scale is shared so that a goal, or a
+goal-saving block, is worth the same whoever makes it. Scaling each position
+by its own spread, tried first, made a centre-back's goal worth half again a
+striker's, and defenders won the league award in 70–80% of seasons. A
+keeper's value is in other units and keeps its own scale.
+
+**Measured** on 24 real league-seasons (1995/96, 2003/04, 2008/09 and
+2025/26, six passes each, stored lineups), season averages by finishing
+place, before and after the two credits and the new scale:
+
+| | Before | After |
+| --- | --- | --- |
+| League mean | 6.48 | 6.74 |
+| Champions, mean (share at 7.0+) | 6.85 (20%) | 7.28 (89%) |
+| Champions' centre-backs / full-backs | 6.78 / 6.70 | 7.27 / 7.19 |
+| 2nd–4th, mean | 6.66 | 7.01 |
+| 5th–8th centre-backs | 6.55 | 6.82 |
+| Bottom six, mean | 6.32 | 6.52 |
+| Top-four defenders with 0–1 goals | 6.55 | 6.96 |
+| League Player of the Season, mean (range) | 7.28 (6.99–7.69) | 7.69 (7.32–8.09) |
+
+The league award goes to Henry at about 8.0 in 2003/04, Cantona, Cole or
+Fowler in 1995/96, Vidić, Terry, Ronaldo, Gerrard or Rooney in 2008/09, and
+Szoboszlai, Ødegaard, Rice, Gabriel, Salah or Foden in 2025/26. Season
+averages across all player-seasons run p10 6.43, p50 6.71, p75 6.89, p95
+7.24, which the results page's colour bands follow. Manchester United 1998/99
+dropped into 2003/04 (2nd on average) rates every regular 7.07–7.47, Stam
+7.22 and Irwin 7.19; Chelsea 2004/05 in 2025/26 has Terry at 7.24 and Čech
+7.15. `matchEngine.calibration.test.ts` asserts every position still
+averages close to 6.75.
 
 ## The plan
 
@@ -245,7 +272,11 @@ bench.
 ## Awards
 
 Player of the Season, for the XI and for the league, is the best average match
-rating. Golden Boot, top assister and Golden Glove are counts. The awards are
+rating among players who played at least half the season (`POTS_MIN_SHARE`).
+Without that floor a stand-in for a suspended player, or someone on for a few
+weeks after half-time, won it on two or three good games: on one seed a
+drafted XI's award went to a player with six appearances. Golden Boot, top
+assister and Golden Glove are counts. The awards are
 exactly as good as the ratings: see [Match ratings](#match-ratings).
 
 ## Randomness
